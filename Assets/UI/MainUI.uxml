@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Template name="PerspectivePanel" src="project://database/Assets/UI/PerspectivePanel.uxml?fileID=9197481963319205126&amp;guid=3dcf6a741e03ff74d91be22a653b8269&amp;type=3#PerspectivePanel" />
+    <Style src="project://database/Assets/UI/MainStyles.uss?fileID=7433441132597879392&amp;guid=3d6f6d684f82a994f9e3898f6acfb01b&amp;type=3#MainStyles" />
+    <ui:VisualElement name="main-container" class="main-container">
+        <ui:VisualElement name="menu-bar-container" class="menu-bar-container" />
+        <ui:VisualElement name="content-container" class="content-container">
+            <ui:VisualElement name="hierarchy-container" class="left-panel" />
+            <ui:VisualElement name="perspective-container" class="bottom-panel" style="justify-content: flex-end;">
+                <ui:Instance template="PerspectivePanel" />
+            </ui:VisualElement>
+            <ui:VisualElement name="viewport-container" class="center-panel" />
+            <ui:VisualElement name="properties-container" class="right-panel" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

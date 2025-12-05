@@ -1,0 +1,25 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/PerspectivePanelStyles.uss?fileID=7433441132597879392&amp;guid=f6058fa44733a5747b318f65b65d5ada&amp;type=3#PerspectivePanelStyles" />
+    <ui:VisualElement name="content" class="perspective-panel-content-container" style="align-items: flex-start; rotate: 0; width: auto;">
+        <PerspectiveButton TopRatio="0.6" name="back-view-btn" class="trapezoid-button" style="width: 73px; height: 15px; rotate: 180deg; flex-direction: row; align-items: center; justify-content: center; align-self: flex-start; align-content: center;">
+            <ui:Label text="З" style="rotate: 180deg; flex-direction: column; align-items: stretch; align-self: stretch; justify-content: space-evenly; height: 15px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; color: rgb(255, 255, 255);" />
+        </PerspectiveButton>
+        <ui:VisualElement style="flex-direction: row; align-items: center; height: 70px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; flex-wrap: nowrap; justify-content: center; align-self: flex-start; align-content: auto; flex-grow: 1;">
+            <PerspectiveButton TopRatio="0.56" name="left-view-btn" class="trapezoid-button" style="width: 72px; height: 15px; rotate: 90deg; margin-left: -30px; justify-content: space-evenly; align-items: center; margin-top: -21px;">
+                <ui:Label text="Л" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; color: rgb(255, 255, 255); rotate: 270deg;" />
+            </PerspectiveButton>
+            <PerspectiveButton TopRatio="1" name="top-bottom-view-btn" class="trapezoid-button" style="width: 39px; height: 39px; margin-left: -25px; margin-top: -22px; -unity-text-align: middle-left; justify-content: center;">
+                <ui:Label text="В/Н" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; justify-content: center; align-self: center; color: rgb(255, 255, 255);" />
+            </PerspectiveButton>
+            <PerspectiveButton TopRatio="0.56" name="right-view-btn" class="trapezoid-button" style="width: 72px; height: 15px; rotate: -90deg; margin-left: -25px; margin-top: -21px; margin-right: 0; margin-bottom: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; justify-content: space-around; align-items: center;">
+                <ui:Label text="П" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; color: rgb(255, 255, 255); rotate: 90deg;" />
+            </PerspectiveButton>
+        </ui:VisualElement>
+        <PerspectiveButton TopRatio="0.6" name="front-view-btn" class="trapezoid-button" style="width: 72px; height: 15px; margin-left: 0; padding-top: 0; margin-top: -22px; margin-right: 0; margin-bottom: 0; rotate: 0; align-items: center;">
+            <ui:Label text="ВП" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; color: rgb(255, 255, 255);" />
+        </PerspectiveButton>
+        <PerspectiveButton TopRatio="1" name="toggle-proection-btn" style="width: 50px; height: 15px; margin-top: 5px; align-content: flex-start; align-self: flex-start; justify-content: space-around; align-items: center; margin-left: 11px;">
+            <ui:Label text="Проекция" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 8px; color: rgb(255, 255, 255);" />
+        </PerspectiveButton>
+    </ui:VisualElement>
+</ui:UXML>

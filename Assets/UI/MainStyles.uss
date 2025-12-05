@@ -1,0 +1,51 @@
+.main-container {
+    flex-direction: column;
+    flex-grow: 1;
+    position: relative;
+}
+
+/* Верхнее меню */
+.menu-bar-container {
+    height: 3%;
+    background-color: #2c3e50;
+}
+
+/* Контент между меню и нижней панелью */
+.content-container {
+    flex-direction: row;
+    flex-grow: 1;  /* занимает всё доступное пространство под меню */
+    position: relative;
+}
+
+/* Левая панель */
+.left-panel {
+    width: 10%;       /* ширина в процентах */
+    height: 100%;     /* тянется на всю высоту content-container */
+    background-color: #34495e;
+    border-right: 1px solid #2c3e50;
+}
+
+/* Центральная панель */
+.center-panel {
+    flex-grow: 1;
+}
+
+/* Нижняя панель */
+.bottom-panel {
+      /* чтобы фиксироваться внизу content-container */
+    bottom: 0;
+    top: 0;
+    margin-bottom: 2%;
+    margin-left: 3%;
+               /* сдвиг на ширину левой панели */
+    min-height: 12%;       /* высота панели в процентах */
+    border-top: 1px solid #1a1a1a;
+}
+
+/* Правая панель */
+.right-panel {
+    width: 20%;
+    background-color: #34495e;
+    border-left: 1px solid #2c3e50;
+    padding: 10px;
+}
