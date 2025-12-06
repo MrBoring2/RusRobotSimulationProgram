@@ -1,71 +1,118 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
 public enum HandleType { Axis, Plane }
 
 public class AxisHandle : MonoBehaviour
 {
     public HandleType type;
-    public Vector3 direction;     // ��� Axis, ������� ��� (X/Y/Z)
-    public Vector3 planeNormal;   // ��� Plane
+    public Vector3 direction;     // для Axis
+    public Vector3 planeNormal;   // для Plane
     public GyzmoManupulator manipulator;
 
     private bool dragging;
-    private Vector3 dragStartPos;          // ������� ������� � ������ ������ ��������������
-    private Vector3 dragStartMouseWorld;   // ����� ����������� ���� � ���������� �� ������
+    private Vector3 dragStartPos;
+    private Vector3 dragStartMouseWorld;
+    private Plane dragPlane;
 
     public void StartDrag()
     {
-        if (manipulator.Target == null) return;
+        if (manipulator.Target == null || manipulator.CurrentManipulatorMode == null) return;
 
         dragging = true;
         dragStartPos = manipulator.Target.position;
 
-        Plane plane = GetDragPlane();
+        // Определяем правильную плоскость для движения
+        dragPlane = GetOptimalDragPlane();
+
+        // Получаем начальную позицию мыши на плоскости
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        plane.Raycast(ray, out float enter);
-        dragStartMouseWorld = ray.GetPoint(enter);
+        if (dragPlane.Raycast(ray, out float enter))
+        {
+            dragStartMouseWorld = ray.GetPoint(enter);
+        }
+
+        manipulator.CurrentManipulatorMode.OnHandleDown(this);
     }
 
     public void UpdateDrag()
     {
-        if (!dragging || manipulator.Target == null) return;
+        if (!dragging || manipulator.Target == null || manipulator.CurrentManipulatorMode == null) return;
 
-        Plane plane = GetDragPlane();
+        // Получаем текущую позицию мыши на той же плоскости
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        plane.Raycast(ray, out float enter);
-        Vector3 currentMouseWorld = ray.GetPoint(enter);
 
-        Vector3 delta = currentMouseWorld - dragStartMouseWorld;
+        if (dragPlane.Raycast(ray, out float enter))
+        {
+            Vector3 currentMouseWorld = ray.GetPoint(enter);
+            Vector3 delta = currentMouseWorld - dragStartMouseWorld;
 
-        if (type == HandleType.Axis)
-        {
-            float move = Vector3.Dot(delta, direction.normalized);
-            manipulator.Target.position = dragStartPos + direction.normalized * move;
-        }
-        else
-        {
-            manipulator.Target.position = dragStartPos + Vector3.ProjectOnPlane(delta, planeNormal);
+            // Передаем delta в мировых координатах
+            manipulator.CurrentManipulatorMode.OnHandleDrag(this, delta, dragStartPos);
         }
     }
 
     public void EndDrag()
     {
+        if (dragging && manipulator.CurrentManipulatorMode != null)
+        {
+            manipulator.CurrentManipulatorMode.OnHandleUp(this);
+        }
         dragging = false;
     }
 
-    private Plane GetDragPlane()
+    private Plane GetOptimalDragPlane()
     {
+        Camera cam = Camera.main;
+        Vector3 targetPos = manipulator.Target.position;
+
         if (type == HandleType.Axis)
         {
-            // ��������� ��������������� ��� � �������� ����� ������
-            Vector3 normal = Vector3.Cross(direction.normalized, Vector3.up);
-            if (normal.sqrMagnitude < 0.001f)
-                normal = Vector3.Cross(direction.normalized, Vector3.forward);
-            return new Plane(normal, dragStartPos);
+            Vector3 axisDir;
+
+            if (manipulator.CurrentAxisMode == AxisMode.Local)
+            {
+                // В локальном режиме берем направление в мировых координатах
+                axisDir = manipulator.Target.TransformDirection(direction.normalized);
+            }
+            else
+            {
+                // В глобальном режиме берем мировое направление
+                axisDir = direction.normalized;
+            }
+
+            // Создаем плоскость, которая всегда хорошо работает с лучом камеры
+            Vector3 camForward = cam.transform.forward;
+            float dot = Vector3.Dot(camForward, axisDir);
+
+            // Если камера смотрит почти вдоль оси, используем другую плоскость
+            if (Mathf.Abs(dot) > 0.9f)
+            {
+                // Плоскость через объект, перпендикулярно направлению от камеры к объекту
+                Vector3 camToTarget = (targetPos - cam.transform.position).normalized;
+                return new Plane(camToTarget, targetPos);
+            }
+            else
+            {
+                // Обычная плоскость: перпендикулярно камере
+                return new Plane(camForward, targetPos);
+            }
         }
-        else
+        else // Plane
         {
-            return new Plane(planeNormal, dragStartPos);
+            Vector3 normal;
+
+            if (manipulator.CurrentAxisMode == AxisMode.Local)
+            {
+                // В локальном режиме берем нормаль в мировых координатах
+                normal = manipulator.Target.TransformDirection(planeNormal);
+            }
+            else
+            {
+                // В глобальном режиме берем мировую нормаль
+                normal = planeNormal;
+            }
+
+            return new Plane(normal, targetPos);
         }
     }
 }

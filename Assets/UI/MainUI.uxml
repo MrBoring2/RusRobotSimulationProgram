@@ -1,11 +1,18 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Template name="GyzmoManipulatorPanel" src="project://database/Assets/UI/GyzmoManipulatorPanel.uxml?fileID=9197481963319205126&amp;guid=fdaf28d5b44d4a54896b04787fbc0a43&amp;type=3#GyzmoManipulatorPanel" />
     <ui:Template name="PerspectivePanel" src="project://database/Assets/UI/PerspectivePanel.uxml?fileID=9197481963319205126&amp;guid=3dcf6a741e03ff74d91be22a653b8269&amp;type=3#PerspectivePanel" />
+    <ui:Template name="AxisModePanel" src="project://database/Assets/UI/AxisModePanel.uxml?fileID=9197481963319205126&amp;guid=1cf271d6755d4f642a29548015dd134f&amp;type=3#AxisModePanel" />
     <Style src="project://database/Assets/UI/MainStyles.uss?fileID=7433441132597879392&amp;guid=3d6f6d684f82a994f9e3898f6acfb01b&amp;type=3#MainStyles" />
     <ui:VisualElement name="main-container" class="main-container">
         <ui:VisualElement name="menu-bar-container" class="menu-bar-container" />
         <ui:VisualElement name="content-container" class="content-container">
-            <ui:VisualElement name="hierarchy-container" class="left-panel" />
-            <ui:VisualElement name="perspective-container" class="bottom-panel" style="justify-content: flex-end;">
+            <ui:VisualElement name="hierarchy-container" enabled="true" class="left-panel" style="visibility: visible; display: flex;" />
+            <ui:VisualElement name="gyzmo-manipulator-panel-container" style="flex-grow: 1; align-items: flex-start; align-self: auto; align-content: auto; justify-content: flex-start; position: absolute;" />
+            <ui:VisualElement name="perspective-container" class="bottom-panel" style="justify-content: space-between; align-items: center;">
+                <ui:VisualElement style="flex-grow: 1;">
+                    <ui:Instance template="AxisModePanel" style="height: 30px; margin-left: -10px; margin-top: 10px;" />
+                    <ui:Instance template="GyzmoManipulatorPanel" style="height: 64px; align-items: auto; justify-content: space-between; align-self: flex-start; align-content: flex-end; margin-top: 15px; margin-left: -10px;" />
+                </ui:VisualElement>
                 <ui:Instance template="PerspectivePanel" />
             </ui:VisualElement>
             <ui:VisualElement name="viewport-container" class="center-panel" />

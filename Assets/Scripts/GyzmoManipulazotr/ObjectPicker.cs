@@ -9,19 +9,21 @@ public class ObjectPicker : MonoBehaviour
 
     private void Start()
     {
-        manipulator.gameObject.SetActive(false);
+        if (manipulator != null)
+            manipulator.gameObject.SetActive(false);
     }
 
-    void Update()
+    private void Update()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         int manipLayerMask = LayerMask.GetMask("Manipulator");
 
         if (Input.GetMouseButtonDown(0))
         {
-            // Сначала проверяем клик по манипулятору
+            // Клик по манипулятору
             if (Physics.Raycast(ray, out RaycastHit hitHandle, Mathf.Infinity, manipLayerMask))
             {
+                Debug.Log(hitHandle.transform.gameObject.name);
                 AxisHandle handle = hitHandle.collider.GetComponent<AxisHandle>();
                 if (handle != null)
                 {
@@ -29,29 +31,25 @@ public class ObjectPicker : MonoBehaviour
                     currentHandle.StartDrag();
                 }
             }
+            // Клик по объекту сцены
+            else if (Physics.Raycast(ray, out RaycastHit hitObject))
+            {
+                manipulator.Attach(hitObject.transform);
+                manipulator.gameObject.SetActive(true);
+            }
+            // Клик по пустому месту сцены
             else
             {
-                // Проверяем клик по объекту сцены (любому, кроме манипулятора)
-                if (Physics.Raycast(ray, out RaycastHit hitObject))
-                {
-                    manipulator.Attach(hitObject.collider.transform);
-                    manipulator.gameObject.SetActive(true);
-                }
-                else
-                {
-                    // Кликнули по пустому месту → скрываем манипулятор
-                    manipulator.gameObject.SetActive(false);
-                }
+                // Тут мы не проверяем UI вообще — манипулятор пропадёт только при клике на пустую сцену
+                manipulator.gameObject.SetActive(false);
             }
         }
 
-        // Перетаскивание (если зажато)
+        // Перетаскивание манипулятора
         if (Input.GetMouseButton(0) && currentHandle != null)
-        {
             currentHandle.UpdateDrag();
-        }
 
-        // Отпускание мыши
+        // Отпускание
         if (Input.GetMouseButtonUp(0) && currentHandle != null)
         {
             currentHandle.EndDrag();
