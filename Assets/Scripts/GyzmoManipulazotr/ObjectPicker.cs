@@ -6,6 +6,9 @@ public class ObjectPicker : MonoBehaviour
 {
     public GyzmoManupulator manipulator;
     private AxisHandle currentHandle;
+    [SerializeField]
+    private UIBlocker uIBlocker;
+    public VisualElement propertiesPanel;
 
     private void Start()
     {
@@ -18,7 +21,7 @@ public class ObjectPicker : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         int manipLayerMask = LayerMask.GetMask("Manipulator");
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !uIBlocker.isPointerOverUI)
         {
             // Клик по манипулятору
             if (Physics.Raycast(ray, out RaycastHit hitHandle, Mathf.Infinity, manipLayerMask))
@@ -55,6 +58,16 @@ public class ObjectPicker : MonoBehaviour
             currentHandle.EndDrag();
             currentHandle = null;
         }
+    }
+
+    public void PickObject(GameObject gameObject)
+    {
+        manipulator.Attach(gameObject.transform);
+        manipulator.gameObject.SetActive(true);
+    }
+    public void UnpickObject()
+    {
+        manipulator.Detach();
     }
 }
 

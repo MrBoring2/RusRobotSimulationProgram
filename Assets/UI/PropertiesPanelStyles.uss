@@ -1,0 +1,49 @@
+:root {
+}
+.unity-base-field__label {
+	min-width: 10px;
+	margin: 0;
+	align-items: center;
+	align-content: center;
+} 
+.unity-text-input {
+	min-width: 100px;
+	height: 20px;
+	padding: 0;
+	align-items: flex-start;
+	justify-content: flex-start;
+	align-content: flex-start;
+	font-size: 8;
+	
+}
+.input-field {
+	min-width: 65px;
+	max-width: 65px;
+	height: 20px;
+	margin-right: 0px;
+	margin-top: 0px;
+	margin-bottom: 0px;
+	margin-left: 2px;
+	
+}
+
+.unity-unsigned-integer-field {
+}
+
+.unity-text-element {
+	font-size: 10;
+	height: 20px;
+}
+
+.unity-base-field__input {
+	height: 20px;
+	padding: 0;
+	align-items: flex-start;
+	justify-content: flex-start;
+	align-content: flex-start;
+	font-size: 8;
+}
+.unity-base-text-field__input {
+	height: 20px;
+	font-size: 8;
+}

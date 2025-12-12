@@ -1,6 +1,6 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/PerspectivePanelStyles.uss?fileID=7433441132597879392&amp;guid=f6058fa44733a5747b318f65b65d5ada&amp;type=3#PerspectivePanelStyles" />
-    <ui:VisualElement name="content" class="perspective-panel-content-container" style="align-items: flex-start; rotate: 0; width: auto;">
+    <ui:VisualElement name="perspective-panel-container" class="perspective-panel-content-container" style="align-items: flex-start; rotate: 0; width: auto;">
         <PerspectiveButton TopRatio="0.6" name="back-view-btn" class="trapezoid-button" style="width: 73px; height: 15px; rotate: 180deg; flex-direction: row; align-items: center; justify-content: center; align-self: flex-start; align-content: center;">
             <ui:Label text="З" style="rotate: 180deg; flex-direction: column; align-items: stretch; align-self: stretch; justify-content: space-evenly; height: 15px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; color: rgb(255, 255, 255);" />
         </PerspectiveButton>

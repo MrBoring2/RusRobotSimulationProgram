@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class MainCameraMovement : MonoBehaviour
@@ -17,6 +18,9 @@ public class MainCameraMovement : MonoBehaviour
     [Header("Камера")]
     [SerializeField] private Camera mainCamera;
     [SerializeField] private float orthographicSize = 10f;
+
+    [Header("Блокер UI")]
+    [SerializeField] private UIBlocker uIBlocker;
 
     private float pitch; // X
     private float yaw;   // Y
@@ -37,8 +41,10 @@ public class MainCameraMovement : MonoBehaviour
 
     private void Update()
     {
-        HandleMovement();
-        HandleMouseRotation();
+        if(!uIBlocker.isInputMode)
+            HandleMovement();
+        if(!uIBlocker.isPointerOverUI)
+            HandleMouseRotation();
         HandleButtonRotation();
     }
 
@@ -64,6 +70,7 @@ public class MainCameraMovement : MonoBehaviour
 
     private void HandleMouseRotation()
     {
+        //if (EventSystem.current.IsPointerOverGameObject()) return;
         if (Input.GetMouseButton(1))
         {
             float mx = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime * 60f; 

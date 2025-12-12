@@ -57,6 +57,12 @@ public class GyzmoManupulator : MonoBehaviour
         CurrentManipulatorMode?.OnObjectSelected(Target, this);
     }
 
+    public void Detach()
+    {
+        Target = null;
+        gameObject.SetActive(false);
+    }
+
     public void SetManipulatorMode(IManipulatorMode mode)
     {
         CurrentManipulatorMode = mode;

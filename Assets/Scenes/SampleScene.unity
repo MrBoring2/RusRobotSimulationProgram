@@ -119,6 +119,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &152640449
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 152640451}
+  - component: {fileID: 152640450}
+  m_Layer: 0
+  m_Name: GameObjectManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &152640450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152640449}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 993c250b9ddc07c48a939dbbcae479d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameObjectManager
+--- !u!4 &152640451
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152640449}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 336768400}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!64 &233803986
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -309,6 +353,7 @@ Transform:
   m_Children:
   - {fileID: 1289876335}
   - {fileID: 813370851}
+  - {fileID: 152640451}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &355159425
@@ -559,6 +604,7 @@ MonoBehaviour:
   buttonRotationSpeedDegPerSec: 500
   mainCamera: {fileID: 330585545}
   orthographicSize: 3
+  uIBlocker: {fileID: 1239946562}
 --- !u!64 &544830773
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -868,6 +914,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ObjectPicker
   manipulator: {fileID: 1068335000}
+  uIBlocker: {fileID: 1239946562}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -929,9 +976,10 @@ GameObject:
   - component: {fileID: 982458436}
   - component: {fileID: 982458435}
   - component: {fileID: 982458434}
+  - component: {fileID: 982458438}
   m_Layer: 1
   m_Name: Cube
-  m_TagString: Untagged
+  m_TagString: SceneObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1022,12 +1070,26 @@ Transform:
   m_GameObject: {fileID: 982458433}
   serializedVersion: 2
   m_LocalRotation: {x: -0.24662377, y: -0.170123, z: 0.94452864, w: -0.1345384}
-  m_LocalPosition: {x: -13.801, y: 2.635, z: -6.27}
+  m_LocalPosition: {x: -14.25, y: 4.66, z: -5.94}
   m_LocalScale: {x: -1.2158856, y: -1.6081488, z: -1.0112832}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 22.813, y: 332.886, z: -169.357}
+--- !u!114 &982458438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 982458433}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6128efd719aa587459e64f4f9b065df7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
+  type: 1
+  sourcePath: 
 --- !u!1 &997057272
 GameObject:
   m_ObjectHideFlags: 0
@@ -1040,9 +1102,10 @@ GameObject:
   - component: {fileID: 997057275}
   - component: {fileID: 997057274}
   - component: {fileID: 997057273}
+  - component: {fileID: 997057277}
   m_Layer: 0
   m_Name: KUBESTRIUS
-  m_TagString: Untagged
+  m_TagString: SceneObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1133,12 +1196,26 @@ Transform:
   m_GameObject: {fileID: 997057272}
   serializedVersion: 2
   m_LocalRotation: {x: 0.6818634, y: 0.019456325, z: -0.64157444, w: 0.35080767}
-  m_LocalPosition: {x: 3.699, y: -0.12, z: 1.871}
+  m_LocalPosition: {x: 9.72, y: 0.76, z: -0.62}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 30.223, y: -1165.395, z: 209.357}
+--- !u!114 &997057277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 997057272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6128efd719aa587459e64f4f9b065df7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
+  type: 1
+  sourcePath: 
 --- !u!114 &1068335000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1256,6 +1333,10 @@ GameObject:
   - component: {fileID: 1239946558}
   - component: {fileID: 1239946559}
   - component: {fileID: 1239946560}
+  - component: {fileID: 1239946561}
+  - component: {fileID: 1239946562}
+  - component: {fileID: 1239946563}
+  - component: {fileID: 1239946564}
   m_Layer: 0
   m_Name: MainUI
   m_TagString: Untagged
@@ -1293,7 +1374,7 @@ MonoBehaviour:
   m_PanelSettings: {fileID: 11400000, guid: 5accceffaeed10841b63ead740e4df81, type: 2}
   m_ParentUI: {fileID: 0}
   sourceAsset: {fileID: 9197481963319205126, guid: 21a9be47dd2ed7a469bc576641b6fe91, type: 3}
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_Position: 0
   m_WorldSpaceSizeMode: 1
   m_WorldSpaceWidth: 1920
@@ -1356,6 +1437,60 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AxisModeEvents
   manipulator: {fileID: 1068335000}
+--- !u!114 &1239946561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239946554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 131c195207796924ca32fee7221c77cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HierarchyPanelEvents
+  objectManager: {fileID: 152640450}
+  iBlocker: {fileID: 1239946562}
+  propertiesPanelEvents: {fileID: 0}
+  objectPicker: {fileID: 813370852}
+--- !u!114 &1239946562
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239946554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d1fa69d68f5c5148b80e644481e6cb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIBlocker
+--- !u!114 &1239946563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239946554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ab6593c856fe374b9028bdf828c58ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PropertiesPanelEvents
+  uiBlocker: {fileID: 1239946562}
+--- !u!114 &1239946564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239946554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43ee9fe7b2217584e9906c667854b411, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TopMenuEvents
+  hierarchyPanelEvents: {fileID: 1239946561}
 --- !u!1 &1289876334
 GameObject:
   m_ObjectHideFlags: 0
@@ -1669,6 +1804,7 @@ GameObject:
   - component: {fileID: 1926383829}
   - component: {fileID: 1926383828}
   - component: {fileID: 1926383827}
+  - component: {fileID: 1926383830}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -1737,6 +1873,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: -17.261, y: 8.36, z: 411.544}
+--- !u!114 &1926383830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926383826}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51413a74f09858544b6f149be26cdf56, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::dasdasd
+  panelSettings: {fileID: 0}
 --- !u!136 &2097463647
 CapsuleCollider:
   m_ObjectHideFlags: 0

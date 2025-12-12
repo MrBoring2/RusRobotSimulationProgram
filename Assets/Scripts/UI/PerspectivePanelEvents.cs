@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -9,7 +9,7 @@ public class PerspectivePanelEvents : MonoBehaviour
     private VisualElement root;
     private MainCameraMovement cameraMovement; 
 
-    // Список для хранения колбэков
+    // РЎРїРёСЃРѕРє РґР»СЏ С…СЂР°РЅРµРЅРёСЏ РєРѕР»Р±СЌРєРѕРІ
     private List<(PerspectiveButton btn, EventCallback<MouseDownEvent> click, EventCallback<MouseMoveEvent> move, EventCallback<MouseLeaveEvent> leave)> registeredButtons
         = new List<(PerspectiveButton, EventCallback<MouseDownEvent>, EventCallback<MouseMoveEvent>, EventCallback<MouseLeaveEvent>)>();
 
@@ -31,7 +31,7 @@ public class PerspectivePanelEvents : MonoBehaviour
         var btn = root.Q<PerspectiveButton>(buttonName);
         if (btn == null) return;
 
-        // Создаём EventCallback для каждого события
+        // РЎРѕР·РґР°С‘Рј EventCallback РґР»СЏ РєР°Р¶РґРѕРіРѕ СЃРѕР±С‹С‚РёСЏ
         EventCallback<MouseLeaveEvent> onLeave = evt => btn.IsHovered = false;
         EventCallback<MouseMoveEvent> onMove = evt =>
         {
@@ -41,18 +41,18 @@ public class PerspectivePanelEvents : MonoBehaviour
         EventCallback<MouseDownEvent> onClick = evt =>
         {
             Vector2 local = evt.localMousePosition;
-            if (btn.IsPointInside(local))
+            if (btn.IsPointInside(local) && evt.button == 0)
                 clickHandler.Invoke();
             else
                 evt.StopPropagation();
         };
 
-        // Регистрируем колбэки
+        // Р РµРіРёСЃС‚СЂРёСЂСѓРµРј РєРѕР»Р±СЌРєРё
         btn.RegisterCallback(onLeave);
         btn.RegisterCallback(onMove);
         btn.RegisterCallback(onClick);
 
-        // Сохраняем для отписки
+        // РЎРѕС…СЂР°РЅСЏРµРј РґР»СЏ РѕС‚РїРёСЃРєРё
         registeredButtons.Add((btn, onClick, onMove, onLeave));
     }
 
@@ -72,7 +72,7 @@ public class PerspectivePanelEvents : MonoBehaviour
 
         targetCamera.transform.rotation = Quaternion.Euler(eulerAngles);
 
-        Debug.Log($"Камера повернута на {eulerAngles}");
+        Debug.Log($"РљР°РјРµСЂР° РїРѕРІРµСЂРЅСѓС‚Р° РЅР° {eulerAngles}");
     }
     private void OnBackViewClick() => cameraMovement.RotateToView(new Vector3(0, 180, 0));
     private void OnLeftViewClick() => cameraMovement.RotateToView(new Vector3(0, -90, 0));
