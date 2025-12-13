@@ -74,6 +74,7 @@ public class TopMenuEvents : MonoBehaviour
         {
             case ObjectType.Primitive:
                 obj = GameObject.CreatePrimitive(PrimitiveType.Cube); // или из sourcePath
+                obj.AddComponent<PrimitivePropertyProvider>();
                 break;
 
             case ObjectType.Static:
@@ -94,6 +95,7 @@ public class TopMenuEvents : MonoBehaviour
         obj.transform.position = data.Position.ToVector3();
         obj.transform.rotation = data.Rotation.ToQuaternion();
         obj.transform.localScale = data.Scale.ToVector3();
+        
 
         var m = obj.AddComponent<SceneObjectMarker>();
         m.type = data.ObjectType;

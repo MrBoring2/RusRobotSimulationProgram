@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public enum AxisMode
 {
@@ -20,7 +21,13 @@ public class GyzmoManupulator : MonoBehaviour
 
     public Transform gizmoRoot;   // ПУСТЫШКА!
     [HideInInspector] public Quaternion gizmoRootStartRotation; // для глобального режима
+    public event Action<Transform> OnTargetTransformChanged;
 
+    public void NotifyTransformChanged()
+    {
+        if (Target != null)
+            OnTargetTransformChanged?.Invoke(Target);
+    }
     private void Awake()
     {
         // создаем пустышку

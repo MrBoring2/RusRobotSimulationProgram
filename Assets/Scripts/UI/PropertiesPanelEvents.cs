@@ -21,11 +21,24 @@ public class PropertiesPanelEvents : MonoBehaviour
     {
         root = GetComponent<UIDocument>().rootVisualElement;
         propertiesPanel = root.Q<VisualElement>("properties-container");
+        HidePanel();
         commonContainer = root.Q("base-properties-container");
         customContainer = root.Q("custom-properties-container");
         //inputs = root.Query<FloatField>().ToList();
+        posX = root.Q<FloatField>("position-x");
+        posY = root.Q<FloatField>("position-y");
+        posZ = root.Q<FloatField>("position-z");
+
+        rotX = root.Q<FloatField>("rotation-x");
+        rotY = root.Q<FloatField>("rotation-y");
+        rotZ = root.Q<FloatField>("rotation-z");
+
+        scaleX = root.Q<FloatField>("scale-x");
+        scaleY = root.Q<FloatField>("scale-y");
+        scaleZ = root.Q<FloatField>("scale-z");
         RegisterInputs();
         RegisterButtons();
+        RegisterValueCallbacks();
     }
 
     private void RegisterButtons()
@@ -72,22 +85,46 @@ public class PropertiesPanelEvents : MonoBehaviour
         
     }
 
+    public void HidePanel()
+    {
+        propertiesPanel.visible = false;
+    }
+    public void ShowPanel()
+    {
+        propertiesPanel.visible = true;
+    }
+    public void UpdateTransform(IPropertyProvider provider)
+    {
+        posX.SetValueWithoutNotify(provider.Position.x);
+        posY.SetValueWithoutNotify(provider.Position.y);
+        posZ.SetValueWithoutNotify(provider.Position.z);
+
+        rotX.SetValueWithoutNotify(provider.Rotation.x);
+        rotY.SetValueWithoutNotify(provider.Rotation.y);
+        rotZ.SetValueWithoutNotify(provider.Rotation.z);
+
+        scaleX.SetValueWithoutNotify(provider.Scale.x);
+        scaleY.SetValueWithoutNotify(provider.Scale.y);
+        scaleZ.SetValueWithoutNotify(provider.Scale.z);
+    }
     public void ShowProperties(IPropertyProvider propertyProvider)
     {
         current = propertyProvider;
         customContainer.Clear();
+        UpdateTransform(propertyProvider);
 
-        BindVector3("position",
-        () => propertyProvider.Position,
-        v => propertyProvider.Position = v);
+        //BindVector3("position",
+        //() => propertyProvider.Position,
+        //v => propertyProvider.Position = v);
 
-        BindVector3("rotation",
-            () => propertyProvider.Rotation,
-            v => propertyProvider.Rotation = v);
+        //BindVector3("rotation",
+        //    () => propertyProvider.Rotation,
+        //    v => propertyProvider.Rotation = v);
 
-        BindVector3("scale",
-            () => propertyProvider.Scale,
-            v => propertyProvider.Scale = v);
+        //BindVector3("scale",
+        //    () => propertyProvider.Scale,
+        //    v => propertyProvider.Scale = v);
+        propertyProvider.BuildCustomProperties(customContainer);
     }
 
     private void BindVector3(string prefix, Func<Vector3> getter, Action<Vector3> setter)
@@ -116,5 +153,88 @@ public class PropertiesPanelEvents : MonoBehaviour
         xField.RegisterValueChangedCallback(OnValueChanged);
         yField.RegisterValueChangedCallback(OnValueChanged);
         zField.RegisterValueChangedCallback(OnValueChanged);
+    }
+    private void RegisterValueCallbacks()
+    {
+        posX.RegisterValueChangedCallback(_ => ApplyPosition());
+        posY.RegisterValueChangedCallback(_ => ApplyPosition());
+        posZ.RegisterValueChangedCallback(_ => ApplyPosition());
+
+        rotX.RegisterValueChangedCallback(e => ApplyRotationWithLimit(e, rotX));
+        rotY.RegisterValueChangedCallback(e => ApplyRotationWithLimit(e, rotY));
+        rotZ.RegisterValueChangedCallback(e => ApplyRotationWithLimit(e, rotZ));
+        rotX.RegisterCallback<BlurEvent>(evt => NormalizeRotationUI());
+        rotY.RegisterCallback<BlurEvent>(evt => NormalizeRotationUI());
+        rotZ.RegisterCallback<BlurEvent>(evt => NormalizeRotationUI());
+
+        scaleX.RegisterValueChangedCallback(_ => ApplyScale());
+        scaleY.RegisterValueChangedCallback(_ => ApplyScale());
+        scaleZ.RegisterValueChangedCallback(_ => ApplyScale());
+    }
+    private void ApplyPosition()
+    {
+        if (current == null) return;
+
+        current.Position = new Vector3(
+            posX.value,
+            posY.value,
+            posZ.value
+        );
+    }
+    private void ApplyRotationWithLimit(ChangeEvent<float> e, FloatField field)
+    {
+        float value = Mathf.Repeat(e.newValue, 361f);
+
+        field.SetValueWithoutNotify(value);
+        ApplyRotation();
+    }
+    private void ApplyRotation()
+    {
+        if (current == null) return;
+
+        current.Rotation = new Vector3(
+            rotX.value,
+            rotY.value,
+            rotZ.value
+        );
+    }
+    private void NormalizeRotationUI()
+    {
+        if (current == null) return;
+
+        // Берем введенные значения
+        float x = rotX.value;
+        float y = rotY.value;
+        float z = rotZ.value;
+
+        // Нормализуем в диапазон [-360, 360]
+        x = NormalizeAngle(x);
+        y = NormalizeAngle(y);
+        z = NormalizeAngle(z);
+
+        // Сохраняем в модель
+        current.Rotation = new Vector3(x, y, z);
+
+        // Обновляем UI
+        rotX.SetValueWithoutNotify(x);
+        rotY.SetValueWithoutNotify(y);
+        rotZ.SetValueWithoutNotify(z);
+    }
+    private float NormalizeAngle(float angle)
+    {
+        angle %= 360f;        // сначала остаток от деления на 360
+        if (angle > 360f) return angle - 360f;
+        if (angle < -360f) return angle + 360f;
+        return angle;
+    }
+    private void ApplyScale()
+    {
+        if (current == null) return;
+
+        current.Scale = new Vector3(
+            scaleX.value,
+            scaleY.value,
+            scaleZ.value
+        );
     }
 }

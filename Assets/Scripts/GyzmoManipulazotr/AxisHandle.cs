@@ -48,6 +48,7 @@ public class AxisHandle : MonoBehaviour
 
             // Передаем delta в мировых координатах
             manipulator.CurrentManipulatorMode.OnHandleDrag(this, delta, dragStartPos);
+            manipulator.NotifyTransformChanged();
         }
     }
 

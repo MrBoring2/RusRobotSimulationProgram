@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UIElements;
 using static UnityEngine.Rendering.VirtualTexturing.Debugging;
 
@@ -8,12 +9,25 @@ public class ObjectPicker : MonoBehaviour
     private AxisHandle currentHandle;
     [SerializeField]
     private UIBlocker uIBlocker;
-    public VisualElement propertiesPanel;
+    public PropertiesPanelEvents propertiesPanel;
+    private IPropertyProvider currentProvider;
 
     private void Start()
     {
         if (manipulator != null)
+        {
             manipulator.gameObject.SetActive(false);
+            manipulator.OnTargetTransformChanged += HandleTransformChanged;
+        }
+    }
+
+    private void HandleTransformChanged(Transform transform)
+    {
+        Debug.Log("Трансформ");
+        if (transform == null) return;
+
+        if (currentProvider != null)
+            propertiesPanel.UpdateTransform(currentProvider);
     }
 
     private void Update()
@@ -37,8 +51,15 @@ public class ObjectPicker : MonoBehaviour
             // Клик по объекту сцены
             else if (Physics.Raycast(ray, out RaycastHit hitObject))
             {
-                manipulator.Attach(hitObject.transform);
-                manipulator.gameObject.SetActive(true);
+             
+                var provider = hitObject.transform.gameObject.TryGetComponent<IPropertyProvider>(out IPropertyProvider d);
+                if (d != null)
+                {
+                    currentProvider = d;
+                    propertiesPanel.ShowPanel();
+                    propertiesPanel.ShowProperties(d);
+                }
+                PickObject(hitObject.transform.gameObject);
             }
             // Клик по пустому месту сцены
             else

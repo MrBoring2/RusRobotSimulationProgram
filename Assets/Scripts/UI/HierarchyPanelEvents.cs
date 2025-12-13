@@ -42,8 +42,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     //}
 
     private void OnMouseDown(MouseDownEvent evt)
-    {
-        Debug.Log("На интерфейсе: " + EventSystem.current.IsPointerOverGameObject());
+    {      
         if (evt.button == 1) // ПКМ
         {
             // Проверяем, был ли клик внутри панели иерархии
@@ -144,12 +143,15 @@ public class HierarchyPanelEvents : MonoBehaviour
 
     private void OnMouseDownHierarchyItem(MouseDownEvent evt)
     {
-        if(evt.target is VisualElement element)
+        if (evt.button == 0)
         {
-            var gameObject = objectManager.GetObjectByUniqueID((int)element.userData);
-            if (gameObject != null)
+            if (evt.target is VisualElement element)
             {
-                objectPicker.PickObject(gameObject);
+                var gameObject = objectManager.GetObjectByUniqueID((int)element.userData);
+                if (gameObject != null)
+                {
+                    objectPicker.PickObject(gameObject);
+                }
             }
         }
     }
@@ -191,8 +193,17 @@ public class HierarchyPanelEvents : MonoBehaviour
 
     private void ShowProperties(VisualElement clickedElement)
     {
-        var propertiesPanel = root.Q("properties-container");
-        propertiesPanel.visible = true;
+        var obj = objectManager.GetObjectByUniqueID((int)clickedElement.userData);
+        if (obj != null)
+        {
+            var provider = obj.TryGetComponent<IPropertyProvider>(out IPropertyProvider d);
+            if (d != null)
+            {
+                propertiesPanelEvents.ShowPanel();
+                propertiesPanelEvents.ShowProperties(d);
+            }
+        }
+        
         Debug.Log("Показать свойства для объекта: " + clickedElement.name);
         // Ваш код для отображения свойств объекта
     }
