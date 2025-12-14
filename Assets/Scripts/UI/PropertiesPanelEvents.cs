@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.Windows;
 using static UnityEditor.PlayerSettings;
 
 public class PropertiesPanelEvents : MonoBehaviour
@@ -16,7 +17,8 @@ public class PropertiesPanelEvents : MonoBehaviour
     private FloatField posX, posY, posZ;
     private FloatField rotX, rotY, rotZ;
     private FloatField scaleX, scaleY, scaleZ;
-
+    private TextField name;
+    public event Action OnTargetNameChanged;
     void Start()
     {
         root = GetComponent<UIDocument>().rootVisualElement;
@@ -36,6 +38,8 @@ public class PropertiesPanelEvents : MonoBehaviour
         scaleX = root.Q<FloatField>("scale-x");
         scaleY = root.Q<FloatField>("scale-y");
         scaleZ = root.Q<FloatField>("scale-z");
+
+        name = root.Q<TextField>("name");
         RegisterInputs();
         RegisterButtons();
         RegisterValueCallbacks();
@@ -82,7 +86,26 @@ public class PropertiesPanelEvents : MonoBehaviour
             });
         }
 
-        
+        name.RegisterCallback<MouseEnterEvent>(evt =>
+        {
+            Debug.Log(evt.button);
+            name.focusable = true;
+        });
+        name.RegisterCallback<FocusEvent>(evt =>
+        {
+            uiBlocker.EnableInputMode();
+        });
+        name.RegisterCallback<BlurEvent>(evt =>
+        {
+            name.focusable = false;
+            uiBlocker.DisableInputMode();
+        });
+        name.RegisterCallback<MouseLeaveEvent>(evt =>
+        {
+            name.focusable = false;
+        });
+
+
     }
 
     public void HidePanel()
@@ -111,7 +134,9 @@ public class PropertiesPanelEvents : MonoBehaviour
     {
         current = propertyProvider;
         customContainer.Clear();
+        name.SetValueWithoutNotify(current.Name);
         UpdateTransform(propertyProvider);
+        //UpdateCustomProperties();
 
         //BindVector3("position",
         //() => propertyProvider.Position,
@@ -125,6 +150,11 @@ public class PropertiesPanelEvents : MonoBehaviour
         //    () => propertyProvider.Scale,
         //    v => propertyProvider.Scale = v);
         propertyProvider.BuildCustomProperties(customContainer);
+    }
+
+    private void UpdateCustomProperties()
+    {
+        
     }
 
     private void BindVector3(string prefix, Func<Vector3> getter, Action<Vector3> setter)
@@ -170,7 +200,19 @@ public class PropertiesPanelEvents : MonoBehaviour
         scaleX.RegisterValueChangedCallback(_ => ApplyScale());
         scaleY.RegisterValueChangedCallback(_ => ApplyScale());
         scaleZ.RegisterValueChangedCallback(_ => ApplyScale());
+
+        name.RegisterValueChangedCallback(_ => ApplyName());
     }
+
+    private void ApplyName()
+    {
+        if (current == null) return;
+
+        current.Name = name.value;
+        Debug.Log("NAME " + current.Name + "||||");
+        OnTargetNameChanged?.Invoke();
+    }
+
     private void ApplyPosition()
     {
         if (current == null) return;

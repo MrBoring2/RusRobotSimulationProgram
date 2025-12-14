@@ -12,7 +12,11 @@ public class RobotPropertyProvider : MonoBehaviour, IPropertyProvider
 
     public void BuildCustomProperties(VisualElement root)
     {
-        var rotSpeedPercent = new FloatField("Скорость вращения");
+        var container = new VisualElement();
+        var label = new Label("Скорость вращения");
+        var rotSpeedPercent = new FloatField("");
+        container.Add(label);
+        container.Add(rotSpeedPercent);
         rotSpeedPercent.value = RotSpeedPercent;
         rotSpeedPercent.RegisterValueChangedCallback(evt => RotSpeedPercent = evt.newValue);
         root.Add(rotSpeedPercent);

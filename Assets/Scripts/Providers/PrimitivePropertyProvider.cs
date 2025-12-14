@@ -3,7 +3,7 @@ using UnityEngine.UIElements;
 
 public class PrimitivePropertyProvider : MonoBehaviour, IPropertyProvider
 {
-    public string Name { get => gameObject.name; set => gameObject.name = Name; }
+    public string Name { get => gameObject.name; set { gameObject.name = value;  } }
     public Vector3 Position { get => transform.position; set => transform.position = value; }
     private Vector3 rotationEuler; // »—“»Õ¿
 

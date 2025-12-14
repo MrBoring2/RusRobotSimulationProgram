@@ -2,6 +2,7 @@ using Assets.Scripts.Models;
 using SFB;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -33,16 +34,16 @@ public class TopMenuEvents : MonoBehaviour
         {
             new ExtensionFilter("Файл RusRobot", "rusbot")
         };
-        StandaloneFileBrowser.OpenFilePanelAsync("Выберите файл", "", extentionsList, false, (string[] path) => 
+        StandaloneFileBrowser.OpenFilePanelAsync("Выберите файл", "", extentionsList, false, (string[] path) =>
         {
             var loaded = saveLoadProvider.Load(path[0]);
-            if(loaded != null)
+            if (loaded != null)
                 ClearScene();
-            foreach (var item in loaded.objectsData) 
+            foreach (var item in loaded.objectsData)
             {
                 SpawnRestoredObject(item);
             }
-            hierarchyPanelEvents.UpdateHierarhy();
+            hierarchyPanelEvents.LoadHierarchy();
         });
     }
 
@@ -52,17 +53,9 @@ public class TopMenuEvents : MonoBehaviour
         {
             new ExtensionFilter("Файл RusRobot", "rusbot")
         };
-        StandaloneFileBrowser.SaveFilePanelAsync("Выберите место дял сохранения", "", "", extentionsList, (string path) => 
+        StandaloneFileBrowser.SaveFilePanelAsync("Выберите место для сохранения", "", "", extentionsList, (string path) =>
         {
-            var objects = new List<GameObject>();
-            foreach (var obj in FindObjectsByType<GameObject>(FindObjectsSortMode.None))
-            {
-                if (obj.CompareTag("SceneObject")) // Фильтруем только нужные объекты
-                {
-                    objects.Add(obj);
-                }
-            }
-            saveLoadProvider.Save(path, objects);
+            saveLoadProvider.Save(path, hierarchyPanelEvents.Items.Select(p => p.Reference).ToList());
         });
     }
 
@@ -95,7 +88,7 @@ public class TopMenuEvents : MonoBehaviour
         obj.transform.position = data.Position.ToVector3();
         obj.transform.rotation = data.Rotation.ToQuaternion();
         obj.transform.localScale = data.Scale.ToVector3();
-        
+
 
         var m = obj.AddComponent<SceneObjectMarker>();
         m.type = data.ObjectType;
@@ -104,8 +97,8 @@ public class TopMenuEvents : MonoBehaviour
 
     private void ClearScene()
     {
-        foreach (var obj in FindObjectsByType<SceneObjectMarker>(FindObjectsSortMode.None))
-            DestroyImmediate(obj.gameObject);
+        foreach (var obj in hierarchyPanelEvents.Items)
+            DestroyImmediate(obj.Reference);
     }
 
 }

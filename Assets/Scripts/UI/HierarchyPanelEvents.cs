@@ -1,17 +1,19 @@
+using Assets.Scripts.Models;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
 using UnityEngine.EventSystems;
+using UnityEngine.UIElements;
 
 public class HierarchyPanelEvents : MonoBehaviour
 {
     public GameObjectManager objectManager;
-    public List<HierarchyItem> Items { get; set; }
+    public List<HierarchyItem> Items { get; set; } = new List<HierarchyItem>();
     private VisualElement root;
     [SerializeField] private VisualElement hierarchyPanel;
-    private VisualElement contextMenu; // Само меню
+    private VisualElement contextMenu;
     public Foldout MainHierarchyItem { get; private set; }
     public UIBlocker iBlocker;
     public PropertiesPanelEvents propertiesPanelEvents;
@@ -22,9 +24,17 @@ public class HierarchyPanelEvents : MonoBehaviour
         root = GetComponent<UIDocument>().rootVisualElement;
         hierarchyPanel = root.Q("hierarchy-container");
         Debug.Log(hierarchyPanel);
+        propertiesPanelEvents.OnTargetNameChanged += PropertiesPanelEvents_OnTargetNameChanged;
         RegisterElements();
         InitExistedObjects();
     }
+
+    private void PropertiesPanelEvents_OnTargetNameChanged()
+    {
+        Debug.Log("IPDATE");
+        UpdateHierarchy();
+    }
+
     //private void OnEnable()
     //{
     //    // Получаем корень UI
@@ -42,7 +52,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     //}
 
     private void OnMouseDown(MouseDownEvent evt)
-    {      
+    {
         if (evt.button == 1) // ПКМ
         {
             // Проверяем, был ли клик внутри панели иерархии
@@ -60,7 +70,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         {
             HideContextMenu(); // любой другой клик закрывает меню
         }
-        evt.StopPropagation(); 
+        evt.StopPropagation();
     }
     private bool IsInsideHierarchyPanel(VisualElement element)
     {
@@ -160,35 +170,48 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
         Debug.Log("Добавить объект");
         var cube = objectManager.AddCube();
-        var newElement = new Label(cube.name);
-        newElement.style.height = 20;
-        newElement.style.marginTop = 2;
-        newElement.style.marginBottom = 2;
-        newElement.userData = cube.GetInstanceID();
-        newElement.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
-        MainHierarchyItem.Add(newElement);
+        var m = cube.AddComponent<SceneObjectMarker>();
+        m.type = ObjectType.Primitive;
+        m.sourcePath = "";
+        Items.Add(new HierarchyItem(cube.GetInstanceID(), cube));
+        UpdateHierarchy();
     }
     private void AddObject(GameObject gameObject)
     {
         Debug.Log("Добавить объект");
-        var newElement = new Label(gameObject.name);
-        newElement.name = gameObject.name;
-        newElement.style.height = 20;
-        newElement.style.marginTop = 2;
-        newElement.style.marginBottom = 2;
-        newElement.userData = gameObject.GetInstanceID();
-        newElement.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
-        MainHierarchyItem.Add(newElement);
+        var m = gameObject.AddComponent<SceneObjectMarker>();
+        m.type = ObjectType.Primitive;
+        m.sourcePath = "";
+        Items.Add(new HierarchyItem(gameObject.GetInstanceID(), gameObject));
+        UpdateHierarchy();
+    }
+
+
+    private void UpdateHierarchy()
+    {
+        MainHierarchyItem.Clear();
+        foreach (var item in Items)
+        {
+            Debug.Log(item.Reference.name);
+            var newElement = new Label(item.Reference.name);
+            newElement.style.height = 20;
+            newElement.style.marginTop = 2;
+            newElement.style.marginBottom = 2;
+            newElement.userData = item.Id;
+            newElement.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
+            MainHierarchyItem.Add(newElement);
+        }
     }
 
     private void DeleteObject(VisualElement clickedElement)
     {
         Debug.Log("Удалить объект: " + clickedElement.name);
         clickedElement.UnregisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
-        MainHierarchyItem.Remove(clickedElement);
+        Items.Remove(Items.FirstOrDefault(p => p.Id == (int)clickedElement.userData));
+        UpdateHierarchy();
         objectPicker.UnpickObject();
         objectManager.DeleteObject((int)clickedElement.userData);
-        
+
     }
 
     private void ShowProperties(VisualElement clickedElement)
@@ -203,19 +226,15 @@ public class HierarchyPanelEvents : MonoBehaviour
                 propertiesPanelEvents.ShowProperties(d);
             }
         }
-        
+
         Debug.Log("Показать свойства для объекта: " + clickedElement.name);
         // Ваш код для отображения свойств объекта
     }
-    
+
     private void RegisterElements()
     {
         MainHierarchyItem = root.Q<Foldout>("main-item");
         root.RegisterCallback<MouseDownEvent>(OnMouseDown);
-        //hierarchyPanel.RegisterCallback<MouseDownEvent>(OnMouseDown);
-        Debug.Log(MainHierarchyItem);
-        //RegisterContextMenu();
-        
     }
 
     private void InitExistedObjects()
@@ -225,11 +244,12 @@ public class HierarchyPanelEvents : MonoBehaviour
         {
             AddObject(obj);
         }
+        UpdateHierarchy();
     }
 
-    public void UpdateHierarhy()
+    public void LoadHierarchy()
     {
-        MainHierarchyItem.Clear();
+        Items.Clear();
         InitExistedObjects();
     }
 }

@@ -8,11 +8,11 @@ public class GameObjectManager : MonoBehaviour
     public GameObject AddCube()
     {
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        cube.name = "New Cube"; 
+        cube.name = "New Cube";
         cube.tag = "SceneObject";
-        cube.AddComponent<UniqueId>();                                                         
+        cube.AddComponent<UniqueId>();
         cube.transform.position = new Vector3(0, 0, 0);
-
+        cube.AddComponent<PrimitivePropertyProvider>();
         cube.transform.localScale = new Vector3(1, 1, 1);
         return cube;
     }
@@ -21,15 +21,15 @@ public class GameObjectManager : MonoBehaviour
         GameObject objToDelete = GetObjectByUniqueID(objectId);
         if (objToDelete != null)
         {
-            Debug.Log("Объект удален: " + objToDelete.name);       
+            Debug.Log("Объект удален: " + objToDelete.name);
             Destroy(objToDelete);
-           
+
         }
         else
         {
             Debug.LogWarning("Объект с таким уникальным ID не найден.");
         }
-       
+
     }
     public GameObject[] GetGameObjectsList()
     {

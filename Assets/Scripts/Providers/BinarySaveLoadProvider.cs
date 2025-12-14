@@ -15,7 +15,6 @@ public class BinarySaveLoadProvider : ISaveLoadProvider
         // Проходим по всем объектам на сцене и собираем информацию
         foreach (var obj in objects)
         {
-            
             var marker = obj.GetComponent<SceneObjectMarker>();
             ObjectInfo objectInfo = new ObjectInfo(obj.name, marker.sourcePath, marker.type, obj.transform.position, obj.transform.rotation, obj.transform.localScale);
             sceneData.objectsData.Add(objectInfo);
