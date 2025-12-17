@@ -21,7 +21,7 @@ public class GameObjectManager : MonoBehaviour
         GameObject objToDelete = GetObjectByUniqueID(objectId);
         if (objToDelete != null)
         {
-            Debug.Log("Объект удален: " + objToDelete.name);
+           // Debug.Log("Объект удален: " + objToDelete.name);
             Destroy(objToDelete);
 
         }
@@ -34,7 +34,7 @@ public class GameObjectManager : MonoBehaviour
     public GameObject[] GetGameObjectsList()
     {
         var objects = GameObject.FindGameObjectsWithTag("SceneObject");
-        Debug.Log(objects.Length);
+       // Debug.Log(objects.Length);
         return objects;
     }
     public GameObject GetObjectByUniqueID(int uniqueID)

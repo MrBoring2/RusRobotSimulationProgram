@@ -11,8 +11,6 @@ public class BinarySaveLoadProvider : ISaveLoadProvider
     public void Save(string path, System.Collections.Generic.List<GameObject> objects)
     {
         SceneData sceneData = new SceneData();
-        Debug.Log("Колво " + objects.Count);
-        // Проходим по всем объектам на сцене и собираем информацию
         foreach (var obj in objects)
         {
             var marker = obj.GetComponent<SceneObjectMarker>();

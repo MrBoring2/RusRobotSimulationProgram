@@ -1,3 +1,5 @@
+using Assets.Scripts.Models;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -9,16 +11,17 @@ public class RobotPropertyProvider : MonoBehaviour, IPropertyProvider
     public Vector3 Scale { get => transform.localScale; set => transform.localScale = Scale; }
 
     public float RotSpeedPercent { get; set; } = 100f;
-
+    public IEnumerable<CustomProperty> GetCustomProperties()
+    {
+        yield return new CustomProperty(
+            "RotSpeedPercent",
+            typeof(float),
+            () => RotSpeedPercent,
+            val => RotSpeedPercent = (float)val
+        );
+    }
     public void BuildCustomProperties(VisualElement root)
     {
-        var container = new VisualElement();
-        var label = new Label("Скорость вращения");
-        var rotSpeedPercent = new FloatField("");
-        container.Add(label);
-        container.Add(rotSpeedPercent);
-        rotSpeedPercent.value = RotSpeedPercent;
-        rotSpeedPercent.RegisterValueChangedCallback(evt => RotSpeedPercent = evt.newValue);
-        root.Add(rotSpeedPercent);
+        
     }
 }

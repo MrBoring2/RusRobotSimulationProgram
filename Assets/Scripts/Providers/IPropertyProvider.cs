@@ -1,3 +1,5 @@
+using Assets.Scripts.Models;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -8,5 +10,5 @@ public interface IPropertyProvider
     Vector3 Rotation { get; set;}
     Vector3 Scale { get; set;}
 
-    void BuildCustomProperties(VisualElement root);
+    IEnumerable<CustomProperty> GetCustomProperties();
 }

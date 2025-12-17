@@ -22,11 +22,23 @@ public class GyzmoManupulator : MonoBehaviour
     public Transform gizmoRoot;   // ПУСТЫШКА!
     [HideInInspector] public Quaternion gizmoRootStartRotation; // для глобального режима
     public event Action<Transform> OnTargetTransformChanged;
+    public event Action<Transform> OnDragStart;
+    public event Action<Transform> OnDragEnd;
 
     public void NotifyTransformChanged()
     {
         if (Target != null)
             OnTargetTransformChanged?.Invoke(Target);
+    }
+    public void NotifyStartDrag()
+    {
+        if (Target != null)
+            OnDragStart?.Invoke(Target);
+    }
+    public void NotifyDragEnd()
+    {
+        if (Target != null)
+            OnDragEnd?.Invoke(Target);
     }
     private void Awake()
     {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Windows.Forms;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static UnityEngine.Rendering.DebugUI;
@@ -23,8 +24,9 @@ public class UIBlocker : MonoBehaviour
             root.Q("properties-container"),
             root.Q("axis-mode-panel-container"),
             root.Q("perspective-panel-container"),
+            
         };
-        Debug.Log(root);
+       // Debug.Log(root);
         // Регистрируем события для каждой панели
         foreach (var panel in uiElements)
         {
@@ -38,6 +40,19 @@ public class UIBlocker : MonoBehaviour
         contextMenu.RegisterCallback<MouseEnterEvent>(OnContextMenuMouseEnter);
         contextMenu.RegisterCallback<MouseLeaveEvent>(OnContextMenuMouseLeave);
     }
+
+    public void AddNewModalWindow(VisualElement modalWindow)
+    {
+        modalWindow.RegisterCallback<MouseEnterEvent>(OnContextMenuMouseEnter);
+        modalWindow.RegisterCallback<MouseLeaveEvent>(OnContextMenuMouseLeave);
+    }
+    public void RemoveModalWindow(VisualElement modalWindow)
+    {
+        uiElements.Remove(modalWindow);
+        modalWindow.UnregisterCallback<MouseEnterEvent>(OnContextMenuMouseEnter);
+        modalWindow.UnregisterCallback<MouseLeaveEvent>(OnContextMenuMouseLeave);
+    }
+
     public void RemoveContextMenu(VisualElement contextMenu)
     {
         uiElements.Remove(contextMenu);
@@ -45,9 +60,14 @@ public class UIBlocker : MonoBehaviour
         contextMenu.UnregisterCallback<MouseLeaveEvent>(OnContextMenuMouseLeave);
     }
 
+    public void ResolveUI()
+    {
+        isPointerOverUI = false;
+    }
+
     private void OnMouseEnter(MouseEnterEvent evt)
     {
-        Debug.Log(evt.target);
+       // Debug.Log(evt.target);
         isPointerOverUI = true;  // Когда курсор заходит на панель 
     }
 
@@ -56,15 +76,23 @@ public class UIBlocker : MonoBehaviour
         isPointerOverUI = false;  // Когда курсор покидает панель
     }
 
+    private void OnModalWindowMouseEnter(MouseEnterEvent evt)
+    {
+        isPointerOverUI = true;
+    }
+    private void OnModalWindowMouseLeaveLeave(MouseLeaveEvent evt)
+    {
+        isPointerOverUI = false; 
+    }
     private void OnContextMenuMouseEnter(MouseEnterEvent evt)
     {
-        Debug.Log(evt.target);
-        isPointerOverUI = true;  // Когда курсор заходит на панель 
+       // Debug.Log(evt.target);
+        isPointerOverUI = true; 
     }
 
     private void OnContextMenuMouseLeave(MouseLeaveEvent evt)
     {
-        isPointerOverUI = false;  // Когда курсор покидает панель
+        isPointerOverUI = false; 
     }
     private void UnregisterUIElements()
     {

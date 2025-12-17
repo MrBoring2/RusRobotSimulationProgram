@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Assets.Scripts.Models;
+using Assets.Scripts.SystemManager;
+using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static UnityEngine.Rendering.VirtualTexturing.Debugging;
@@ -11,19 +13,52 @@ public class ObjectPicker : MonoBehaviour
     private UIBlocker uIBlocker;
     public PropertiesPanelEvents propertiesPanel;
     private IPropertyProvider currentProvider;
-
+    private Vector3 startPos;
+    private Vector3 startRot;
     private void Start()
     {
         if (manipulator != null)
         {
             manipulator.gameObject.SetActive(false);
             manipulator.OnTargetTransformChanged += HandleTransformChanged;
+            manipulator.OnDragEnd += Manipulator_OnDragEnd;
+            manipulator.OnDragStart += Manipulator_OnDragStart;
         }
+    }
+
+    private void Manipulator_OnDragStart(Transform obj)
+    {
+        startPos = obj.position;
+        startRot = obj.eulerAngles;
+    }
+
+    private void Manipulator_OnDragEnd(Transform obj)
+    {
+        if (transform == null) return;
+        Vector3 endPos = obj.position;
+        Vector3 endRot = obj.eulerAngles;
+        if (currentProvider != null)
+        {
+            if (startPos != endPos)
+            {
+                UndoRedoSystem.Instance.Execute(
+                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Position), startPos, endPos, true)
+                );
+            }
+
+            if (startRot != endRot)
+            {
+                UndoRedoSystem.Instance.Execute(
+                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Rotation), startRot, endRot, true)
+                );
+            }
+            //propertiesPanel.UpdateTransform(currentProvider);
+        }
+           
     }
 
     private void HandleTransformChanged(Transform transform)
     {
-        Debug.Log("Трансформ");
         if (transform == null) return;
 
         if (currentProvider != null)
@@ -40,7 +75,7 @@ public class ObjectPicker : MonoBehaviour
             // Клик по манипулятору
             if (Physics.Raycast(ray, out RaycastHit hitHandle, Mathf.Infinity, manipLayerMask))
             {
-                Debug.Log(hitHandle.transform.gameObject.name);
+                //Debug.Log(hitHandle.transform.gameObject.name);
                 AxisHandle handle = hitHandle.collider.GetComponent<AxisHandle>();
                 if (handle != null)
                 {

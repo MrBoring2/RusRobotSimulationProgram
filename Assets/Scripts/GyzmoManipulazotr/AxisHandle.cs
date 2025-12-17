@@ -20,7 +20,7 @@ public class AxisHandle : MonoBehaviour
 
         dragging = true;
         dragStartPos = manipulator.Target.position;
-
+        manipulator.NotifyStartDrag();
         // Определяем правильную плоскость для движения
         dragPlane = GetOptimalDragPlane();
 
@@ -59,6 +59,7 @@ public class AxisHandle : MonoBehaviour
             manipulator.CurrentManipulatorMode.OnHandleUp(this);
         }
         dragging = false;
+        manipulator.NotifyDragEnd();
     }
 
     private Plane GetOptimalDragPlane()

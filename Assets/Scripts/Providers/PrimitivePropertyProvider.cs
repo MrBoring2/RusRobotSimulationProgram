@@ -1,3 +1,5 @@
+using Assets.Scripts.Models;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -5,7 +7,7 @@ public class PrimitivePropertyProvider : MonoBehaviour, IPropertyProvider
 {
     public string Name { get => gameObject.name; set { gameObject.name = value;  } }
     public Vector3 Position { get => transform.position; set => transform.position = value; }
-    private Vector3 rotationEuler; // ÈÑÒÈÍÀ
+    private Vector3 rotationEuler;
 
     public Vector3 Rotation
     {
@@ -22,13 +24,14 @@ public class PrimitivePropertyProvider : MonoBehaviour, IPropertyProvider
     }
     public Vector3 Scale { get => transform.localScale; set => transform.localScale = value; }
 
-    public void BuildCustomProperties(VisualElement root)
-    {
-        
-    }
 
     private void Awake()
     {
         rotationEuler = transform.eulerAngles;
+    }
+
+    public IEnumerable<CustomProperty> GetCustomProperties()
+    {
+        return null;
     }
 }

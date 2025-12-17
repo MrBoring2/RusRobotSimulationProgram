@@ -2,5 +2,7 @@
     <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
         <ui:Button text="Сохранить" name="save-button" />
         <ui:Button text="Загрузить" name="load-button" />
+        <ui:Button text="Назад" name="back-button" />
+        <ui:Button text="Вперёд" name="forward-button" />
     </ui:VisualElement>
 </ui:UXML>
