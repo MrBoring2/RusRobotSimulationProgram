@@ -28,6 +28,9 @@ namespace Assets.Scripts.SystemManager
                 return _instance;
             }
         }
+        public bool IsRecording { get; private set; } = true;
+
+      
         public UndoRedoSystem()
         {
             
@@ -38,10 +41,19 @@ namespace Assets.Scripts.SystemManager
         private readonly Stack<ICommand> redoStack = new();
         public void Execute(ICommand command)
         {
+            if (redoStack.Count > 0)
+            {
+                //CleanupRedoStack();
+                redoStack.Clear();
+            }
             command.Execute();
+            if (!IsRecording)
+                return;
+
+
             undoStack.Push(command);
             OnCommandExecuted?.Invoke(command);
-            redoStack.Clear();
+            //redoStack.Clear();
         }
 
         public void Undo()
@@ -63,10 +75,32 @@ namespace Assets.Scripts.SystemManager
             undoStack.Push(cmd);
             OnCommandExecuted?.Invoke(cmd);
         }
-
-        public override bool Equals(object obj)
+        private void SetRecording(bool value)
         {
-            return obj is UndoRedoSystem system;
+            IsRecording = value;
+        }
+        private void CleanupRedoStack()
+        {
+            foreach (var cmd in redoStack)
+            {
+                if (cmd is IDestructiveCommand destructive)
+                    destructive.FinalizeDestroy();
+            }
+        }
+        public void BeginExternalOperation()
+        {
+            SetRecording(false);
+            ClearHistory();
+        }
+
+        public void EndExternalOperation()
+        {
+            SetRecording(true);
+        }
+        public void ClearHistory()
+        {
+            undoStack.Clear();
+            redoStack.Clear();
         }
     }
 }

@@ -1300,6 +1300,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TopMenuEvents
   hierarchyPanelEvents: {fileID: 1239946561}
+  _gameObjectManager: {fileID: 152640450}
 --- !u!114 &1239946565
 MonoBehaviour:
   m_ObjectHideFlags: 0

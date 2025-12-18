@@ -5,36 +5,27 @@ using UnityEngine;
 
 public class GameObjectManager : MonoBehaviour
 {
-    public GameObject AddCube()
+    public event Action<GameObject> OnObjectAdded;
+    public event Action<GameObject> OnObjectRemoved;
+    public GameObject CreateObject(GameObject prefab, Vector3 position)
     {
-        GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        cube.name = "New Cube";
-        cube.tag = "SceneObject";
-        cube.AddComponent<UniqueId>();
-        cube.transform.position = new Vector3(0, 0, 0);
-        cube.AddComponent<PrimitivePropertyProvider>();
-        cube.transform.localScale = new Vector3(1, 1, 1);
-        return cube;
+        var obj = Instantiate(prefab, position, Quaternion.identity);
+        obj.name = prefab.name;
+        OnObjectAdded?.Invoke(obj);
+        return obj;
     }
-    public void DeleteObject(int objectId)
-    {
-        GameObject objToDelete = GetObjectByUniqueID(objectId);
-        if (objToDelete != null)
-        {
-           // Debug.Log("Объект удален: " + objToDelete.name);
-            Destroy(objToDelete);
 
-        }
-        else
-        {
-            Debug.LogWarning("Объект с таким уникальным ID не найден.");
-        }
+    public void DeleteObject(GameObject obj)
+    {
+        if (obj == null) return;
+
+        OnObjectRemoved?.Invoke(obj);
+        Destroy(obj);
 
     }
     public GameObject[] GetGameObjectsList()
     {
         var objects = GameObject.FindGameObjectsWithTag("SceneObject");
-       // Debug.Log(objects.Length);
         return objects;
     }
     public GameObject GetObjectByUniqueID(int uniqueID)

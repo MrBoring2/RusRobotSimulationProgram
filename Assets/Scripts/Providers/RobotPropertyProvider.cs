@@ -11,6 +11,19 @@ public class RobotPropertyProvider : MonoBehaviour, IPropertyProvider
     public Vector3 Scale { get => transform.localScale; set => transform.localScale = Scale; }
 
     public float RotSpeedPercent { get; set; } = 100f;
+
+    public ProviderSaveData CaptureCustomState()
+    {
+        return new ProviderSaveData
+        {
+            ProviderType = nameof(RobotPropertyProvider),
+            FloatValues =
+            {
+                ["RotSpeedPercent"] = RotSpeedPercent
+            }
+        };
+    }
+
     public IEnumerable<CustomProperty> GetCustomProperties()
     {
         yield return new CustomProperty(
@@ -20,8 +33,10 @@ public class RobotPropertyProvider : MonoBehaviour, IPropertyProvider
             val => RotSpeedPercent = (float)val
         );
     }
-    public void BuildCustomProperties(VisualElement root)
+
+    public void RestoreCustomState(ProviderSaveData data)
     {
-        
+        if (data.FloatValues.TryGetValue("RotSpeedPercent", out var v))
+            RotSpeedPercent = v;
     }
 }

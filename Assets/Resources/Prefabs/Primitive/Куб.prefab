@@ -127,7 +127,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
   type: 1
-  sourcePath: "Prefabs/Primitive/\u041A\u0443\u0431.prefab"
+  sourcePath: "Prefabs/Primitive/\u041A\u0443\u0431"
 --- !u!114 &6673540635758467502
 MonoBehaviour:
   m_ObjectHideFlags: 0

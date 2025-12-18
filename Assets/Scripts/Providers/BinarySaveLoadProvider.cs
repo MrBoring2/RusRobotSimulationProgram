@@ -14,7 +14,14 @@ public class BinarySaveLoadProvider : ISaveLoadProvider
         foreach (var obj in objects)
         {
             var marker = obj.GetComponent<SceneObjectMarker>();
-            ObjectInfo objectInfo = new ObjectInfo(obj.name, marker.sourcePath, marker.type, obj.transform.position, obj.transform.rotation, obj.transform.localScale);
+            var provider = obj.GetComponent<IPropertyProvider>();
+            ObjectInfo objectInfo = new ObjectInfo(provider.Name, 
+                                                    marker.sourcePath,
+                                                    marker.type, 
+                                                    provider.Position,
+                                                    Quaternion.Euler(provider.Rotation), 
+                                                    obj.transform.localScale, 
+                                                    provider?.CaptureCustomState());
             sceneData.objectsData.Add(objectInfo);
         }
 

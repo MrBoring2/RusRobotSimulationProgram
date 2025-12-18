@@ -1,3 +1,4 @@
+using Assets.Scripts.Models;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,7 +21,9 @@ public class ObjectInfo
     public SerializableQuaternion Rotation { get; set; }
     public SerializableTransform Scale { get; set; }
 
-    public ObjectInfo(string name, string sourcePath, ObjectType objectType, Vector3 position, Quaternion rotation, Vector3 scale)
+    public ProviderSaveData ProviderData;
+
+    public ObjectInfo(string name, string sourcePath, ObjectType objectType, Vector3 position, Quaternion rotation, Vector3 scale, ProviderSaveData data)
     {
         Name = name;
         SourcePath = sourcePath;
@@ -28,6 +31,7 @@ public class ObjectInfo
         Position = new SerializableTransform(position);
         Rotation = new SerializableQuaternion(rotation);
         Scale = new SerializableTransform(scale);
+        ProviderData = data;
     }
 }
 

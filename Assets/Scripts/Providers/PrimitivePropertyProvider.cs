@@ -34,4 +34,17 @@ public class PrimitivePropertyProvider : MonoBehaviour, IPropertyProvider
     {
         return null;
     }
+
+    public ProviderSaveData CaptureCustomState()
+    {
+        return new ProviderSaveData
+        {
+            ProviderType = nameof(PrimitivePropertyProvider)
+        };
+    }
+
+    public void RestoreCustomState(ProviderSaveData data)
+    {
+        
+    }
 }

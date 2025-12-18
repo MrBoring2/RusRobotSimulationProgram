@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+
 public interface IPropertyProvider
 {
     string Name { get; set;}
@@ -11,4 +12,6 @@ public interface IPropertyProvider
     Vector3 Scale { get; set;}
 
     IEnumerable<CustomProperty> GetCustomProperties();
+    ProviderSaveData CaptureCustomState();
+    void RestoreCustomState(ProviderSaveData data);
 }

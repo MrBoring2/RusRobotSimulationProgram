@@ -42,19 +42,19 @@ public class ObjectPicker : MonoBehaviour
             if (startPos != endPos)
             {
                 UndoRedoSystem.Instance.Execute(
-                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Position), startPos, endPos, true)
+                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Position), startPos, endPos)
                 );
             }
 
             if (startRot != endRot)
             {
                 UndoRedoSystem.Instance.Execute(
-                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Rotation), startRot, endRot, true)
+                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Rotation), startRot, endRot)
                 );
             }
             //propertiesPanel.UpdateTransform(currentProvider);
         }
-           
+
     }
 
     private void HandleTransformChanged(Transform transform)
@@ -69,7 +69,7 @@ public class ObjectPicker : MonoBehaviour
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         int manipLayerMask = LayerMask.GetMask("Manipulator");
-
+        //if (manipulator.Target == null) manipulator.Detach();
         if (Input.GetMouseButtonDown(0) && !uIBlocker.isPointerOverUI)
         {
             // Клик по манипулятору
@@ -86,7 +86,7 @@ public class ObjectPicker : MonoBehaviour
             // Клик по объекту сцены
             else if (Physics.Raycast(ray, out RaycastHit hitObject))
             {
-             
+
                 var provider = hitObject.transform.gameObject.TryGetComponent<IPropertyProvider>(out IPropertyProvider d);
                 if (d != null)
                 {
@@ -119,6 +119,7 @@ public class ObjectPicker : MonoBehaviour
     public void PickObject(GameObject gameObject)
     {
         manipulator.Attach(gameObject.transform);
+        currentProvider = gameObject.GetComponent<IPropertyProvider>();
         manipulator.gameObject.SetActive(true);
     }
     public void UnpickObject()

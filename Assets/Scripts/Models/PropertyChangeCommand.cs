@@ -13,10 +13,9 @@ namespace Assets.Scripts.Models
         private readonly PropertyInfo propertyInfo;
         private readonly object before;
         private readonly object after;
-        private readonly bool applyOnExecute;
         public object Target => target;
 
-        public PropertyChangeCommand(object target, string propertyName, object before, object after, bool applyOnExecute = true)
+        public PropertyChangeCommand(object target, string propertyName, object before, object after)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (string.IsNullOrEmpty(propertyName)) throw new ArgumentNullException(nameof(propertyName));
@@ -29,13 +28,11 @@ namespace Assets.Scripts.Models
 
             this.before = before;
             this.after = after;
-            this.applyOnExecute = applyOnExecute;
         }
 
         public void Execute()
         {
-            if (applyOnExecute)
-                propertyInfo.SetValue(target, after);
+            propertyInfo.SetValue(target, after);
         }
 
         public void Undo()

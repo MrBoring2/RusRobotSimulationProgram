@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 6246401819662831452}
   m_Layer: 0
   m_Name: "\u0426\u0438\u043B\u0438\u043D\u0434\u0440"
-  m_TagString: Untagged
+  m_TagString: SceneObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -156,7 +156,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
   type: 1
-  sourcePath: "Prefabs/Primitive/\u0426\u0438\u043B\u0438\u043D\u0434\u0440.prefab"
+  sourcePath: "Prefabs/Primitive/\u0426\u0438\u043B\u0438\u043D\u0434\u0440"
 --- !u!114 &6246401819662831452
 MonoBehaviour:
   m_ObjectHideFlags: 0

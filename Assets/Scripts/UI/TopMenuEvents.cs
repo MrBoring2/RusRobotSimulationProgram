@@ -1,8 +1,10 @@
-using Assets.Scripts.Models;
+ï»¿using Assets.Scripts.Models;
+using Assets.Scripts.SystemManager;
 using SFB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,6 +14,7 @@ public class TopMenuEvents : MonoBehaviour
     private VisualElement root;
     public HierarchyPanelEvents hierarchyPanelEvents;
     public ISaveLoadProvider saveLoadProvider;
+    public GameObjectManager _gameObjectManager;
     private void Start()
     {
         saveLoadProvider = new BinarySaveLoadProvider();
@@ -28,71 +31,85 @@ public class TopMenuEvents : MonoBehaviour
         });
     }
 
-    private async void LoadScene()
+    private void LoadScene()
     {
         var extentionsList = new[]
         {
-            new ExtensionFilter("Ôàéë RusRobot", "rusbot")
+            new ExtensionFilter("Ð¤Ð°Ð¹Ð» RusRobot", "rusbot")
         };
-        StandaloneFileBrowser.OpenFilePanelAsync("Âûáåðèòå ôàéë", "", extentionsList, false, (string[] path) =>
+        StandaloneFileBrowser.OpenFilePanelAsync("Ð’Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ñ„Ð°Ð¹Ð»", "", extentionsList, false, OnSceneFileSelected);
+    }
+
+    private void OnSceneFileSelected(string[] paths)
+    {
+        if (paths == null || paths.Length == 0)
+            return;
+
+        UndoRedoSystem.Instance.BeginExternalOperation();
+
+        try
         {
-            var loaded = saveLoadProvider.Load(path[0]);
-            if (loaded != null)
-                ClearScene();
-            foreach (var item in loaded.objectsData)
+            ClearScene();
+
+            var loaded = saveLoadProvider.Load(paths[0]);
+            if (loaded == null)
             {
-                SpawnRestoredObject(item);
+                Debug.LogError("ÐžÑˆÐ¸Ð±ÐºÐ° Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐ¸ ÑÑ†ÐµÐ½Ñ‹");
+                return;
             }
             hierarchyPanelEvents.LoadHierarchy();
-        });
+            foreach (var data in loaded.objectsData)
+            {
+                SpawnRestoredObject(data);
+            }   
+        }
+        finally
+        {
+            // âœ… Undo Ð’Ð¡Ð•Ð“Ð”Ð Ð²ÐµÑ€Ð½Ñ‘Ñ‚ÑÑ
+            UndoRedoSystem.Instance.EndExternalOperation();
+        }
     }
 
     private void SaveScene()
     {
         var extentionsList = new[]
         {
-            new ExtensionFilter("Ôàéë RusRobot", "rusbot")
+            new ExtensionFilter("Ð¤Ð°Ð¹Ð» RusRobot", "rusbot")
         };
-        StandaloneFileBrowser.SaveFilePanelAsync("Âûáåðèòå ìåñòî äëÿ ñîõðàíåíèÿ", "", "", extentionsList, (string path) =>
+        StandaloneFileBrowser.SaveFilePanelAsync("Ð’Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð¼ÐµÑÑ‚Ð¾ Ð´Ð»Ñ ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ñ", "", "", extentionsList, (string path) =>
         {
-            saveLoadProvider.Save(path, hierarchyPanelEvents.Items.Select(p => p.Reference).ToList());
+            if (string.IsNullOrEmpty(path))
+                return;
+            saveLoadProvider.Save(path, hierarchyPanelEvents.Items
+                .Select(p => p.Reference)
+                .ToList());
         });
     }
-
+    private IPropertyProvider AddProvider(GameObject obj, string type)
+    {
+        return type switch
+        {
+            nameof(PrimitivePropertyProvider) => obj.AddComponent<PrimitivePropertyProvider>(),
+            nameof(RobotPropertyProvider) => obj.AddComponent<RobotPropertyProvider>(),
+            _ => null
+        };
+    }
     private void SpawnRestoredObject(ObjectInfo data)
     {
-        GameObject obj = null;
+        GameObject[] prefabs = Resources.LoadAll<GameObject>($"Prefabs/Primitive");
+        var prefab = Resources.Load<GameObject>(data.SourcePath);
+        var instance = _gameObjectManager.CreateObject(prefab, Vector3.zero);
+        var provider = AddProvider(instance, data.ProviderData.ProviderType);
+        provider?.RestoreCustomState(data.ProviderData);
+        instance.name = data.Name;
+        instance.tag = "SceneObject";
+        instance.transform.position = data.Position.ToVector3();
+        instance.transform.rotation = data.Rotation.ToQuaternion();
+        instance.transform.localScale = data.Scale.ToVector3();
 
-        switch (data.ObjectType)
-        {
-            case ObjectType.Primitive:
-                obj = GameObject.CreatePrimitive(PrimitiveType.Cube); // èëè èç sourcePath
-                obj.AddComponent<PrimitivePropertyProvider>();
-                break;
-
-            case ObjectType.Static:
-                // Çàãðóçèòü obj/FBX â ðàíòàéìå
-                //obj = RuntimeOBJLoader.LoadOBJ(data.sourcePath);
-                break;
-
-            case ObjectType.Dynamic:
-                obj = Instantiate(Resources.Load<GameObject>(data.SourcePath));
-                break;
-            case ObjectType.Robot:
-                obj = Instantiate(Resources.Load<GameObject>(data.SourcePath));
-                break;
-        }
-
-        obj.name = data.Name;
-        obj.tag = "SceneObject";
-        obj.transform.position = data.Position.ToVector3();
-        obj.transform.rotation = data.Rotation.ToQuaternion();
-        obj.transform.localScale = data.Scale.ToVector3();
-
-
-        var m = obj.AddComponent<SceneObjectMarker>();
+        var m = instance.AddComponent<SceneObjectMarker>();
         m.type = data.ObjectType;
-        m.sourcePath = data.SourcePath;
+        m.sourcePath = data.SourcePath; 
     }
 
     private void ClearScene()
