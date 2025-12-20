@@ -1,0 +1,30 @@
+.menu-button:hover {
+	background-color: #10375e; 
+}
+
+.menu-button.active {
+	background-color: #33506e;
+}
+
+.menu-button {
+	background-image: none;
+	padding-top: 0;
+	padding-right: 0;
+	padding-bottom: 0; 
+	padding-left: 0;
+	width: 45px;
+	height: 45px;
+	align-content: auto;
+	align-self: stretch;
+	justify-content: center;
+	align-items: stretch;
+	border-top-left-radius: 10px; 
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px;
+	border-bottom-left-radius: 10px;
+	background-color: rgb(159, 186, 255);
+	border-left-color: rgb(133, 166, 250);
+	border-right-color: rgb(133, 166, 250);
+	border-top-color: rgb(133, 166, 250);
+	border-bottom-color: rgb(133, 166, 250);
+}

@@ -1,3 +1,4 @@
+using Assets.Scripts.UI;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,35 +7,61 @@ using UnityEngine.UIElements;
 public class ManipulatorController : MonoBehaviour
 {
     public GyzmoManupulator manipulator;
+    public Button lookButton;
     public Button moveButton;
     public Button rotateButton;
+    public TooltipEvents tooltipEvents;
     private VisualElement root;
     private List<(Button btn, EventCallback<ClickEvent> click)> registeredButtons
         = new List<(Button, EventCallback<ClickEvent>)>();
     private void OnEnable()
     {
         root = GetComponent<UIDocument>().rootVisualElement;
-        RegisterButton("move-mode-btn", () => OnMoveModeClick());
-        RegisterButton("rotate-mode-btn", () => OnRotationModeClick());
+        RegisterButtons();
     }
 
-    private void RegisterButton(string buttonName, Action clickHandler)
+    private void RegisterButtons()
     {
-        var btn = root.Q<Button>(buttonName);
-        if (btn == null) return;
-
-        EventCallback<ClickEvent> onClick = evt =>
-        {
-            clickHandler.Invoke();
-        };
-
-        btn.RegisterCallback(onClick);
-
-        registeredButtons.Add((btn, onClick));
+        lookButton = root.Q<Button>("mode-look-button");
+        moveButton = root.Q<Button>("mode-move-button");
+        rotateButton = root.Q<Button>("mode-rotate-button");
+        lookButton.RegisterCallback<ClickEvent>(OnLookModeClick);
+        moveButton.RegisterCallback<ClickEvent>(OnMoveModeClick);
+        rotateButton.RegisterCallback<ClickEvent>(OnRotationModeClick);
+        tooltipEvents.RegisterTooltip(lookButton, "Режим просмотра");
+        tooltipEvents.RegisterTooltip(moveButton, "Режим перемещения");
+        tooltipEvents.RegisterTooltip(rotateButton, "Режим вращения");
+        moveButton.AddToClassList("active");
+        manipulator.SetManipulatorMode(new MoveMode());
     }
-    private void OnMoveModeClick() => manipulator.SetManipulatorMode(new MoveMode());
+
+    private void OnLookModeClick(ClickEvent evt)
+    {
+        RemoveActive();
+        lookButton.AddToClassList("active");
+        manipulator.SetManipulatorModeCamera();
+    }
+
+    private void OnMoveModeClick(ClickEvent click)
+    {
+        RemoveActive();
+        moveButton.AddToClassList("active");
+        manipulator.SetManipulatorMode(new MoveMode());
+    }
     //private void OnRotationModeClick() => manipulator.SetMode(new RotateMode(manipulator.GetComponent<LineRenderer>()));
-    private void OnRotationModeClick() => manipulator.SetManipulatorMode(new RotateMode());
+    private void OnRotationModeClick(ClickEvent click)
+    {
+        RemoveActive();
+        rotateButton.AddToClassList("active");
+        manipulator.SetManipulatorMode(new RotateMode());
+    }
+
+    private void RemoveActive()
+    {
+        lookButton.RemoveFromClassList("active");
+        moveButton.RemoveFromClassList("active");
+        rotateButton.RemoveFromClassList("active");
+    }
 
     private void OnDisable()
     {

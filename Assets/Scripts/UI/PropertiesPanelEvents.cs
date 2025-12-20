@@ -2,11 +2,8 @@ using Assets.Scripts.Models;
 using Assets.Scripts.SystemManager;
 using System;
 using System.Collections.Generic;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEngine.Windows;
-using static UnityEditor.PlayerSettings;
 
 public class PropertiesPanelEvents : MonoBehaviour
 {

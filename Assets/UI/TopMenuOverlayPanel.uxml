@@ -1,0 +1,14 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/TopMenuPanelStyles.uss?fileID=7433441132597879392&amp;guid=44c1be02d56eb084a8b3cc4f29393ff1&amp;type=3#TopMenuPanelStyles" />
+    <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
+        <ui:VisualElement name="FileMenu" class="dropdown hidden">
+            <ui:Button name="NewBtn" text="Создать" />
+            <ui:Button name="OpenBtn" text="Открыть" />
+            <ui:Button name="SaveBtn" text="Сохранить" />
+        </ui:VisualElement>
+        <ui:VisualElement name="ViewMenu" class="dropdown hidden">
+            <ui:Toggle name="PropertiesToggle" text="Панель свойств" />
+            <ui:Toggle name="HierarchyToggle" text="Панель объектов" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

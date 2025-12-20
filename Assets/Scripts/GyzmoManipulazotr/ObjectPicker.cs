@@ -15,6 +15,7 @@ public class ObjectPicker : MonoBehaviour
     private IPropertyProvider currentProvider;
     private Vector3 startPos;
     private Vector3 startRot;
+    public bool IsDraggingManipulator => currentHandle != null;
     private void Start()
     {
         if (manipulator != null)
@@ -52,7 +53,6 @@ public class ObjectPicker : MonoBehaviour
                     new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Rotation), startRot, endRot)
                 );
             }
-            //propertiesPanel.UpdateTransform(currentProvider);
         }
 
     }
@@ -67,9 +67,15 @@ public class ObjectPicker : MonoBehaviour
 
     private void Update()
     {
+        if (manipulator.CameraModeActive) 
+        {
+            if (currentHandle != null) UnpickObject();
+            return; 
+        }
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         int manipLayerMask = LayerMask.GetMask("Manipulator");
-        //if (manipulator.Target == null) manipulator.Detach();
+
         if (Input.GetMouseButtonDown(0) && !uIBlocker.isPointerOverUI)
         {
             // Клик по манипулятору
@@ -96,15 +102,12 @@ public class ObjectPicker : MonoBehaviour
                 }
                 PickObject(hitObject.transform.gameObject);
             }
-            // Клик по пустому месту сцены
             else
             {
-                // Тут мы не проверяем UI вообще — манипулятор пропадёт только при клике на пустую сцену
                 manipulator.gameObject.SetActive(false);
             }
         }
 
-        // Перетаскивание манипулятора
         if (Input.GetMouseButton(0) && currentHandle != null)
             currentHandle.UpdateDrag();
 
@@ -125,6 +128,11 @@ public class ObjectPicker : MonoBehaviour
     public void UnpickObject()
     {
         manipulator.Detach();
+    }
+
+    public IManipulatorMode GetManipulatorMode()
+    {
+        return manipulator.CurrentManipulatorMode;
     }
 }
 

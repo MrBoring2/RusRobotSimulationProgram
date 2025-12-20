@@ -1,49 +1,117 @@
-:root {
-}
-.unity-base-field__label {
-	min-width: 10px;
-	margin: 0;
-	align-items: center;
-	align-content: center;
-} 
-.unity-text-input {
-	min-width: 100px;
-	height: 20px;
-	padding: 0;
-	align-items: flex-start;
-	justify-content: flex-start;
-	align-content: flex-start;
-	font-size: 8;
-	
-}
-.input-field {
-	min-width: 65px;
-	max-width: 65px;
-	height: 20px;
-	margin-right: 0px;
-	margin-top: 0px;
-	margin-bottom: 0px;
-	margin-left: 2px;
-	
+#properties-panel-content-container {
+    padding: 1px;
 }
 
-.unity-unsigned-integer-field {
+/* === Верхнее меню с кнопкой закрытия === */
+#menu {
+    margin-bottom: 20px;
+}
+
+#close-button {
+    width: 20px;
+    height: 20px;
+    background-color: #ff4d4d;
+    color: white;
+    border-radius: 3px;
+    border-width: 0;
+    padding: 0;
+    margin: 0;
+}
+
+#close-button:hover {
+    background-color: #ff1a1a;
+}
+
+#base-properties-container {
+}
+
+/* === Строки свойств === */
+#name-property-container,
+#position-property-container,
+#rotation-property-container,
+#scale-property-container {
+    margin-bottom: 10px;
+}
+
+/* === Label свойств === */
+#name-property-container > Label,
+#position-property-container > Label,
+#rotation-property-container > Label,
+#scale-property-container > Label {
+    color: #e0e0e0;
+    font-size: 10px;
+    margin-right: 10px;
+}
+
+#name-property-container > VisualElement,
+#position-input-container,
+#rotation-input-container,
+#scale-input-container {
+   
+}
+
+#position-input-container,
+#rotation-input-container,
+#scale-input-container {
+    flex-direction: row;       
+    justify-content: flex-end;
+    align-items: center;       
+}
+
+/* === Поля ввода XYZ === */
+#position-input-container > FloatField,
+#rotation-input-container > FloatField,
+#scale-input-container > FloatField {
+           
+    width: 60px;              
+    height: 20px;             
+    padding: 0;                       
+    box-sizing: border-box;  
+    background-color: #9fbaff;
+
+
+}
+
+
+TextField,
+FloatField,
+.input-field,
+.unity-text-input,
+.unity-base-field__input,
+.unity-base-text-field__input {
+    width: auto;              
+
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    border: 1px solid #555;
+    border-radius: 3px;
+}
+
+TextField:focus,
+FloatField:focus,
+.input-field:focus {
+    border-color: #1e90ff;
+    outline: none;
+}
+
+#custom-properties-container {
+    margin-top: 5px;
 }
 
 .unity-text-element {
-	font-size: 10;
-	height: 20px;
+    font-size: 10px;
+    height: 20px;
+    
 }
 
-.unity-base-field__input {
-	height: 20px;
-	padding: 0;
-	align-items: flex-start;
-	justify-content: flex-start;
-	align-content: flex-start;
-	font-size: 8;
+.unity-base-field__label {
+    min-width: 10px;
+    margin: 0;
+  
 }
-.unity-base-text-field__input {
-	height: 20px;
-	font-size: 8;
+
+.unity-base-field__label:hover {
+    color: #1e90ff;
 }

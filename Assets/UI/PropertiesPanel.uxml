@@ -1,41 +1,47 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/PropertiesPanelStyles.uss?fileID=7433441132597879392&amp;guid=1ebbdd19a7ef0154bb8ea71ea6917814&amp;type=3#PropertiesPanelStyles" />
-    <ui:VisualElement name="properties-panel-content-container" style="flex-grow: initial; align-items: stretch; flex-direction: column; flex-wrap: nowrap;">
-        <ui:VisualElement name="menu" style="flex-grow: 1; align-items: auto; align-self: flex-end; justify-content: flex-start; align-content: auto; margin-bottom: 20px;">
-            <ui:Button text="X" name="close-button" focusable="false" style="width: 20px; height: 20px; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+    <ui:VisualElement name="properties-panel-content-container">
+
+        <ui:VisualElement name="menu">
+            <ui:Button text="X" name="close-button" focusable="false" />
         </ui:VisualElement>
-        <ui:VisualElement name="base-properties-container" style="flex-grow: 1; align-items: stretch; justify-content: flex-start; align-self: stretch; flex-direction: column;">
-            <ui:VisualElement name="name-property-container" style="flex-grow: 1; flex-direction: row; align-self: stretch; align-content: auto; justify-content: space-between; margin-bottom: 10px;">
-                <ui:Label text="Наименование" style="margin-right: 40px; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;" />
-                <ui:VisualElement style="flex-grow: 1; justify-content: flex-end; align-self: flex-start; flex-direction: row; align-content: stretch;">
-                    <ui:TextField name="name" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; width: 189px;" />
+
+        <ui:VisualElement name="base-properties-container">
+
+            <ui:VisualElement name="name-property-container">
+                <ui:Label text="Наименование" />
+                <ui:TextField name="name" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="position-property-container">
+                <ui:Label text="Расположение" />
+                <ui:VisualElement name="position-input-container">
+                    <ui:FloatField label="X" name="position-x" />
+                    <ui:FloatField label="Y" name="position-y" />
+                    <ui:FloatField label="Z" name="position-z" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="position-property-container" style="flex-grow: 1; justify-content: space-between; align-items: stretch; align-content: auto; align-self: stretch; border-top-width: 0; border-left-width: 0; border-bottom-width: 0; border-right-width: 0; border-left-color: rgb(106, 106, 106); border-right-color: rgb(106, 106, 106); border-top-color: rgb(106, 106, 106); border-bottom-color: rgb(106, 106, 106); margin-bottom: 10px; flex-direction: row;">
-                <ui:Label text="Расположение" style="margin-right: 40px; align-items: stretch; justify-content: flex-start; align-self: auto; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;" />
-                <ui:VisualElement name="input-cotnainer" style="flex-grow: 1; flex-direction: row; justify-content: flex-end; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;">
-                    <ui:FloatField label="X" name="position-x" select-all-on-focus="false" hide-mobile-input="true" class="input-field" />
-                    <ui:FloatField label="Y" name="position-y" select-all-on-focus="false" class="input-field" />
-                    <ui:FloatField label="Z" name="position-z" select-all-on-focus="false" class="input-field" />
+
+            <ui:VisualElement name="rotation-property-container">
+                <ui:Label text="Поворот" />
+                <ui:VisualElement name="rotation-input-container">
+                    <ui:FloatField label="X" name="rotation-x" />
+                    <ui:FloatField label="Y" name="rotation-y" />
+                    <ui:FloatField label="Z" name="rotation-z" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="rotation-property-container" style="flex-grow: 1; justify-content: flex-start; align-items: flex-start; align-content: flex-start; align-self: stretch; flex-direction: row; margin-bottom: 10px;">
-                <ui:Label text="Поворот" style="padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;" />
-                <ui:VisualElement style="flex-grow: 1; flex-direction: row; align-items: auto; justify-content: flex-end;">
-                    <ui:FloatField label="X" name="rotation-x" select-all-on-focus="false" class="input-field" />
-                    <ui:FloatField label="Y" name="rotation-y" select-all-on-focus="false" class="input-field" />
-                    <ui:FloatField label="Z" name="rotation-z" select-all-on-focus="false" class="input-field" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-            <ui:VisualElement name="scale-property-container" style="flex-grow: 1; justify-content: flex-start; align-items: stretch; align-content: auto; align-self: stretch; flex-direction: row;">
-                <ui:Label text="Масштаб" style="padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;" />
-                <ui:VisualElement style="flex-grow: 1; flex-direction: row; justify-content: flex-end; align-content: stretch; align-self: stretch;">
-                    <ui:FloatField label="X" name="scale-x" select-all-on-focus="false" class="input-field" />
-                    <ui:FloatField label="Y" name="scale-y" select-all-on-focus="false" class="input-field" />
-                    <ui:FloatField label="Z" name="scale-z" select-all-on-focus="false" class="input-field" />
+
+            <ui:VisualElement name="scale-property-container">
+                <ui:Label text="Масштаб" />
+                <ui:VisualElement name="scale-input-container">
+                    <ui:FloatField label="X" name="scale-x" />
+                    <ui:FloatField label="Y" name="scale-y" />
+                    <ui:FloatField label="Z" name="scale-z" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="custom-properties-container" style="flex-grow: 1; align-items: auto;" />
+
+        <ui:VisualElement name="custom-properties-container" />
+
     </ui:VisualElement>
 </ui:UXML>

@@ -1,3 +1,4 @@
+using Assets.Scripts.UI;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,33 +9,42 @@ public class AxisModeEvents : MonoBehaviour
     public GyzmoManupulator manipulator;
     public Button localAxisButton;
     public Button globalAxisButton;
+    public TooltipEvents tooltipEvents;
     private VisualElement root;
     private List<(Button btn, EventCallback<ClickEvent> click)> registeredButtons
         = new List<(Button, EventCallback<ClickEvent>)>();
     private void OnEnable()
     {
         root = GetComponent<UIDocument>().rootVisualElement;
-        RegisterButton("local-mode-btn", () => OnLocalModeClick());
-        RegisterButton("global-mode-btn", () => OnGlobalModeClick());
+        RegisterButtons();
     }
-    private void RegisterButton(string buttonName, Action clickHandler)
+    private void RegisterButtons()
     {
-        var btn = root.Q<Button>(buttonName);
-        if (btn == null) return;
-
-        EventCallback<ClickEvent> onClick = evt =>
-        {
-            clickHandler.Invoke();
-        };
-
-        btn.RegisterCallback(onClick);
-
-        registeredButtons.Add((btn, onClick));
+        localAxisButton = root.Q<Button>("local-coord-button");
+        globalAxisButton = root.Q<Button>("global-coord-button");
+        localAxisButton.RegisterCallback<ClickEvent>(OnLocalModeClick);
+        globalAxisButton.RegisterCallback<ClickEvent>(OnGlobalModeClick);
+        tooltipEvents.RegisterTooltip(localAxisButton, "Локальные координаты");
+        tooltipEvents.RegisterTooltip(globalAxisButton, "Глобальные координаты");
+        globalAxisButton.AddToClassList("active");
     }
-    private void OnLocalModeClick() => manipulator.SetAxisMode(AxisMode.Local);
-    //private void OnRotationModeClick() => manipulator.SetMode(new RotateMode(manipulator.GetComponent<LineRenderer>()));
-    private void OnGlobalModeClick() => manipulator.SetAxisMode(AxisMode.Global);
-
+    private void OnLocalModeClick(ClickEvent click)
+    {
+        RemoveActive();
+        localAxisButton.AddToClassList("active");
+        manipulator.SetAxisMode(AxisMode.Local);
+    }
+    private void OnGlobalModeClick(ClickEvent click)
+    {
+        RemoveActive();
+        globalAxisButton.AddToClassList("active");
+        manipulator.SetAxisMode(AxisMode.Global);
+    }
+    private void RemoveActive()
+    {
+        globalAxisButton.RemoveFromClassList("active");
+        localAxisButton.RemoveFromClassList("active");
+    }
     private void OnDisable()
     {
         foreach (var (btn, click) in registeredButtons)

@@ -5,9 +5,10 @@ public class GridSettings : MonoBehaviour
     public float cellSize = 1f;
     public int drawDistance = 100;
 
-    public Color thinLineColor = new Color(0.6f, 0.6f, 0.6f, 0.8f);
-    public Color thickLineColor = new Color(0.831f, 0.831f, 0.831f, 1f);
-
+    //public Color thinLineColor = new Color(0.6f, 0.6f, 0.6f, 0.8f);
+    //public Color thickLineColor = new Color(0.831f, 0.831f, 0.831f, 1f);
+    public Material thinMaterial;
+    public Material thickMaterial;
     private Material[] materials;
     private MeshFilter meshFilter;
     private Camera mainCamera;
@@ -46,11 +47,13 @@ public class GridSettings : MonoBehaviour
             mr = gameObject.AddComponent<MeshRenderer>();
 
         materials = new Material[2];
-        materials[0] = new Material(Shader.Find("Unlit/Color"));
-        materials[1] = new Material(Shader.Find("Unlit/Color"));
+        materials[0] = thinMaterial;
+        materials[1] = thickMaterial;
+        //materials[0] = new Material(Shader.Find("Unlit/Color"));
+        //materials[1] = new Material(Shader.Find("Unlit/Color"));
 
         mr.materials = materials;
-        ApplyColors();
+        //ApplyColors();
 
         transform.position = Vector3.zero;
         UpdateVisibleGrid();
@@ -125,12 +128,12 @@ public class GridSettings : MonoBehaviour
         meshFilter.mesh = mesh;
     }
 
-    void ApplyColors()
-    {
-        if (materials == null || materials.Length < 2) return;
+    //void ApplyColors()
+    //{
+    //    if (materials == null || materials.Length < 2) return;
 
-        materials[0].color = thinLineColor;
-        materials[1].color = thickLineColor;
-    }
+    //    materials[0].color = thinLineColor;
+    //    materials[1].color = thickLineColor;
+    //}
 }
 

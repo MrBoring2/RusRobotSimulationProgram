@@ -1,26 +1,34 @@
 ﻿using Assets.Scripts.Models;
 using Assets.Scripts.SystemManager;
+using Assets.Scripts.UI;
 using SFB;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class TopMenuEvents : MonoBehaviour
+public class FileMenuPanelEvents : MonoBehaviour
 {
     private VisualElement root;
+    public TooltipEvents tooltipEvents;
     public HierarchyPanelEvents hierarchyPanelEvents;
     public ISaveLoadProvider saveLoadProvider;
     public GameObjectManager _gameObjectManager;
+    private string savePath = "";
     private void Start()
     {
         saveLoadProvider = new BinarySaveLoadProvider();
         root = GetComponent<UIDocument>().rootVisualElement;
+        var newBtn = root.Q<Button>("new-file-button");
         var saveBtn = root.Q<Button>("save-button");
         var loadBtn = root.Q<Button>("load-button");
+        tooltipEvents.RegisterTooltip(saveBtn, "Сохранить");
+        tooltipEvents.RegisterTooltip(loadBtn, "Загрузить");
+        tooltipEvents.RegisterTooltip(newBtn, "Новая сцена");
         saveBtn.RegisterCallback<ClickEvent>(evt =>
         {
             SaveScene();
@@ -28,6 +36,10 @@ public class TopMenuEvents : MonoBehaviour
         loadBtn.RegisterCallback<ClickEvent>(evt =>
         {
             LoadScene();
+        });
+        newBtn.RegisterCallback<ClickEvent>(evt =>
+        {
+            ClearScene();
         });
     }
 
@@ -57,11 +69,12 @@ public class TopMenuEvents : MonoBehaviour
                 Debug.LogError("Ошибка загрузки сцены");
                 return;
             }
+            savePath = paths[0];
             hierarchyPanelEvents.LoadHierarchy();
             foreach (var data in loaded.objectsData)
             {
                 SpawnRestoredObject(data);
-            }   
+            }
         }
         finally
         {
@@ -72,6 +85,14 @@ public class TopMenuEvents : MonoBehaviour
 
     private void SaveScene()
     {
+        if(!string.IsNullOrEmpty(savePath))
+        {
+            if(File.Exists(savePath))
+                saveLoadProvider.Save(savePath, hierarchyPanelEvents.Items
+                  .Select(p => p.Reference)
+                  .ToList());
+            return;
+        }
         var extentionsList = new[]
         {
             new ExtensionFilter("Файл RusRobot", "rusbot")
@@ -80,6 +101,7 @@ public class TopMenuEvents : MonoBehaviour
         {
             if (string.IsNullOrEmpty(path))
                 return;
+            savePath = path;
             saveLoadProvider.Save(path, hierarchyPanelEvents.Items
                 .Select(p => p.Reference)
                 .ToList());
@@ -109,13 +131,17 @@ public class TopMenuEvents : MonoBehaviour
 
         var m = instance.AddComponent<SceneObjectMarker>();
         m.type = data.ObjectType;
-        m.sourcePath = data.SourcePath; 
+        m.sourcePath = data.SourcePath;
     }
 
     private void ClearScene()
     {
-        foreach (var obj in hierarchyPanelEvents.Items)
-            DestroyImmediate(obj.Reference);
+        var itemsToDelete = new List<GameObject>(hierarchyPanelEvents.Items.Select(item => item.Reference));
+
+        foreach (var gameObject in itemsToDelete)
+        {
+            _gameObjectManager.DeleteObject(gameObject);
+        }
     }
 
 }

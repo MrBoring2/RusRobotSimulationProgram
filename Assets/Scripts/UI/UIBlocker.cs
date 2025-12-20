@@ -18,13 +18,11 @@ public class UIBlocker : MonoBehaviour
         // ќпредел€ем список панелей, по которым нужно отслеживать курсор
         uiElements = new List<VisualElement>
         {
-            root.Q("gyzmo-manipulator-mode-container"),
             root.Q("menu-bar-container"),
+            root.Q("main-menu-container"),
             root.Q("hierarchy-container"),
             root.Q("properties-container"),
-            root.Q("axis-mode-panel-container"),
             root.Q("perspective-panel-container"),
-            
         };
        // Debug.Log(root);
         // –егистрируем событи€ дл€ каждой панели
@@ -67,7 +65,6 @@ public class UIBlocker : MonoBehaviour
 
     private void OnMouseEnter(MouseEnterEvent evt)
     {
-       // Debug.Log(evt.target);
         isPointerOverUI = true;  //  огда курсор заходит на панель 
     }
 

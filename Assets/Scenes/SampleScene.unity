@@ -564,6 +564,7 @@ GameObject:
   m_Component:
   - component: {fileID: 468208928}
   - component: {fileID: 468208929}
+  - component: {fileID: 468208930}
   m_Layer: 0
   m_Name: MainCameraParent
   m_TagString: Untagged
@@ -605,6 +606,22 @@ MonoBehaviour:
   mainCamera: {fileID: 330585545}
   orthographicSize: 3
   uIBlocker: {fileID: 1239946562}
+--- !u!114 &468208930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 468208927}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 288ec8f6da094e44ca9ed25caed3d4ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraPanController
+  picker: {fileID: 813370852}
+  uiBlocker: {fileID: 1239946562}
+  panSpeed: 0.002
+  cam: {fileID: 330585545}
 --- !u!64 &544830773
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1145,6 +1162,8 @@ GameObject:
   - component: {fileID: 1239946564}
   - component: {fileID: 1239946565}
   - component: {fileID: 1239946566}
+  - component: {fileID: 1239946567}
+  - component: {fileID: 1239946568}
   m_Layer: 0
   m_Name: MainUI
   m_TagString: Untagged
@@ -1232,6 +1251,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ManipulatorController
   manipulator: {fileID: 1068335000}
+  tooltipEvents: {fileID: 1239946568}
 --- !u!114 &1239946560
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1245,6 +1265,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AxisModeEvents
   manipulator: {fileID: 1068335000}
+  tooltipEvents: {fileID: 1239946568}
 --- !u!114 &1239946561
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1299,6 +1320,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43ee9fe7b2217584e9906c667854b411, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TopMenuEvents
+  tooltipEvents: {fileID: 1239946568}
   hierarchyPanelEvents: {fileID: 1239946561}
   _gameObjectManager: {fileID: 152640450}
 --- !u!114 &1239946565
@@ -1328,6 +1350,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3f4c562fefa5794a8157167eb22f3fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.UndoRedoPanelEvents
+  tooltipEvents: {fileID: 1239946568}
+--- !u!114 &1239946567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239946554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9d2e7f1143b14e46a434eb611cc4e19, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.TopMenuPanelEvents
+--- !u!114 &1239946568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239946554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54d3d7f4c329efc4197b27f0a276ba5e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.TooltipEvents
 --- !u!1 &1289876334
 GameObject:
   m_ObjectHideFlags: 0
@@ -1374,8 +1421,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GridSettings
   cellSize: 1
   drawDistance: 200
-  thinLineColor: {r: 0.44313726, g: 0.44313726, b: 0.44313726, a: 0.8}
-  thickLineColor: {r: 0.50980395, g: 0.50980395, b: 0.50980395, a: 1}
+  thinMaterial: {fileID: 2100000, guid: 7c128b516b21c9340b6ca5b8560cc928, type: 2}
+  thickMaterial: {fileID: 2100000, guid: bc7dc57d1d6c15d44bf1124b175759f0, type: 2}
 --- !u!64 &1356827734
 MeshCollider:
   m_ObjectHideFlags: 0

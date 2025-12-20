@@ -1,5 +1,6 @@
 using Assets.Scripts.Models;
 using Assets.Scripts.SystemManager;
+using Assets.Scripts.UI;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -178,7 +179,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         {
             if (evt.target is VisualElement element)
             {
-                var a = objectManager.Get
+                //var a = objectManager.Get
                 var gameObject = objectManager.GetObjectByUniqueID((int)element.userData);
                 Debug.Log(gameObject.GetInstanceID());
                 if (gameObject != null)

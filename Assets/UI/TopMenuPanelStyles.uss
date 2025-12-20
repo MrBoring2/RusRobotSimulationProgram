@@ -1,0 +1,49 @@
+.top-menu {
+    flex-direction: row;
+    height: 24px;
+    background-color: #34495e;
+    flex-direction: row; 
+    align-items: center; 
+    justify-content: flex-start; 
+    padding: 0;
+}
+
+.menu-button {
+    width: 80px;
+    height: 100%;
+    background-color: transparent;
+    border-width: 0;
+     margin: 0;    /* обнуляем отступы */
+    padding: 0;   /* если нужно убрать внутренние паддинги */
+    color: white;
+}
+
+.menu-button:hover {
+    background-color: #10375e;
+}
+
+.dropdown {
+    position: absolute;
+    top: 24px;
+    width: 160px;
+    background-color: #34495e;
+    border-width: 1px;
+    border-color: #444;
+    flex-direction: column;
+}
+
+.dropdown Button,
+.dropdown Toggle {
+    height: 22px;
+    background-color: #9fbaff;
+    justify-content: flex-start;
+}
+
+.dropdown Button:hover,
+.dropdown Toggle:hover {
+    background-color: #10375e;
+}
+
+.hidden {
+    display: none;
+}

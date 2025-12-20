@@ -12,12 +12,15 @@ namespace Assets.Scripts.UI
 {
     public class UndoRedoPanelEvents : MonoBehaviour
     {
+        public TooltipEvents tooltipEvents;
         private VisualElement root;
         private void Start()
         {
             root = GetComponent<UIDocument>().rootVisualElement;
             var backBtn = root.Q<Button>("back-button");
             var forwardBtn = root.Q<Button>("forward-button");
+            tooltipEvents.RegisterTooltip(backBtn, "Назад");
+            tooltipEvents.RegisterTooltip(forwardBtn, "Вперёд");
             backBtn.RegisterCallback<ClickEvent>(evt =>
             {
                 Undo();
@@ -35,7 +38,6 @@ namespace Assets.Scripts.UI
 
         private void Undo()
         {
-            Debug.Log("DDSADASDASD@!#!@#@!");
             UndoRedoSystem.Instance.Undo();
         }
     }

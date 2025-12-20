@@ -12,7 +12,7 @@ public class GyzmoManupulator : MonoBehaviour
     public Transform Target { get; private set; }
     public IManipulatorMode CurrentManipulatorMode { get; private set; }
     public AxisMode CurrentAxisMode { get; private set; }
-
+    public bool CameraModeActive { get; private set; } = false;
     public GameObject moveHandlesGroup;
     public GameObject rotateHandlesGroup;
 
@@ -42,11 +42,9 @@ public class GyzmoManupulator : MonoBehaviour
     }
     private void Awake()
     {
-        // создаем пустышку
         gizmoRoot = new GameObject("GizmoRoot").transform;
         gizmoRoot.SetParent(transform, false);
 
-        // переносим группы в пустышку
         moveHandlesGroup.transform.SetParent(gizmoRoot, true);
         rotateHandlesGroup.transform.SetParent(gizmoRoot, true);
     }
@@ -82,9 +80,17 @@ public class GyzmoManupulator : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+
+    public void SetManipulatorModeCamera()
+    {
+        SetManipulatorMode(null);
+        CameraModeActive = true;
+    }
     public void SetManipulatorMode(IManipulatorMode mode)
     {
+        CameraModeActive = false;
         CurrentManipulatorMode = mode;
+        if (mode == null) return;
 
         moveHandlesGroup.SetActive(mode is MoveMode);
         rotateHandlesGroup.SetActive(mode is RotateMode);
