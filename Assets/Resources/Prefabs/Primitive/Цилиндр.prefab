@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2045904620471416202}
   - component: {fileID: 1801212703412194222}
   - component: {fileID: 3425477854630688427}
-  - component: {fileID: 6246401819662831452}
+  - component: {fileID: 851179017079020663}
   m_Layer: 0
   m_Name: "\u0426\u0438\u043B\u0438\u043D\u0434\u0440"
   m_TagString: SceneObject
@@ -155,9 +155,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6128efd719aa587459e64f4f9b065df7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
-  type: 1
+  type: 3
   sourcePath: "Prefabs/Primitive/\u0426\u0438\u043B\u0438\u043D\u0434\u0440"
---- !u!114 &6246401819662831452
+--- !u!114 &851179017079020663
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -166,6 +166,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1537845784463467995}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536daeb559ace5145b5fe84b1cb651a7, type: 3}
+  m_Script: {fileID: 11500000, guid: 410c4df3565f1b3479f9364aa74c829b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PrimitivePropertyProvider

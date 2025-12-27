@@ -9,11 +9,10 @@ Shader "Custom/GyzmoManipulatorShader"
     SubShader
     {
         Tags { 
-            "Queue" = "Geometry+1000"  // Рендерится последним
+            "Queue" = "Geometry+1000" 
             "RenderType" = "Opaque"
         }
         
-        // Отключаем Z-тест и Z-запись
         ZTest Always
         ZWrite Off
         

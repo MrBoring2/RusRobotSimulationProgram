@@ -1,3 +1,9 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Foldout text="Сцена" name="main-item" focusable="false" style="min-width: 100px;" />
+    <Style src="project://database/Assets/UI/CustomElements/CustomFoldoutStyles.uss?fileID=7433441132597879392&amp;guid=6b3f4a5ac9f7cd04bbd0a4966d294370&amp;type=3#CustomFoldoutStyles" />
+    <Style src="project://database/Assets/UI/HierarchyPanelStyles.uss?fileID=7433441132597879392&amp;guid=e9d8888a8dc4f4c4b90ccfaaae001036&amp;type=3#HierarchyPanelStyles" />
+    <ui:VisualElement name="hierarchy-container" class="hierarchy-container">
+        <ui:ScrollView name="hierarchy-scrollview" vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Auto" mode="VerticalAndHorizontal" class="hierarchy-scrollview" style="flex-grow: 1; width: 100%;">
+            <CustomFoldout text="Объекты" name="main-item" class="hierarchy-foldout" />
+        </ui:ScrollView>
+    </ui:VisualElement>
 </ui:UXML>

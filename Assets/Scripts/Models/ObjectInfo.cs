@@ -6,9 +6,12 @@ using UnityEngine;
 public enum ObjectType
 {
     Unknown,
+    LinearMoveCommand,
+    StateEndEffectorCommand,
     Primitive,
     Static,
     Dynamic,
+    Program,
     Robot
 }
 [System.Serializable]

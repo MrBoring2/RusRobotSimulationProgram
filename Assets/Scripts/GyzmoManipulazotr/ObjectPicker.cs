@@ -1,4 +1,8 @@
-﻿using Assets.Scripts.Models;
+﻿using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
+using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using Assets.Scripts.Models;
 using Assets.Scripts.SystemManager;
 using System;
 using UnityEngine;
@@ -15,9 +19,13 @@ public class ObjectPicker : MonoBehaviour
     private IPropertyProvider currentProvider;
     private Vector3 startPos;
     private Vector3 startRot;
+    private EventBus _eventBus;
+    private SceneObjectsManager _sceneObjectsManager;
     public bool IsDraggingManipulator => currentHandle != null;
     private void Start()
     {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
+        _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
         if (manipulator != null)
         {
             manipulator.gameObject.SetActive(false);
@@ -67,10 +75,10 @@ public class ObjectPicker : MonoBehaviour
 
     private void Update()
     {
-        if (manipulator.CameraModeActive) 
+        if (manipulator.CameraModeActive)
         {
             if (currentHandle != null) UnpickObject();
-            return; 
+            return;
         }
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -90,21 +98,45 @@ public class ObjectPicker : MonoBehaviour
                 }
             }
             // Клик по объекту сцены
-            else if (Physics.Raycast(ray, out RaycastHit hitObject))
-            {
-
-                var provider = hitObject.transform.gameObject.TryGetComponent<IPropertyProvider>(out IPropertyProvider d);
-                if (d != null)
-                {
-                    currentProvider = d;
-                    propertiesPanel.ShowPanel();
-                    propertiesPanel.ShowProperties(d);
-                }
-                PickObject(hitObject.transform.gameObject);
-            }
             else
             {
-                manipulator.gameObject.SetActive(false);
+                // ИСПРАВЛЕНИЕ: Используем RaycastAll вместо Raycast
+                RaycastHit[] hits = Physics.RaycastAll(ray, Mathf.Infinity);
+
+                if (hits.Length > 0)
+                {
+                    // Сортируем по расстоянию (от ближнего к дальнему)
+                    Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+                    // Ищем первый объект с IPropertyProvider
+                    foreach (RaycastHit hit in hits)
+                    {
+                        // Проверяем, есть ли IPropertyProvider на этом объекте
+                        IPropertyProvider provider = hit.collider.GetComponentInParent<IPropertyProvider>();
+                        if (provider != null)
+                        {
+                            // Получаем Transform с провайдером
+                            Transform providerTransform = (provider as MonoBehaviour)?.transform;
+
+                            if (providerTransform != null)
+                            {
+                                currentProvider = provider;
+                                //var a = _sceneObjectsManager.GetById(currentProvider.Id);
+                                _eventBus.Invoke(new SelectObjectInScene(currentProvider.Id));
+
+                                propertiesPanel.ShowPanel();
+                                propertiesPanel.ShowProperties(provider);
+                                PickObject(providerTransform.gameObject);
+                                break; // Выходим после нахождения первого подходящего объекта
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    manipulator.gameObject.SetActive(false);
+
+                }
             }
         }
 
@@ -121,6 +153,15 @@ public class ObjectPicker : MonoBehaviour
 
     public void PickObject(GameObject gameObject)
     {
+        IPropertyProvider provider = null;
+        GameObject target = gameObject;
+
+        // Ищем провайдер на самом объекте
+        if (!target.TryGetComponent<IPropertyProvider>(out provider))
+        {
+            Debug.LogWarning($"На объекте {target.name} нет IPropertyProvider");
+            return;
+        }
         manipulator.Attach(gameObject.transform);
         currentProvider = gameObject.GetComponent<IPropertyProvider>();
         manipulator.gameObject.SetActive(true);

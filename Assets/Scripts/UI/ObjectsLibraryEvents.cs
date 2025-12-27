@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
+using Assets.Scripts.CustomServiceManager;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,7 +11,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
     public VisualTreeAsset windowUXML;  // Основное окно
     public VisualTreeAsset itemUXML;    // Элемент списка
 
-    private List<string> categories = new List<string> { "Primitive", "Static" };
+    private List<string> categories = new List<string> { "Primitive", "Static", "Robot" };
 
     public event Action<GameObject> OnObjectSelected;
 
@@ -19,9 +22,11 @@ public class ObjectsLibraryEvents : MonoBehaviour
     public UIBlocker UIBlocker;
     private bool isDragging = false;
     private Vector2 dragOffset;
+    private EventBus _eventBus;
 
     void Start()
     {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
         foreach (var category in categories)
         {
             GameObject[] prefabs = Resources.LoadAll<GameObject>($"Prefabs/{category}");
@@ -116,7 +121,8 @@ public class ObjectsLibraryEvents : MonoBehaviour
 
                 prefabItem.RegisterCallback<ClickEvent>(evt =>
                 {
-                    OnObjectSelected?.Invoke(prefab);
+                    _eventBus.Invoke(new SelectObjectinLibrary(prefab));
+                    //OnObjectSelected?.Invoke(prefab);
                     windowRoot.style.display = DisplayStyle.None;
                 });
 
@@ -137,7 +143,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
         var rt = new RenderTexture(size, size, 24, RenderTextureFormat.ARGB32)
         {
             antiAliasing = 8,
-            hideFlags = HideFlags.DontSave 
+            hideFlags = HideFlags.DontSave
         };
 
         cam.targetTexture = rt;
@@ -174,7 +180,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
         // Уничтожаем объекты
         DestroyImmediate(obj);
         DestroyImmediate(camGO);
-        DestroyImmediate(rt); 
+        DestroyImmediate(rt);
 
         return tex;
     }

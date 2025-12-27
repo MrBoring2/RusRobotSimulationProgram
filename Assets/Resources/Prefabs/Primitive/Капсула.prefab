@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 3871220598498927006}
   - component: {fileID: 6649973723696466348}
   - component: {fileID: 2409040209969404972}
-  - component: {fileID: 4295200300223177308}
   - component: {fileID: 5855954387017141189}
+  - component: {fileID: 4380994549661805668}
   m_Layer: 0
   m_Name: "\u041A\u0430\u043F\u0441\u0443\u043B\u0430"
   m_TagString: SceneObject
@@ -143,18 +143,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &4295200300223177308
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8178635925542800096}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536daeb559ace5145b5fe84b1cb651a7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PrimitivePropertyProvider
 --- !u!114 &5855954387017141189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -167,5 +155,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6128efd719aa587459e64f4f9b065df7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
-  type: 1
+  type: 3
   sourcePath: "Prefabs/Primitive/\u041A\u0430\u043F\u0441\u0443\u043B\u0430"
+--- !u!114 &4380994549661805668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8178635925542800096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 410c4df3565f1b3479f9364aa74c829b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PrimitivePropertyProvider

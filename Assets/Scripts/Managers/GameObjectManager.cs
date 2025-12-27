@@ -1,18 +1,20 @@
+using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomServiceManager;
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml;
 using UnityEngine;
 
-public class GameObjectManager : MonoBehaviour
+public class GameObjectManager2 : MonoBehaviour, IService
 {
+    private EventBus _eventBus;
     public event Action<GameObject> OnObjectAdded;
     public event Action<GameObject> OnObjectRemoved;
-    public GameObject CreateObject(GameObject prefab, Vector3 position)
+
+    public void Init()
     {
-        var obj = Instantiate(prefab, position, Quaternion.identity);
-        obj.name = prefab.name;
-        OnObjectAdded?.Invoke(obj);
-        return obj;
+        _eventBus = ServiceManager.Current.Get<EventBus>(); 
     }
 
     public void DeleteObject(GameObject obj)
@@ -24,7 +26,7 @@ public class GameObjectManager : MonoBehaviour
 
     }
     public GameObject[] GetGameObjectsList()
-    {
+    {                                         
         var objects = GameObject.FindGameObjectsWithTag("SceneObject");
         return objects;
     }

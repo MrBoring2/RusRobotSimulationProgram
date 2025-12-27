@@ -1,4 +1,8 @@
-﻿using Assets.Scripts.Models;
+﻿using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
+using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using Assets.Scripts.Models;
 using Assets.Scripts.SystemManager;
 using Assets.Scripts.UI;
 using SFB;
@@ -7,7 +11,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -17,10 +20,12 @@ public class FileMenuPanelEvents : MonoBehaviour
     public TooltipEvents tooltipEvents;
     public HierarchyPanelEvents hierarchyPanelEvents;
     public ISaveLoadProvider saveLoadProvider;
-    public GameObjectManager _gameObjectManager;
+    public SceneObjectsManager _sceneObjectManager;
     private string savePath = "";
+    private EventBus _eventBus;
     private void Start()
     {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
         saveLoadProvider = new BinarySaveLoadProvider();
         root = GetComponent<UIDocument>().rootVisualElement;
         var newBtn = root.Q<Button>("new-file-button");
@@ -70,25 +75,26 @@ public class FileMenuPanelEvents : MonoBehaviour
                 return;
             }
             savePath = paths[0];
-            hierarchyPanelEvents.LoadHierarchy();
+
+            // hierarchyPanelEvents.LoadHierarchy();
             foreach (var data in loaded.objectsData)
             {
                 SpawnRestoredObject(data);
             }
+            _eventBus.Invoke(new LoadObjectsSignal(_sceneObjectManager.GetGameObjectsList()));
         }
         finally
         {
-            // ✅ Undo ВСЕГДА вернётся
             UndoRedoSystem.Instance.EndExternalOperation();
         }
     }
 
     private void SaveScene()
     {
-        if(!string.IsNullOrEmpty(savePath))
+        if (!string.IsNullOrEmpty(savePath))
         {
-            if(File.Exists(savePath))
-                saveLoadProvider.Save(savePath, hierarchyPanelEvents.Items
+            if (File.Exists(savePath))
+                saveLoadProvider.Save(savePath, _sceneObjectManager.GetGameObjectsList() //hierarchyPanelEvents.Items
                   .Select(p => p.Reference)
                   .ToList());
             return;
@@ -102,12 +108,12 @@ public class FileMenuPanelEvents : MonoBehaviour
             if (string.IsNullOrEmpty(path))
                 return;
             savePath = path;
-            saveLoadProvider.Save(path, hierarchyPanelEvents.Items
+            saveLoadProvider.Save(path, _sceneObjectManager.GetGameObjectsList()//hierarchyPanelEvents.Items
                 .Select(p => p.Reference)
                 .ToList());
         });
     }
-    private IPropertyProvider AddProvider(GameObject obj, string type)
+    private IPropertyProvider GetProvider(GameObject obj, string type)
     {
         return type switch
         {
@@ -118,29 +124,28 @@ public class FileMenuPanelEvents : MonoBehaviour
     }
     private void SpawnRestoredObject(ObjectInfo data)
     {
-        GameObject[] prefabs = Resources.LoadAll<GameObject>($"Prefabs/Primitive");
         var prefab = Resources.Load<GameObject>(data.SourcePath);
-        var instance = _gameObjectManager.CreateObject(prefab, Vector3.zero);
-        var provider = AddProvider(instance, data.ProviderData.ProviderType);
+        var instance = _sceneObjectManager.Create(prefab, Vector3.zero, prefab.GetComponent<SceneObjectMarker>().type);
+        var provider = GetProvider(instance.Reference, data.ProviderData.ProviderType);
         provider?.RestoreCustomState(data.ProviderData);
-        instance.name = data.Name;
-        instance.tag = "SceneObject";
-        instance.transform.position = data.Position.ToVector3();
-        instance.transform.rotation = data.Rotation.ToQuaternion();
-        instance.transform.localScale = data.Scale.ToVector3();
+        instance.Reference.name = data.Name;
+        instance.Reference.tag = "SceneObject";
+        instance.Reference.transform.position = data.Position.ToVector3();
+        instance.Reference.transform.rotation = data.Rotation.ToQuaternion();
+        instance.Reference.transform.localScale = data.Scale.ToVector3();
 
-        var m = instance.AddComponent<SceneObjectMarker>();
+        var m = instance.Reference.AddComponent<SceneObjectMarker>();
         m.type = data.ObjectType;
         m.sourcePath = data.SourcePath;
     }
 
     private void ClearScene()
     {
-        var itemsToDelete = new List<GameObject>(hierarchyPanelEvents.Items.Select(item => item.Reference));
+        //var itemsToDelete = new List<GameObject>(hierarchyPanelEvents.Items.Select(item => item.Reference));
 
-        foreach (var gameObject in itemsToDelete)
+        foreach (var gameObject in _sceneObjectManager.GetGameObjectsList())
         {
-            _gameObjectManager.DeleteObject(gameObject);
+            _sceneObjectManager.Remove(gameObject.Id);
         }
     }
 

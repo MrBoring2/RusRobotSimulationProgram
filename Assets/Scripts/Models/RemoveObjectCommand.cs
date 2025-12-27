@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,13 +11,13 @@ namespace Assets.Scripts.Models
 {
     public class RemoveObjectCommand : ICommand, IDestructiveCommand
     {
-        private GameObjectManager _gameObjectManager;
-        private GameObject instance;
-        public GameObject Instance => instance;
+        private SceneObjectsManager _sceneObjectManager;
+        private SceneObject instance;
+        public SceneObject Instance => instance;
 
-        public RemoveObjectCommand(GameObjectManager gameObjectManager, GameObject instance)
+        public RemoveObjectCommand(SceneObject instance)
         {
-            _gameObjectManager = gameObjectManager;
+            _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
             this.instance = instance;
         }
 
@@ -24,19 +26,19 @@ namespace Assets.Scripts.Models
             if (instance == null)
                 throw new Exception("Обхекта не существует");
             else
-                instance.SetActive(false);
+                instance.Reference.SetActive(false);
         }
 
         public void Undo()
         {
             if (instance != null)
-                instance.SetActive(true);
+                instance.Reference.SetActive(true);
         }
 
         public void FinalizeDestroy()
         {
             if (instance != null)
-                _gameObjectManager.DeleteObject(instance);
+                _sceneObjectManager.Remove(instance.Id);
         }
     }
 }

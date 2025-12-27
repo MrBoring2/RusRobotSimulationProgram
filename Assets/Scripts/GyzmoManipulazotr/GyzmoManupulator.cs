@@ -43,7 +43,7 @@ public class GyzmoManupulator : MonoBehaviour
     private void Awake()
     {
         gizmoRoot = new GameObject("GizmoRoot").transform;
-        gizmoRoot.SetParent(transform, false);
+        gizmoRoot.SetParent(transform, true);
 
         moveHandlesGroup.transform.SetParent(gizmoRoot, true);
         rotateHandlesGroup.transform.SetParent(gizmoRoot, true);

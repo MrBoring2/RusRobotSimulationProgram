@@ -31,7 +31,9 @@ public class BinarySaveLoadProvider : ISaveLoadProvider
         {
             formatter.Serialize(fs, sceneData);
         }
+        
     }
+    
     public SceneData Load(string path)
     {
         if (!File.Exists(path)) return null;

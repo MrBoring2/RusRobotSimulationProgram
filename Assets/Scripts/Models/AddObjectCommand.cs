@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,37 +11,41 @@ namespace Assets.Scripts.Models
 {
     public class AddObjectCommand : ICommand, IDestructiveCommand
     {
-        private GameObjectManager _gameObjectManager;
+        private SceneObjectsManager _sceneObjectManager;
         private GameObject prefab;
-        private GameObject instance;
+        private SceneObject instance;
         private Vector3 position;
-        public GameObject Instance => instance;
+        private string parentId;
+        private ObjectType type;
+        public SceneObject Instance => instance;
 
-        public AddObjectCommand(GameObjectManager gameObjectManager, GameObject prefab, Vector3 position)
+        public AddObjectCommand(GameObject prefab, ObjectType type, Vector3 position, string parentId = null)
         {
-            _gameObjectManager = gameObjectManager;
+            _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
+            this.type = type;   
             this.prefab = prefab;
             this.position = position;
+            this.parentId = parentId;
         }
 
         public void Execute()
         {
             if (instance == null)
-                instance = _gameObjectManager.CreateObject(prefab, position);
+                instance = _sceneObjectManager.Create(prefab,position, type, parentId);
             else
-                instance.SetActive(true);
+                instance.Reference.SetActive(true);
         }
 
         public void Undo()
         {
             if (instance != null)
-                instance.SetActive(false);
+                instance.Reference.SetActive(false);
         }
 
         public void FinalizeDestroy()
         {
             if (instance != null)
-                _gameObjectManager.DeleteObject(instance);
+                _sceneObjectManager.Remove(instance.Id);
         }
     }
 }

@@ -16,6 +16,10 @@ public class PropertiesPanelEvents : MonoBehaviour
     private FloatField posX, posY, posZ;
     private FloatField rotX, rotY, rotZ;
     private FloatField scaleX, scaleY, scaleZ;
+    private VisualElement namePropertyContainer;
+    private VisualElement positionPropertyContainer;
+    private VisualElement rotationPropertyContainer;
+    private VisualElement scalePropertyContainer;
     private TextField name;
 
     private List<Action> cleanupActions = new List<Action>();
@@ -44,6 +48,11 @@ public class PropertiesPanelEvents : MonoBehaviour
 
         name = root.Q<TextField>("name");
 
+        namePropertyContainer = root.Q<VisualElement>("name-property-container");
+        positionPropertyContainer = root.Q<VisualElement>("position-property-container");
+        rotationPropertyContainer = root.Q<VisualElement>("rotation-property-container");
+        scalePropertyContainer = root.Q<VisualElement>("scale-property-container");
+
         RegisterButtons();
         RegisterInputs();
         UndoRedoSystem.Instance.OnCommandExecuted += OnUndoRedoPerformed;
@@ -55,13 +64,45 @@ public class PropertiesPanelEvents : MonoBehaviour
         ClearBindings();
 
         current = propertyProvider;
+
+        if (!current.DisplayName)
+        {
+            HideElement(namePropertyContainer);
+        }
+        else ShowElement(namePropertyContainer);
+        if (!current.DisplayPosition)
+        {
+            HideElement(positionPropertyContainer);
+        }
+        else ShowElement(positionPropertyContainer);
+        if (!current.DisplayRotation)
+        {
+            HideElement(rotationPropertyContainer);
+        }
+        else ShowElement(rotationPropertyContainer);
+        if (!current.DisplayScale)
+        {
+            HideElement(scalePropertyContainer);
+        }
+        else ShowElement(scalePropertyContainer);
+
+
         customContainer.Clear();
 
         if (current != null)
         {
             UpdateUI();
-            RegisterBaseFieldsBindings(); // Регистрируем ТОЛЬКО когда есть current
+            RegisterBaseFieldsBindings();
         }
+    }
+
+    private void HideElement(VisualElement element)
+    {
+        element.style.display = DisplayStyle.None;
+    }
+    private void ShowElement(VisualElement element)
+    {
+        element.style.display = DisplayStyle.Flex;
     }
 
     private void OnUndoRedoPerformed(ICommand command)
@@ -267,6 +308,17 @@ public class PropertiesPanelEvents : MonoBehaviour
             {
                 var field = new FloatField(prop.Name);
                 field.value = (float)prop.Getter();
+                customContainer.Add(field);
+
+                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, () =>
+                {
+                    prop.Setter(field.value);
+                }));
+            }
+            else if(prop.PropertyType == typeof(bool))
+            {
+                var field = new Toggle(prop.Name);
+                field.value = (bool)prop.Getter();
                 customContainer.Add(field);
 
                 cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, () =>
