@@ -8,19 +8,20 @@ using UnityEngine;
 public class BinarySaveLoadProvider : ISaveLoadProvider
 {
     
-    public void Save(string path, System.Collections.Generic.List<GameObject> objects)
+    public void Save(string path, System.Collections.Generic.List<SceneObject> objects)
     {
         SceneData sceneData = new SceneData();
         foreach (var obj in objects)
         {
-            var marker = obj.GetComponent<SceneObjectMarker>();
-            var provider = obj.GetComponent<IPropertyProvider>();
-            ObjectInfo objectInfo = new ObjectInfo(provider.Name, 
+            var marker = obj.Reference.GetComponent<SceneObjectMarker>();
+            var provider = obj.Reference.GetComponent<IPropertyProvider>();
+            ObjectInfo objectInfo = new ObjectInfo(obj.Id, provider.Name, 
                                                     marker.sourcePath,
                                                     marker.type, 
                                                     provider.Position,
                                                     Quaternion.Euler(provider.Rotation), 
-                                                    obj.transform.localScale, 
+                                                    provider.Scale, 
+                                                    obj.ParentId,
                                                     provider?.CaptureCustomState());
             sceneData.objectsData.Add(objectInfo);
         }

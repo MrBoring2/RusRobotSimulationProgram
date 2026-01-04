@@ -4,7 +4,7 @@
     border-left-color: #2779c6;
     border-bottom-color: #2779c6;
     margin-top: 2px;
-    min-width: 220px;
+    /*min-width: 220px;*/
 }
 
 /* Заголовок */

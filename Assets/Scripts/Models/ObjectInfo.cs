@@ -16,24 +16,28 @@ public enum ObjectType
 }
 [System.Serializable]
 public class ObjectInfo
-{
+{                                                 
+    public string Id { get; set; }
     public string Name { get; set; }
-    public string SourcePath { get;set; }
+    public string SourcePath { get; set; }
     public ObjectType ObjectType { get; set; }
     public SerializableTransform Position { get; set; }
     public SerializableQuaternion Rotation { get; set; }
-    public SerializableTransform Scale { get; set; }
+    public SerializableTransform Scale { get; set; }                                                                                                  
+    public string ParentId { get; set; }
 
     public ProviderSaveData ProviderData;
 
-    public ObjectInfo(string name, string sourcePath, ObjectType objectType, Vector3 position, Quaternion rotation, Vector3 scale, ProviderSaveData data)
+    public ObjectInfo(string id, string name, string sourcePath, ObjectType objectType, Vector3 position, Quaternion rotation, Vector3 scale, string parentId, ProviderSaveData data)
     {
+        Id = id;
         Name = name;
         SourcePath = sourcePath;
         ObjectType = objectType;
         Position = new SerializableTransform(position);
         Rotation = new SerializableQuaternion(rotation);
         Scale = new SerializableTransform(scale);
+        ParentId = parentId;
         ProviderData = data;
     }
 }

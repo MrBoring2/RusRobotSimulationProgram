@@ -1,7 +1,11 @@
 using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.Lines;
+using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
+using Assets.Scripts.CustomEventBus.Signals.ObjectsLibrary;
+using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
 using Assets.Scripts.CustomEventBus.Signals.Robot;
+using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
@@ -19,25 +23,26 @@ using UnityEngine.UIElements;
 public class HierarchyPanelEvents : MonoBehaviour
 {
     private EventBus _eventBus;
-    public SceneObjectsManager _sceneObjectManager;
+    private SceneObjectsManager _sceneObjectManager;
     private LineManager _lineManager;
     private VisualElement root;
-    [SerializeField] private VisualElement hierarchyPanel;
+    [SerializeField] 
+    private VisualElement hierarchyPanel;
     private VisualElement contextMenu;
     public CustomFoldout MainHierarchyItem { get; private set; }
     public UIBlocker iBlocker;
-    public PropertiesPanelEvents propertiesPanelEvents;
-    public ObjectPicker objectPicker;
-    public ObjectsLibraryEvents objectsLibraryEvents;
+    //public PropertiesPanelEvents propertiesPanelEvents;
+    //public ObjectPicker objectPicker;
+    //public ObjectsLibraryEvents objectsLibraryEvents;
     private string selectedElementId;
     private VisualElement lastSelectedElement;
     private CustomScrollView customScrollView;
     private Dictionary<string, VisualElement> elementCache = new Dictionary<string, VisualElement>();
+    private UndoRedoManager _undoRedoManager;
 
     private void Start()
     {
-        _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
-        _lineManager = ServiceManager.Current.Get<LineManager>();
+       
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<AddSceneObjectSignal>(OnObjectAdded);
         _eventBus.Subscribe<RemoveSceneObjectSignal>(OnObjectRemoved);
@@ -45,18 +50,26 @@ public class HierarchyPanelEvents : MonoBehaviour
         _eventBus.Subscribe<LoadObjectsSignal>(OnLoadObjects);
         _eventBus.Subscribe<SelectObjectinLibrary>(OnObjectSelectedInLibrary);
         _eventBus.Subscribe<SelectObjectInScene>(OnObjectSelectedInScene);
-
+        _eventBus.Subscribe<ChangeNamePropertySignal>(OnChangeNameProperty);
+        _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
+        _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
+        _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
+        _lineManager = ServiceManager.Current.Get<LineManager>();
+        _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
         root = GetComponent<UIDocument>().rootVisualElement;
         hierarchyPanel = root.Q("hierarchy-container");
-        propertiesPanelEvents.OnTargetNameChanged += PropertiesPanelEvents_OnTargetNameChanged;
-        UndoRedoSystem.Instance.OnCommandExecuted += Instance_OnCommandExecuted;
-        UndoRedoSystem.Instance.OnCommandUndone += Instance_OnCommandUndone;
+        //propertiesPanelEvents.OnTargetNameChanged += PropertiesPanelEvents_OnTargetNameChanged;
+        //UndoRedoManager.Instance.OnCommandExecuted += Instance_OnCommandExecuted;
+        //UndoRedoManager.Instance.OnCommandUndone += Instance_OnCommandUndone;
         RegisterElements();
         if (_sceneObjectManager.GetGameObjectsList().Count > 0)
         {
             UpdateHierarchy();
         }
     }
+
+
+
     #region Обработчики событий
     private void OnObjectSelectedInScene(SelectObjectInScene scene) => SelectHierarchyItem(scene.Id);
 
@@ -79,6 +92,21 @@ public class HierarchyPanelEvents : MonoBehaviour
             UpdateHierarchy();
         }
     }
+    private void OnCommandUndoned(UndoneCommandSignal signal)
+    {
+        if (signal.Command is IDestructiveCommand)
+        {
+            UpdateHierarchy();
+        }
+    }
+
+    private void OnCommandExecuted(ExecuteCommandSignal signal)
+    {
+        if (signal.Command is IDestructiveCommand)
+        {
+            UpdateHierarchy();
+        }
+    }
 
     private void OnObjectAdded(AddSceneObjectSignal evt) => AddHierarchyItem(evt.GameObject);
     private void OnObjectRemoved(RemoveSceneObjectSignal evt) => RemoveHierarchyItem(evt.GameObject.Id);
@@ -87,10 +115,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     private void OnExecuteCommand(ChangeObjectNameSignal evt) { }
     private void OnObjectsLoaded(LoadObjectsSignal evt) => UpdateHierarchy();
     private void OnLoadObjects(LoadObjectsSignal signal) => UpdateHierarchy();
-    private void PropertiesPanelEvents_OnTargetNameChanged()
-    {
-        UpdateHierarchy();
-    }
+    private void OnChangeNameProperty(ChangeNamePropertySignal signal) => UpdateHierarchy();
     #endregion
     #region Методы для работы с иерархией
     /// <summary>
@@ -207,8 +232,10 @@ public class HierarchyPanelEvents : MonoBehaviour
                 ClearAllSelections();
                 selectedElementId = null;
                 lastSelectedElement = null;
-                objectPicker.UnpickObject();
-                propertiesPanelEvents.HidePanel();
+                _eventBus.Invoke(new UnpickObjectSignal());
+                //objectPicker.UnpickObject();
+                _eventBus.Invoke(new HidePropertiesSignal());
+                //propertiesPanelEvents.HidePanel();
             }
 
             RemoveChildrenFromCache(itemId);
@@ -359,7 +386,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 {
                     element = GetFoldoutFromElement(element);
                 }
-                var gameObject = _sceneObjectManager.GetGameObjectsDictionary()[element.userData.ToString()];
+                var gameObject = _sceneObjectManager.GetById(element.userData.ToString());
                 if (gameObject != null)
                 {
                     var objectId = element.userData?.ToString();
@@ -374,11 +401,13 @@ public class HierarchyPanelEvents : MonoBehaviour
                             if (!string.IsNullOrEmpty(element.userData.ToString()) &&
                                     _lineManager.IsCommandInCurrentProgram(objectId))
                             {
-                                objectPicker.PickObject(gameObject.Reference);
+                                _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
+                                //objectPicker.PickObject(gameObject.Reference);
                             }
                             else
                             {
-                                objectPicker.PickObject(gameObject.Reference);
+                                //objectPicker.PickObject(gameObject.Reference);
+                                _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
                                 _eventBus.Invoke(new StopLineDrawer());
                             }
                             break;
@@ -386,7 +415,8 @@ public class HierarchyPanelEvents : MonoBehaviour
                             break;
                         default:
                             // Для других типов (Robot и т.д.): только выделение
-                            objectPicker.PickObject(gameObject.Reference);
+                            //objectPicker.PickObject(gameObject.Reference);
+                            _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
                             _eventBus.Invoke(new StopLineDrawer());
                             break;
                     }
@@ -519,7 +549,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             {
                 if (foldout.name == "hierarchy-item-robot")
                 {
-                    var robot = _sceneObjectManager.GetGameObjectsDictionary()[foldout.userData.ToString()];
+                    var robot = _sceneObjectManager.GetById(foldout.userData.ToString());
                     contextMenu.Add(CreateMenuButton("Добавить линейное движение", () => CreatePoint(robot)));
                     contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(robot)));
                     contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(robot)));
@@ -636,7 +666,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             iBlocker.RemoveContextMenu(contextMenu);
             root.Remove(contextMenu);
             contextMenu = null;
-            iBlocker.ResolveUI();
+            //iBlocker.ResolveUI();
         }
     }
     /// <summary>
@@ -644,7 +674,8 @@ public class HierarchyPanelEvents : MonoBehaviour
     /// </summary>
     private void CreateObject()
     {
-        objectsLibraryEvents.Show();
+        _eventBus.Invoke(new ShowObjectsLibrarySignal());
+        //objectsLibraryEvents.Show();
     }
     /// <summary>
     /// Добавить объект
@@ -656,10 +687,11 @@ public class HierarchyPanelEvents : MonoBehaviour
         if (gameObject == null)
             return;
 
-        objectPicker.UnpickObject();
+        //objectPicker.UnpickObject();
+        _eventBus.Invoke(new UnpickObjectSignal());
         var type = prefab.GetComponent<SceneObjectMarker>().type;
         var command = new AddObjectCommand(prefab, type, Vector3.zero, parentId);
-        UndoRedoSystem.Instance.Execute(command);
+        _undoRedoManager.Execute(command);
     }
 
     /// <summary>
@@ -699,14 +731,16 @@ public class HierarchyPanelEvents : MonoBehaviour
             }
         }
         string id = (string)clickedElement.userData;
-        var obj = _sceneObjectManager.GetGameObjectsDictionary()[clickedElement.userData.ToString()]; //objectManager.GetObjectByUniqueID(id);
+        var obj = _sceneObjectManager.GetById(clickedElement.userData.ToString()); //objectManager.GetObjectByUniqueID(id);
 
         if (obj == null)
             return;
-        objectPicker.UnpickObject();
-        propertiesPanelEvents.HidePanel();
+        //objectPicker.UnpickObject();
+        _eventBus.Invoke(new UnpickObjectSignal());
+        _eventBus.Invoke(new HidePropertiesSignal());
+        //propertiesPanelEvents.HidePanel();
         var command = new RemoveObjectCommand(obj);
-        UndoRedoSystem.Instance.Execute(command);
+        _undoRedoManager.Execute(command);
     }
     /// <summary>
     ///  Показать панель свойств
@@ -714,14 +748,15 @@ public class HierarchyPanelEvents : MonoBehaviour
     /// <param name="clickedElement">Ссылка на кликнутый элемент</param>
     private void ShowProperties(VisualElement clickedElement)
     {
-        var obj = _sceneObjectManager.GetGameObjectsDictionary()[clickedElement.userData.ToString()]; //objectManager.GetObjectByUniqueID((int)clickedElement.userData);
+        var obj = _sceneObjectManager.GetById(clickedElement.userData.ToString()); //objectManager.GetObjectByUniqueID((int)clickedElement.userData);
         if (obj != null)
         {
             var provider = obj.Reference.TryGetComponent<IPropertyProvider>(out IPropertyProvider d);
             if (d != null)
             {
-                propertiesPanelEvents.ShowPanel();
-                propertiesPanelEvents.ShowProperties(d);
+                _eventBus.Invoke(new ShowPropertiesSignal(d));
+                //propertiesPanelEvents.ShowPanel();
+                //propertiesPanelEvents.ShowProperties(d);
             }
         }
     }

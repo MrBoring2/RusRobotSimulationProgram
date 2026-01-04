@@ -37,6 +37,7 @@ namespace Assets.Scripts.Providers.PropertyProviders
         {
             yield return new CustomProperty(
                 "StatusEndEffector",
+                "Открыть захват",
                 typeof(bool),
                 () => StatusEndEffector,
                 val => StatusEndEffector = (bool)val

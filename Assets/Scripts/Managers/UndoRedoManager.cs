@@ -1,4 +1,7 @@
-﻿using Assets.Scripts.Models;
+﻿using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
+using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,37 +9,38 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using static Unity.Burst.Intrinsics.X86.Avx;
 
-namespace Assets.Scripts.SystemManager
+namespace Assets.Scripts.Managers
 {
-    public class UndoRedoSystem
+    public class UndoRedoManager : MonoBehaviour, IService
     {
-        private static UndoRedoSystem _instance;
-        private static object syncRoot = new object();
-        public static UndoRedoSystem Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    lock (syncRoot)
-                    {
-                        if (_instance == null)
-                            _instance = new UndoRedoSystem();
-                    }
-                }
-                return _instance;
-            }
-        }
+        //private static UndoRedoSystem _instance;
+        //private static object syncRoot = new object();
+        //public static UndoRedoSystem Instance
+        //{
+        //    get
+        //    {
+        //        if (_instance == null)
+        //        {
+        //            lock (syncRoot)
+        //            {
+        //                if (_instance == null)
+        //                    _instance = new UndoRedoSystem();
+        //            }
+        //        }
+        //        return _instance;
+        //    }
+        //}
         public bool IsRecording { get; private set; } = true;
+        private EventBus _eventBus;
 
-      
-        public UndoRedoSystem()
+        public void Init()
         {
-            
+            _eventBus = ServiceManager.Current.Get<EventBus>();
         }
-        public event Action<ICommand> OnCommandExecuted;
-        public event Action<ICommand> OnCommandUndone;
+        //public event Action<ICommand> OnCommandExecuted;
+        //public event Action<ICommand> OnCommandUndone;
         private readonly Stack<ICommand> undoStack = new();
         private readonly Stack<ICommand> redoStack = new();
         public void Execute(ICommand command)
@@ -52,7 +56,8 @@ namespace Assets.Scripts.SystemManager
 
 
             undoStack.Push(command);
-            OnCommandExecuted?.Invoke(command);
+            _eventBus.Invoke(new ExecuteCommandSignal(command));
+            //OnCommandExecuted?.Invoke(command);
             //redoStack.Clear();
         }
 
@@ -63,7 +68,8 @@ namespace Assets.Scripts.SystemManager
             var cmd = undoStack.Pop();
             cmd.Undo();
             redoStack.Push(cmd);
-            OnCommandUndone?.Invoke(cmd);
+            _eventBus.Invoke(new UndoneCommandSignal(cmd));
+            //OnCommandUndone?.Invoke(cmd);
         }
 
         public void Redo()
@@ -73,7 +79,8 @@ namespace Assets.Scripts.SystemManager
             var cmd = redoStack.Pop();
             cmd.Execute();
             undoStack.Push(cmd);
-            OnCommandExecuted?.Invoke(cmd);
+            _eventBus.Invoke(new ExecuteCommandSignal(cmd));
+            //OnCommandExecuted?.Invoke(cmd);
         }
         private void SetRecording(bool value)
         {

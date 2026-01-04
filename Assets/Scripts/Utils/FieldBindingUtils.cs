@@ -1,16 +1,18 @@
-﻿using Assets.Scripts.SystemManager;
+﻿using Assets.Scripts.Managers;
+using Assets.Scripts.SystemManager;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.Windows;
 using static UnityEngine.GraphicsBuffer;
 
 namespace Assets.Scripts.Models
 {
     public class FieldBindingUtils
     {
-        public static Action BindFieldWithHistory<T>(BaseField<T> field, object target, string propertyName, Action applyImmediately = null)
+        public static Action BindFieldWithHistory<T>(BaseField<T> field, object target, string propertyName, UndoRedoManager undoRedoManager, UIStatusManager uIStatusManager, Action applyImmediately = null)
         {
             if (target == null || field == null || string.IsNullOrEmpty(propertyName))
                 return () => { };
@@ -28,11 +30,11 @@ namespace Assets.Scripts.Models
                 Debug.LogError($"Свойства '{propertyName}' не найдено для {target.GetType().Name}");
                 return () => { };
             }
-
-            // СОХРАНЯЕМ ССЫЛКИ на обработчики
+            field.focusable = false;
             EventCallback<FocusEvent> focusHandler = _ =>
             {
                 oldValue = propertyInfo.GetValue(target);
+                uIStatusManager.SetInputMode(true);
             };
 
             EventCallback<ChangeEvent<T>> changeHandler = evt =>
@@ -40,20 +42,33 @@ namespace Assets.Scripts.Models
                 applyImmediately?.Invoke();
             };
 
+            EventCallback<MouseEnterEvent> mouseEnterHandler = evt =>
+            {
+                field.focusable = true;
+            };
+            EventCallback<MouseLeaveEvent> mouseLeaveHandler = evt =>
+            {
+                field.focusable = false;
+            };
+
+
             EventCallback<BlurEvent> blurHandler = _ =>
             {
                 var currentValue = propertyInfo.GetValue(target);
                 if (!Equals(oldValue, currentValue))
                 {
                     var command = new PropertyChangeCommand(target, propertyName, oldValue, currentValue);
-                    UndoRedoSystem.Instance.Execute(command);
+                    undoRedoManager.Execute(command);
                 }
+                field.focusable = false;
+                uIStatusManager.SetInputMode(false);
             };
-
             // Регистрируем обработчики
             field.RegisterCallback(focusHandler);
             field.RegisterValueChangedCallback(changeHandler);
             field.RegisterCallback(blurHandler);
+            field.RegisterCallback(mouseEnterHandler);
+            field.RegisterCallback(mouseLeaveHandler);
 
             // Возвращаем функцию для отписки
             return () =>
@@ -61,6 +76,8 @@ namespace Assets.Scripts.Models
                 field.UnregisterCallback(focusHandler);
                 field.UnregisterValueChangedCallback(changeHandler);
                 field.UnregisterCallback(blurHandler);
+                field.UnregisterCallback(mouseEnterHandler);
+                field.UnregisterCallback(mouseLeaveHandler);
             };
         }
 

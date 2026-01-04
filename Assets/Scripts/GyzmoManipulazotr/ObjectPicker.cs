@@ -1,5 +1,8 @@
 ﻿using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.Manipulator;
+using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
+using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
@@ -13,19 +16,24 @@ public class ObjectPicker : MonoBehaviour
 {
     public GyzmoManupulator manipulator;
     private AxisHandle currentHandle;
-    [SerializeField]
-    private UIBlocker uIBlocker;
-    public PropertiesPanelEvents propertiesPanel;
+    //[SerializeField] private UIBlocker uIBlocker;
+    //public PropertiesPanelEvents propertiesPanel;
+    private UIStatusManager _uiStatusManager;
     private IPropertyProvider currentProvider;
     private Vector3 startPos;
     private Vector3 startRot;
     private EventBus _eventBus;
     private SceneObjectsManager _sceneObjectsManager;
-    public bool IsDraggingManipulator => currentHandle != null;
+    private UndoRedoManager _undoRedoManager;
+    //public bool IsDraggingManipulator => currentHandle != null;
     private void Start()
     {
         _eventBus = ServiceManager.Current.Get<EventBus>();
+        _eventBus.Subscribe<PickObjectSignal>(OnPickObject);
+        _eventBus.Subscribe<UnpickObjectSignal>(OnUnpickObject);
+        _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
         _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
+        _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
         if (manipulator != null)
         {
             manipulator.gameObject.SetActive(false);
@@ -33,6 +41,21 @@ public class ObjectPicker : MonoBehaviour
             manipulator.OnDragEnd += Manipulator_OnDragEnd;
             manipulator.OnDragStart += Manipulator_OnDragStart;
         }
+    }
+
+    private void OnUnpickObject(UnpickObjectSignal signal)
+    {
+        UnpickObject();
+    }
+
+    private void OnPickObject(PickObjectSignal signal)
+    {
+        PickObject(signal.Object);
+    }
+
+    private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
+    {
+        
     }
 
     private void Manipulator_OnDragStart(Transform obj)
@@ -50,14 +73,14 @@ public class ObjectPicker : MonoBehaviour
         {
             if (startPos != endPos)
             {
-                UndoRedoSystem.Instance.Execute(
+                _undoRedoManager.Execute(
                     new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Position), startPos, endPos)
                 );
             }
 
             if (startRot != endRot)
             {
-                UndoRedoSystem.Instance.Execute(
+                _undoRedoManager.Execute(
                     new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Rotation), startRot, endRot)
                 );
             }
@@ -70,7 +93,8 @@ public class ObjectPicker : MonoBehaviour
         if (transform == null) return;
 
         if (currentProvider != null)
-            propertiesPanel.UpdateTransform(currentProvider);
+            _eventBus.Invoke(new PropertiesTransformUpdateSignal());
+            //propertiesPanel.UpdateTransform(currentProvider);
     }
 
     private void Update()
@@ -84,7 +108,7 @@ public class ObjectPicker : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         int manipLayerMask = LayerMask.GetMask("Manipulator");
 
-        if (Input.GetMouseButtonDown(0) && !uIBlocker.isPointerOverUI)
+        if (Input.GetMouseButtonDown(0) && !_uiStatusManager.isPointerOverUI)
         {
             // Клик по манипулятору
             if (Physics.Raycast(ray, out RaycastHit hitHandle, Mathf.Infinity, manipLayerMask))
@@ -123,9 +147,9 @@ public class ObjectPicker : MonoBehaviour
                                 currentProvider = provider;
                                 //var a = _sceneObjectsManager.GetById(currentProvider.Id);
                                 _eventBus.Invoke(new SelectObjectInScene(currentProvider.Id));
-
-                                propertiesPanel.ShowPanel();
-                                propertiesPanel.ShowProperties(provider);
+                                _eventBus.Invoke(new ShowPropertiesSignal(provider));
+                                //propertiesPanel.ShowPanel();
+                                //propertiesPanel.ShowProperties(provider);
                                 PickObject(providerTransform.gameObject);
                                 break; // Выходим после нахождения первого подходящего объекта
                             }

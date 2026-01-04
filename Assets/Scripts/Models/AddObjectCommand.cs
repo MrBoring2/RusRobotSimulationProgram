@@ -31,7 +31,7 @@ namespace Assets.Scripts.Models
         public void Execute()
         {
             if (instance == null)
-                instance = _sceneObjectManager.Create(prefab,position, type, parentId);
+                instance = _sceneObjectManager.Create(prefab, position, type, parentId: parentId);
             else
                 instance.Reference.SetActive(true);
         }

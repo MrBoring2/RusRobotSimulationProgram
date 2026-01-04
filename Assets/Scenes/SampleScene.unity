@@ -571,7 +571,6 @@ MonoBehaviour:
   buttonRotationSpeedDegPerSec: 500
   mainCamera: {fileID: 330585545}
   orthographicSize: 3
-  uIBlocker: {fileID: 1239946562}
 --- !u!114 &468208930
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -584,8 +583,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 288ec8f6da094e44ca9ed25caed3d4ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraPanController
-  picker: {fileID: 813370852}
-  uiBlocker: {fileID: 1239946562}
   panSpeed: 0.002
   cam: {fileID: 330585545}
 --- !u!1 &469165500
@@ -617,11 +614,59 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 544480373}
+  - {fileID: 969185049}
   - {fileID: 1468343623}
   - {fileID: 1847016647}
   - {fileID: 1987798940}
+  - {fileID: 2052803953}
+  - {fileID: 2020512687}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &544480372
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 544480373}
+  - component: {fileID: 544480374}
+  m_Layer: 0
+  m_Name: UndoRedoManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &544480373
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 544480372}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 469165501}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &544480374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 544480372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cb900d3aba783b419520f863c9a1799, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Managers.UndoRedoManager
 --- !u!1001 &571289014
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -881,8 +926,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ObjectPicker
   manipulator: {fileID: 1068335000}
-  uIBlocker: {fileID: 1239946562}
-  propertiesPanel: {fileID: 1239946563}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -997,6 +1040,50 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+--- !u!1 &969185048
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 969185049}
+  - component: {fileID: 969185050}
+  m_Layer: 0
+  m_Name: AxisModeManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &969185049
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 969185048}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 469165501}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &969185050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 969185048}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e452485058d0a60419c3c8cf88ef62e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Managers.AxisModeManager
 --- !u!114 &1068335000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1229,7 +1316,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36c7a0d9641e68a43904cfcfd84ffe27, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ManipulatorController
-  manipulator: {fileID: 1068335000}
   tooltipEvents: {fileID: 1239946568}
 --- !u!114 &1239946560
 MonoBehaviour:
@@ -1243,7 +1329,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15ef61c4ce62ec84786074de1047c951, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AxisModeEvents
-  manipulator: {fileID: 1068335000}
   tooltipEvents: {fileID: 1239946568}
 --- !u!114 &1239946561
 MonoBehaviour:
@@ -1259,9 +1344,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HierarchyPanelEvents
   _sceneObjectManager: {fileID: 0}
   iBlocker: {fileID: 1239946562}
-  propertiesPanelEvents: {fileID: 1239946563}
-  objectPicker: {fileID: 813370852}
-  objectsLibraryEvents: {fileID: 1239946565}
 --- !u!114 &1239946562
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1286,7 +1368,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ab6593c856fe374b9028bdf828c58ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PropertiesPanelEvents
-  uiBlocker: {fileID: 1239946562}
 --- !u!114 &1239946564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1300,7 +1381,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TopMenuEvents
   tooltipEvents: {fileID: 1239946568}
-  hierarchyPanelEvents: {fileID: 1239946561}
   _sceneObjectManager: {fileID: 0}
 --- !u!114 &1239946565
 MonoBehaviour:
@@ -1612,6 +1692,10 @@ PrefabInstance:
       propertyPath: type
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6399256712814710422, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
+      propertyPath: manipulator
+      value: 
+      objectReference: {fileID: 1068335000}
     - target: {fileID: 6424565725955262874, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
       propertyPath: m_Layer
       value: 6
@@ -1956,6 +2040,94 @@ MonoBehaviour:
   lineMaterial: {fileID: 2100000, guid: 3753d7944e6b6a44bb2553db2fdb9bfd, type: 2}
   lineWidth: 0.05
   lineColor: {r: 0, g: 0, b: 1, a: 1}
+--- !u!1 &2020512686
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2020512687}
+  - component: {fileID: 2020512688}
+  m_Layer: 0
+  m_Name: SceneManipulatorModeManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2020512687
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020512686}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 469165501}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2020512688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020512686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ea13411352ed674d970c4e376fbadb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Managers.SceneManipulatorModeManager
+--- !u!1 &2052803952
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2052803953}
+  - component: {fileID: 2052803954}
+  m_Layer: 0
+  m_Name: UIStatusManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2052803953
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2052803952}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 469165501}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2052803954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2052803952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 547dfa1e99e254c4baf377ef26ea0d7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Managers.UIStatusManager
 --- !u!1 &2062383074
 GameObject:
   m_ObjectHideFlags: 0
@@ -2002,6 +2174,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.CustomServiceManager.ServiceManager_Main
   _sceneObjectManager: {fileID: 1468343624}
   _lineManager: {fileID: 1987798941}
+  _uiStatusManager: {fileID: 2052803954}
+  _sceneManipulatorModeManager: {fileID: 2020512688}
+  _axisModeManager: {fileID: 969185050}
+  _undoRedoManager: {fileID: 544480374}
 --- !u!1001 &2394085790015429071
 PrefabInstance:
   m_ObjectHideFlags: 0

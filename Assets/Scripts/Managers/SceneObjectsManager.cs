@@ -6,6 +6,7 @@ using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Runtime.Serialization;
 using UnityEngine;
@@ -21,9 +22,9 @@ namespace Assets.Scripts.Managers
             InitExistedObjects();
         }
                                                                                                                                     
-        public Dictionary<string, SceneObject> Items { get; private set; }  = new Dictionary<string, SceneObject>();
+        public OrderedDictionary Items { get; private set; }  = new OrderedDictionary();
 
-        public SceneObject Create(GameObject prefab, Vector3 position, ObjectType type, string parentId = null)
+        public SceneObject Create(GameObject prefab, Vector3 position, ObjectType type, string id = null, string parentId = null)
         {
             SceneObject sceneObj = null;
             if (prefab != null)
@@ -33,14 +34,15 @@ namespace Assets.Scripts.Managers
                 var objectMaker = obj.GetComponent<SceneObjectMarker>();
                 if (objectMaker != null)
                 {
-                    var id = Guid.NewGuid().ToString();
+                    if (id == null)
+                        id = Guid.NewGuid().ToString();
                     sceneObj = new SceneObject(id, objectMaker.type, obj, parentId);
-                    if (!Items.ContainsKey(id))
+                    if (!Items.Contains(id))
                     {
 
                         if (!string.IsNullOrEmpty(parentId))
                         {
-                            var parentObj = Items[parentId].Reference;
+                            var parentObj = ((SceneObject)Items[parentId]).Reference;
                             obj.transform.SetParent(parentObj.transform, false); 
                         }
                         Items[id] = sceneObj;
@@ -100,8 +102,8 @@ namespace Assets.Scripts.Managers
         {
             if (!string.IsNullOrEmpty(id))
             {
-                var sceneObject = Items[id];
-                if (Items.ContainsKey(id))
+                var sceneObject = ((SceneObject)Items[id]);
+                if (Items.Contains(id))
                 {
                     Items.Remove(id);
                     _eventBus.Invoke<RemoveSceneObjectSignal>(new RemoveSceneObjectSignal(sceneObject));
@@ -111,14 +113,14 @@ namespace Assets.Scripts.Managers
             }
         }
 
-        public IReadOnlyDictionary<string, SceneObject> GetGameObjectsDictionary()
-        {
-            return Items;
-        }
+        //public IReadOnlyDictionary<string, SceneObject> GetGameObjectsDictionary()
+        //{
+        //    return Items;
+        //}
 
         public SceneObject GetById(string id)
         {
-            return Items[id];
+            return ((SceneObject)Items[id]);
         }
 
         public GameObject[] GetGameObjectsList2()
@@ -131,7 +133,46 @@ namespace Assets.Scripts.Managers
 
         public List<SceneObject> GetGameObjectsList()
         {
-            return Items.Values.ToList();
+            return Items.Values.Cast<SceneObject>().ToList();
+        }
+        public void ClearScene()
+        {
+            foreach (var gameObject in GetGameObjectsList())
+            {
+                Remove(gameObject.Id);
+            }
+        }
+
+        public void SpawnRestoredObjects(List<ObjectInfo> data)
+        {
+            foreach (var item in data)
+            {
+                var prefab = Resources.Load<GameObject>(item.SourcePath);
+                var instance = Create(prefab, Vector3.zero, item.ObjectType, item.Id, item.ParentId);
+                var provider = GetProvider(instance.Reference, item.ProviderData.ProviderType);
+                provider?.RestoreCustomState(item.ProviderData);
+                instance.Reference.name = item.Name;
+                instance.Reference.tag = "SceneObject";
+                instance.Reference.transform.position = item.Position.ToVector3();
+                instance.Reference.transform.rotation = item.Rotation.ToQuaternion();
+                instance.Reference.transform.localScale = item.Scale.ToVector3();
+
+                var m = instance.Reference.AddComponent<SceneObjectMarker>();
+                m.type = item.ObjectType;
+                m.sourcePath = item.SourcePath;
+
+                //var sceneObject = new SceneObject(item.Id, item.ObjectType, instance, item.ParentId);
+            }
+            
+        }
+        private IPropertyProvider GetProvider(GameObject obj, string type)
+        {
+            return type switch
+            {
+                nameof(PrimitivePropertyProvider) => obj.AddComponent<PrimitivePropertyProvider>(),
+                nameof(RobotPropertyProvider) => obj.AddComponent<RobotPropertyProvider>(),
+                _ => null
+            };
         }
         private void InitExistedObjects()
         {
@@ -142,14 +183,15 @@ namespace Assets.Scripts.Managers
                 {
                     var id = Guid.NewGuid().ToString();
                     var sceneObj = new SceneObject(id, objectMaker.type, obj);
-                    if (!Items.ContainsKey(id))
+                    if (!Items.Contains(id))
                     {
                         sceneObj.Reference.GetComponent<IPropertyProvider>().Id = id;
-                        Items[id] = sceneObj; 
+                        Items.Add(id, sceneObj);
+                        //Items[id] = sceneObj; 
                     }
                 }
             }
-            _eventBus.Invoke(new LoadObjectsSignal(Items.Values.ToList()));
+            _eventBus.Invoke(new LoadObjectsSignal(Items.Values.Cast<SceneObject>().ToList()));
         }
     }
 }

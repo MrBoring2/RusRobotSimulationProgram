@@ -15,10 +15,13 @@ namespace Assets.Scripts.Providers
             displayPosition = false;
             displayRotation = false;
             displayScale = false;
-        }
+        }                                   
         public override ProviderSaveData CaptureCustomState()
         {
-            throw new NotImplementedException();
+            return new ProviderSaveData
+            {
+                ProviderType = nameof(LinearPointPropertyProvider)
+            };
         }
 
         public override IEnumerable<CustomProperty> GetCustomProperties()
@@ -28,7 +31,7 @@ namespace Assets.Scripts.Providers
 
         public override void RestoreCustomState(ProviderSaveData data)
         {
-            throw new NotImplementedException();
+           
         }
     }
 }

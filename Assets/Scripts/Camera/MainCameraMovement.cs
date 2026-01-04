@@ -1,3 +1,8 @@
+using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.Camera;
+using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -19,8 +24,8 @@ public class MainCameraMovement : MonoBehaviour
     [SerializeField] private Camera mainCamera;
     [SerializeField] private float orthographicSize = 10f;
 
-    [Header("Блокер UI")]
-    [SerializeField] private UIBlocker uIBlocker;
+    private UIStatusManager _uiStatusManager;
+    private EventBus _eventBus;
 
     private float pitch; // X
     private float yaw;   // Y
@@ -31,6 +36,10 @@ public class MainCameraMovement : MonoBehaviour
 
     private void Start()
     {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
+        _eventBus.Subscribe<RotateCameraSingal>(OnRotateCamera);
+        _eventBus.Subscribe<ToggleOrthographicSignal>(OnToggleOtrhograthic);
+        _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
         Vector3 e = transform.localEulerAngles;
         pitch = NormalizeAngle(e.x);
         yaw = NormalizeAngle(e.y);
@@ -39,11 +48,21 @@ public class MainCameraMovement : MonoBehaviour
         transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
     }
 
+    private void OnToggleOtrhograthic(ToggleOrthographicSignal signal)
+    {
+        ToggleOrthographic();
+    }
+
+    private void OnRotateCamera(RotateCameraSingal singal)
+    {
+        RotateToView(singal.Rotation);
+    }
+
     private void Update()
     {
-        if(!uIBlocker.isInputMode)
+        if(!_uiStatusManager.isInputMode)
             HandleMovement();
-        if(!uIBlocker.isPointerOverUI)
+        if(!_uiStatusManager.isPointerOverUI)
             HandleMouseRotation();
         HandleButtonRotation();
     }

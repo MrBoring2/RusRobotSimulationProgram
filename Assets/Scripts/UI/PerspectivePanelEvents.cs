@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.Camera;
+using Assets.Scripts.CustomServiceManager;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -7,17 +10,19 @@ public class PerspectivePanelEvents : MonoBehaviour
 {
     [SerializeField] private Camera targetCamera;
     private VisualElement root;
-    private MainCameraMovement cameraMovement; 
+    //private MainCameraMovement cameraMovement; 
 
     // Список для хранения колбэков
     private List<(PerspectiveButton btn, EventCallback<MouseDownEvent> click, EventCallback<MouseMoveEvent> move, EventCallback<MouseLeaveEvent> leave)> registeredButtons
         = new List<(PerspectiveButton, EventCallback<MouseDownEvent>, EventCallback<MouseMoveEvent>, EventCallback<MouseLeaveEvent>)>();
+    private EventBus _eventBus;
 
     private bool topViewClicked = false;
-    private void OnEnable()
+    private void Start()
     {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
         root = GetComponent<UIDocument>().rootVisualElement;
-        cameraMovement = targetCamera.transform.parent.GetComponent<MainCameraMovement>();
+        //cameraMovement = targetCamera.transform.parent.GetComponent<MainCameraMovement>();
         RegisterButton("back-view-btn", () => OnBackViewClick());
         RegisterButton("left-view-btn", () => OnLeftViewClick());
         RegisterButton("right-view-btn", () => OnRightViewClick());
@@ -74,23 +79,25 @@ public class PerspectivePanelEvents : MonoBehaviour
 
         Debug.Log($"Камера повернута на {eulerAngles}");
     }
-    private void OnBackViewClick() => cameraMovement.RotateToView(new Vector3(0, 180, 0));
-    private void OnLeftViewClick() => cameraMovement.RotateToView(new Vector3(0, -90, 0));
-    private void OnRightViewClick() => cameraMovement.RotateToView(new Vector3(0, 90, 0));
+    private void OnBackViewClick() => _eventBus.Invoke(new RotateCameraSingal(new Vector3(0, 180, 0))); //cameraMovement.RotateToView(new Vector3(0, 180, 0));
+    private void OnLeftViewClick() => _eventBus.Invoke(new RotateCameraSingal(new Vector3(0, -90, 0)));//cameraMovement.RotateToView(new Vector3(0, -90, 0));
+    private void OnRightViewClick() => _eventBus.Invoke(new RotateCameraSingal(new Vector3(0, 90, 0)));//cameraMovement.RotateToView(new Vector3(0, 90, 0));
     private void OnTopBottomViewClick()
     {
         if (!topViewClicked)
         {
             topViewClicked = true;
-            cameraMovement.RotateToView(new Vector3(90, 0, 0));
+            _eventBus.Invoke(new RotateCameraSingal(new Vector3(90, 0, 0)));
+            //cameraMovement.RotateToView(new Vector3(90, 0, 0));
         }
         else
         {
             topViewClicked = false;
-            cameraMovement.RotateToView(new Vector3(-90, 0, 0));
+            _eventBus.Invoke(new RotateCameraSingal(new Vector3(-90, 0, 0)));
+            //cameraMovement.RotateToView(new Vector3(-90, 0, 0));
         }
         
     }
-    private void OnFrontViewClick() => cameraMovement.RotateToView(new Vector3(0, 0, 0));
-    private void OnToggleProection() => cameraMovement.ToggleOrthographic();
+    private void OnFrontViewClick() => _eventBus.Invoke(new RotateCameraSingal(new Vector3(0, 0, 0))); //cameraMovement.RotateToView(new Vector3(0, 0, 0));
+    private void OnToggleProection() => _eventBus.Invoke(new ToggleOrthographicSignal()); //cameraMovement.ToggleOrthographic();
 }

@@ -6,7 +6,9 @@ using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
 using Assets.Scripts.Providers.PropertyProviders;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -123,10 +125,30 @@ public class RobotPropertyProvider : BasePropertyProvider
 
     public IEnumerable<RobotProgrammElement> GetRootElements()
     {
-        return _sceneObjectManager.Items.Values
-             .Where(x => x.ParentId == Id &&
-                         (x.Type == ObjectType.LinearMoveCommand || x.Type == ObjectType.StateEndEffectorCommand || x.Type == ObjectType.Program))
-             .Select(x => ConvertToRobotProgrammElement(x));
+        var itemsDict = _sceneObjectManager.Items;
+        if (itemsDict == null) return Enumerable.Empty<RobotProgrammElement>();
+
+        var result = new List<RobotProgrammElement>();
+
+        // Перебираем в порядке добавления
+        foreach (DictionaryEntry entry in itemsDict)
+        {
+            var sceneObj = entry.Value as SceneObject;
+            if (sceneObj != null &&
+                sceneObj.ParentId == Id &&
+                (sceneObj.Type == ObjectType.LinearMoveCommand ||
+                 sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+                 sceneObj.Type == ObjectType.Program))
+            {
+                result.Add(ConvertToRobotProgrammElement(sceneObj));
+            }
+        }
+
+        return result;
+        //return _sceneObjectManager.Items.Values
+        //     .Where(x => x.ParentId == Id &&
+        //                 (x.Type == ObjectType.LinearMoveCommand || x.Type == ObjectType.StateEndEffectorCommand || x.Type == ObjectType.Program))
+        //     .Select(x => ConvertToRobotProgrammElement(x));
     }
 
     //public void Comm()
@@ -154,23 +176,59 @@ public class RobotPropertyProvider : BasePropertyProvider
 
     private IEnumerable<RobotProgrammElement> BuildTreeInternal(string parentId)
     {
-        var children = _sceneObjectManager.Items.Values
-            .Where(x => x.Reference.activeSelf == true && x.ParentId == parentId &&
-                        (x.Type == ObjectType.LinearMoveCommand || x.Type == ObjectType.StateEndEffectorCommand || x.Type == ObjectType.Program));
+        var itemsDict = _sceneObjectManager.Items;
+        if (itemsDict == null) yield break;
 
-        foreach (var child in children)
+        // Сначала собираем всех детей в правильном порядке
+        var childrenInOrder = new List<SceneObject>();
+
+        foreach (DictionaryEntry entry in itemsDict)
+        {
+            var sceneObj = entry.Value as SceneObject;
+            if (sceneObj != null &&
+                sceneObj.Reference.activeSelf == true &&
+                sceneObj.ParentId == parentId &&
+                (sceneObj.Type == ObjectType.LinearMoveCommand ||
+                 sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+                 sceneObj.Type == ObjectType.Program))
+            {
+                childrenInOrder.Add(sceneObj);
+            }
+        }
+
+        // Теперь обрабатываем в правильном порядке
+        foreach (var child in childrenInOrder)
         {
             var node = ConvertToRobotProgrammElement(child);
             yield return node;
 
             if (node is SubProgramm subProgramm)
             {
-                foreach (var subChild in subProgramm.Get())
+                // Рекурсивно получаем элементы подпрограммы
+                var subChildren = BuildTreeInternal(child.Id).ToList();
+                foreach (var subChild in subChildren)
                 {
                     yield return subChild;
                 }
             }
         }
+        //var children = _sceneObjectManager.Items.Values
+        //    .Where(x => x.Reference.activeSelf == true && x.ParentId == parentId &&
+        //                (x.Type == ObjectType.LinearMoveCommand || x.Type == ObjectType.StateEndEffectorCommand || x.Type == ObjectType.Program));
+
+        //foreach (var child in children)
+        //{
+        //    var node = ConvertToRobotProgrammElement(child);
+        //    yield return node;
+
+        //    if (node is SubProgramm subProgramm)
+        //    {
+        //        foreach (var subChild in subProgramm.Get())
+        //        {
+        //            yield return subChild;
+        //        }
+        //    }
+        //}
     }
     private RobotProgrammElement ConvertToRobotProgrammElement(SceneObject obj)
     {
@@ -186,15 +244,36 @@ public class RobotPropertyProvider : BasePropertyProvider
         }
         else if (obj.Type == ObjectType.Program)
         {
-            var subProgram = new SubProgramm(
-                _sceneObjectManager.Items.Values
-                    .Where(x => x.ParentId == obj.Id && (x.Type == ObjectType.LinearMoveCommand || x.Type == ObjectType.StateEndEffectorCommand))
-                    .Select(x => ConvertToRobotProgrammElement(x))
-                    .ToList(),
-                ENUM_COMANDS.SUBPROGRAMM,
-                obj.Id
-            );
+            // Получаем дочерние элементы в правильном порядке
+            var subItems = new List<RobotProgrammElement>();
+
+            var itemsDict = _sceneObjectManager.Items;
+            if (itemsDict != null)
+            {
+                foreach (DictionaryEntry entry in itemsDict)
+                {
+                    var sceneObj = entry.Value as SceneObject;
+                    if (sceneObj != null &&
+                        sceneObj.ParentId == obj.Id &&
+                        (sceneObj.Type == ObjectType.LinearMoveCommand ||
+                         sceneObj.Type == ObjectType.StateEndEffectorCommand))
+                    {
+                        subItems.Add(ConvertToRobotProgrammElement(sceneObj));
+                    }
+                }
+            }
+
+            var subProgram = new SubProgramm(subItems, ENUM_COMANDS.SUBPROGRAMM, obj.Id);
             return subProgram;
+            //var subProgram = new SubProgramm(
+            //    _sceneObjectManager.Items.Values
+            //        .Where(x => x.ParentId == obj.Id && (x.Type == ObjectType.LinearMoveCommand || x.Type == ObjectType.StateEndEffectorCommand))
+            //        .Select(x => ConvertToRobotProgrammElement(x))
+            //        .ToList(),
+            //    ENUM_COMANDS.SUBPROGRAMM,
+            //    obj.Id
+            //);
+            //return subProgram;
         }
         return null;
     }
@@ -274,27 +353,17 @@ public class RobotPropertyProvider : BasePropertyProvider
     {
         return new ProviderSaveData
         {
-            ProviderType = nameof(RobotPropertyProvider),
-            FloatValues =
-            {
-                ["RotSpeedPercent"] = RotSpeedPercent
-            }
+            ProviderType = nameof(RobotPropertyProvider)
         };
     }
 
     public override IEnumerable<CustomProperty> GetCustomProperties()
     {
-        yield return new CustomProperty(
-            "RotSpeedPercent",
-            typeof(float),
-            () => RotSpeedPercent,
-            val => RotSpeedPercent = (float)val
-        );
+        return null;
     }
 
     public override void RestoreCustomState(ProviderSaveData data)
     {
-        if (data.FloatValues.TryGetValue("RotSpeedPercent", out var v))
-            RotSpeedPercent = v;
+        
     }
 }

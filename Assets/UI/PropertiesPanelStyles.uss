@@ -26,15 +26,21 @@
 }
 
 /* === Строки свойств === */
-#name-property-container,
+.base-property,
+.base-bool-property, 
 #position-property-container,
 #rotation-property-container,
 #scale-property-container {
     margin-bottom: 10px;
 }
 
+.base-bool-property {
+    flex-direction: row;
+}
+
 /* === Label свойств === */
-#name-property-container > Label,
+.base-property > Label,
+.base-bool-property > Label,
 #position-property-container > Label,
 #rotation-property-container > Label,
 #scale-property-container > Label {
@@ -43,12 +49,14 @@
     margin-right: 10px;
 }
 
-#name-property-container > VisualElement,
+.base-property > VisualElement,
+.base-bool-property > VisualElement,
 #position-input-container,
 #rotation-input-container,
 #scale-input-container {
-   
+    
 }
+
 
 #position-input-container,
 #rotation-input-container,

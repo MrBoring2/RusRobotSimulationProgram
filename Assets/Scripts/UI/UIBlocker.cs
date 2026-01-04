@@ -1,3 +1,5 @@
+using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using UnityEngine;
@@ -7,13 +9,14 @@ using static UnityEngine.Rendering.DebugUI;
 public class UIBlocker : MonoBehaviour
 {
     private VisualElement root;
-    public bool isPointerOverUI { get; private set; }
-    public bool isInputMode { get; private set; }
-
+    //public bool isPointerOverUI { get; private set; }
+    //public bool isInputMode { get; private set; }
+    private UIStatusManager _uiStatusManager;
     private List<VisualElement> uiElements;
 
     void Start()
     {
+        _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
         root = GetComponent<UIDocument>().rootVisualElement;
         // ќпредел€ем список панелей, по которым нужно отслеживать курсор
         uiElements = new List<VisualElement>
@@ -24,7 +27,7 @@ public class UIBlocker : MonoBehaviour
             root.Q("properties-container"),
             root.Q("perspective-panel-container"),
         };
-       // Debug.Log(root);
+        // Debug.Log(root);
         // –егистрируем событи€ дл€ каждой панели
         foreach (var panel in uiElements)
         {
@@ -56,43 +59,44 @@ public class UIBlocker : MonoBehaviour
         uiElements.Remove(contextMenu);
         contextMenu.UnregisterCallback<MouseEnterEvent>(OnContextMenuMouseEnter);
         contextMenu.UnregisterCallback<MouseLeaveEvent>(OnContextMenuMouseLeave);
+        ResolveUI();
     }
 
     public void ResolveUI()
     {
-        isPointerOverUI = false;
+        _uiStatusManager.SetPointerOberUI(false);
     }
 
     private void OnMouseEnter(MouseEnterEvent evt)
     {
-        isPointerOverUI = true;  //  огда курсор заходит на панель 
+        _uiStatusManager.SetPointerOberUI(true);  //  огда курсор заходит на панель 
     }
 
     private void OnMouseLeave(MouseLeaveEvent evt)
     {
-        isPointerOverUI = false;  //  огда курсор покидает панель
+        _uiStatusManager.SetPointerOberUI(false); //  огда курсор покидает панель
     }
 
     private void OnModalWindowMouseEnter(MouseEnterEvent evt)
     {
-        isPointerOverUI = true;
+        _uiStatusManager.SetPointerOberUI(true);
     }
     private void OnModalWindowMouseLeaveLeave(MouseLeaveEvent evt)
     {
-        isPointerOverUI = false; 
+        _uiStatusManager.SetPointerOberUI(false);
     }
     private void OnContextMenuMouseEnter(MouseEnterEvent evt)
     {
-       // Debug.Log(evt.target);
-        isPointerOverUI = true; 
+        _uiStatusManager.SetPointerOberUI(true);
     }
 
     private void OnContextMenuMouseLeave(MouseLeaveEvent evt)
     {
-        isPointerOverUI = false; 
+        _uiStatusManager.SetPointerOberUI(false);
     }
     private void UnregisterUIElements()
     {
+        if (uiElements == null || uiElements.Count == 0) return;
         foreach (var panel in uiElements)
         {
             panel.UnregisterCallback<MouseEnterEvent>(OnMouseEnter);
@@ -102,12 +106,12 @@ public class UIBlocker : MonoBehaviour
 
     public void EnableInputMode()
     {
-        isInputMode = true;
+        _uiStatusManager.SetInputMode(true);
     }
 
     public void DisableInputMode()
     {
-        isInputMode = false;
+        _uiStatusManager.SetInputMode(false);
     }
     private void OnDisable()
     {

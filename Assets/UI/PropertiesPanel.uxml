@@ -7,8 +7,7 @@
         </ui:VisualElement>
 
         <ui:VisualElement name="base-properties-container">
-
-            <ui:VisualElement name="name-property-container">
+            <ui:VisualElement name="name-property-container" class="base-property">
                 <ui:Label text="Наименование" />
                 <ui:TextField name="name" />
             </ui:VisualElement>

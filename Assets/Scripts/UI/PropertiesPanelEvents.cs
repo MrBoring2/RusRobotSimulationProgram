@@ -1,15 +1,21 @@
+using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
+using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
+using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using Assets.Scripts.SystemManager;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.Windows;
 
 public class PropertiesPanelEvents : MonoBehaviour
 {
     private VisualElement root;
     private VisualElement propertiesPanel;
-    public UIBlocker uiBlocker;
+    //public UIBlocker uiBlocker;
     private IPropertyProvider current;
     private VisualElement commonContainer;
     private VisualElement customContainer;
@@ -21,13 +27,24 @@ public class PropertiesPanelEvents : MonoBehaviour
     private VisualElement rotationPropertyContainer;
     private VisualElement scalePropertyContainer;
     private TextField name;
-
+    private EventBus _eventBus;
+    private UIStatusManager _UIStatusManager;
     private List<Action> cleanupActions = new List<Action>();
+    private UndoRedoManager _undoRedoManager;
 
-    public event Action OnTargetNameChanged;
+   // public event Action OnTargetNameChanged;
 
     void Start()
     {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
+        _eventBus.Subscribe<PropertiesTransformUpdateSignal>(OnTransformChanged);
+        _eventBus.Subscribe<ShowPropertiesSignal>(OnShowProperties);
+        _eventBus.Subscribe<HidePropertiesSignal>(OnHideProperties);
+        _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
+        _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
+        _UIStatusManager = ServiceManager.Current.Get<UIStatusManager>();
+        _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
+
         root = GetComponent<UIDocument>().rootVisualElement;
         propertiesPanel = root.Q<VisualElement>("properties-container");
         HidePanel();
@@ -55,12 +72,30 @@ public class PropertiesPanelEvents : MonoBehaviour
 
         RegisterButtons();
         RegisterInputs();
-        UndoRedoSystem.Instance.OnCommandExecuted += OnUndoRedoPerformed;
-        UndoRedoSystem.Instance.OnCommandUndone += OnUndoRedoPerformed;
+        //UndoRedoManager.Instance.OnCommandExecuted += OnUndoRedoPerformed;
+        //UndoRedoManager.Instance.OnCommandUndone += OnUndoRedoPerformed;
+    }
+
+  
+
+    private void OnHideProperties(HidePropertiesSignal signal)
+    {
+        HidePanel();
+    }
+
+    private void OnShowProperties(ShowPropertiesSignal signal)
+    {
+        ShowProperties(signal.PropertyProvider);
+    }
+
+    private void OnTransformChanged(PropertiesTransformUpdateSignal signal)
+    {
+        UpdateTransform();
     }
 
     public void ShowProperties(IPropertyProvider propertyProvider)
     {
+        ShowPanel();
         ClearBindings();
 
         current = propertyProvider;
@@ -105,7 +140,16 @@ public class PropertiesPanelEvents : MonoBehaviour
         element.style.display = DisplayStyle.Flex;
     }
 
-    private void OnUndoRedoPerformed(ICommand command)
+    private void OnCommandUndoned(UndoneCommandSignal signal)
+    {
+        PerformUndoRedo(signal.Command);
+    }
+
+    private void OnCommandExecuted(ExecuteCommandSignal signal)
+    {
+        PerformUndoRedo(signal.Command);
+    }
+    private void PerformUndoRedo(ICommand command)
     {
         // Если команда относится к текущему объекту, обновляем UI
         if (current != null && command is PropertyChangeCommand propertyCommand)
@@ -122,7 +166,7 @@ public class PropertiesPanelEvents : MonoBehaviour
     private void UpdateUI()
     {
         name.SetValueWithoutNotify(current.Name);
-        UpdateTransform(current);
+        UpdateTransform();
         BuildCustomProperties(current);
     }
 
@@ -141,38 +185,38 @@ public class PropertiesPanelEvents : MonoBehaviour
         if (current == null) return;
 
         // Позиция - сохраняем Action для отписки
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posX, current, nameof(IPropertyProvider.Position), () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posX, current, nameof(IPropertyProvider.Position), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Position = new Vector3(posX.value, current.Position.y, current.Position.z);
         }));
 
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posY, current, nameof(IPropertyProvider.Position), () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posY, current, nameof(IPropertyProvider.Position), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Position = new Vector3(current.Position.x, posY.value, current.Position.z);
         }));
 
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posZ, current, nameof(IPropertyProvider.Position), () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posZ, current, nameof(IPropertyProvider.Position), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Position = new Vector3(current.Position.x, current.Position.y, posZ.value);
         }));
 
         // Поворот - сохраняем Action для отписки
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(rotX, current, nameof(IPropertyProvider.Rotation), () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(rotX, current, nameof(IPropertyProvider.Rotation), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Rotation = new Vector3(NormalizeAngle(rotX.value), current.Rotation.y, current.Rotation.z);
         }));
 
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(rotY, current, nameof(IPropertyProvider.Rotation), () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(rotY, current, nameof(IPropertyProvider.Rotation), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Rotation = new Vector3(current.Rotation.x, NormalizeAngle(rotY.value), current.Rotation.z);
         }));
 
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(rotZ, current, nameof(IPropertyProvider.Rotation), () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(rotZ, current, nameof(IPropertyProvider.Rotation), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Rotation = new Vector3(current.Rotation.x, current.Rotation.y, NormalizeAngle(rotZ.value));
         }));
 
-        // Нормализация при Blur - сохраняем ссылки на обработчики для отписки
+
         EventCallback<BlurEvent> rotXBlurHandler = evt => NormalizeRotationUI();
         EventCallback<BlurEvent> rotYBlurHandler = evt => NormalizeRotationUI();
         EventCallback<BlurEvent> rotZBlurHandler = evt => NormalizeRotationUI();
@@ -186,28 +230,29 @@ public class PropertiesPanelEvents : MonoBehaviour
         cleanupActions.Add(() => rotZ.UnregisterCallback(rotZBlurHandler));
 
         // Масштаб - сохраняем Action для отписки
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(scaleX, current, nameof(IPropertyProvider.Scale), () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(scaleX, current, nameof(IPropertyProvider.Scale), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Scale = new Vector3(scaleX.value, current.Scale.y, current.Scale.z);
         }));
 
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(scaleY, current, nameof(IPropertyProvider.Scale), () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(scaleY, current, nameof(IPropertyProvider.Scale), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Scale = new Vector3(current.Scale.x, scaleY.value, current.Scale.z);
         }));
 
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(scaleZ, current, nameof(IPropertyProvider.Scale), () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(scaleZ, current, nameof(IPropertyProvider.Scale), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Scale = new Vector3(current.Scale.x, current.Scale.y, scaleZ.value);
         }));
 
         // Имя - сохраняем Action для отписки
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(name, current, nameof(IPropertyProvider.Name), () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(name, current, nameof(IPropertyProvider.Name), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null)
             {
                 current.Name = name.value;
-                OnTargetNameChanged?.Invoke();
+                _eventBus.Invoke(new ChangeNamePropertySignal());
+                //OnTargetNameChanged?.Invoke();
             }
         }));
     }
@@ -226,44 +271,73 @@ public class PropertiesPanelEvents : MonoBehaviour
         var inputs = root.Query<FloatField>().ToList();
         foreach (var input in inputs)
         {
-            input.focusable = false;
-            input.RegisterCallback<MouseEnterEvent>(evt =>
-            {
-                input.focusable = true;
-            });
-            input.RegisterCallback<FocusEvent>(evt =>
-            {
-                uiBlocker?.EnableInputMode();
-            });
-            input.RegisterCallback<BlurEvent>(evt =>
-            {
-                input.focusable = false;
-                uiBlocker?.DisableInputMode();
-            });
-            input.RegisterCallback<MouseLeaveEvent>(evt =>
-            {
-                input.focusable = false;
-            });
+            RegisterEventsforInput(input);
+            //input.focusable = false;
+            //input.RegisterCallback<MouseEnterEvent>(evt =>
+            //{
+            //    input.focusable = true;
+            //});
+            //input.RegisterCallback<FocusEvent>(evt =>
+            //{
+            //    _UIStatusManager.SetInputMode(true);
+            //    //uiBlocker?.EnableInputMode();
+            //});
+            //input.RegisterCallback<BlurEvent>(evt =>
+            //{
+            //    input.focusable = false;
+            //    _UIStatusManager.SetInputMode(false);
+            //    //uiBlocker?.DisableInputMode();
+            //});
+            //input.RegisterCallback<MouseLeaveEvent>(evt =>
+            //{
+            //    input.focusable = false;
+            //});
         }
+        RegisterEventsforInput(name);
+        //name.focusable = false;
+        //name.RegisterCallback<MouseEnterEvent>(evt =>
+        //{
+        //    name.focusable = true;
+        //});
+        //name.RegisterCallback<FocusEvent>(evt =>
+        //{
+        //    _UIStatusManager.SetInputMode(true);
+        //    //uiBlocker?.EnableInputMode();
+        //});
+        //name.RegisterCallback<BlurEvent>(evt =>
+        //{
+        //    name.focusable = false;
+        //    _UIStatusManager.SetInputMode(false);
+        //    //uiBlocker?.DisableInputMode();
+        //});
+        //name.RegisterCallback<MouseLeaveEvent>(evt =>
+        //{
+        //    name.focusable = false;
+        //});
+    }
 
-        name.focusable = false;
-        name.RegisterCallback<MouseEnterEvent>(evt =>
-        {
-            name.focusable = true;
-        });
-        name.RegisterCallback<FocusEvent>(evt =>
-        {
-            uiBlocker?.EnableInputMode();
-        });
-        name.RegisterCallback<BlurEvent>(evt =>
-        {
-            name.focusable = false;
-            uiBlocker?.DisableInputMode();
-        });
-        name.RegisterCallback<MouseLeaveEvent>(evt =>
-        {
-            name.focusable = false;
-        });
+    private void RegisterEventsforInput(VisualElement input)
+    {
+        //input.focusable = false;
+        //input.RegisterCallback<MouseEnterEvent>(evt =>
+        //{
+        //    input.focusable = true;
+        //});
+        //input.RegisterCallback<FocusEvent>(evt =>
+        //{
+        //    _UIStatusManager.SetInputMode(true);
+        //    //uiBlocker?.EnableInputMode();
+        //});
+        //input.RegisterCallback<BlurEvent>(evt =>
+        //{
+        //    input.focusable = false;
+        //    _UIStatusManager.SetInputMode(false);
+        //    //uiBlocker?.DisableInputMode();
+        //});
+        //input.RegisterCallback<MouseLeaveEvent>(evt =>
+        //{
+        //    input.focusable = false;
+        //});
     }
 
     public void HidePanel()
@@ -280,70 +354,90 @@ public class PropertiesPanelEvents : MonoBehaviour
     {
 
     }
-    public void UpdateTransform(IPropertyProvider provider)
+    //public void UpdateTransform(IPropertyProvider provider)
+    public void UpdateTransform()
     {
-        if (provider == null) return;
+        //if (provider == null) return;
 
-        posX.SetValueWithoutNotify(provider.Position.x);
-        posY.SetValueWithoutNotify(provider.Position.y);
-        posZ.SetValueWithoutNotify(provider.Position.z);
+        posX.SetValueWithoutNotify(current.Position.x);
+        posY.SetValueWithoutNotify(current.Position.y);
+        posZ.SetValueWithoutNotify(current.Position.z);
 
-        rotX.SetValueWithoutNotify(provider.Rotation.x);
-        rotY.SetValueWithoutNotify(provider.Rotation.y);
-        rotZ.SetValueWithoutNotify(provider.Rotation.z);
+        rotX.SetValueWithoutNotify(current.Rotation.x);
+        rotY.SetValueWithoutNotify(current.Rotation.y);
+        rotZ.SetValueWithoutNotify(current.Rotation.z);
 
-        scaleX.SetValueWithoutNotify(provider.Scale.x);
-        scaleY.SetValueWithoutNotify(provider.Scale.y);
-        scaleZ.SetValueWithoutNotify(provider.Scale.z);
+        scaleX.SetValueWithoutNotify(current.Scale.x);
+        scaleY.SetValueWithoutNotify(current.Scale.y);
+        scaleZ.SetValueWithoutNotify(current.Scale.z);
     }
 
     private void BuildCustomProperties(IPropertyProvider provider)
     {
         customContainer.Clear();
-        if (provider.GetCustomProperties() == null) return;
+        if (provider.GetCustomProperties() == null) return;                                                 
 
         foreach (var prop in provider.GetCustomProperties())
         {
             if (prop.PropertyType == typeof(float))
             {
-                var field = new FloatField(prop.Name);
+                var container = new VisualElement();
+                container.AddToClassList("base-property");
+                container.Add(new Label(prop.DisplayName));
+                var field = new FloatField();
                 field.value = (float)prop.Getter();
-                customContainer.Add(field);
-
-                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, () =>
+                container.Add(field);
+                customContainer.Add(container);
+                RegisterEventsforInput(field);
+                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
                 {
                     prop.Setter(field.value);
                 }));
+                RegisterEventsforInput(field);
+
             }
             else if(prop.PropertyType == typeof(bool))
             {
-                var field = new Toggle(prop.Name);
+                var container = new VisualElement();
+                container.AddToClassList("base-bool-property");
+                container.Add(new Label(prop.DisplayName));                                                                                                    
+                var field = new Toggle();
                 field.value = (bool)prop.Getter();
-                customContainer.Add(field);
-
-                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, () =>
+                container.Add(field);                                                                                                                                         
+                customContainer.Add(container);
+                RegisterEventsforInput(field);
+                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
                 {
                     prop.Setter(field.value);
                 }));
             }
             else if (prop.PropertyType == typeof(int))
             {
-                var field = new IntegerField(prop.Name);
+                var container = new VisualElement();
+                container.AddToClassList("base-property");
+                container.Add(new Label(prop.DisplayName));
+                var field = new IntegerField();
                 field.value = (int)prop.Getter();
-                customContainer.Add(field);
+                container.Add(field);
+                customContainer.Add(container);                                                                                                             
 
-                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, () =>
+                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
                 {
                     prop.Setter(field.value);
                 }));
+                RegisterEventsforInput(field);
             }
             else if (prop.PropertyType == typeof(string))
             {
-                var field = new TextField(prop.Name);
+                var container = new VisualElement();
+                container.AddToClassList("base-property");
+                container.Add(new Label(prop.DisplayName));
+                var field = new TextField();
                 field.value = (string)prop.Getter();
-                customContainer.Add(field);
-
-                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, () =>
+                container.Add(field);
+                customContainer.Add(container);
+                RegisterEventsforInput(field);
+                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
                 {
                     prop.Setter(field.value);
                 }));

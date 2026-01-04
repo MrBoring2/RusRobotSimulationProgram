@@ -1,3 +1,5 @@
+using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
 using Assets.Scripts.UI;
 using System;
 using System.Collections.Generic;
@@ -6,15 +8,17 @@ using UnityEngine.UIElements;
 
 public class AxisModeEvents : MonoBehaviour
 {
-    public GyzmoManupulator manipulator;
+    //public GyzmoManupulator manipulator;
     public Button localAxisButton;
     public Button globalAxisButton;
     public TooltipEvents tooltipEvents;
     private VisualElement root;
     private List<(Button btn, EventCallback<ClickEvent> click)> registeredButtons
         = new List<(Button, EventCallback<ClickEvent>)>();
-    private void OnEnable()
+    private AxisModeManager _axisModeManager;
+    private void Start()
     {
+        _axisModeManager = ServiceManager.Current.Get<AxisModeManager>();
         root = GetComponent<UIDocument>().rootVisualElement;
         RegisterButtons();
     }
@@ -32,13 +36,15 @@ public class AxisModeEvents : MonoBehaviour
     {
         RemoveActive();
         localAxisButton.AddToClassList("active");
-        manipulator.SetAxisMode(AxisMode.Local);
+        _axisModeManager.SetAxisMode(AxisMode.Local);
+        //manipulator.SetAxisMode(AxisMode.Local);
     }
     private void OnGlobalModeClick(ClickEvent click)
     {
         RemoveActive();
         globalAxisButton.AddToClassList("active");
-        manipulator.SetAxisMode(AxisMode.Global);
+        _axisModeManager.SetAxisMode(AxisMode.Global);
+        //manipulator.SetAxisMode(AxisMode.Global);
     }
     private void RemoveActive()
     {

@@ -3,7 +3,9 @@ using Assets.Scripts.CustomEventBus.Signals.Lines;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Models;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,7 +31,7 @@ namespace Assets.Scripts.Managers
         private string _currentProgramId;
         private bool _isDrawing = false;
 
-        void Start()
+        public void Init()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
             _sceneManager = ServiceManager.Current.Get<SceneObjectsManager>();
@@ -124,16 +126,30 @@ namespace Assets.Scripts.Managers
 
             if (_sceneManager?.Items == null) return children;
 
-            // Так как Items отсортирован, дети программы идут подряд
-            foreach (var kvp in _sceneManager.Items.Where(p => p.Value.ParentId == programId))
+            // Получаем Items как OrderedDictionary
+            var itemsDict = _sceneManager.Items;
+            if (itemsDict == null) return children;
+
+            // Перебираем в порядке добавления
+            foreach (DictionaryEntry entry in itemsDict)
             {
-                var obj = kvp.Value;
-                if (obj.ParentId == programId)
+                var obj = entry.Value as SceneObject;
+                if (obj != null && obj.ParentId == programId)
                 {
                     children.Add(obj);
                     Debug.Log($"  Ребёнок: {obj.Id}, Тип: {obj.Type}");
                 }
             }
+            //// Так как Items отсортирован, дети программы идут подряд
+            //foreach (var kvp in _sceneManager.Items.Where(p => p.Value.ParentId == programId))
+            //{
+            //    var obj = kvp.Value;
+            //    if (obj.ParentId == programId)
+            //    {
+            //        children.Add(obj);
+            //        Debug.Log($"  Ребёнок: {obj.Id}, Тип: {obj.Type}");
+            //    }
+            //}
 
             return children;
         }
@@ -211,10 +227,17 @@ namespace Assets.Scripts.Managers
             if (_sceneManager == null || _sceneManager.Items == null)
                 return commands;
 
-            foreach (var kvp in _sceneManager.Items.Where(p => p.Value.ParentId == programId))
+            var itemsDict = _sceneManager.Items as OrderedDictionary;
+            if (itemsDict == null) return commands;
+
+            // Перебираем в порядке добавления
+            foreach (DictionaryEntry entry in itemsDict)
             {
-                var obj = kvp.Value;
-                if (obj.Type == ObjectType.LinearMoveCommand || obj.Type == ObjectType.StateEndEffectorCommand && obj.ParentId == programId)
+                var obj = entry.Value as SceneObject;
+                if (obj != null &&
+                    obj.ParentId == programId &&
+                    (obj.Type == ObjectType.LinearMoveCommand ||
+                     obj.Type == ObjectType.StateEndEffectorCommand))
                 {
                     commands.Add(obj.Id);
                 }
@@ -246,7 +269,8 @@ namespace Assets.Scripts.Managers
         {
             if (string.IsNullOrEmpty(_currentProgramId)) return false;
 
-            if (_sceneManager.Items.TryGetValue(commandId, out var command))
+            var command = _sceneManager.GetById(commandId);
+            if (command != null)
             {
                 // Проверяем, принадлежит ли команда текущей программе
                 return command.ParentId == _currentProgramId;

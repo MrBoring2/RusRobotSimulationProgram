@@ -1,4 +1,9 @@
-﻿using System;
+﻿using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.AxisModes;
+using Assets.Scripts.CustomEventBus.Signals.Manipulator;
+using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using System;
 using UnityEngine;
 
 public enum AxisMode
@@ -11,7 +16,7 @@ public class GyzmoManupulator : MonoBehaviour
 {
     public Transform Target { get; private set; }
     public IManipulatorMode CurrentManipulatorMode { get; private set; }
-    public AxisMode CurrentAxisMode { get; private set; }
+    public AxisMode? CurrentAxisMode => _axisModeManager?.Mode;
     public bool CameraModeActive { get; private set; } = false;
     public GameObject moveHandlesGroup;
     public GameObject rotateHandlesGroup;
@@ -24,6 +29,8 @@ public class GyzmoManupulator : MonoBehaviour
     public event Action<Transform> OnTargetTransformChanged;
     public event Action<Transform> OnDragStart;
     public event Action<Transform> OnDragEnd;
+    private EventBus _eventBus;
+    private AxisModeManager _axisModeManager;
 
     public void NotifyTransformChanged()
     {
@@ -51,8 +58,25 @@ public class GyzmoManupulator : MonoBehaviour
 
     private void Start()
     {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
+        _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
+        _eventBus.Subscribe<SetAxisModeSignal>(OnSetAxisMode);
+        _axisModeManager = ServiceManager.Current.Get<AxisModeManager>();
+        
         SetManipulatorMode(new MoveMode());
-        SetAxisMode(AxisMode.Global);
+        //SetAxisMode(AxisMode.Global);
+        _axisModeManager.SetAxisMode(AxisMode.Global);
+    }
+
+    private void OnSetAxisMode(SetAxisModeSignal signal)
+    {
+        SetAxisMode(signal.Mode);
+    }
+
+    private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
+    {
+        SetManipulatorMode(signal.Mode);
+        //CurrentManipulatorMode = ;
     }
 
     private void Update()
@@ -101,9 +125,10 @@ public class GyzmoManupulator : MonoBehaviour
 
     public void SetAxisMode(AxisMode mode)
     {
-        if (CurrentAxisMode == mode) return;
+        //if (_axisModeManager.Mode == mode) return;
+        //if (CurrentAxisMode == mode) return;
 
-        CurrentAxisMode = mode;
+        //CurrentAxisMode = mode;
 
         if (Target == null) return;
 
@@ -124,7 +149,8 @@ public class GyzmoManupulator : MonoBehaviour
     {
         if (Target == null) return;
 
-        if (CurrentAxisMode == AxisMode.Local)
+        //if (CurrentAxisMode == AxisMode.Local)
+        if (_axisModeManager.Mode == AxisMode.Local)
         {
             gizmoRoot.rotation = Target.rotation;
             // привязка moveHandles и plane к локальной системе объекта

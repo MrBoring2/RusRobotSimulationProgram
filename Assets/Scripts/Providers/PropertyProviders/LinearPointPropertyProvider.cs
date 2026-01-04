@@ -20,7 +20,7 @@ namespace Assets.Scripts.Providers
         private Mesh sphereMesh;
         public Quaternion RotationQ => transform.rotation;
         //public float PersentSpeed { get; set; } = 100f;
-        public float Speed { get; set;} = 0;
+        public float Speed { get; set;} = 50;
         public TypePoint pointType = TypePoint.LIN;
         //магнит
         public MagnitS magnitStatus = MagnitS.NotControl;
@@ -52,6 +52,7 @@ namespace Assets.Scripts.Providers
         {
             yield return new CustomProperty(
                 "Speed",
+                "Скорость",
                 typeof(float),
                 () => Speed,
                 val => Speed = (float)val

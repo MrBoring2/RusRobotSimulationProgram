@@ -1,10 +1,12 @@
-﻿using Assets.Scripts.Models;
+﻿using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using Assets.Scripts.Models;
 using Assets.Scripts.SystemManager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading.Tasks;                                 
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -14,8 +16,10 @@ namespace Assets.Scripts.UI
     {
         public TooltipEvents tooltipEvents;
         private VisualElement root;
+        private UndoRedoManager _undoRedoManager;
         private void Start()
         {
+            _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
             root = GetComponent<UIDocument>().rootVisualElement;
             var backBtn = root.Q<Button>("back-button");
             var forwardBtn = root.Q<Button>("forward-button");
@@ -33,12 +37,12 @@ namespace Assets.Scripts.UI
 
         private void Redo()
         {
-            UndoRedoSystem.Instance.Redo();
+            _undoRedoManager.Redo();
         }
 
         private void Undo()
         {
-            UndoRedoSystem.Instance.Undo();
+            _undoRedoManager.Undo();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
+using Assets.Scripts.CustomEventBus.Signals.ObjectsLibrary;
 using Assets.Scripts.CustomServiceManager;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
     void Start()
     {
         _eventBus = ServiceManager.Current.Get<EventBus>();
+        _eventBus.Subscribe<ShowObjectsLibrarySignal>(OnShowLibrary);
         foreach (var category in categories)
         {
             GameObject[] prefabs = Resources.LoadAll<GameObject>($"Prefabs/{category}");
@@ -39,11 +41,16 @@ public class ObjectsLibraryEvents : MonoBehaviour
         list = windowRoot.Q<ScrollView>("list");
 
         var button = windowRoot.Q<Button>("cancelBtn");
-        button.clicked += () => { windowRoot.style.display = DisplayStyle.None; UIBlocker.RemoveModalWindow(windowRoot); UIBlocker.ResolveUI(); };
+        button.clicked += () => { windowRoot.style.display = DisplayStyle.None; UIBlocker.RemoveModalWindow(windowRoot); };
 
         EnableDrag();
 
         BuildList();
+    }
+
+    private void OnShowLibrary(ShowObjectsLibrarySignal signal)
+    {
+        Show();
     }
 
     private void EnableDrag()
