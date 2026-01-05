@@ -61,3 +61,24 @@
     min-width: 0;
     overflow: hidden;
 }
+
+.context-menu-hierarchy-container {
+    background-color: #34495e;
+    border-width: 1px;
+    border-color: #13202e;
+}
+
+    .context-menu-hierarchy-container > Button {
+        margin: 0;
+        background-color: #9fbaff;
+        font-size: 14px;
+        unity-font-style: bold;
+        -unity-font-style: bold;
+        focusable: false;
+        border-width: 1;
+        border-color: #7f94cc;
+        padding: 5px;
+    }
+    .context-menu-hierarchy-container > Button:hover {
+        background-color: #d4dffa;
+    }

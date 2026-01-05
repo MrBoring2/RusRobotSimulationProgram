@@ -522,20 +522,20 @@ public class HierarchyPanelEvents : MonoBehaviour
         contextMenu.style.position = Position.Absolute;
         contextMenu.style.left = position.x;
         contextMenu.style.top = position.y;
-        contextMenu.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
-        contextMenu.style.borderTopWidth = 1;
-        contextMenu.style.borderBottomWidth = 1;
-        contextMenu.style.borderLeftWidth = 1;
-        contextMenu.style.borderRightWidth = 1;
-        contextMenu.style.borderBottomColor = Color.black;
-        contextMenu.style.borderTopColor = Color.black;
-        contextMenu.style.borderLeftColor = Color.black;
-        contextMenu.style.borderRightColor = Color.black;
+        //contextMenu.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+        //contextMenu.style.borderTopWidth = 1;
+        //contextMenu.style.borderBottomWidth = 1;
+        //contextMenu.style.borderLeftWidth = 1;
+        //contextMenu.style.borderRightWidth = 1;
+        //contextMenu.style.borderBottomColor = Color.black;
+        //contextMenu.style.borderTopColor = Color.black;
+        //contextMenu.style.borderLeftColor = Color.black;
+        //contextMenu.style.borderRightColor = Color.black;
         contextMenu.style.flexDirection = FlexDirection.Column;
-        contextMenu.style.paddingTop = 2;
-        contextMenu.style.paddingBottom = 2;
-        contextMenu.style.paddingLeft = 4;
-        contextMenu.style.paddingRight = 4;
+        //contextMenu.style.paddingTop = 2;
+        //contextMenu.style.paddingBottom = 2;
+        //contextMenu.style.paddingLeft = 4;
+        //contextMenu.style.paddingRight = 4;
 
         if (clickedElement != null && clickedElement.name.Contains("hierarchy-item"))
         {
@@ -652,8 +652,8 @@ public class HierarchyPanelEvents : MonoBehaviour
         btn.text = text;
         btn.style.unityTextAlign = TextAnchor.MiddleLeft;
         btn.style.height = 20;
-        btn.style.width = 150;
-        btn.style.marginBottom = 2;
+        //btn.style.width = 150;
+        //btn.style.marginBottom = 2;
         return btn;
     }
     /// <summary>
