@@ -49,7 +49,8 @@ public class ManipulatorModePanelEvents : MonoBehaviour
 
     private void OnJogClick(ClickEvent evt)
     {
-        _eventBus.Invoke(new PauseSimulationSignal());
+        //_eventBus.Invoke(new PauseSimulationSignal());
+        _sceneManipulatorModeManager.SetManipulatorMode(SceneManipulatorMode.JOG);
     }
 
     private void OnLookModeClick(ClickEvent evt)
