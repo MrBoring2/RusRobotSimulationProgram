@@ -6,9 +6,20 @@ using System.Threading.Tasks;
 
 namespace Assets.Scripts.CustomEventBus.Signals.Robot
 {
-    public class AddProgram
-    {
-
-    }
+    //Команды
+    public class AddProgram{ }
     public class AddCommand { }
+
+
+    //Симуляция
+    public class StartProgramm { }
+    public class PauseProgramm { }
+    public class StopProgramm { }
+    
+
+    public class RobotEndMove
+    {
+        public String RoboID;
+    }
+
 }

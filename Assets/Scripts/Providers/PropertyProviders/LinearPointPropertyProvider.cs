@@ -18,15 +18,20 @@ namespace Assets.Scripts.Providers
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private Mesh sphereMesh;
-        public Quaternion RotationQ => transform.rotation;
+        public Quaternion RotationQ
+        {
+            get => transform.rotation;
+            set => transform.rotation = value;
+        }
+
         //public float PersentSpeed { get; set; } = 100f;
         public float Speed { get; set;} = 50;
-        public TypePoint pointType = TypePoint.LIN;
+       // public TypePoint pointType = TypePoint.LIN;
         //магнит
-        public MagnitS magnitStatus = MagnitS.NotControl;
+       // public MagnitS magnitStatus = MagnitS.NotControl;
 
         //в точке
-        public float delay = 0;
+        //public float delay = 0;
         private void Awake()
         {
             displayScale = false;

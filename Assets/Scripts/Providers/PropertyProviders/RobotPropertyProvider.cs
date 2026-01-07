@@ -70,48 +70,17 @@ public class RobotPropertyProvider : BasePropertyProvider
     public void SyncJOGPosition()
     {
         JOGpoint.transform.position = absoluteXYZ;
+        JOGpoint.RotationQ = XYZRot;
     }
 
     private float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 }; //гр/с
 
-    public event Action EndMoveEvent;
-    public void EndMove()
-    {
-        EndMoveEvent?.Invoke();
-    }
 
     public void ResetPositionEffector()
     {
         XYZ = Vector3.zero;
         oldXYZ = Vector3.zero;
     }
-
-    //private List<Comand> Programm { get; set; } = new List<Comand>();
-    //public void SetRobotProgramm(List<Comand> prog)
-    //{
-    //    Programm = prog;
-    ////}
-    //public List<Comand> GetProgramm()
-    //{
-    //    return Programm;
-    //}
-    //public void AddComand(ComandMove p)
-    //{
-    //    Programm.Add(p);
-    //}
-    //public void AddSubProgramm(SubProgramm p)
-    //{
-    //    Programm.Add(p);
-    //}
-    //public void AddComandInSubProgramm(SubProgramm sp, ComandMove c)
-    //{
-    //    (Programm.FirstOrDefault(p => p.ID == sp.ID) as SubProgramm).Addcomand(c);
-    //}
-    //public void AddSubprogrammInSubProgramm(SubProgramm sp, SubProgramm spAdd)
-    //{
-    //    (Programm.FirstOrDefault(p => p.ID == sp.ID) as SubProgramm).AddSubProgramm(spAdd);
-    //}
-
     private void Start()
     {
         _eventBus = ServiceManager.Current.Get<EventBus>();
@@ -145,29 +114,8 @@ public class RobotPropertyProvider : BasePropertyProvider
         }
 
         return result;
-        //return _sceneObjectManager.Items.Values
-        //     .Where(x => x.ParentId == Id &&
-        //                 (x.Type == ObjectType.LinearMoveCommand || x.Type == ObjectType.StateEndEffectorCommand || x.Type == ObjectType.Program))
-        //     .Select(x => ConvertToRobotProgrammElement(x));
     }
 
-    //public void Comm()
-    //{
-    //    var root = BuildTreeInternal(Id);
-    //    foreach (var element in root)
-    //    {
-    //        if (element is SubProgramm prog)
-    //        {
-    //            var elements = prog.Get();
-    //            //рекурсивно обходилм
-    //        }
-    //        else if (element is RobotCommand comm)
-    //        {
-                
-    //            //команду получили
-    //        }
-    //    }
-    //}
 
     public IEnumerable<RobotProgrammElement> BuildTree()
     {
@@ -212,34 +160,17 @@ public class RobotPropertyProvider : BasePropertyProvider
                 }
             }
         }
-        //var children = _sceneObjectManager.Items.Values
-        //    .Where(x => x.Reference.activeSelf == true && x.ParentId == parentId &&
-        //                (x.Type == ObjectType.LinearMoveCommand || x.Type == ObjectType.StateEndEffectorCommand || x.Type == ObjectType.Program));
-
-        //foreach (var child in children)
-        //{
-        //    var node = ConvertToRobotProgrammElement(child);
-        //    yield return node;
-
-        //    if (node is SubProgramm subProgramm)
-        //    {
-        //        foreach (var subChild in subProgramm.Get())
-        //        {
-        //            yield return subChild;
-        //        }
-        //    }
-        //}
     }
     private RobotProgrammElement ConvertToRobotProgrammElement(SceneObject obj)
     {
         if (obj.Type == ObjectType.LinearMoveCommand)
         {
-            var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMANDS.MOVE_LIN, obj.Id);
+            var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
             return command;
         }
         else if(obj.Type == ObjectType.StateEndEffectorCommand)
         {
-            var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
+            var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
             return command;
         }
         else if (obj.Type == ObjectType.Program)
@@ -263,7 +194,7 @@ public class RobotPropertyProvider : BasePropertyProvider
                 }
             }
 
-            var subProgram = new SubProgramm(subItems, ENUM_COMANDS.SUBPROGRAMM, obj.Id);
+            var subProgram = new SubProgramm(subItems, ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
             return subProgram;
             //var subProgram = new SubProgramm(
             //    _sceneObjectManager.Items.Values

@@ -1,3 +1,6 @@
+using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.Robot;
+using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
 using Assets.Scripts.Providers.PropertyProviders;
@@ -9,8 +12,9 @@ using UnityEngine.UIElements;
 
 public class RobotController : MonoBehaviour
 {
-    private bool allowNextCommand;
     private RobotPropertyProvider _propertyProvider;
+    private EventBus _eventBus;
+    private bool allowNextMove;
     private float Speed;
     private TypePoint PointType;
     private Vector3 point;
@@ -20,13 +24,14 @@ public class RobotController : MonoBehaviour
 
     void Start()
     {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
         _propertyProvider = GetComponent<RobotPropertyProvider>();
         ik = new IK(_propertyProvider);
     }
     public void RobotSetStateEndEffector(StateEndEffectorPropertyProvider cmd)
     {
         _propertyProvider.EndEffectorOn = cmd.Get();
-        EndMoveToPoint();
+        _eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
     }
     public void SetJogMove(LinearPointPropertyProvider point)
     {
@@ -43,11 +48,7 @@ public class RobotController : MonoBehaviour
     public void RobotSetLinMove(LinearPointPropertyProvider point)
     {
         GetPositionInfo(point);
-        if(PointType == TypePoint.LIN)
-        {
-           StartCoroutine(LinMove());
-            
-        }
+        StartCoroutine(LinMove());
     }
     private void GetPositionInfo(LinearPointPropertyProvider p)
     {
@@ -57,7 +58,7 @@ public class RobotController : MonoBehaviour
         _propertyProvider.XYZ.x = point.z * 1000;
         _propertyProvider.XYZRot = p.transform.rotation;
         Speed = p.Speed;
-        PointType = p.pointType;
+        //PointType = p.pointType;
     }
     private void GetAbsolutePosition(Vector3 pos)
     {
@@ -92,7 +93,7 @@ public class RobotController : MonoBehaviour
         while (traveled < distance)
         {
 
-            yield return new WaitUntil(()=>GetStatusSim());
+            yield return new WaitUntil(()=>allowNextMove);
             float t0 = MathF.Floor((traveled / distance) * 100f) / 100f;
 
             float s = ik.Curva(t0);
@@ -106,59 +107,28 @@ public class RobotController : MonoBehaviour
             _propertyProvider.XYZRot = Quaternion.Lerp(_propertyProvider.oldXYZRot, XYZBuf, ik.Curva2(t0));
             //UnityEngine.Debug.LogWarning("XYZ " + _propertyProvider.XYZRot.eulerAngles.y);
 
-            ik.CalculateInverseKinematics(); ;
+            ik.CalculateInverseKinematics();
             //CheckAngle();
 
             traveled += g;
             ik.CheckAngle();
+
             yield return new WaitForSeconds(Time.fixedDeltaTime);
         }
         //XYZRot = XYZBuf;
         _propertyProvider.oldXYZ = _propertyProvider.XYZ;
         _propertyProvider.oldXYZRot = _propertyProvider.XYZRot;
-        EndMoveToPoint();
+        _propertyProvider.SyncJOGPosition();
+        _eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
     }
-    private bool GetStatusSim()
+    public void SetAllowNextMove(bool allow)
     {
-        return allowNextCommand;
+        allowNextMove = allow;
     }
-    public void StatusSim(SIM sim)
+    public void StopSim()
     {
-        switch (sim)
-        {
-            case SIM.START: StartSim(); break;
-            case SIM.STOP: StopSim(); break;
-            case SIM.PAUSE: PauseSim(); break;
-            case SIM.RESUME: ResumeSim(); break;
-            default: break;
-        }
-    }
-    private void PauseSim()
-    {
-        allowNextCommand = false;
-    }
-    private void StopSim()
-    {
-        allowNextCommand = false;
-        //_propertyProvider.ResetPositionEffector();
+        allowNextMove = false;
         StopAllCoroutines();
-    }
-    private void StartSim()
-    {
-        allowNextCommand = true;
-    }
-    private void ResumeSim()
-    {
-        allowNextCommand = true;
-    }
-    private void StepSim()
-    {
-        allowNextCommand = true;
-
-    }
-    private void EndMoveToPoint()
-    {
-        _propertyProvider.EndMove();
     }
 }
 

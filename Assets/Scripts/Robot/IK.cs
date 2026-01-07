@@ -203,7 +203,7 @@ public class IK
         _propertyProvider.J5Angle = (old_thetha[4] += angles[4]);
         _propertyProvider.J6Angle = (old_thetha[5] += angles[5]);
     }
-    public void CheckAngle()
+    public bool CheckAngle()
     {
         if (checkIsNaN())
         {
@@ -214,7 +214,12 @@ public class IK
             }
             step_thetha[5] = (((thetha[5] - old_thetha[5]) % 360 + 540) % 360 - 180);
             ModifyRobot(step_thetha);
+            return true;
 
+        }
+        else
+        {
+            return false;
         }
     }
 }
