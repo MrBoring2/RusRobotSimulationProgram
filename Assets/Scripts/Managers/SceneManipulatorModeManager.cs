@@ -28,23 +28,7 @@ namespace Assets.Scripts.Managers
         public void SetManipulatorMode(SceneManipulatorMode mode)
         {
             Mode = mode;
-            switch (mode)
-            {
-                case SceneManipulatorMode.Drag:
-                    _eventBus.Invoke(new SetGyzmoManipulatorModeSignal(null));
-                    break;
-                case SceneManipulatorMode.Move:
-                    _eventBus.Invoke(new SetGyzmoManipulatorModeSignal(new MoveMode()));
-                    break;
-                case SceneManipulatorMode.Rotation:
-                    _eventBus.Invoke(new SetGyzmoManipulatorModeSignal(new RotateMode()));
-                    break;
-                case SceneManipulatorMode.JOG:
-                    _eventBus.Invoke(new SetJOGManipulatorModeSignal());
-                    break;
-                default:
-                    break;
-            }
+            _eventBus.Invoke(new SetGyzmoManipulatorModeSignal(Mode));
         }
     }
 }

@@ -20,17 +20,19 @@ public class GyzmoManupulator : MonoBehaviour
     public bool CameraModeActive { get; private set; } = false;
     public GameObject moveHandlesGroup;
     public GameObject rotateHandlesGroup;
+    private SceneManipulatorModeManager _manipulatorModeManager;
 
     public Camera cam;
     public float gizmoScaleKoeficient = 0.1f;
 
-    public Transform gizmoRoot;   // ПУСТЫШКА!
-    [HideInInspector] public Quaternion gizmoRootStartRotation; // для глобального режима
+    public Transform gizmoRoot; 
+    [HideInInspector] public Quaternion gizmoRootStartRotation;
     public event Action<Transform> OnTargetTransformChanged;
     public event Action<Transform> OnDragStart;
     public event Action<Transform> OnDragEnd;
     private EventBus _eventBus;
     private AxisModeManager _axisModeManager;
+    public SceneManipulatorMode CurrentSceneMode => _manipulatorModeManager.Mode;
 
     public void NotifyTransformChanged()
     {
@@ -62,7 +64,7 @@ public class GyzmoManupulator : MonoBehaviour
         _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
         _eventBus.Subscribe<SetAxisModeSignal>(OnSetAxisMode);
         _axisModeManager = ServiceManager.Current.Get<AxisModeManager>();
-        
+        _manipulatorModeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
         SetManipulatorMode(new MoveMode());
         //SetAxisMode(AxisMode.Global);
         _axisModeManager.SetAxisMode(AxisMode.Global);
@@ -75,7 +77,24 @@ public class GyzmoManupulator : MonoBehaviour
 
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
     {
-        SetManipulatorMode(signal.Mode);
+        switch (signal.Mode)
+        {
+            case SceneManipulatorMode.Drag:
+                SetManipulatorMode(null);
+                break;
+            case SceneManipulatorMode.Move:
+                SetManipulatorMode(new MoveMode());
+                break;
+            case SceneManipulatorMode.Rotation:
+                SetManipulatorMode(new RotateMode());
+                break;
+            case SceneManipulatorMode.JOG:
+                SetManipulatorMode(null);
+                break;
+            default:
+                break;
+        }
+        
         //CurrentManipulatorMode = ;
     }
 

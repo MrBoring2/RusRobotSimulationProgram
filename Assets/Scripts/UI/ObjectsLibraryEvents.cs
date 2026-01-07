@@ -12,7 +12,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
     public VisualTreeAsset windowUXML;  // Основное окно
     public VisualTreeAsset itemUXML;    // Элемент списка
 
-    private List<string> categories = new List<string> { "Primitive", "Static", "Robot" };
+    private Dictionary<string, string> categories = new Dictionary<string, string>();
 
     public event Action<GameObject> OnObjectSelected;
 
@@ -27,9 +27,11 @@ public class ObjectsLibraryEvents : MonoBehaviour
 
     void Start()
     {
+        categories.Add("Primitive", "Примитивы");
+        categories.Add("Robot", "Манипуляторы");
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<ShowObjectsLibrarySignal>(OnShowLibrary);
-        foreach (var category in categories)
+        foreach (var category in categories.Keys)
         {
             GameObject[] prefabs = Resources.LoadAll<GameObject>($"Prefabs/{category}");
             loadedPrefabs[category] = prefabs;
@@ -108,12 +110,12 @@ public class ObjectsLibraryEvents : MonoBehaviour
         foreach (var category in loadedPrefabs)
         {
 
-            string categoryName = category.Key;
+            string categoryName = categories[category.Key];
             GameObject[] prefabs = category.Value;
 
             Label catLabel = new Label(categoryName)
             {
-                style = { unityFontStyleAndWeight = FontStyle.Bold, fontSize = 14 }
+                style = { unityFontStyleAndWeight = FontStyle.Bold, fontSize = 14, color = Color.white }
             };
             list.Add(catLabel);
 
@@ -121,16 +123,27 @@ public class ObjectsLibraryEvents : MonoBehaviour
             {
                 var prefabItem = itemUXML.CloneTree();
                 var previewImage = prefabItem.Q<Image>("preview");
+                //previewImage.scaleMode = ScaleMode.StretchToFill;
                 var titleLabel = prefabItem.Q<Label>("title");
 
                 previewImage.image = GeneratePreview(prefab);
+                previewImage.scaleMode = ScaleMode.ScaleAndCrop;
+
+                // Если нужно растянуть на всю площадь
+                //previewImage.style.flexGrow = 1;
+                previewImage.style.width = new Length(150, LengthUnit.Pixel);
+                previewImage.style.height = new Length(80, LengthUnit.Pixel);
+
                 titleLabel.text = prefab.name;
 
                 prefabItem.RegisterCallback<ClickEvent>(evt =>
                 {
-                    _eventBus.Invoke(new SelectObjectinLibrary(prefab));
-                    //OnObjectSelected?.Invoke(prefab);
-                    windowRoot.style.display = DisplayStyle.None;
+                    if (evt.clickCount == 2)
+                    {
+                        _eventBus.Invoke(new SelectObjectinLibrary(prefab));
+                        //OnObjectSelected?.Invoke(prefab);
+                        windowRoot.style.display = DisplayStyle.None;
+                    }
                 });
 
                 list.Add(prefabItem);
@@ -165,7 +178,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
         var bounds = CalculateBounds(obj);
 
         float distance = bounds.size.magnitude * 1.5f;
-        Vector3 offset = new Vector3(0.5f, 0.3f, -1f);
+        Vector3 offset = new Vector3(1.5f, 0.3f, -1f);
         offset.Normalize();
         cam.transform.position = bounds.center + offset * distance;
         cam.transform.LookAt(bounds.center);

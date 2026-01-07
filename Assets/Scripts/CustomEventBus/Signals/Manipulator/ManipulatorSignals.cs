@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Assets.Scripts.Managers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +9,9 @@ namespace Assets.Scripts.CustomEventBus.Signals.Manipulator
 {
     public class SetGyzmoManipulatorModeSignal
     {
-        public readonly IManipulatorMode Mode;
+        public readonly SceneManipulatorMode Mode;
 
-        public SetGyzmoManipulatorModeSignal(IManipulatorMode mode)
+        public SetGyzmoManipulatorModeSignal(SceneManipulatorMode mode)
         {
             Mode = mode;
         }

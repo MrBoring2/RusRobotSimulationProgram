@@ -1,3 +1,5 @@
+using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.Simulation;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.UI;
@@ -10,15 +12,18 @@ public class ManipulatorModePanelEvents : MonoBehaviour
 {
     //public GyzmoManupulator manipulator;
     private SceneManipulatorModeManager _sceneManipulatorModeManager;
+    private EventBus _eventBus;
     public Button lookButton;
     public Button moveButton;
     public Button rotateButton;
+    public Button jogButton;
     public TooltipEvents tooltipEvents;
     private VisualElement root;
     private List<(Button btn, EventCallback<ClickEvent> click)> registeredButtons
         = new List<(Button, EventCallback<ClickEvent>)>();
     private void Start()
     {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
         _sceneManipulatorModeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
         root = GetComponent<UIDocument>().rootVisualElement;
         RegisterButtons();
@@ -29,15 +34,22 @@ public class ManipulatorModePanelEvents : MonoBehaviour
         lookButton = root.Q<Button>("mode-look-button");
         moveButton = root.Q<Button>("mode-move-button");
         rotateButton = root.Q<Button>("mode-rotate-button");
+        jogButton = root.Q<Button>("mode-jog-button");
         lookButton.RegisterCallback<ClickEvent>(OnLookModeClick);
         moveButton.RegisterCallback<ClickEvent>(OnMoveModeClick);
         rotateButton.RegisterCallback<ClickEvent>(OnRotationModeClick);
+        jogButton.RegisterCallback<ClickEvent>(OnJogClick);
         tooltipEvents.RegisterTooltip(lookButton, "Режим просмотра");
         tooltipEvents.RegisterTooltip(moveButton, "Режим перемещения");
         tooltipEvents.RegisterTooltip(rotateButton, "Режим вращения");
         moveButton.AddToClassList("active");
         _sceneManipulatorModeManager.SetManipulatorMode(SceneManipulatorMode.Move);
         //manipulator.SetManipulatorMode(new MoveMode());
+    }
+
+    private void OnJogClick(ClickEvent evt)
+    {
+        _eventBus.Invoke(new PauseSimulationSignal());
     }
 
     private void OnLookModeClick(ClickEvent evt)

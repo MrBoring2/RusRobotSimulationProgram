@@ -32,14 +32,14 @@ public class PropertiesPanelEvents : MonoBehaviour
     private List<Action> cleanupActions = new List<Action>();
     private UndoRedoManager _undoRedoManager;
 
-   // public event Action OnTargetNameChanged;
+    // public event Action OnTargetNameChanged;
 
     void Start()
     {
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<PropertiesTransformUpdateSignal>(OnTransformChanged);
-        _eventBus.Subscribe<ShowPropertiesSignal>(OnShowProperties);
-        _eventBus.Subscribe<HidePropertiesSignal>(OnHideProperties);
+        _eventBus.Subscribe<ChangePropertiesProviderSignal>(OnChangePropertiesProvider);
+        _eventBus.Subscribe<TogglePropertiesSignal>(OnToggleProperties);
         _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
         _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
         _UIStatusManager = ServiceManager.Current.Get<UIStatusManager>();
@@ -47,7 +47,7 @@ public class PropertiesPanelEvents : MonoBehaviour
 
         root = GetComponent<UIDocument>().rootVisualElement;
         propertiesPanel = root.Q<VisualElement>("properties-container");
-        HidePanel();
+        TogglePanel();
         commonContainer = root.Q("base-properties-container");
         customContainer = root.Q("custom-properties-container");
 
@@ -72,20 +72,27 @@ public class PropertiesPanelEvents : MonoBehaviour
 
         RegisterButtons();
         RegisterInputs();
+        HideElement(namePropertyContainer);
+        HideElement(positionPropertyContainer);
+        HideElement(rotationPropertyContainer);
+        HideElement(scalePropertyContainer);
         //UndoRedoManager.Instance.OnCommandExecuted += OnUndoRedoPerformed;
         //UndoRedoManager.Instance.OnCommandUndone += OnUndoRedoPerformed;
     }
 
-  
 
-    private void OnHideProperties(HidePropertiesSignal signal)
+
+    private void OnToggleProperties(TogglePropertiesSignal signal)
     {
-        HidePanel();
+        TogglePanel();
     }
 
-    private void OnShowProperties(ShowPropertiesSignal signal)
+    private void OnChangePropertiesProvider(ChangePropertiesProviderSignal signal)
     {
-        ShowProperties(signal.PropertyProvider);
+        ChangePropertiesProvider(signal.PropertyProvider);
+        if (signal.PropertyProvider != null)
+            _UIStatusManager.SetPropertiesPanelVisibility(true);
+        else _UIStatusManager.SetPropertiesPanelVisibility(false);
     }
 
     private void OnTransformChanged(PropertiesTransformUpdateSignal signal)
@@ -93,29 +100,28 @@ public class PropertiesPanelEvents : MonoBehaviour
         UpdateTransform();
     }
 
-    public void ShowProperties(IPropertyProvider propertyProvider)
+    public void ChangePropertiesProvider(IPropertyProvider propertyProvider)
     {
-        ShowPanel();
         ClearBindings();
 
         current = propertyProvider;
 
-        if (!current.DisplayName)
+        if (propertyProvider == null || !current.DisplayName)
         {
             HideElement(namePropertyContainer);
         }
         else ShowElement(namePropertyContainer);
-        if (!current.DisplayPosition)
+        if (propertyProvider == null || !current.DisplayPosition)
         {
             HideElement(positionPropertyContainer);
         }
         else ShowElement(positionPropertyContainer);
-        if (!current.DisplayRotation)
+        if (propertyProvider == null || !current.DisplayRotation)
         {
             HideElement(rotationPropertyContainer);
         }
         else ShowElement(rotationPropertyContainer);
-        if (!current.DisplayScale)
+        if (propertyProvider == null || !current.DisplayScale)
         {
             HideElement(scalePropertyContainer);
         }
@@ -259,10 +265,10 @@ public class PropertiesPanelEvents : MonoBehaviour
 
     private void RegisterButtons()
     {
-        var closeBtn = root.Q<Button>("close-button");
+        var closeBtn = root.Q<Button>("close-properties-button");
         closeBtn.clicked += () =>
         {
-            propertiesPanel.visible = false;
+            _UIStatusManager.TogglePropertiesPanel();
         };
     }
 
@@ -314,6 +320,48 @@ public class PropertiesPanelEvents : MonoBehaviour
         //{
         //    name.focusable = false;
         //});
+        rotX.RegisterCallback<ChangeEvent<float>>(evt =>
+        {
+            if (evt.newValue > 360)
+            {
+                rotX.SetValueWithoutNotify(360);
+                return;
+            }
+            else if (evt.newValue < -360)
+            {
+                rotX.SetValueWithoutNotify(-360);
+                return;
+            }
+            rotX.SetValueWithoutNotify(evt.newValue);
+        });
+        rotY.RegisterCallback<ChangeEvent<float>>(evt =>
+        {
+            if (evt.newValue > 360)
+            {
+                rotY.SetValueWithoutNotify(360);
+                return;
+            }
+            else if (evt.newValue < -360)
+            {
+                rotY.SetValueWithoutNotify(-360);
+                return;
+            }
+            rotY.SetValueWithoutNotify(evt.newValue);
+        });
+        rotZ.RegisterCallback<ChangeEvent<float>>(evt =>
+        {
+            if (evt.newValue > 360)
+            {
+                rotZ.SetValueWithoutNotify(360);
+                return;
+            }
+            else if (evt.newValue < -360)
+            {
+                rotZ.SetValueWithoutNotify(-360);
+                return;
+            }
+            rotZ.SetValueWithoutNotify(evt.newValue);
+        });
     }
 
     private void RegisterEventsforInput(VisualElement input)
@@ -340,15 +388,15 @@ public class PropertiesPanelEvents : MonoBehaviour
         //});
     }
 
-    public void HidePanel()
+    public void TogglePanel()
     {
-        propertiesPanel.visible = false;
+        propertiesPanel.visible = _UIStatusManager.IsPropertiesPanelVisible == true ? true : false;
     }
 
-    public void ShowPanel()
-    {
-        propertiesPanel.visible = true;
-    }
+    //public void ShowPanel()
+    //{
+    //    propertiesPanel.visible = true;
+    //}
 
     public void AddNewTransformOperation(IPropertyProvider provider)
     {
@@ -375,7 +423,7 @@ public class PropertiesPanelEvents : MonoBehaviour
     private void BuildCustomProperties(IPropertyProvider provider)
     {
         customContainer.Clear();
-        if (provider.GetCustomProperties() == null) return;                                                 
+        if (provider.GetCustomProperties() == null) return;
 
         foreach (var prop in provider.GetCustomProperties())
         {
@@ -396,14 +444,14 @@ public class PropertiesPanelEvents : MonoBehaviour
                 RegisterEventsforInput(field);
 
             }
-            else if(prop.PropertyType == typeof(bool))
+            else if (prop.PropertyType == typeof(bool))
             {
                 var container = new VisualElement();
                 container.AddToClassList("base-bool-property");
-                container.Add(new Label(prop.DisplayName));                                                                                                    
+                container.Add(new Label(prop.DisplayName));
                 var field = new Toggle();
                 field.value = (bool)prop.Getter();
-                container.Add(field);                                                                                                                                         
+                container.Add(field);
                 customContainer.Add(container);
                 RegisterEventsforInput(field);
                 cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
@@ -419,7 +467,7 @@ public class PropertiesPanelEvents : MonoBehaviour
                 var field = new IntegerField();
                 field.value = (int)prop.Getter();
                 container.Add(field);
-                customContainer.Add(container);                                                                                                             
+                customContainer.Add(container);
 
                 cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
                 {
