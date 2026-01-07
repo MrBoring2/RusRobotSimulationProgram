@@ -19,17 +19,14 @@ public class FileMenuPanelEvents : MonoBehaviour
     private VisualElement root;
     public TooltipEvents tooltipEvents;
     //public HierarchyPanelEvents hierarchyPanelEvents;
-    public ISaveLoadProvider saveLoadProvider;
-    private SceneObjectsManager _sceneObjectManager;
-    private string savePath = "";
     private EventBus _eventBus;
-    private UndoRedoManager _undoRedoManager;
+
+    private SaveLoadManager _saveLoadManager;
     private void Start()
     {
         _eventBus = ServiceManager.Current.Get<EventBus>();
-        _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();   
-        _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
-        saveLoadProvider = new BinarySaveLoadProvider();
+        _saveLoadManager = ServiceManager.Current.Get<SaveLoadManager>();
+        //saveLoadProvider = new BinarySaveLoadProvider();
         root = GetComponent<UIDocument>().rootVisualElement;
         var newBtn = root.Q<Button>("new-file-button");
         var saveBtn = root.Q<Button>("save-button");
@@ -39,80 +36,21 @@ public class FileMenuPanelEvents : MonoBehaviour
         tooltipEvents.RegisterTooltip(newBtn, "Новая сцена");
         saveBtn.RegisterCallback<ClickEvent>(evt =>
         {
-            SaveScene();
+            _saveLoadManager.SaveScene();
         });
         loadBtn.RegisterCallback<ClickEvent>(evt =>
         {
-            LoadScene();
+            _saveLoadManager.LoadScene();
         });
         newBtn.RegisterCallback<ClickEvent>(evt =>
         {
-            ClearScene();
+            _saveLoadManager.ClearScene();
         });
     }
 
-    private void LoadScene()
-    {
-        var extentionsList = new[]
-        {
-            new ExtensionFilter("Файл RusRobot", "rusbot")
-        };
-        StandaloneFileBrowser.OpenFilePanelAsync("Выберите файл", "", extentionsList, false, OnSceneFileSelected);
-    }
 
-    private void OnSceneFileSelected(string[] paths)
-    {
-        if (paths == null || paths.Length == 0)
-            return;
 
-        _undoRedoManager.BeginExternalOperation();
-
-        try
-        {
-            ClearScene();
-
-            var loaded = saveLoadProvider.Load(paths[0]);
-            if (loaded == null)
-            {
-                Debug.LogError("Ошибка загрузки сцены");
-                return;
-            }
-            savePath = paths[0];
-
-            // hierarchyPanelEvents.LoadHierarchy();
-            _sceneObjectManager.SpawnRestoredObjects(loaded.objectsData);
-            //foreach (var data in loaded.objectsData)
-            //{
-            //    SpawnRestoredObject(data);
-            //}
-            _eventBus.Invoke(new LoadObjectsSignal(_sceneObjectManager.GetGameObjectsList()));
-        }
-        finally
-        {
-            _undoRedoManager.EndExternalOperation();
-        }
-    }
-
-    private void SaveScene()
-    {
-        if (!string.IsNullOrEmpty(savePath))
-        {
-            if (File.Exists(savePath))
-                saveLoadProvider.Save(savePath, _sceneObjectManager.GetGameObjectsList()); //hierarchyPanelEvents.Items);
-            return;
-        }
-        var extentionsList = new[]
-        {
-            new ExtensionFilter("Файл RusRobot", "rusbot")
-        };
-        StandaloneFileBrowser.SaveFilePanelAsync("Выберите место для сохранения", "", "", extentionsList, (string path) =>
-        {
-            if (string.IsNullOrEmpty(path))
-                return;
-            savePath = path;
-            saveLoadProvider.Save(path, _sceneObjectManager.GetGameObjectsList());//hierarchyPanelEvents.Items);
-        });
-    }
+   
    
     //private void SpawnRestoredObject(ObjectInfo data)
     //{
@@ -131,14 +69,6 @@ public class FileMenuPanelEvents : MonoBehaviour
     //    m.sourcePath = data.SourcePath;
     //}
 
-    private void ClearScene()
-    {
-        //var itemsToDelete = new List<GameObject>(hierarchyPanelEvents.Items.Select(item => item.Reference));
-        _sceneObjectManager.ClearScene();
-        //foreach (var gameObject in _sceneObjectManager.GetGameObjectsList())
-        //{
-        //    _sceneObjectManager.Remove(gameObject.Id);
-        //}
-    }
+   
 
 }

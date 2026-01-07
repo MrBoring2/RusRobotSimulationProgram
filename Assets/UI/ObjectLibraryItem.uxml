@@ -1,18 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ui:UXML
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:ui="UnityEngine.UIElements"
-    xmlns:uie="UnityEditor.UIElements"
-    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
->
-     <ui:VisualElement class="item"
-                      style="flex-direction:row; margin-bottom:6px; padding:6px; background-color:#2a2a2a;">
-
-        <ui:Image name="preview"
-                  style="width:64px; height:64px; margin-right:8px;" />
-
-        <ui:Label name="title"
-                  style="flex-grow:1; align-self:center;" />
-
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement class="item">
+        <ui:Image name="preview" style="width: auto; height: auto; margin-right: 8px; -unity-background-scale-mode: scale-and-crop; -unity-background-image-tint-color: rgb(255, 255, 255); -unity-background-image-position: center; -unity-background-image-size: cover;" />
+        <ui:Label name="title" style="flex-grow: 1; align-self: center; color: rgb(255, 255, 255);" />
     </ui:VisualElement>
 </ui:UXML>

@@ -20,5 +20,9 @@ namespace Assets.Scripts.Models
             Reference = reference;
             ParentId = parentId;
         }
+        public void SetParent(string parentId)
+        {
+            ParentId = parentId;
+        }
     }
 }

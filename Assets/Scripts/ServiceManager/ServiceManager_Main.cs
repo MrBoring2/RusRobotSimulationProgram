@@ -18,6 +18,7 @@ namespace Assets.Scripts.CustomServiceManager
         [SerializeField] private SceneManipulatorModeManager _sceneManipulatorModeManager;
         [SerializeField] private AxisModeManager _axisModeManager;
         [SerializeField] private UndoRedoManager _undoRedoManager;
+        [SerializeField] private SaveLoadManager _saveLoadManager;
         private CustomEventBus.EventBus _eventBus;
         [SerializeField] private SimulationManager _simulationManager;
 
@@ -39,6 +40,7 @@ namespace Assets.Scripts.CustomServiceManager
             ServiceManager.Current.Register(_sceneManipulatorModeManager);
             ServiceManager.Current.Register(_axisModeManager);
             ServiceManager.Current.Register(_undoRedoManager);
+            ServiceManager.Current.Register(_saveLoadManager);
             ServiceManager.Current.Register(_simulationManager);
         }
 
@@ -50,6 +52,7 @@ namespace Assets.Scripts.CustomServiceManager
             _sceneManipulatorModeManager.Init();
             _axisModeManager.Init();
             _undoRedoManager.Init();
+            _saveLoadManager.Init();
         }
 
     }

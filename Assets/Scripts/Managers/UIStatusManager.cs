@@ -1,4 +1,7 @@
-﻿using Assets.Scripts.CustomServiceManager;
+﻿using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.HierarhyPanel;
+using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
+using Assets.Scripts.CustomServiceManager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +14,14 @@ namespace Assets.Scripts.Managers
 {
     public class UIStatusManager : MonoBehaviour, IService
     {
+        public bool IsPropertiesPanelVisible { get; private set; } = false;
+        public bool IsObjectsListVisible { get; private set; } = true;
         public bool isPointerOverUI { get; private set; }
         public bool isInputMode { get; private set; }
+        private EventBus _eventBus;
         public void Init()
         {
+            _eventBus = ServiceManager.Current.Get<EventBus>();
             isInputMode = false;
             isPointerOverUI = false;
         }
@@ -28,13 +35,27 @@ namespace Assets.Scripts.Managers
             this.isPointerOverUI = isPointerOverUI;
         }
 
-        public void AddContextMenu(VisualElement element)
+        public void SetPropertiesPanelVisibility(bool visible)
         {
-            
+            IsPropertiesPanelVisible = visible;
+            _eventBus.Invoke(new TogglePropertiesSignal());
         }
-        public void AddModalWindow(VisualElement element)
+        public void SetObjectsListPanelVisibility(bool visible)
         {
+            IsObjectsListVisible = visible;
+            _eventBus.Invoke(new ToggleObjectsListSignal());
+        }
 
+        public void TogglePropertiesPanel()
+        {
+            IsPropertiesPanelVisible = !IsPropertiesPanelVisible;
+            _eventBus.Invoke(new TogglePropertiesSignal());
+        }
+
+        public void ToggleObjectsListPanel()
+        {
+            IsObjectsListVisible = !IsObjectsListVisible;
+            _eventBus.Invoke(new ToggleObjectsListSignal());
         }
     }
 }
