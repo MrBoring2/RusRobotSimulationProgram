@@ -19,6 +19,7 @@ namespace Assets.Scripts.CustomServiceManager
         [SerializeField] private AxisModeManager _axisModeManager;
         [SerializeField] private UndoRedoManager _undoRedoManager;
         private CustomEventBus.EventBus _eventBus;
+        [SerializeField] private SimulationManager _simulationManager;
 
         private void Awake()
         {
@@ -38,6 +39,7 @@ namespace Assets.Scripts.CustomServiceManager
             ServiceManager.Current.Register(_sceneManipulatorModeManager);
             ServiceManager.Current.Register(_axisModeManager);
             ServiceManager.Current.Register(_undoRedoManager);
+            ServiceManager.Current.Register(_simulationManager);
         }
 
         private void Init()
