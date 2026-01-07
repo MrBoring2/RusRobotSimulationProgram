@@ -11,7 +11,7 @@ namespace Assets.Scripts.Models
 {
     public abstract class RobotProgrammElement
     {
-        public ENUM_COMANDS TypeComand;
+        public ENUM_COMMANDS TypeComand;
         public string ID { get; set; }
         public RobotProgrammElement(string id)
         {
@@ -22,7 +22,7 @@ namespace Assets.Scripts.Models
     public class CommandMove : RobotProgrammElement
     {
         private LinearPointPropertyProvider Point { get; set; }
-        public CommandMove(LinearPointPropertyProvider p, ENUM_COMANDS tc, string id) : base(id)
+        public CommandMove(LinearPointPropertyProvider p, ENUM_COMMANDS tc, string id) : base(id)
         {
             Point = p;
             TypeComand = tc;
@@ -40,7 +40,7 @@ namespace Assets.Scripts.Models
     public class ComandSetStateEndEffector : RobotProgrammElement
     {
         private StateEndEffectorPropertyProvider stateEndEffectorProperty;
-        public ComandSetStateEndEffector(StateEndEffectorPropertyProvider p, ENUM_COMANDS tc, string id)  : base(id)
+        public ComandSetStateEndEffector(StateEndEffectorPropertyProvider p, ENUM_COMMANDS tc, string id)  : base(id)
         {
             stateEndEffectorProperty = p;
             TypeComand = tc;
@@ -62,7 +62,7 @@ namespace Assets.Scripts.Models
         //{
         //    TypeComand = tc;
         //}
-        public SubProgramm(List<RobotProgrammElement> p, ENUM_COMANDS tc, string id) : base(id)
+        public SubProgramm(List<RobotProgrammElement> p, ENUM_COMMANDS tc, string id) : base(id)
         {
             ProgrammElement = p;
         }
@@ -81,22 +81,8 @@ namespace Assets.Scripts.Models
 
 
 
-    public enum SIM
-    {
-        START,
-        STOP,
-        PAUSE,
-        RESUME,
-        NONE
-    }
-    public enum MODE
-    {
-        STEP,
-        NO_STEP,
-        JOG_MODE,
-        NONE
-    }
-    public enum ENUM_COMANDS
+   
+    public enum ENUM_COMMANDS
     {
         MOVE_PTP,
         MOVE_LIN,
