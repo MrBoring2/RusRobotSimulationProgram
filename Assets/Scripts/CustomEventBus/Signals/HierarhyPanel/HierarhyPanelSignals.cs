@@ -9,4 +9,7 @@ namespace Assets.Scripts.CustomEventBus.Signals.HierarhyPanel
     public class ToggleObjectsListSignal
     {
     }
+    public class UpdateHierarchySignal
+    {
+    }
 }

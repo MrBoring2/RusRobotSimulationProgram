@@ -1,4 +1,4 @@
-using Assets.Scripts.CustomEventBus;
+п»їusing Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.HierarhyPanel;
 using Assets.Scripts.CustomEventBus.Signals.Lines;
 using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
@@ -31,6 +31,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     private VisualElement hierarchyPanel;
     private VisualElement contextMenu;
     public CustomFoldout MainHierarchyItem { get; private set; }
+
     public UIBlocker iBlocker;
     //public PropertiesPanelEvents propertiesPanelEvents;
     //public ObjectPicker objectPicker;
@@ -41,6 +42,16 @@ public class HierarchyPanelEvents : MonoBehaviour
     private Dictionary<string, VisualElement> elementCache = new Dictionary<string, VisualElement>();
     private UndoRedoManager _undoRedoManager;
     private UIStatusManager _uIStatusManager;
+
+    private DragDropData currentDragData;
+    private VisualElement dragPreviewElement;
+    private DropTargetInfo currentDropTarget;
+    private const string DRAG_PREVIEW_CLASS = "drag-preview";
+    private const string DROP_TARGET_ABOVE_CLASS = "drop-target-above";
+    private const string DROP_TARGET_BELOW_CLASS = "drop-target-below";
+    private const string DROP_TARGET_INSIDE_CLASS = "drop-target-inside";
+    private const string DRAGGING_CLASS = "dragging";
+    private bool isDragging = false;
 
     private void Start()
     {
@@ -56,6 +67,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
         _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
         _eventBus.Subscribe<ToggleObjectsListSignal>(OnToggleObjectsList);
+        _eventBus.Subscribe<UpdateHierarchySignal>(OnUpdateHierarhy);
         _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
         _lineManager = ServiceManager.Current.Get<LineManager>();
         _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
@@ -67,18 +79,21 @@ public class HierarchyPanelEvents : MonoBehaviour
         //UndoRedoManager.Instance.OnCommandUndone += Instance_OnCommandUndone;
         RegisterElements();
         RegisterButtons();
+        InitializeDragAndDrop();
+
         if (_sceneObjectManager.GetGameObjectsList().Count > 0)
         {
             UpdateHierarchy();
         }
         ToggleObjectsList();
+
     }
 
 
 
 
 
-    #region Обработчики событий
+    #region РћР±СЂР°Р±РѕС‚С‡РёРєРё СЃРѕР±С‹С‚РёР№
     private void OnObjectSelectedInScene(SelectObjectInScene scene) => SelectHierarchyItem(scene.Id);
 
     private void OnRobotCommandAdd(AddCommand command) => UpdateHierarchy();
@@ -92,6 +107,8 @@ public class HierarchyPanelEvents : MonoBehaviour
             UpdateHierarchy();
         }
     }
+
+    private void OnUpdateHierarhy(UpdateHierarchySignal signal) => UpdateHierarchy();
 
     private void Instance_OnCommandExecuted(ICommand obj)
     {
@@ -127,10 +144,10 @@ public class HierarchyPanelEvents : MonoBehaviour
     private void OnLoadObjects(LoadObjectsSignal signal) => UpdateHierarchy();
     private void OnChangeNameProperty(ChangeNamePropertySignal signal) => UpdateHierarchy();
     #endregion
-    #region Методы для работы с иерархией
+    #region РњРµС‚РѕРґС‹ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ РёРµСЂР°СЂС…РёРµР№
 
     /// <summary>
-    /// Переключить видимость панели
+    /// РџРµСЂРµРєР»СЋС‡РёС‚СЊ РІРёРґРёРјРѕСЃС‚СЊ РїР°РЅРµР»Рё
     /// </summary>
     private void ToggleObjectsList()
     {
@@ -146,14 +163,14 @@ public class HierarchyPanelEvents : MonoBehaviour
         };
     }
     /// <summary>
-    /// Добавить элемент в иерархию
+    /// Р”РѕР±Р°РІРёС‚СЊ СЌР»РµРјРµРЅС‚ РІ РёРµСЂР°СЂС…РёСЋ
     /// </summary>
-    /// <param name="item">Ссылка на объект</param>
-    /// <param name="parentId">Id родителя, не обязатлен</param>
+    /// <param name="item">РЎСЃС‹Р»РєР° РЅР° РѕР±СЉРµРєС‚</param>
+    /// <param name="parentId">Id СЂРѕРґРёС‚РµР»СЏ, РЅРµ РѕР±СЏР·Р°С‚Р»РµРЅ</param>
     public void AddHierarchyItem(SceneObject item, string parentId = null)
     {
         if (item == null) return;
-        // Проверяем, нет ли уже такого элемента в кэше (защита от дублирования)
+        // РџСЂРѕРІРµСЂСЏРµРј, РЅРµС‚ Р»Рё СѓР¶Рµ С‚Р°РєРѕРіРѕ СЌР»РµРјРµРЅС‚Р° РІ РєСЌС€Рµ (Р·Р°С‰РёС‚Р° РѕС‚ РґСѓР±Р»РёСЂРѕРІР°РЅРёСЏ)
         if (elementCache.ContainsKey(item.Id))
         {
             Debug.LogWarning($"Element with id {item.Id} already exists in hierarchy");
@@ -161,19 +178,19 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
         VisualElement parentElement = null;
 
-        // Находим родительский элемент
+        // РќР°С…РѕРґРёРј СЂРѕРґРёС‚РµР»СЊСЃРєРёР№ СЌР»РµРјРµРЅС‚
         if (!string.IsNullOrEmpty(parentId))
         {
             parentElement = FindElementByUserIdCached(parentId);
         }
 
-        // Если родитель не найден или parentId пустой, используем MainHierarchyItem
+        // Р•СЃР»Рё СЂРѕРґРёС‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ РёР»Рё parentId РїСѓСЃС‚РѕР№, РёСЃРїРѕР»СЊР·СѓРµРј MainHierarchyItem
         if (parentElement == null)
         {
             parentElement = MainHierarchyItem;
         }
 
-        // Добавляем элемент
+        // Р”РѕР±Р°РІР»СЏРµРј СЌР»РµРјРµРЅС‚
         if (parentElement is CustomFoldout parentFoldout)
         {
             DrawSingleItem(item, parentFoldout);
@@ -181,10 +198,10 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Нарисовать один элемент и его потомков
+    /// РќР°СЂРёСЃРѕРІР°С‚СЊ РѕРґРёРЅ СЌР»РµРјРµРЅС‚ Рё РµРіРѕ РїРѕС‚РѕРјРєРѕРІ
     /// </summary>
-    /// <param name="item">Ссылка на объект</param>
-    /// <param name="parent">Ссылка на родительский элемент, в котором размещать объект</param>
+    /// <param name="item">РЎСЃС‹Р»РєР° РЅР° РѕР±СЉРµРєС‚</param>
+    /// <param name="parent">РЎСЃС‹Р»РєР° РЅР° СЂРѕРґРёС‚РµР»СЊСЃРєРёР№ СЌР»РµРјРµРЅС‚, РІ РєРѕС‚РѕСЂРѕРј СЂР°Р·РјРµС‰Р°С‚СЊ РѕР±СЉРµРєС‚</param>
     private void DrawSingleItem(SceneObject item, CustomFoldout parent)
     {
         VisualElement element = null;
@@ -237,9 +254,9 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Удалить элемент из иерархии
+    /// РЈРґР°Р»РёС‚СЊ СЌР»РµРјРµРЅС‚ РёР· РёРµСЂР°СЂС…РёРё
     /// </summary>
-    /// <param name="itemId">Id элемента</param>
+    /// <param name="itemId">Id СЌР»РµРјРµРЅС‚Р°</param>
     public void RemoveHierarchyItem(string itemId)
     {
         if (string.IsNullOrEmpty(itemId)) return;
@@ -269,9 +286,9 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
     }
     /// <summary>
-    /// Удалить всех детей элемента из кэша
+    /// РЈРґР°Р»РёС‚СЊ РІСЃРµС… РґРµС‚РµР№ СЌР»РµРјРµРЅС‚Р° РёР· РєСЌС€Р°
     /// </summary>
-    /// <param name="parentId">Id родителя</param>
+    /// <param name="parentId">Id СЂРѕРґРёС‚РµР»СЏ</param>
     private void RemoveChildrenFromCache(string parentId)
     {
         var childrenToRemove = new List<string>();
@@ -292,10 +309,10 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Переименовать элемент в иерархии
+    /// РџРµСЂРµРёРјРµРЅРѕРІР°С‚СЊ СЌР»РµРјРµРЅС‚ РІ РёРµСЂР°СЂС…РёРё
     /// </summary>
-    /// <param name="itemId">Id элемента</param>
-    /// <param name="newName">Новое имя элемента</param>
+    /// <param name="itemId">Id СЌР»РµРјРµРЅС‚Р°</param>
+    /// <param name="newName">РќРѕРІРѕРµ РёРјСЏ СЌР»РµРјРµРЅС‚Р°</param>
     public void RenameHierarchyItem(string itemId, string newName)
     {
         if (string.IsNullOrEmpty(itemId)) return;
@@ -314,12 +331,12 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
     }
     #endregion
-    #region Кэширование элементов
+    #region РљСЌС€РёСЂРѕРІР°РЅРёРµ СЌР»РµРјРµРЅС‚РѕРІ
     /// <summary>
-    /// Добавить элемент в кэш
+    /// Р”РѕР±Р°РІРёС‚СЊ СЌР»РµРјРµРЅС‚ РІ РєСЌС€
     /// </summary>
-    /// <param name="element">Ссылка на элемент</param>
-    /// <param name="id">Id элемента</param>
+    /// <param name="element">РЎСЃС‹Р»РєР° РЅР° СЌР»РµРјРµРЅС‚</param>
+    /// <param name="id">Id СЌР»РµРјРµРЅС‚Р°</param>
     private void CacheElement(VisualElement element, string id)
     {
         if (!string.IsNullOrEmpty(id) && element != null)
@@ -329,9 +346,9 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Найти элемент по ID через кэш
+    /// РќР°Р№С‚Рё СЌР»РµРјРµРЅС‚ РїРѕ ID С‡РµСЂРµР· РєСЌС€
     /// </summary>
-    /// <param name="id">Id элемента</param>
+    /// <param name="id">Id СЌР»РµРјРµРЅС‚Р°</param>
     /// <returns></returns>
     private VisualElement FindElementByUserIdCached(string id)
     {
@@ -342,10 +359,10 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Найти элемент рекурсивно
+    /// РќР°Р№С‚Рё СЌР»РµРјРµРЅС‚ СЂРµРєСѓСЂСЃРёРІРЅРѕ
     /// </summary>
-    /// <param name="parent">Ссылка на элемент, в котором искать</param>
-    /// <param name="id">Id искомого элемента</param>
+    /// <param name="parent">РЎСЃС‹Р»РєР° РЅР° СЌР»РµРјРµРЅС‚, РІ РєРѕС‚РѕСЂРѕРј РёСЃРєР°С‚СЊ</param>
+    /// <param name="id">Id РёСЃРєРѕРјРѕРіРѕ СЌР»РµРјРµРЅС‚Р°</param>
     /// <returns></returns>
     private VisualElement FindElementByUserId(VisualElement parent, string id)
     {
@@ -365,7 +382,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Очистить кэш
+    /// РћС‡РёСЃС‚РёС‚СЊ РєСЌС€
     /// </summary>
     private void ClearCache()
     {
@@ -373,11 +390,11 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     #endregion
-    #region Работа с UI
+    #region Р Р°Р±РѕС‚Р° СЃ UI
     /// <summary>
-    /// Нажатие внутри панели
+    /// РќР°Р¶Р°С‚РёРµ РІРЅСѓС‚СЂРё РїР°РЅРµР»Рё
     /// </summary>
-    /// <param name="evt">Данные собтия мыши</param>
+    /// <param name="evt">Р”Р°РЅРЅС‹Рµ СЃРѕР±С‚РёСЏ РјС‹С€Рё</param>
     private void OnMouseDownInsidePanel(MouseDownEvent evt)
     {
         if (evt.button == 1)
@@ -399,64 +416,72 @@ public class HierarchyPanelEvents : MonoBehaviour
         evt.StopPropagation();
     }
     /// <summary>
-    /// Нажатие на элемент иерархии
+    /// РќР°Р¶Р°С‚РёРµ РЅР° СЌР»РµРјРµРЅС‚ РёРµСЂР°СЂС…РёРё
     /// </summary>
-    /// <param name="evt">Данные события мыши</param>
+    /// <param name="evt">Р”Р°РЅРЅС‹Рµ СЃРѕР±С‹С‚РёСЏ РјС‹С€Рё</param>
     private void OnMouseDownHierarchyItem(MouseDownEvent evt)
     {
-        if (evt.button == 0)
-        {
-            if (evt.target is VisualElement element)
-            {
-                evt.StopPropagation();
-                if (element.name == "")
-                {
-                    element = GetFoldoutFromElement(element);
-                }
-                var gameObject = _sceneObjectManager.GetById(element.userData.ToString());
-                if (gameObject != null)
-                {
-                    var objectId = element.userData?.ToString();
-                    switch (gameObject.Type)
-                    {
-                        case ObjectType.Program:
-                            // Для программ: рисуем маршрут
-                            _eventBus.Invoke(new StartLineDrawer(objectId));
-                            break;
+        if (evt.button != 0) return;
 
-                        case ObjectType.LinearMoveCommand:
-                            if (!string.IsNullOrEmpty(element.userData.ToString()) &&
-                                    _lineManager.IsCommandInCurrentProgram(objectId))
-                            {
-                                _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
-                                //objectPicker.PickObject(gameObject.Reference);
-                            }
-                            else
-                            {
-                                //objectPicker.PickObject(gameObject.Reference);
-                                _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
-                                _eventBus.Invoke(new StopLineDrawer());
-                            }
-                            break;
-                        case ObjectType.StateEndEffectorCommand:
-                            break;
-                        default:
-                            // Для других типов (Robot и т.д.): только выделение
-                            //objectPicker.PickObject(gameObject.Reference);
+        if (evt.target is VisualElement element)
+        {
+            evt.StopPropagation();
+
+            if (element.name == "")
+            {
+                element = GetFoldoutFromElement(element);
+            }
+
+            var gameObject = _sceneObjectManager.GetById(element.userData.ToString());
+            if (gameObject != null)
+            {
+                var objectId = element.userData?.ToString();
+
+                // РЎРѕС…СЂР°РЅСЏРµРј РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РїРѕС‚РµРЅС†РёР°Р»СЊРЅРѕРј drag
+                // Drag РЅР°С‡РЅРµС‚СЃСЏ С‚РѕР»СЊРєРѕ РїСЂРё РґРІРёР¶РµРЅРёРё РјС‹С€Рё СЃ Р·Р°Р¶Р°С‚РѕР№ РєРЅРѕРїРєРѕР№
+                currentDragData = new DragDropData
+                {
+                    SourceId = gameObject.Id,
+                    SourceElement = element,
+                    SceneObject = gameObject,
+                    StartPosition = evt.mousePosition
+                };
+
+                // РћР±СЂР°Р±Р°С‚С‹РІР°РµРј РєР»РёРє (РІС‹РґРµР»РµРЅРёРµ, СЃРІРѕР№СЃС‚РІР° Рё С‚.Рґ.)
+                switch (gameObject.Type)
+                {
+                    case ObjectType.Program:
+                        _eventBus.Invoke(new StartLineDrawer(objectId));
+                        break;
+
+                    case ObjectType.LinearMoveCommand:
+                        if (!string.IsNullOrEmpty(element.userData.ToString()) &&
+                                _lineManager.IsCommandInCurrentProgram(objectId))
+                        {
+                            _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
+                        }
+                        else
+                        {
                             _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
                             _eventBus.Invoke(new StopLineDrawer());
-                            break;
-                    }
-                    ShowProperties(element);
-                    SelectHierarchyItem(element);
+                        }
+                        break;
+                    case ObjectType.StateEndEffectorCommand:
+                        break;
+                    default:
+                        _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
+                        _eventBus.Invoke(new StopLineDrawer());
+                        break;
                 }
+                ShowProperties(element);
+                SelectHierarchyItem(element);
             }
         }
     }
     /// <summary>
-    /// Проверка находится ли мы сейчас внутри панели
+    /// РџСЂРѕРІРµСЂРєР° РЅР°С…РѕРґРёС‚СЃСЏ Р»Рё РјС‹ СЃРµР№С‡Р°СЃ РІРЅСѓС‚СЂРё РїР°РЅРµР»Рё
     /// </summary>
-    /// <param name="element">Ссылка на элемент</param>
+    /// <param name="element">РЎСЃС‹Р»РєР° РЅР° СЌР»РµРјРµРЅС‚</param>
     /// <returns></returns>
     private bool IsInsideHierarchyPanel(VisualElement element)
     {
@@ -470,9 +495,9 @@ public class HierarchyPanelEvents : MonoBehaviour
         return false;
     }
     /// <summary>
-    /// Выбрать элемент иерархии по Id, сначла поиск в кэше, иначе находим рекурсивно в списке элементов
+    /// Р’С‹Р±СЂР°С‚СЊ СЌР»РµРјРµРЅС‚ РёРµСЂР°СЂС…РёРё РїРѕ Id, СЃРЅР°С‡Р»Р° РїРѕРёСЃРє РІ РєСЌС€Рµ, РёРЅР°С‡Рµ РЅР°С…РѕРґРёРј СЂРµРєСѓСЂСЃРёРІРЅРѕ РІ СЃРїРёСЃРєРµ СЌР»РµРјРµРЅС‚РѕРІ
     /// </summary>
-    /// <param name="id">ID элемента</param>
+    /// <param name="id">ID СЌР»РµРјРµРЅС‚Р°</param>
     private void SelectHierarchyItem(string id)
     {
         if (string.IsNullOrEmpty(id)) return;
@@ -498,9 +523,9 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
     }
     /// <summary>
-    /// Выбрать элемент иерархии по ссылке на элемент
+    /// Р’С‹Р±СЂР°С‚СЊ СЌР»РµРјРµРЅС‚ РёРµСЂР°СЂС…РёРё РїРѕ СЃСЃС‹Р»РєРµ РЅР° СЌР»РµРјРµРЅС‚
     /// </summary>
-    /// <param name="element">Ссылка на элемент</param>
+    /// <param name="element">РЎСЃС‹Р»РєР° РЅР° СЌР»РµРјРµРЅС‚</param>
     private void SelectHierarchyItem(VisualElement element)
     {
         ClearAllSelections();
@@ -525,7 +550,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
     }
     /// <summary>
-    /// Очистить отмеченный элемент
+    /// РћС‡РёСЃС‚РёС‚СЊ РѕС‚РјРµС‡РµРЅРЅС‹Р№ СЌР»РµРјРµРЅС‚
     /// </summary>
     private void ClearAllSelections()
     {
@@ -536,10 +561,10 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
     }
     /// <summary>
-    /// Показать контестное меню
+    /// РџРѕРєР°Р·Р°С‚СЊ РєРѕРЅС‚РµСЃС‚РЅРѕРµ РјРµРЅСЋ
     /// </summary>
-    /// <param name="position">Позиция, в котором появлистя меню</param>
-    /// <param name="clickedElement">Ссылка на кликнутый элемент</param>
+    /// <param name="position">РџРѕР·РёС†РёСЏ, РІ РєРѕС‚РѕСЂРѕРј РїРѕСЏРІР»РёСЃС‚СЏ РјРµРЅСЋ</param>
+    /// <param name="clickedElement">РЎСЃС‹Р»РєР° РЅР° РєР»РёРєРЅСѓС‚С‹Р№ СЌР»РµРјРµРЅС‚</param>
     private void ShowContextMenu(Vector2 position, VisualElement clickedElement)
     {
         if (contextMenu != null)
@@ -567,7 +592,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
         if (clickedElement != null && clickedElement.name.Contains("hierarchy-item"))
         {
-            contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+            contextMenu.Add(CreateMenuButton("РЈРґР°Р»РёС‚СЊ РѕР±СЉРµРєС‚", () => DeleteObject(clickedElement)));
         }
 
         if (clickedElement.name == "")
@@ -578,19 +603,19 @@ public class HierarchyPanelEvents : MonoBehaviour
                 if (foldout.name == "hierarchy-item-robot")
                 {
                     var robot = _sceneObjectManager.GetById(foldout.userData.ToString());
-                    contextMenu.Add(CreateMenuButton("Добавить линейное движение", () => CreatePoint(robot)));
-                    contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(robot)));
-                    contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(robot)));
-                    contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+                    contextMenu.Add(CreateMenuButton("Р”РѕР±Р°РІРёС‚СЊ Р»РёРЅРµР№РЅРѕРµ РґРІРёР¶РµРЅРёРµ", () => CreatePoint(robot)));
+                    contextMenu.Add(CreateMenuButton("Р”РѕР±Р°РІРёС‚СЊ СЃРѕСЃС‚РѕСЏРЅРёРµ Р·Р°С…РІР°С‚Р°", () => CreateStateEndEffector(robot)));
+                    contextMenu.Add(CreateMenuButton("Р”РѕР±Р°РІРёС‚СЊ РїРѕРґРїСЂРѕРіСЂР°РјРјСѓ", () => CreateProgram(robot)));
+                    contextMenu.Add(CreateMenuButton("РЈРґР°Р»РёС‚СЊ РѕР±СЉРµРєС‚", () => DeleteObject(clickedElement)));
                 }
                 else if (foldout.name == "hierarchy-item-program")
                 {
                     ;
                     var parentId = foldout.userData.ToString();
-                    contextMenu.Add(CreateMenuButton("Добавить команду", () => CreatePoint(parentId)));
-                    contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(parentId)));
-                    contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(parentId)));
-                    contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+                    contextMenu.Add(CreateMenuButton("Р”РѕР±Р°РІРёС‚СЊ РєРѕРјР°РЅРґСѓ", () => CreatePoint(parentId)));
+                    contextMenu.Add(CreateMenuButton("Р”РѕР±Р°РІРёС‚СЊ СЃРѕСЃС‚РѕСЏРЅРёРµ Р·Р°С…РІР°С‚Р°", () => CreateStateEndEffector(parentId)));
+                    contextMenu.Add(CreateMenuButton("Р”РѕР±Р°РІРёС‚СЊ РїРѕРґРїСЂРѕРіСЂР°РјРјСѓ", () => CreateProgram(parentId)));
+                    contextMenu.Add(CreateMenuButton("РЈРґР°Р»РёС‚СЊ РѕР±СЉРµРєС‚", () => DeleteObject(clickedElement)));
                 }
                 else { contextMenu = null; return; }
 
@@ -603,7 +628,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
         else
         {
-            contextMenu.Add(CreateMenuButton("Добавить объект", CreateObject));
+            contextMenu.Add(CreateMenuButton("Р”РѕР±Р°РІРёС‚СЊ РѕР±СЉРµРєС‚", CreateObject));
         }
 
         root.Add(contextMenu);
@@ -611,64 +636,64 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Создать точку по ссылке на робота
+    /// РЎРѕР·РґР°С‚СЊ С‚РѕС‡РєСѓ РїРѕ СЃСЃС‹Р»РєРµ РЅР° СЂРѕР±РѕС‚Р°
     /// </summary>
-    /// <param name="robot">Ссылка на робота</param>
+    /// <param name="robot">РЎСЃС‹Р»РєР° РЅР° СЂРѕР±РѕС‚Р°</param>
     private void CreateStateEndEffector(SceneObject robot)
     {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Задать состояние захвата");
+        var prefab = Resources.Load<GameObject>("Prefabs/Program/Р—Р°РґР°С‚СЊ СЃРѕСЃС‚РѕСЏРЅРёРµ Р·Р°С…РІР°С‚Р°");
         AddObject(prefab, robot.Id);
     }
     /// <summary>
-    /// Создать программу по ID программы
+    /// РЎРѕР·РґР°С‚СЊ РїСЂРѕРіСЂР°РјРјСѓ РїРѕ ID РїСЂРѕРіСЂР°РјРјС‹
     /// </summary>
-    /// <param name="programId">ID программы</param>
+    /// <param name="programId">ID РїСЂРѕРіСЂР°РјРјС‹</param>
     private void CreateStateEndEffector(string programId)
     {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Задать состояние захвата");
+        var prefab = Resources.Load<GameObject>("Prefabs/Program/Р—Р°РґР°С‚СЊ СЃРѕСЃС‚РѕСЏРЅРёРµ Р·Р°С…РІР°С‚Р°");
         AddObject(prefab, programId);
     }
     /// <summary>
-    /// Создать точку по ID программы
+    /// РЎРѕР·РґР°С‚СЊ С‚РѕС‡РєСѓ РїРѕ ID РїСЂРѕРіСЂР°РјРјС‹
     /// </summary>
-    /// <param name="programId">ID программы</param>
+    /// <param name="programId">ID РїСЂРѕРіСЂР°РјРјС‹</param>
     private void CreatePoint(string programId)
     {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Линейная точка");
+        var prefab = Resources.Load<GameObject>("Prefabs/Program/Р›РёРЅРµР№РЅР°СЏ С‚РѕС‡РєР°");
         AddObject(prefab, programId);
     }
     /// <summary>
-    /// Создать точку по ссылке на робота
+    /// РЎРѕР·РґР°С‚СЊ С‚РѕС‡РєСѓ РїРѕ СЃСЃС‹Р»РєРµ РЅР° СЂРѕР±РѕС‚Р°
     /// </summary>
-    /// <param name="robot">Ссылка на робота</param>
+    /// <param name="robot">РЎСЃС‹Р»РєР° РЅР° СЂРѕР±РѕС‚Р°</param>
     private void CreatePoint(SceneObject robot)
     {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Линейная точка");
+        var prefab = Resources.Load<GameObject>("Prefabs/Program/Р›РёРЅРµР№РЅР°СЏ С‚РѕС‡РєР°");
         AddObject(prefab, robot.Id);
     }
     /// <summary>
-    /// Создать программу по ID программы
+    /// РЎРѕР·РґР°С‚СЊ РїСЂРѕРіСЂР°РјРјСѓ РїРѕ ID РїСЂРѕРіСЂР°РјРјС‹
     /// </summary>
-    /// <param name="programId">ID программы</param>
+    /// <param name="programId">ID РїСЂРѕРіСЂР°РјРјС‹</param>
     private void CreateProgram(string programId)
     {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
+        var prefab = Resources.Load<GameObject>("Prefabs/Program/РџСЂРѕРіСЂР°РјРјР°");
         AddObject(prefab, programId);
     }
     /// <summary>
-    /// Создать программу по ссылке на робота
+    /// РЎРѕР·РґР°С‚СЊ РїСЂРѕРіСЂР°РјРјСѓ РїРѕ СЃСЃС‹Р»РєРµ РЅР° СЂРѕР±РѕС‚Р°
     /// </summary>
-    /// <param name="robot">Ссылка на робота</param>
+    /// <param name="robot">РЎСЃС‹Р»РєР° РЅР° СЂРѕР±РѕС‚Р°</param>
     private void CreateProgram(SceneObject robot)
     {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
+        var prefab = Resources.Load<GameObject>("Prefabs/Program/РџСЂРѕРіСЂР°РјРјР°");
         AddObject(prefab, robot.Id);
     }
     /// <summary>
-    /// Создать кнопку в контестноем меню
+    /// РЎРѕР·РґР°С‚СЊ РєРЅРѕРїРєСѓ РІ РєРѕРЅС‚РµСЃС‚РЅРѕРµРј РјРµРЅСЋ
     /// </summary>
-    /// <param name="text">Текст кнопки</param>
-    /// <param name="action">Действие, выполняемое кнокой</param>
+    /// <param name="text">РўРµРєСЃС‚ РєРЅРѕРїРєРё</param>
+    /// <param name="action">Р”РµР№СЃС‚РІРёРµ, РІС‹РїРѕР»РЅСЏРµРјРѕРµ РєРЅРѕРєРѕР№</param>
     /// <returns></returns>
     private Button CreateMenuButton(string text, System.Action action)
     {
@@ -685,7 +710,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         return btn;
     }
     /// <summary>
-    /// Спрятать контестное меню
+    /// РЎРїСЂСЏС‚Р°С‚СЊ РєРѕРЅС‚РµСЃС‚РЅРѕРµ РјРµРЅСЋ
     /// </summary>
     private void HideContextMenu()
     {
@@ -698,7 +723,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
     }
     /// <summary>
-    /// Открыть библиотеку оъхектов
+    /// РћС‚РєСЂС‹С‚СЊ Р±РёР±Р»РёРѕС‚РµРєСѓ РѕСЉС…РµРєС‚РѕРІ
     /// </summary>
     private void CreateObject()
     {
@@ -706,10 +731,10 @@ public class HierarchyPanelEvents : MonoBehaviour
         //objectsLibraryEvents.Show();
     }
     /// <summary>
-    /// Добавить объект
+    /// Р”РѕР±Р°РІРёС‚СЊ РѕР±СЉРµРєС‚
     /// </summary>
-    /// <param name="prefab">Ссылка на префаб объекта</param>
-    /// <param name="parentId">Id родителя, необязателен</param>
+    /// <param name="prefab">РЎСЃС‹Р»РєР° РЅР° РїСЂРµС„Р°Р± РѕР±СЉРµРєС‚Р°</param>
+    /// <param name="parentId">Id СЂРѕРґРёС‚РµР»СЏ, РЅРµРѕР±СЏР·Р°С‚РµР»РµРЅ</param>
     private void AddObject(GameObject prefab, string parentId = null)
     {
         if (gameObject == null)
@@ -723,7 +748,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Обновить иерархию
+    /// РћР±РЅРѕРІРёС‚СЊ РёРµСЂР°СЂС…РёСЋ
     /// </summary>
     private void UpdateHierarchy()
     {
@@ -745,9 +770,9 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Удалить объект
+    /// РЈРґР°Р»РёС‚СЊ РѕР±СЉРµРєС‚
     /// </summary>
-    /// <param name="clickedElement">Ссылка на кликнутый элемент</param>
+    /// <param name="clickedElement">РЎСЃС‹Р»РєР° РЅР° РєР»РёРєРЅСѓС‚С‹Р№ СЌР»РµРјРµРЅС‚</param>
     private void DeleteObject(VisualElement clickedElement)
     {
         if (clickedElement.name == "")
@@ -771,9 +796,9 @@ public class HierarchyPanelEvents : MonoBehaviour
         _undoRedoManager.Execute(command);
     }
     /// <summary>
-    ///  Показать панель свойств
+    ///  РџРѕРєР°Р·Р°С‚СЊ РїР°РЅРµР»СЊ СЃРІРѕР№СЃС‚РІ
     /// </summary>
-    /// <param name="clickedElement">Ссылка на кликнутый элемент</param>
+    /// <param name="clickedElement">РЎСЃС‹Р»РєР° РЅР° РєР»РёРєРЅСѓС‚С‹Р№ СЌР»РµРјРµРЅС‚</param>
     private void ShowProperties(VisualElement clickedElement)
     {
         var obj = _sceneObjectManager.GetById(clickedElement.userData.ToString()); //objectManager.GetObjectByUniqueID((int)clickedElement.userData);
@@ -789,11 +814,579 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
     }
     #endregion
-    #region Вспомогательные методы
+    #region Drag & Drop
+    private void InitializeDragAndDrop()
+    {
+        hierarchyPanel.RegisterCallback<MouseMoveEvent>(OnMouseMoveForDrag);
+        hierarchyPanel.RegisterCallback<MouseUpEvent>(OnMouseUpForDrag);
+        hierarchyPanel.RegisterCallback<MouseCaptureOutEvent>(OnMouseCaptureOut);
+
+        dragPreviewElement = new VisualElement();
+        dragPreviewElement.AddToClassList(DRAG_PREVIEW_CLASS);
+        dragPreviewElement.style.display = DisplayStyle.None;
+        dragPreviewElement.pickingMode = PickingMode.Ignore;
+        root.Add(dragPreviewElement);
+        dragPreviewElement.style.position = Position.Absolute;
+    }
+
+    private void OnMouseMoveForDrag(MouseMoveEvent evt)
+    {
+        if (evt.pressedButtons == 1 && currentDragData != null && !isDragging)
+        {
+            float dragThreshold = 10f;
+            if (Vector2.Distance(currentDragData.StartPosition, evt.mousePosition) > dragThreshold)
+            {
+                isDragging = true;
+                currentDragData.SourceElement.AddToClassList(DRAGGING_CLASS);
+                UpdateDragPreview(evt.mousePosition);
+                hierarchyPanel.CaptureMouse();
+                evt.StopPropagation();
+            }
+        }
+        else if (isDragging && currentDragData != null)
+        {
+            UpdateDragPreview(evt.mousePosition);
+            var dropTarget = FindDropTarget(evt.mousePosition);
+            UpdateDropIndicators(dropTarget);
+            evt.StopPropagation();
+        }
+    }
+
+    private void OnMouseUpForDrag(MouseUpEvent evt)
+    {
+        if (evt.button != 0) return;
+
+        if (isDragging && currentDragData != null)
+        {
+            if (currentDropTarget != null)
+            {
+                HandleDrop();
+            }
+            CleanupDrag();
+            if (hierarchyPanel.HasMouseCapture())
+            {
+                hierarchyPanel.ReleaseMouse();
+            }
+            evt.StopPropagation();
+        }
+        else
+        {
+            currentDragData = null;
+        }
+    }
+
+    private void OnMouseCaptureOut(MouseCaptureOutEvent evt)
+    {
+        if (isDragging)
+        {
+            CleanupDrag();
+        }
+    }
+
+    private void UpdateDragPreview(Vector2 position)
+    {
+        if (currentDragData == null || currentDragData.SourceElement == null) return;
+
+        var element = currentDragData.SourceElement;
+        float elementWidth = element.resolvedStyle.width > 0 ? element.resolvedStyle.width : 150f;
+        float elementHeight = element.resolvedStyle.height > 0 ? element.resolvedStyle.height : 24f;
+
+        dragPreviewElement.style.width = elementWidth;
+        dragPreviewElement.style.height = elementHeight;
+        dragPreviewElement.Clear();
+
+        string text = element is CustomFoldout foldout ? foldout.Text :
+                      (element is Label label ? label.text : element.name);
+
+        var content = new Label(text);
+        content.style.color = Color.white;
+        content.style.unityTextAlign = TextAnchor.MiddleLeft;
+        content.style.paddingLeft = 10;
+        content.style.paddingTop = 4;
+        content.style.fontSize = 12;
+        dragPreviewElement.Add(content);
+
+        dragPreviewElement.style.left = position.x + 15f;
+        dragPreviewElement.style.top = position.y + 15f;
+        dragPreviewElement.style.display = DisplayStyle.Flex;
+    }
+
+    private DropTargetInfo FindDropTarget(Vector2 position)
+    {
+        var allElements = GetHierarchyElementsInOrder();
+        DropTargetInfo bestTarget = null;
+        float minDistance = float.MaxValue;
+
+        var panelWorldBounds = hierarchyPanel.worldBound;
+        float localPosX = position.x - panelWorldBounds.x;
+        float localPosY = position.y - panelWorldBounds.y;
+        var localPos = new Vector2(localPosX, localPosY);
+
+        // РџСЂРѕРІРµСЂСЏРµРј РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊ РґСЂРѕРїР° РІ РЅР°С‡Р°Р»Рѕ
+        if (allElements.Count > 0 && CanDropInRoot(currentDragData.SceneObject))
+        {
+            var firstElement = allElements[0];
+            var firstBounds = firstElement.worldBound;
+            var firstLocalY = firstBounds.y - panelWorldBounds.y;
+
+            if (localPos.y < firstLocalY - 10)
+            {
+                var distance = Mathf.Abs(localPos.y - firstLocalY);
+                bestTarget = new DropTargetInfo
+                {
+                    TargetElement = firstElement,
+                    Position = DropPosition.Above,
+                    Distance = distance,
+                    IsBeforeFirst = true
+                };
+                minDistance = distance;
+            }
+        }
+
+        foreach (var element in allElements)
+        {
+            if (element == currentDragData.SourceElement) continue;
+
+            var sceneObject = GetSceneObjectFromElement(element);
+            if (sceneObject == null) continue;
+
+            if (!CanDropOnTarget(currentDragData.SceneObject, sceneObject))
+                continue;
+
+            var elementWorldBounds = element.worldBound;
+            var elementLocalBounds = new Rect(
+                elementWorldBounds.x - panelWorldBounds.x,
+                elementWorldBounds.y - panelWorldBounds.y,
+                elementWorldBounds.width,
+                elementWorldBounds.height
+            );
+
+            var dropInfo = CalculateDropPosition(element, elementLocalBounds, localPos);
+            if (dropInfo != null && dropInfo.Distance < minDistance)
+            {
+                minDistance = dropInfo.Distance;
+                bestTarget = dropInfo;
+            }
+        }
+
+        // РџСЂРѕРІРµСЂСЏРµРј РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊ РґСЂРѕРїР° РІ РєРѕРЅРµС†
+        if (allElements.Count > 0 && CanDropInRoot(currentDragData.SceneObject) && bestTarget == null)
+        {
+            var lastElement = allElements[allElements.Count - 1];
+            var lastBounds = lastElement.worldBound;
+            var lastLocalY = lastBounds.y - panelWorldBounds.y + lastBounds.height;
+
+            if (localPos.y > lastLocalY + 10)
+            {
+                bestTarget = new DropTargetInfo
+                {
+                    TargetElement = lastElement,
+                    Position = DropPosition.Below,
+                    Distance = Mathf.Abs(localPos.y - lastLocalY)
+                };
+            }
+        }
+
+        return bestTarget;
+    }
+    private VisualElement FindDraggableElement(VisualElement element)
+    {
+        while (element != null && element != hierarchyPanel)
+        {
+            if (element.name.Contains("hierarchy-item"))
+            {
+                return element;
+            }
+            element = element.parent;
+        }
+        return null;
+    }
+
+    private SceneObject GetSceneObjectFromElement(VisualElement element)
+    {
+        if (element?.userData == null) return null;
+        return _sceneObjectManager.GetById(element.userData.ToString());
+    }
+
+    private bool CanBeDragged(SceneObject sceneObject)
+    {
+        if (sceneObject.Type == ObjectType.Primitive)
+            return true;
+
+        if (sceneObject.Type == ObjectType.Robot)
+            return true;
+
+        if (sceneObject.Type == ObjectType.Program ||
+            sceneObject.Type == ObjectType.LinearMoveCommand ||
+            sceneObject.Type == ObjectType.StateEndEffectorCommand)
+        {
+            return GetRobotParent(sceneObject) != null;
+        }
+
+        return false;
+    }
+
+    private SceneObject GetRobotParent(SceneObject sceneObject)
+    {
+        var current = sceneObject;
+        while (current != null && !string.IsNullOrEmpty(current.ParentId))
+        {
+            var parent = _sceneObjectManager.GetById(current.ParentId);
+            if (parent == null) return null;
+
+            if (parent.Type == ObjectType.Robot)
+                return parent;
+
+            current = parent;
+        }
+        return null;
+    }
+    private List<VisualElement> GetHierarchyElementsInOrder()
+    {
+        var result = new List<VisualElement>();
+
+        var roots = _sceneObjectManager.GetGameObjectsList()
+            .Where(o => string.IsNullOrEmpty(o.ParentId))
+            .OrderBy(o => GetObjectIndex(o.Id))
+            .ToList();
+
+        foreach (var root in roots)
+        {
+            var rootElement = FindElementByUserIdCached(root.Id);
+            if (rootElement == null) continue;
+
+            result.Add(rootElement);
+
+            AddChildrenRecursive(root.Id, result);
+        }
+
+        return result;
+    }
+
+    private void AddChildrenRecursive(string parentId, List<VisualElement> elements)
+    {
+        var children = _sceneObjectManager.GetGameObjectsList()
+            .Where(o => o.ParentId == parentId)
+            .OrderBy(o => GetObjectIndex(o.Id))
+            .ToList();
+
+        foreach (var child in children)
+        {
+            var element = FindElementByUserIdCached(child.Id);
+            if (element != null)
+            {
+                elements.Add(element);
+                // Р РµРєСѓСЂСЃРёРІРЅРѕ РґРѕР±Р°РІР»СЏРµРј РґРµС‚РµР№ РµСЃР»Рё СЌС‚Рѕ foldout Рё РѕРЅ СЂР°СЃРєСЂС‹С‚
+                AddChildrenRecursive(child.Id, elements);
+            }
+        }
+    }
+
+    private DropTargetInfo CalculateDropPosition(VisualElement element, Rect bounds, Vector2 localPos)
+    {
+        float height = bounds.height;
+        float topZone = bounds.y + height * 0.25f;
+        float bottomZone = bounds.y + height * 0.75f;
+
+        if (localPos.y < topZone)
+        {
+            return new DropTargetInfo
+            {
+                TargetElement = element,
+                Position = DropPosition.Above,
+                Distance = Mathf.Abs(localPos.y - bounds.y)
+            };
+        }
+
+        if (localPos.y > bottomZone)
+        {
+            return new DropTargetInfo
+            {
+                TargetElement = element,
+                Position = DropPosition.Below,
+                Distance = Mathf.Abs(localPos.y - (bounds.y + bounds.height))
+            };
+        }
+
+        // в›” Inside вЂ” С‚РѕР»СЊРєРѕ РµСЃР»Рё СЂРµР°Р»СЊРЅРѕ РјРѕР¶РЅРѕ РґСЂРѕРїР°С‚СЊ
+        var targetObject = GetSceneObjectFromElement(element);
+        if (targetObject != null &&
+            (targetObject.Type == ObjectType.Robot ||
+             targetObject.Type == ObjectType.Program))
+        {
+            return new DropTargetInfo
+            {
+                TargetElement = element,
+                Position = DropPosition.Inside,
+                Distance = 0
+            };
+        }
+
+        return null;
+    }
+
+    private bool CanDropOnTarget(SceneObject draggedObject, SceneObject targetObject)
+    {
+        if (draggedObject.Id == targetObject.Id || IsChildOf(draggedObject.Id, targetObject.Id))
+            return false;
+
+        // РџСЂРѕРІРµСЂСЏРµРј, РЅР°С…РѕРґРёС‚СЃСЏ Р»Рё targetObject РІ РєРѕСЂРЅРµ
+        bool isTargetInRoot = string.IsNullOrEmpty(targetObject.ParentId);
+
+        switch (draggedObject.Type)
+        {
+            case ObjectType.Primitive:
+                if (targetObject.Type == ObjectType.Primitive)
+                    return true;
+
+                if (isTargetInRoot)
+                    return true;
+
+                return false;
+
+            case ObjectType.Robot:
+                // Р РѕР±РѕС‚РѕРІ РјРѕР¶РЅРѕ РґСЂРѕРїР°С‚СЊ С‚РѕР»СЊРєРѕ РІ РєРѕСЂРµРЅСЊ
+                return isTargetInRoot;
+
+            case ObjectType.Program:
+                // РџСЂРѕРіСЂР°РјРјС‹ РјРѕР¶РЅРѕ РґСЂРѕРїР°С‚СЊ РІ СЂРѕР±РѕС‚РѕРІ РёР»Рё РІ РґСЂСѓРіРёРµ РїСЂРѕРіСЂР°РјРјС‹
+                return targetObject.Type == ObjectType.Robot ||
+                       targetObject.Type == ObjectType.Program;
+
+            case ObjectType.LinearMoveCommand:
+            case ObjectType.StateEndEffectorCommand:
+                // РљРѕРјР°РЅРґС‹ РјРѕР¶РЅРѕ РґСЂРѕРїР°С‚СЊ РІ СЂРѕР±РѕС‚РѕРІ РёР»Рё РїСЂРѕРіСЂР°РјРјС‹
+                return targetObject.Type == ObjectType.Robot ||
+                       targetObject.Type == ObjectType.Program;
+
+            default:
+                return false;
+        }
+    }
+
+    private bool CanDropInRoot(SceneObject draggedObject)
+    {
+        // Р’ РєРѕСЂРµРЅСЊ РјРѕР¶РЅРѕ РґСЂРѕРїР°С‚СЊ С‚РѕР»СЊРєРѕ РїСЂРёРјРёС‚РёРІС‹ Рё СЂРѕР±РѕС‚РѕРІ
+        return draggedObject.Type == ObjectType.Primitive ||
+               draggedObject.Type == ObjectType.Robot;
+    }
+
+    private bool IsChildOf(string potentialChildId, string potentialParentId)
+    {
+        var current = _sceneObjectManager.GetById(potentialChildId);
+        while (current != null && !string.IsNullOrEmpty(current.ParentId))
+        {
+            if (current.ParentId == potentialParentId)
+                return true;
+            current = _sceneObjectManager.GetById(current.ParentId);
+        }
+        return false;
+    }
+
+    private void UpdateDropIndicators(DropTargetInfo dropTarget)
+    {
+        ClearDropIndicators();
+
+        currentDropTarget = dropTarget;
+        if (dropTarget == null) return;
+
+        switch (dropTarget.Position)
+        {
+            case DropPosition.Above:
+                dropTarget.TargetElement.AddToClassList(DROP_TARGET_ABOVE_CLASS);
+                break;
+            case DropPosition.Below:
+                dropTarget.TargetElement.AddToClassList(DROP_TARGET_BELOW_CLASS);
+                break;
+            case DropPosition.Inside:
+                dropTarget.TargetElement.AddToClassList(DROP_TARGET_INSIDE_CLASS);
+                break;
+        }
+    }
+
+    private void ClearDropIndicators()
+    {
+        if (currentDropTarget?.TargetElement != null)
+        {
+            currentDropTarget.TargetElement.RemoveFromClassList(DROP_TARGET_ABOVE_CLASS);
+            currentDropTarget.TargetElement.RemoveFromClassList(DROP_TARGET_BELOW_CLASS);
+            currentDropTarget.TargetElement.RemoveFromClassList(DROP_TARGET_INSIDE_CLASS);
+        }
+        currentDropTarget = null;
+    }
+
+    private void HandleDrop()
+    {
+        if (currentDragData == null || currentDropTarget == null) return;
+
+        var draggedObject = currentDragData.SceneObject;
+        var targetElement = currentDropTarget.TargetElement;
+        var targetObject = GetSceneObjectFromElement(targetElement);
+        if (targetObject != null && targetObject.Id == draggedObject.Id)
+        {
+            CleanupDrag();
+            return;
+        }
+
+        string newParentId = null;
+        int? insertAtIndex = null;
+
+        if (currentDropTarget.IsBeforeFirst)
+        {
+            newParentId = null;
+            insertAtIndex = 0;
+        }
+        else if (currentDropTarget.Position == DropPosition.Above)
+        {
+            // в¬…пёЏ РљРѕРјР°РЅРґР° РЅР°Рґ РїСЂРѕРіСЂР°РјРјРѕР№ = РєРѕСЂРµРЅСЊ СЂРѕР±РѕС‚Р°
+            if ((draggedObject.Type == ObjectType.LinearMoveCommand ||
+                 draggedObject.Type == ObjectType.StateEndEffectorCommand) &&
+                targetObject.Type == ObjectType.Program)
+            {
+                var robot = _sceneObjectManager.GetById(targetObject.ParentId);
+                if (robot != null && robot.Type == ObjectType.Robot)
+                {
+                    newParentId = robot.Id;
+                    insertAtIndex = GetObjectIndex(targetObject.Id);
+                }
+                else
+                {
+                    newParentId = targetObject.ParentId;
+                    insertAtIndex = GetObjectIndex(targetObject.Id);
+                }
+            }
+            else
+            {
+                newParentId = targetObject?.ParentId;
+                insertAtIndex = GetObjectIndex(targetObject.Id);
+            }
+        }
+        else if (currentDropTarget.Position == DropPosition.Below)
+        {
+            if ((draggedObject.Type == ObjectType.LinearMoveCommand ||
+                 draggedObject.Type == ObjectType.StateEndEffectorCommand) &&
+                targetObject.Type == ObjectType.Program)
+            {
+                var robot = _sceneObjectManager.GetById(targetObject.ParentId);
+                if (robot != null && robot.Type == ObjectType.Robot)
+                {
+                    newParentId = robot.Id;
+                    insertAtIndex = GetObjectIndex(targetObject.Id) + 1;
+                }
+                else
+                {
+                    newParentId = targetObject.ParentId;
+                    insertAtIndex = GetObjectIndex(targetObject.Id) + 1;
+                }
+            }
+            else
+            {
+                newParentId = targetObject?.ParentId;
+                insertAtIndex = GetObjectIndex(targetObject.Id) + 1;
+            }
+        }
+        else if (currentDropTarget.Position == DropPosition.Inside)
+        {
+            // Р’РЅСѓС‚СЂСЊ РјРѕР¶РЅРѕ С‚РѕР»СЊРєРѕ СЂРѕР±РѕС‚РѕРІ Рё РїСЂРѕРіСЂР°РјРј
+            if (targetObject.Type == ObjectType.Robot || targetObject.Type == ObjectType.Program)
+            {
+                newParentId = targetObject.Id;
+                var children = GetDirectChildren(targetObject.Id);
+                if (children.Count > 0)
+                {
+                    var lastChild = children.OrderByDescending(c => GetObjectIndex(c.Id)).First();
+                    insertAtIndex = GetObjectIndex(lastChild.Id) + 1;
+                }
+                else
+                {
+                    insertAtIndex = GetObjectIndex(targetObject.Id) + 1;
+                }
+            }
+            else
+            {
+                // Р•СЃР»Рё РїС‹С‚Р°РµРјСЃСЏ РґСЂРѕРїРЅСѓС‚СЊ РІРЅСѓС‚СЂСЊ РїСЂРёРјРёС‚РёРІР° - РїСЂРѕСЃС‚Рѕ РѕС‚РјРµРЅСЏРµРј
+                CleanupDrag();
+                return;
+            }
+        }
+
+        // РџСЂРѕРІРµСЂСЏРµРј, РЅРµ С‚Рѕ Р¶Рµ СЃР°РјРѕРµ Р»Рё РјРµСЃС‚Рѕ
+        if (newParentId == draggedObject.ParentId &&
+            GetObjectIndex(draggedObject.Id) == insertAtIndex)
+        {
+            CleanupDrag();
+            return;
+        }
+
+        if ((draggedObject.Type == ObjectType.Program ||
+             draggedObject.Type == ObjectType.LinearMoveCommand ||
+             draggedObject.Type == ObjectType.StateEndEffectorCommand) &&
+            string.IsNullOrEmpty(newParentId))
+        {
+            CleanupDrag();
+            return;
+        }
+
+        var oldIndex = GetObjectIndex(draggedObject.Id);
+
+        if (insertAtIndex.HasValue && insertAtIndex.Value > oldIndex)
+        {
+            insertAtIndex--;
+        }
+        // Р’С‹РїРѕР»РЅСЏРµРј РєРѕРјР°РЅРґСѓ
+        var command = new ChangeParentCommand(draggedObject.Id, newParentId, insertAtIndex);
+        _undoRedoManager.Execute(command);
+    }
+
+    private List<SceneObject> GetDirectChildren(string parentId)
+    {
+        return _sceneObjectManager.GetGameObjectsList()
+            .Where(o => o.ParentId == parentId)
+            .ToList();
+    }
+
+    private int GetObjectIndex(string objectId)
+    {
+        if (string.IsNullOrEmpty(objectId)) return -1;
+
+        var items = _sceneObjectManager.Items;
+        int index = 0;
+
+        foreach (System.Collections.DictionaryEntry entry in items)
+        {
+            if (entry.Key?.ToString() == objectId)
+            {
+                return index;
+            }
+            index++;
+        }
+
+        return -1;
+    }
+
+    private void CleanupDrag()
+    {
+        ClearDropIndicators();
+
+        if (currentDragData?.SourceElement != null)
+        {
+            currentDragData.SourceElement.RemoveFromClassList(DRAGGING_CLASS);
+        }
+
+        if (dragPreviewElement != null)
+        {
+            dragPreviewElement.style.display = DisplayStyle.None;
+        }
+
+        currentDragData = null;
+        isDragging = false;
+    }
+    #endregion
+    #region Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ РјРµС‚РѕРґС‹
     /// <summary>
-    /// Получить CustomFoldout их элемента
+    /// РџРѕР»СѓС‡РёС‚СЊ CustomFoldout РёС… СЌР»РµРјРµРЅС‚Р°
     /// </summary>
-    /// <param name="element">Ссылка на элемент</param>
+    /// <param name="element">РЎСЃС‹Р»РєР° РЅР° СЌР»РµРјРµРЅС‚</param>
     /// <returns></returns>
     private CustomFoldout GetFoldoutFromElement(VisualElement element)
     {
@@ -805,11 +1398,11 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Создать элемент иерархии
+    /// РЎРѕР·РґР°С‚СЊ СЌР»РµРјРµРЅС‚ РёРµСЂР°СЂС…РёРё
     /// </summary>
-    /// <param name="elemName">Имя элемента</param>
-    /// <param name="text">Отображаемый текст</param>
-    /// <param name="id">Id элемента</param>
+    /// <param name="elemName">РРјСЏ СЌР»РµРјРµРЅС‚Р°</param>
+    /// <param name="text">РћС‚РѕР±СЂР°Р¶Р°РµРјС‹Р№ С‚РµРєСЃС‚</param>
+    /// <param name="id">Id СЌР»РµРјРµРЅС‚Р°</param>
     /// <returns></returns>
     private VisualElement CreateHierarchyElement(string elemName, string text, string id)
     {
@@ -827,7 +1420,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
     /// <summary>
-    /// Зарегистрировать элементы
+    /// Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊ СЌР»РµРјРµРЅС‚С‹
     /// </summary>
     private void RegisterElements()
     {
