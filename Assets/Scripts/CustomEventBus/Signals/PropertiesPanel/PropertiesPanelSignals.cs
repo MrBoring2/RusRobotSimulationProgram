@@ -10,20 +10,23 @@ namespace Assets.Scripts.CustomEventBus.Signals.PropertiesPanel
     {
 
     }
-    public class ShowPropertiesSignal
+    public class ChangePropertiesProviderSignal
     {
         public readonly IPropertyProvider PropertyProvider;
 
-        public ShowPropertiesSignal(IPropertyProvider propertyProvider)
+        public ChangePropertiesProviderSignal(IPropertyProvider propertyProvider)
         {
             PropertyProvider = propertyProvider;
         }
     }
-
-    public class HidePropertiesSignal
+    public class TogglePropertiesSignal
     {
 
     }
+    //public class HidePropertiesSignal
+    //{
+
+    //}
     public class ChangeNamePropertySignal
     {
 

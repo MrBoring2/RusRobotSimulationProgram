@@ -621,6 +621,7 @@ Transform:
   - {fileID: 1987798940}
   - {fileID: 2052803953}
   - {fileID: 2020512687}
+  - {fileID: 1827411684}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &544480372
@@ -1342,7 +1343,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 131c195207796924ca32fee7221c77cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HierarchyPanelEvents
-  _sceneObjectManager: {fileID: 0}
   iBlocker: {fileID: 1239946562}
 --- !u!114 &1239946562
 MonoBehaviour:
@@ -1381,7 +1381,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TopMenuEvents
   tooltipEvents: {fileID: 1239946568}
-  _sceneObjectManager: {fileID: 0}
 --- !u!114 &1239946565
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1786,6 +1785,50 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 32a622fe02fdc5b479478063e185f814, type: 3}
+--- !u!1 &1827411683
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1827411684}
+  - component: {fileID: 1827411685}
+  m_Layer: 0
+  m_Name: SaveLoadManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1827411684
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1827411683}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -4.76088, y: -0.02744, z: 5.63326}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 469165501}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1827411685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1827411683}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d3c63a631dc3c44e835ce44d82f9ed0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Managers.SaveLoadManager
 --- !u!1 &1847016646
 GameObject:
   m_ObjectHideFlags: 0
@@ -2178,6 +2221,7 @@ MonoBehaviour:
   _sceneManipulatorModeManager: {fileID: 2020512688}
   _axisModeManager: {fileID: 969185050}
   _undoRedoManager: {fileID: 544480374}
+  _saveLoadManager: {fileID: 1827411685}
 --- !u!1001 &2394085790015429071
 PrefabInstance:
   m_ObjectHideFlags: 0

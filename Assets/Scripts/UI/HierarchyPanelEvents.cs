@@ -1,4 +1,5 @@
 using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.HierarhyPanel;
 using Assets.Scripts.CustomEventBus.Signals.Lines;
 using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
@@ -26,7 +27,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     private SceneObjectsManager _sceneObjectManager;
     private LineManager _lineManager;
     private VisualElement root;
-    [SerializeField] 
+    [SerializeField]
     private VisualElement hierarchyPanel;
     private VisualElement contextMenu;
     public CustomFoldout MainHierarchyItem { get; private set; }
@@ -39,10 +40,11 @@ public class HierarchyPanelEvents : MonoBehaviour
     private CustomScrollView customScrollView;
     private Dictionary<string, VisualElement> elementCache = new Dictionary<string, VisualElement>();
     private UndoRedoManager _undoRedoManager;
+    private UIStatusManager _uIStatusManager;
 
     private void Start()
     {
-       
+
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<AddSceneObjectSignal>(OnObjectAdded);
         _eventBus.Subscribe<RemoveSceneObjectSignal>(OnObjectRemoved);
@@ -53,20 +55,26 @@ public class HierarchyPanelEvents : MonoBehaviour
         _eventBus.Subscribe<ChangeNamePropertySignal>(OnChangeNameProperty);
         _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
         _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
+        _eventBus.Subscribe<ToggleObjectsListSignal>(OnToggleObjectsList);
         _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
         _lineManager = ServiceManager.Current.Get<LineManager>();
         _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
+        _uIStatusManager = ServiceManager.Current.Get<UIStatusManager>();
         root = GetComponent<UIDocument>().rootVisualElement;
         hierarchyPanel = root.Q("hierarchy-container");
         //propertiesPanelEvents.OnTargetNameChanged += PropertiesPanelEvents_OnTargetNameChanged;
         //UndoRedoManager.Instance.OnCommandExecuted += Instance_OnCommandExecuted;
         //UndoRedoManager.Instance.OnCommandUndone += Instance_OnCommandUndone;
         RegisterElements();
+        RegisterButtons();
         if (_sceneObjectManager.GetGameObjectsList().Count > 0)
         {
             UpdateHierarchy();
         }
+        ToggleObjectsList();
     }
+
+
 
 
 
@@ -107,6 +115,8 @@ public class HierarchyPanelEvents : MonoBehaviour
             UpdateHierarchy();
         }
     }
+    private void OnToggleObjectsList(ToggleObjectsListSignal signal) => ToggleObjectsList();
+
 
     private void OnObjectAdded(AddSceneObjectSignal evt) => AddHierarchyItem(evt.GameObject);
     private void OnObjectRemoved(RemoveSceneObjectSignal evt) => RemoveHierarchyItem(evt.GameObject.Id);
@@ -118,6 +128,23 @@ public class HierarchyPanelEvents : MonoBehaviour
     private void OnChangeNameProperty(ChangeNamePropertySignal signal) => UpdateHierarchy();
     #endregion
     #region Методы для работы с иерархией
+
+    /// <summary>
+    /// Переключить видимость панели
+    /// </summary>
+    private void ToggleObjectsList()
+    {
+        hierarchyPanel.style.display = _uIStatusManager.IsObjectsListVisible == true ? DisplayStyle.Flex : DisplayStyle.None;
+    }
+
+    private void RegisterButtons()
+    {
+        var closeBtn = root.Q<Button>("close-hierarhy-button");
+        closeBtn.clicked += () =>
+        {
+            _uIStatusManager.ToggleObjectsListPanel();
+        };
+    }
     /// <summary>
     /// Добавить элемент в иерархию
     /// </summary>
@@ -234,7 +261,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 lastSelectedElement = null;
                 _eventBus.Invoke(new UnpickObjectSignal());
                 //objectPicker.UnpickObject();
-                _eventBus.Invoke(new HidePropertiesSignal());
+                _uIStatusManager.SetPropertiesPanelVisibility(false);
                 //propertiesPanelEvents.HidePanel();
             }
 
@@ -435,6 +462,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
         while (element != null)
         {
+            if (element.name == "menu") return false;
             if (element == hierarchyPanel)
                 return true;
             element = element.parent;
@@ -737,7 +765,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             return;
         //objectPicker.UnpickObject();
         _eventBus.Invoke(new UnpickObjectSignal());
-        _eventBus.Invoke(new HidePropertiesSignal());
+        _eventBus.Invoke(new ChangePropertiesProviderSignal(null));
         //propertiesPanelEvents.HidePanel();
         var command = new RemoveObjectCommand(obj);
         _undoRedoManager.Execute(command);
@@ -754,7 +782,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             var provider = obj.Reference.TryGetComponent<IPropertyProvider>(out IPropertyProvider d);
             if (d != null)
             {
-                _eventBus.Invoke(new ShowPropertiesSignal(d));
+                _eventBus.Invoke(new ChangePropertiesProviderSignal(d));
                 //propertiesPanelEvents.ShowPanel();
                 //propertiesPanelEvents.ShowProperties(d);
             }

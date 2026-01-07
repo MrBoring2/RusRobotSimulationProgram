@@ -147,7 +147,7 @@ public class ObjectPicker : MonoBehaviour
                                 currentProvider = provider;
                                 //var a = _sceneObjectsManager.GetById(currentProvider.Id);
                                 _eventBus.Invoke(new SelectObjectInScene(currentProvider.Id));
-                                _eventBus.Invoke(new ShowPropertiesSignal(provider));
+                                _eventBus.Invoke(new ChangePropertiesProviderSignal(provider));
                                 //propertiesPanel.ShowPanel();
                                 //propertiesPanel.ShowProperties(provider);
                                 PickObject(providerTransform.gameObject);

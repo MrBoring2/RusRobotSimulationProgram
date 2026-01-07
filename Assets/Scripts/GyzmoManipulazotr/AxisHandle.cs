@@ -16,7 +16,11 @@ public class AxisHandle : MonoBehaviour
 
     public void StartDrag()
     {
-        if (manipulator.Target == null || manipulator.CurrentManipulatorMode == null) return;
+        if (manipulator.Target == null || 
+            manipulator.CurrentManipulatorMode == null || 
+            manipulator.CurrentSceneMode == Assets.Scripts.Managers.SceneManipulatorMode.Drag || 
+            manipulator.CurrentSceneMode == Assets.Scripts.Managers.SceneManipulatorMode.JOG) 
+            return;
 
         dragging = true;
         dragStartPos = manipulator.Target.position;

@@ -3,7 +3,7 @@
     <ui:VisualElement name="properties-panel-content-container">
 
         <ui:VisualElement name="menu">
-            <ui:Button text="X" name="close-button" focusable="false" />
+            <ui:Button text="X" name="close-properties-button" focusable="false" />
         </ui:VisualElement>
 
         <ui:VisualElement name="base-properties-container">
