@@ -622,6 +622,7 @@ Transform:
   - {fileID: 2052803953}
   - {fileID: 2020512687}
   - {fileID: 645784141}
+  - {fileID: 1827411684}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &544480372
@@ -1870,7 +1871,7 @@ Transform:
   m_GameObject: {fileID: 1827411683}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -4.76088, y: -0.02744, z: 5.63326}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2300,6 +2301,7 @@ MonoBehaviour:
   _sceneManipulatorModeManager: {fileID: 2020512688}
   _axisModeManager: {fileID: 969185050}
   _undoRedoManager: {fileID: 544480374}
+  _saveLoadManager: {fileID: 1827411685}
   _simulationManager: {fileID: 645784142}
 --- !u!1001 &2394085790015429071
 PrefabInstance:

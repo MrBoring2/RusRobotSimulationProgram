@@ -77,7 +77,24 @@ public class GyzmoManupulator : MonoBehaviour
 
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
     {
-        SetManipulatorMode(signal.Mode);
+        switch (signal.Mode)
+        {
+            case SceneManipulatorMode.Drag:
+                SetManipulatorMode(null);
+                break;
+            case SceneManipulatorMode.Move:
+                SetManipulatorMode(new MoveMode());
+                break;
+            case SceneManipulatorMode.Rotation:
+                SetManipulatorMode(new RotateMode());
+                break;
+            case SceneManipulatorMode.JOG:
+                SetManipulatorMode(null);
+                break;
+            default:
+                break;
+        }
+        
         //CurrentManipulatorMode = ;
     }
 
