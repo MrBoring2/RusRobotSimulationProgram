@@ -207,7 +207,7 @@ public class IK
     {
         if (checkIsNaN())
         {
-            //CheckLimit();
+            CheckLimit();
             for (int i = 0; i < 5; i++)
             {
                 step_thetha[i] = (thetha[i] - old_thetha[i]);
@@ -222,4 +222,72 @@ public class IK
             return false;
         }
     }
+
+    public void CheckLimit()
+    {
+        if (thetha[0] < -175)
+        {
+            thetha[0] = -175;
+            UnityEngine.Debug.LogWarning("ฮระ ภ1");
+        }
+        if (thetha[0] > 175)
+        {
+            thetha[0] = 175;
+            UnityEngine.Debug.LogWarning("ฮระ ภ1");
+        }
+        if (thetha[1] < 20)
+        {
+            thetha[1] = 20;
+            UnityEngine.Debug.LogWarning("ฮระ ภ2");
+        }
+        if (thetha[1] > 140)
+        {
+            thetha[1] = 140;
+            UnityEngine.Debug.LogWarning("ฮระ ภ2");
+        }
+        if (thetha[2] > 170)
+        {
+            thetha[2] = 170;
+            UnityEngine.Debug.LogWarning("ฮระ ภ3");
+        }
+        if (thetha[2] < -60)
+        {
+            thetha[2] = -60;
+            UnityEngine.Debug.LogWarning("ฮระ ภ3");
+        }
+        if (thetha[3] < -180)
+        {
+            thetha[3] = -180;
+            UnityEngine.Debug.LogWarning("ฮระ ภ4");
+        }
+        if (thetha[3] > 180)
+        {
+            thetha[3] = 180;
+            UnityEngine.Debug.LogWarning("ฮระ ภ4");
+        }
+        if (thetha[4] < -105)
+        {
+            thetha[4] = -105;
+            UnityEngine.Debug.LogWarning("ฮระ ภ5");
+        }
+        if (thetha[4] > 105)
+        {
+            thetha[4] = 105;
+            UnityEngine.Debug.LogWarning("ฮระ ภ6");
+        }
+
+        if (thetha[5] < -180)
+        {
+            thetha[5] = -180;
+            UnityEngine.Debug.LogWarning("ฮระ ภ6");
+        }
+        if (thetha[5] > 180)
+        {
+            thetha[5] = 180;
+            UnityEngine.Debug.LogWarning("ฮระ ภ6");
+        }
+
+
+    }
+
 }
