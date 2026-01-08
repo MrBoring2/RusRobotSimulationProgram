@@ -171,8 +171,7 @@ public class ObjectPicker : MonoBehaviour
                 }
                 else
                 {
-                    manipulator.gameObject.SetActive(false);
-
+                    manipulator.Detach();
                 }
             }
         }

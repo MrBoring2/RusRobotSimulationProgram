@@ -1,11 +1,15 @@
+using System;
+using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 [UxmlElement]
 public partial class CustomFoldout : VisualElement
 {
-
+    public event Action<bool> OnExpandedChanged;
     public bool IsExpanded { get; private set; }
+    public List<VisualElement> Childrens { get; private set; } = new List<VisualElement>();
     private VisualElement header;
     public VisualElement Header => header;
     private Label label;
@@ -51,9 +55,11 @@ public partial class CustomFoldout : VisualElement
         content.style.display = DisplayStyle.None;
         Add(content);
     }
-    public void ClearContent()
+    public void ClearContent(bool expand = false)
     {
         content.Clear();
+        IsExpanded = expand;
+        UpdateVisualState();
     }
     public void SetSelected(bool selected)
     {
@@ -66,34 +72,43 @@ public partial class CustomFoldout : VisualElement
             header.RemoveFromClassList("selected");
         }
     }
-    public void AddContent(VisualElement element)
+    public void AddChild(VisualElement element)
     {
+        Childrens.Add(element);
         content.Add(element);
-        Disp();
+        //IsExpanded = true;
+        UpdateVisualState();
     }
-
-    private void Disp()
+    
+    public void SetExpanded(bool expanded)
     {
-        if (content.childCount > 0)
+        if (IsExpanded != expanded)
         {
-            content.style.display = DisplayStyle.Flex;
-            IsExpanded = true;
-            toggleButton.text = IsExpanded ? "-" : "+";
+            IsExpanded = expanded;
+            UpdateVisualState();
+
+            // Вызываем событие при изменении состояния
+            OnExpandedChanged?.Invoke(IsExpanded);
         }
-        else
-        {
-            content.style.display = DisplayStyle.None;
-            toggleButton.text = IsExpanded ? "-" : "+";
-        }
-        
     }
     private void Toggle()
     {
         IsExpanded = !IsExpanded;
-        if (content.childCount > 0)
-        {
-            content.style.display = IsExpanded ? DisplayStyle.Flex : DisplayStyle.None;
-        }
-        toggleButton.text = IsExpanded ? "-" : "+";
+        UpdateVisualState();
+        // Вызываем событие только если состояние изменилось
+
+        OnExpandedChanged?.Invoke(IsExpanded);
+
+    }
+    private void UpdateVisualState()
+    {
+        bool hasChildren = content.childCount > 0;
+
+        content.style.display =
+            (IsExpanded && hasChildren)
+            ? DisplayStyle.Flex
+            : DisplayStyle.None;
+
+        toggleButton.text = (IsExpanded && hasChildren) ? "-" : "+";
     }
 }

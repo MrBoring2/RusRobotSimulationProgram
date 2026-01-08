@@ -1151,7 +1151,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3126245551890948002, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_Name
-      value: "\u0420\u041E\u0411\u041E\u04221"
+      value: RusRobot RR 120-2900
       objectReference: {fileID: 0}
     - target: {fileID: 3784784265109912282, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: JOGpoint
@@ -2371,67 +2371,6 @@ MonoBehaviour:
   _undoRedoManager: {fileID: 544480374}
   _saveLoadManager: {fileID: 1827411685}
   _simulationManager: {fileID: 645784142}
---- !u!1001 &2394085790015429071
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 2823315939087682942, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_Name
-      value: ROBOT_TEST
-      objectReference: {fileID: 0}
-    - target: {fileID: 4274765767942078997, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -2.29
-      objectReference: {fileID: 0}
-    - target: {fileID: 4274765767942078997, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.131
-      objectReference: {fileID: 0}
-    - target: {fileID: 4274765767942078997, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 3.1799998
-      objectReference: {fileID: 0}
-    - target: {fileID: 4274765767942078997, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4274765767942078997, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4274765767942078997, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4274765767942078997, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4274765767942078997, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4274765767942078997, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4274765767942078997, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9082092249850116449, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
-      propertyPath: type
-      value: 7
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 8bbe2c7dcf5521e4093821d7420e886b, type: 3}
 --- !u!1 &6728728365230234436
 GameObject:
   m_ObjectHideFlags: 0
@@ -2479,6 +2418,5 @@ SceneRoots:
   - {fileID: 8542470662968175446}
   - {fileID: 1742088331}
   - {fileID: 1095323857}
-  - {fileID: 2394085790015429071}
   - {fileID: 469165501}
   - {fileID: 877242589}

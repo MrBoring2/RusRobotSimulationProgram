@@ -108,7 +108,8 @@ namespace Assets.Scripts.GyzmoManipulazotr
         {
             if (_modeManager.Mode != SceneManipulatorMode.JOG)
             {
-                manipulator.gameObject.SetActive(false);
+                if (manipulator != null)
+                    manipulator.gameObject.SetActive(false);
                 return;
             }
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
