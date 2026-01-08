@@ -583,8 +583,6 @@ MonoBehaviour:
   oldXYZ: {x: 0, y: 0, z: 0}
   XYZRot: {x: 0, y: 0, z: 0, w: 0}
   oldXYZRot: {x: 0, y: 0, z: 0, w: 1}
-  absoluteXYZ: {x: 0, y: 0, z: 0}
-  absoluteOldXYZ: {x: 0, y: 0, z: 0}
   thetha:
   - 0
   - 0
@@ -606,7 +604,7 @@ MonoBehaviour:
   - 0
   - 0
   - 0
-  JOGpoint: {fileID: 0}
+  JOGpoint: {fileID: 4107322080161818876}
 --- !u!114 &7573109030372696143
 MonoBehaviour:
   m_ObjectHideFlags: 0

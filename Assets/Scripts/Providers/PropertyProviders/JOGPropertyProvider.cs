@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 namespace Assets.Scripts.Providers
 {
@@ -54,7 +55,25 @@ namespace Assets.Scripts.Providers
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private Mesh sphereMesh;
-        public Vector3 Position { get => transform.localPosition*1000; set => transform.localPosition = value/1000; }
+        public Vector3 Position {
+            get {
+
+                Vector3 pos;
+                pos.z = transform.localPosition.y * 1000;
+                pos.x = transform.localPosition.z * 1000;
+                pos.y = transform.localPosition.x * 1000;
+                return pos;
+            } 
+            set
+            {
+                Vector3 pos;
+                pos.z = value.x / 1000;
+                pos.x = value.y / 1000;
+                pos.y = value.z / 1000;
+                transform.localPosition = pos;
+
+            }
+        }
         public Vector3 GlobalPosition { get => transform.position; set => transform.position = value; }
         public Quaternion RotationQ
         {
