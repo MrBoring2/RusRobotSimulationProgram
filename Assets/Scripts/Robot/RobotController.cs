@@ -7,6 +7,7 @@ using Assets.Scripts.Providers.PropertyProviders;
 using System;
 using System.Collections;
 using System.Drawing;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -35,13 +36,24 @@ public class RobotController : MonoBehaviour
     }
     public void SetJogMove(LinearPointPropertyProvider point)
     {
-        if(oldJOGposition != point.Position)
+        if(oldJOGposition != point.Position || _propertyProvider.XYZRot != point.RotationQ)
         {
             GetPositionInfo(point);
             ik.CalculateInverseKinematics();
-            ik.CheckAngle();
-            oldJOGposition = point.Position;
-            _propertyProvider.oldXYZ = _propertyProvider.XYZ;
+            if (ik.CheckAngle())
+            {
+                ik.CheckLimit();
+                oldJOGposition = point.Position;
+                _propertyProvider.oldXYZ = _propertyProvider.XYZ;
+                _propertyProvider.absoluteOldXYZ = _propertyProvider.absoluteXYZ;
+            }
+            else
+            {
+                //_propertyProvider.XYZ = _propertyProvider.oldXYZ;
+                ik.thetha = ik.old_thetha.ToArray();
+                point.Position = _propertyProvider.absoluteOldXYZ;
+            }
+            
         }
         
     }
@@ -58,6 +70,8 @@ public class RobotController : MonoBehaviour
         _propertyProvider.XYZ.x = point.z * 1000;
         _propertyProvider.XYZRot = p.transform.rotation;
         Speed = p.Speed;
+
+        _propertyProvider.absoluteXYZ = p.Position;
         //PointType = p.pointType;
     }
     private void GetAbsolutePosition(Vector3 pos)
