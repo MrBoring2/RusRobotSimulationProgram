@@ -173,6 +173,51 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3311927857407002060, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
   m_PrefabInstance: {fileID: 1601748049}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &323597818
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 323597819}
+  - component: {fileID: 323597820}
+  m_Layer: 0
+  m_Name: JOGObjectPicker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &323597819
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 323597818}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -3.8000798, y: 0, z: 9.09503}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 336768400}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &323597820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 323597818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b5682ac9adaee449a57cc32b53562dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.GyzmoManipulazotr.JOGObjectPicker
+  manipulator: {fileID: 706125395}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -343,6 +388,7 @@ Transform:
   - {fileID: 813370851}
   - {fileID: 152640451}
   - {fileID: 2062383075}
+  - {fileID: 323597819}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &410087039
@@ -844,6 +890,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb098a1122864fa4f9cbf08717699ef4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimulationManager
+--- !u!114 &706125392 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2117359983579357880, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+  m_PrefabInstance: {fileID: 877242589}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 831e9c3d93bbb764eada140225da6de5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.LinearPointPropertyProvider
+--- !u!114 &706125395 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2530315365824414446, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+  m_PrefabInstance: {fileID: 877242589}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6857612ea4787e74ba84ca73eeae8722, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.GyzmoManipulazotr.JOGManipulator
 --- !u!1001 &756670532
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1088,7 +1156,7 @@ PrefabInstance:
     - target: {fileID: 3784784265109912282, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: JOGpoint
       value: 
-      objectReference: {fileID: 1993166870}
+      objectReference: {fileID: 706125392}
     - target: {fileID: 4841013436529971194, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_IsKinematic
       value: 0

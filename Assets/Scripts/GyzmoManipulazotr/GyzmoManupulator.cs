@@ -5,6 +5,7 @@ using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using System;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public enum AxisMode
 {
@@ -66,8 +67,11 @@ public class GyzmoManupulator : MonoBehaviour
         _axisModeManager = ServiceManager.Current.Get<AxisModeManager>();
         _manipulatorModeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
         SetManipulatorMode(new MoveMode());
-        //SetAxisMode(AxisMode.Global);
-        _axisModeManager.SetAxisMode(AxisMode.Global);
+        if(cam == null)
+        {
+            cam = Camera.main;
+        }
+        SetAxisMode(AxisMode.Global);
     }
 
     private void OnSetAxisMode(SetAxisModeSignal signal)
