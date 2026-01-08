@@ -7,6 +7,7 @@ public partial class CustomFoldout : VisualElement
 
     public bool IsExpanded { get; private set; }
     private VisualElement header;
+    public VisualElement Header => header;
     private Label label;
     private Button toggleButton;
     private VisualElement content;

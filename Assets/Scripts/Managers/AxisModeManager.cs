@@ -18,6 +18,7 @@ namespace Assets.Scripts.Managers
         public void Init()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
+            Mode = AxisMode.Global;
         }
         public void SetAxisMode(AxisMode mode)
         {
