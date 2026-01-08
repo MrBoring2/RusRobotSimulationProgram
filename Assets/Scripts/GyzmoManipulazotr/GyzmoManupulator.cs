@@ -4,6 +4,7 @@ using Assets.Scripts.CustomEventBus.Signals.Manipulator;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -15,6 +16,7 @@ public enum AxisMode
 
 public class GyzmoManupulator : MonoBehaviour
 {
+    public TextMeshPro angleTextPrefab;
     public Transform Target { get; private set; }
     public IManipulatorMode CurrentManipulatorMode { get; private set; }
     public AxisMode? CurrentAxisMode => _axisModeManager?.Mode;
@@ -90,7 +92,10 @@ public class GyzmoManupulator : MonoBehaviour
                 SetManipulatorMode(new MoveMode());
                 break;
             case SceneManipulatorMode.Rotation:
-                SetManipulatorMode(new RotateMode());
+                var rotateMode = new RotateMode();
+                SetManipulatorMode(rotateMode);
+                rotateMode.cursorAngleText = angleTextPrefab; // angleTextPrefab — это уже TextMeshProUGUI на Canvas
+                rotateMode.cursorAngleText.gameObject.SetActive(false);
                 break;
             case SceneManipulatorMode.JOG:
                 SetManipulatorMode(null);

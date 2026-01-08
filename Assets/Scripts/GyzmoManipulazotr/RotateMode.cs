@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 
 //public class RotateMode : IManipulatorMode
 //{
@@ -124,75 +125,132 @@
 //}
 
 using UnityEngine;
+using UnityEngine.UI;
+using static UnityEngine.GraphicsBuffer;
 
-public class RotateMode : IManipulatorMode 
-{ 
-    private Quaternion startRot; 
-    private Vector3 mouseStart;
-    private Vector3 ringTangentScreen; 
-    private float sensitivity;
-    public RotateMode(float sens = 1f)
-    { 
-        sensitivity = sens; 
-    }
-    public void OnObjectSelected(Transform t, GyzmoManupulator m) 
+public class RotateMode : IManipulatorMode
+{
+    private Quaternion startRotation;      // начальный поворот объекта
+    private Quaternion gizmoStartRotation; // начальный поворот гизмо
+    private Vector3 mouseStart;            // стартовая позиция мыши
+    private Vector3 screenTangent;         // касательная для проекции
+    private Vector3 axisWorld;             // ось вращения
+    private float sensitivity;             // чувствительность вращения
+
+    // UI элемент для отображения угла рядом с курсором
+    public TextMeshPro cursorAngleText;           // или TextMeshProUGUI
+    private Transform targetTransform;
+    public RotateMode(float sens = 0.3f)
     {
-    } 
+        sensitivity = sens;
+    }
+
+    // Вызывается при выборе объекта
+    public void OnObjectSelected(Transform t, GyzmoManupulator m)
+    {
+        targetTransform = t;
+        if (m != null)
+            gizmoStartRotation = m.gizmoRoot.rotation;
+    }
+
+    // Начало вращения
     public void OnHandleDown(AxisHandle handle)
-    { 
-        var t = handle.manipulator.Target; 
-        var manip = handle?.manipulator;
-        if (t == null || manip == null) return;
-        startRot = t.rotation; mouseStart = Input.mousePosition; 
-        Vector3 axis = handle.direction.normalized; 
-        if (manip.CurrentAxisMode == AxisMode.Global) 
-            manip.gizmoRootStartRotation = manip.gizmoRoot.rotation;
-        Vector3 camDir = (Camera.main.transform.position - t.position).normalized; 
-        Vector3 ringTangent = Vector3.Cross(camDir, axis).normalized * -1f;
-        Vector3 s0 = Camera.main.WorldToScreenPoint(t.position); 
-        Vector3 s1 = Camera.main.WorldToScreenPoint(t.position + ringTangent); 
-        ringTangentScreen = (s1 - s0).sqrMagnitude < 0.001f ? Vector3.right : (s1 - s0).normalized; 
-    }
-    public void OnHandleDrag(AxisHandle handle, Vector3 d, Vector3 s)
     {
-        var t = handle.manipulator.Target;
-        var manip = handle.manipulator;
-        if (t == null) return;
+        if (handle?.manipulator?.Target == null) return;
 
-        Vector3 axis = handle.direction.normalized;
+        Transform t = handle.manipulator.Target;
 
-        if (manip.CurrentAxisMode == AxisMode.Local)
-        {
-            Vector3 localAxisWorld = t.TransformDirection(axis);
+        // Ось вращения (локальная или глобальная)
+        axisWorld =
+            handle.manipulator.CurrentAxisMode == AxisMode.Local
+                ? t.TransformDirection(handle.direction).normalized
+                : handle.direction.normalized;
 
-            Vector3 mouseDelta = Input.mousePosition - mouseStart;
-            mouseStart = Input.mousePosition; // обновляем для следующего кадра
+        startRotation = t.rotation;
+        mouseStart = Input.mousePosition;
 
-            // Берём только горизонтальную или вертикальную составляющую мыши
-            float projected = mouseDelta.x; // например, движение мыши по X
-            float angle = Mathf.Clamp(projected * sensitivity, -5f, 5f);
+        // Касательная к кольцу
+        Vector3 camDir = (Camera.main.transform.position - t.position).normalized;
+        Vector3 tangentWorld = Vector3.Cross(axisWorld, camDir).normalized;
+        if (tangentWorld.sqrMagnitude < 1e-6f)
+            tangentWorld = Vector3.Cross(axisWorld, Vector3.up).normalized;
 
-            Quaternion delta = Quaternion.AngleAxis(angle, localAxisWorld);
-            t.rotation = delta * t.rotation;
-            manip.gizmoRoot.rotation = t.rotation;
-        }
+        // Проекция на экран
+        Vector3 p0 = Camera.main.WorldToScreenPoint(t.position);
+        Vector3 p1 = Camera.main.WorldToScreenPoint(t.position + tangentWorld);
+        screenTangent = (p1 - p0);
+        screenTangent.z = 0;
+        if (screenTangent.sqrMagnitude > 1e-6f)
+            screenTangent.Normalize();
         else
-        {
-            // глобальный режим оставляем прежним
-            Vector3 mouseDelta = Input.mousePosition - mouseStart;
-            float ang = Vector3.Dot(mouseDelta, ringTangentScreen) * sensitivity;
-            Quaternion delta = Quaternion.AngleAxis(ang, axis);
-            t.rotation = delta * startRot;
-            manip.gizmoRoot.rotation = delta * manip.gizmoRootStartRotation;
-        }
+            screenTangent = Vector3.right;
+
+        gizmoStartRotation = handle.manipulator.gizmoRoot.rotation;
+
+        // Показываем текст рядом с точкой клика в мире
+        cursorAngleText.gameObject.SetActive(true);
+        cursorAngleText.text = "0°";
+        UpdateTextPositionAndRotation(axisWorld);
     }
 
+    // Движение мыши — вращение объекта
+    public void OnHandleDrag(AxisHandle handle, Vector3 delta, Vector3 startPos)
+    {
+        if (handle?.manipulator?.Target == null) return;
+
+        Transform t = handle.manipulator.Target;
+        Vector3 mouseDelta = Input.mousePosition - mouseStart;
+        float projected = Vector3.Dot(mouseDelta, screenTangent);
+        float angle = projected * sensitivity;
+
+        // Вращаем объект
+        t.rotation = Quaternion.AngleAxis(angle, axisWorld) * startRotation;
+
+        // Вращаем гизмо
+        handle.manipulator.gizmoRoot.rotation =
+            Quaternion.AngleAxis(angle, axisWorld) * gizmoStartRotation;
+
+        // Обновляем текст возле курсора
+        string axisLetter = "X";
+        if (axisWorld == Vector3.right) axisLetter = "X";
+        else if (axisWorld == Vector3.up) axisLetter = "Y";
+        else if (axisWorld == Vector3.forward) axisLetter = "Z";
+        cursorAngleText.text = $"{axisLetter}: {angle:F1}°";
+
+        // Обновляем позицию и цвет
+        UpdateTextPositionAndRotation(axisWorld);
+    }
+
+    // Отпускание мыши — фиксируем вращение, скрываем текст
     public void OnHandleUp(AxisHandle handle)
     {
-        var manip = handle?.manipulator;
-        if (manip == null) return;
+        if (handle?.manipulator == null) return;
 
-        if (manip.CurrentAxisMode == AxisMode.Global)
-            manip.gizmoRoot.rotation = manip.gizmoRootStartRotation; // возвращаем визуально к глобальной ориентации
+        handle.manipulator.gizmoRoot.rotation = gizmoStartRotation;
+
+        // Скрываем текст
+        cursorAngleText.gameObject.SetActive(false);
+    }
+    private void UpdateTextPositionAndRotation(Vector3 axis)
+    {
+        if (cursorAngleText == null || targetTransform == null) return;
+
+        // Позиция чуть выше объекта
+        cursorAngleText.transform.position = targetTransform.position + Vector3.up * 0.5f;
+
+        // Поворачиваем к камере
+        cursorAngleText.transform.rotation = Quaternion.LookRotation(
+            cursorAngleText.transform.position - Camera.main.transform.position
+        );
+
+        // Меняем цвет в зависимости от оси
+        if (axis == Vector3.right)
+            cursorAngleText.color = Color.red;
+        else if (axis == Vector3.up)
+            cursorAngleText.color = Color.green;
+        else if (axis == Vector3.forward)
+            cursorAngleText.color = Color.blue;
+        else
+            cursorAngleText.color = Color.white; // для произвольной оси
     }
 }
