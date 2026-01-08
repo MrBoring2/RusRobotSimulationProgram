@@ -152,7 +152,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
                                 if (manipulator != null) manipulator.gameObject.SetActive(false);
                                 manipulator = jogPoint.GetComponent<JOGManipulator>();
                                 manipulator.gameObject.SetActive(true);
-                                var pointProvier = jogPoint.GetComponent<LinearPointPropertyProvider>();
+                                var pointProvier = jogPoint.GetComponent<JOGPropertyProvider>();
                                 if (pointProvier == null) break;
 
                                 currentProvider = pointProvier;

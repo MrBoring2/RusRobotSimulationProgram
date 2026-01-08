@@ -890,17 +890,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb098a1122864fa4f9cbf08717699ef4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimulationManager
---- !u!114 &706125392 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2117359983579357880, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-  m_PrefabInstance: {fileID: 877242589}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 831e9c3d93bbb764eada140225da6de5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.LinearPointPropertyProvider
 --- !u!114 &706125395 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2530315365824414446, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
@@ -912,6 +901,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6857612ea4787e74ba84ca73eeae8722, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.GyzmoManipulazotr.JOGManipulator
+--- !u!4 &706125396 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2423190242658182375, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+  m_PrefabInstance: {fileID: 877242589}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &706125397 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4107322080161818876, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+  m_PrefabInstance: {fileID: 877242589}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ced2a471ef6252489062f8db7db56a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.JOGPropertyProvider
 --- !u!1001 &756670532
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1149,6 +1154,14 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2530315365824414446, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: cam
+      value: 
+      objectReference: {fileID: 330585545}
+    - target: {fileID: 2530315365824414446, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: gizmoRoot
+      value: 
+      objectReference: {fileID: 706125396}
     - target: {fileID: 3126245551890948002, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_Name
       value: "\u0420\u041E\u0411\u041E\u04221"
@@ -1156,7 +1169,7 @@ PrefabInstance:
     - target: {fileID: 3784784265109912282, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: JOGpoint
       value: 
-      objectReference: {fileID: 706125392}
+      objectReference: {fileID: 706125397}
     - target: {fileID: 4841013436529971194, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_IsKinematic
       value: 0
@@ -1164,10 +1177,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1093400836396925207, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1993166870}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
 --- !u!1 &969185048
 GameObject:
@@ -2211,26 +2221,6 @@ MonoBehaviour:
   lineMaterial: {fileID: 2100000, guid: 3753d7944e6b6a44bb2553db2fdb9bfd, type: 2}
   lineWidth: 0.05
   lineColor: {r: 0, g: 0, b: 1, a: 1}
---- !u!1 &1993166868 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1093400836396925207, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-  m_PrefabInstance: {fileID: 877242589}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1993166870
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1993166868}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 831e9c3d93bbb764eada140225da6de5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.LinearPointPropertyProvider
-  ShowVisual: 1
-  material: {fileID: 0}
-  PointSize: 0.3
 --- !u!1 &2020512686
 GameObject:
   m_ObjectHideFlags: 0
