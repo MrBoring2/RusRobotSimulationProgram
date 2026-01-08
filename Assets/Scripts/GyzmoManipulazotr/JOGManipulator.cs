@@ -56,10 +56,12 @@ namespace Assets.Scripts.GyzmoManipulazotr
             Target = transform;
             CurrentManipulatorMode = new JOGMode();
             gizmoRoot = transform;
-            _pointProvider = gameObject.GetComponent<LinearPointPropertyProvider>();    
+            _pointProvider = gameObject.GetComponent<LinearPointPropertyProvider>();
+            gameObject.SetActive(false);
         }
         private void Start()
-        {    
+        {
+           
             _eventBus = ServiceManager.Current.Get<EventBus>();
             _manipulatorModeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
             //SetManipulatorMode(new MoveMode());

@@ -24,6 +24,7 @@ namespace Assets.Scripts.Managers
         public void Init()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
+            Mode = SceneManipulatorMode.Move;
         }
         public void SetManipulatorMode(SceneManipulatorMode mode)
         {

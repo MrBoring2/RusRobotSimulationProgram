@@ -25,6 +25,7 @@ public class ObjectPicker : MonoBehaviour
     private EventBus _eventBus;
     private SceneObjectsManager _sceneObjectsManager;
     private UndoRedoManager _undoRedoManager;
+    private SceneManipulatorModeManager _manipulatorModeManager;
     //public bool IsDraggingManipulator => currentHandle != null;
     private void Start()
     {
@@ -34,6 +35,7 @@ public class ObjectPicker : MonoBehaviour
         _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
         _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
         _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
+        _manipulatorModeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
         if (manipulator != null)
         {
             manipulator.gameObject.SetActive(false);
@@ -55,7 +57,7 @@ public class ObjectPicker : MonoBehaviour
 
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
     {
-        
+
     }
 
     private void Manipulator_OnDragStart(Transform obj)
@@ -94,11 +96,22 @@ public class ObjectPicker : MonoBehaviour
 
         if (currentProvider != null)
             _eventBus.Invoke(new PropertiesTransformUpdateSignal());
-            //propertiesPanel.UpdateTransform(currentProvider);
+        //propertiesPanel.UpdateTransform(currentProvider);
     }
 
     private void Update()
     {
+        if (_manipulatorModeManager.Mode == SceneManipulatorMode.JOG)
+        {
+            manipulator.gameObject.SetActive(false);
+            manipulator.Detach();
+            return;
+        }
+        else
+        {
+            if (manipulator.Target != null)
+                manipulator.gameObject.SetActive(true);
+        }
         if (manipulator.CameraModeActive)
         {
             if (currentHandle != null) UnpickObject();

@@ -6,12 +6,14 @@ using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
+using Assets.Scripts.Providers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Assets.Scripts.GyzmoManipulazotr
 {
@@ -28,6 +30,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
         private EventBus _eventBus;
         private SceneObjectsManager _sceneObjectsManager;
         private UndoRedoManager _undoRedoManager;
+        private SceneManipulatorModeManager _modeManager;
         //public bool IsDraggingManipulator => currentHandle != null;
         private void Start()
         {
@@ -37,6 +40,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
             _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
             _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
+            _modeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
             if (manipulator != null)
             {
                 //manipulator.gameObject.SetActive(false);
@@ -102,12 +106,11 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
         private void Update()
         {
-            //if (manipulator.CameraModeActive)
-            //{
-            //    if (currentHandle != null) UnpickObject();
-            //    return;
-            //}
-
+            if (_modeManager.Mode != SceneManipulatorMode.JOG)
+            {
+                manipulator.gameObject.SetActive(false);
+                return;
+            }
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             int manipLayerMask = LayerMask.GetMask("Manipulator");
 
@@ -124,11 +127,51 @@ namespace Assets.Scripts.GyzmoManipulazotr
                         currentHandle.StartDrag();
                     }
                 }
-                // Клик по объекту сцены
-                //else
-                //{
-                //    manipulator.gameObject.SetActive(false);
-                //}
+                else
+                {
+                    // ИСПРАВЛЕНИЕ: Используем RaycastAll вместо Raycast
+                    RaycastHit[] hits = Physics.RaycastAll(ray, Mathf.Infinity);
+
+                    if (hits.Length > 0)
+                    {
+                        // Сортируем по расстоянию (от ближнего к дальнему)
+                        Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+                        // Ищем первый объект с IPropertyProvider
+                        foreach (RaycastHit hit in hits)
+                        {
+                            // Проверяем, есть ли IPropertyProvider на этом объекте
+                            IPropertyProvider provider = hit.collider.GetComponentInParent<IPropertyProvider>();
+                            if (provider != null)
+                            {
+                                var obj = _sceneObjectsManager.GetById(provider.Id);
+                                if (obj.Type != ObjectType.Robot) continue;
+
+                                var jogPoint = FindInChildren(obj.Reference.transform, "JOG_Manipulator");
+                                if (jogPoint == null) break;
+                                if (manipulator != null) manipulator.gameObject.SetActive(false);
+                                manipulator = jogPoint.GetComponent<JOGManipulator>();
+                                manipulator.gameObject.SetActive(true);
+                                var pointProvier = jogPoint.GetComponent<LinearPointPropertyProvider>();
+                                if (pointProvier == null) break;
+
+                                currentProvider = pointProvier;
+                                //var a = _sceneObjectsManager.GetById(currentProvider.Id);
+                                _eventBus.Invoke(new SelectObjectInScene(currentProvider.Id));
+                                _eventBus.Invoke(new ChangePropertiesProviderSignal(currentProvider));
+                                //propertiesPanel.ShowPanel();
+                                //propertiesPanel.ShowProperties(provider);
+                                //PickObject(providerTransform.gameObject);
+                                break; // Выходим после нахождения первого подходящего объекта
+                            }
+                        }
+                    }
+                    //else
+                    //{
+                    //    manipulator.gameObject.SetActive(false);
+
+                    //}
+                }
             }
 
             if (Input.GetMouseButton(0) && currentHandle != null)
@@ -141,7 +184,19 @@ namespace Assets.Scripts.GyzmoManipulazotr
                 currentHandle = null;
             }
         }
+        private Transform FindInChildren(Transform parent, string name)
+        {
+            foreach (Transform child in parent)
+            {
+                if (child.name == name)
+                    return child;
 
+                var result = FindInChildren(child, name);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
         //public void PickObject(GameObject gameObject)
         //{
         //    IPropertyProvider provider = null;

@@ -49,7 +49,9 @@ public class ManipulatorModePanelEvents : MonoBehaviour
 
     private void OnJogClick(ClickEvent evt)
     {
-        _eventBus.Invoke(new PauseSimulationSignal());
+        RemoveActive();
+        jogButton.AddToClassList("active");
+        _sceneManipulatorModeManager.SetManipulatorMode(SceneManipulatorMode.JOG);
     }
 
     private void OnLookModeClick(ClickEvent evt)
@@ -81,6 +83,7 @@ public class ManipulatorModePanelEvents : MonoBehaviour
         lookButton.RemoveFromClassList("active");
         moveButton.RemoveFromClassList("active");
         rotateButton.RemoveFromClassList("active");
+        jogButton.RemoveFromClassList("active");
     }
 
     private void OnDisable()

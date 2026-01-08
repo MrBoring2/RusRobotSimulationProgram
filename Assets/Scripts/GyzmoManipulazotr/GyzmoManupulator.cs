@@ -71,8 +71,7 @@ public class GyzmoManupulator : MonoBehaviour
         {
             cam = Camera.main;
         }
-        //SetAxisMode(AxisMode.Global);
-        _axisModeManager.SetAxisMode(AxisMode.Global);
+        SetAxisMode(AxisMode.Global);
     }
 
     private void OnSetAxisMode(SetAxisModeSignal signal)
