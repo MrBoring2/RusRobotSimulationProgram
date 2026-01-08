@@ -43,7 +43,7 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        if(_simManager.GetModeSim() == MODE.JOG_MODE)
+        if(_simManager.GetModeSim() == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
         {
             RC.SetJogMove(_propertyProvider.JOGpoint);
         }
