@@ -35,13 +35,20 @@ public class RobotController : MonoBehaviour
     }
     public void SetJogMove(LinearPointPropertyProvider point)
     {
-        if(oldJOGposition != point.Position)
+        if(oldJOGposition != point.Position /*|| _propertyProvider.XYZRot != point.RotationQ*/)
         {
             GetPositionInfo(point);
             ik.CalculateInverseKinematics();
-            ik.CheckAngle();
-            oldJOGposition = point.Position;
-            _propertyProvider.oldXYZ = _propertyProvider.XYZ;
+            if (ik.CheckAngle())
+            {
+                oldJOGposition = point.Position;
+                _propertyProvider.oldXYZ = _propertyProvider.XYZ;
+            }
+            else
+            {
+                _propertyProvider.XYZ = _propertyProvider.oldXYZ;
+            }
+            
         }
         
     }
