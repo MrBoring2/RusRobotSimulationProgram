@@ -26,14 +26,14 @@ public class ZajimZZ: MonoBehaviour
                 parent.z1Col = true;
                 parent.z1Collision = collision;
                 /*ZCollisionEnter.Invoke(collision);*/
-                UnityEngine.Debug.LogWarning("Коллизия!!!!!!!!!!" + gameObject.name);
+                //UnityEngine.Debug.LogWarning("Коллизия!!!!!!!!!!" + gameObject.name);
             }
             else
             {
                 parent.z2Col = true;
                 parent.z2Collision = collision;
                 /*ZCollisionEnter.Invoke(collision);*/
-                UnityEngine.Debug.LogWarning("Коллизия!!!!!!!!!!" + gameObject.name);
+                //UnityEngine.Debug.LogWarning("Коллизия!!!!!!!!!!" + gameObject.name);
             }
         }
         
