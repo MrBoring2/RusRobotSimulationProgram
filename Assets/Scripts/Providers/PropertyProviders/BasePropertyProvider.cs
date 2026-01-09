@@ -53,15 +53,4 @@ namespace Assets.Scripts.Providers
 
         public abstract void RestoreCustomState(ProviderSaveData data);
     }
-    public enum MagnitS
-    {
-        On,
-        Off,
-        NotControl
-    }
-    public enum TypePoint
-    {
-        PTP,
-        LIN
-    }
 }

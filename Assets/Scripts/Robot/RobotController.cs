@@ -17,7 +17,6 @@ public class RobotController : MonoBehaviour
     private EventBus _eventBus;
     private bool allowNextMove;
     private float Speed;
-    private TypePoint PointType;
     private Vector3 point;
     private IK ik;
     private Vector3 oldJOGposition = Vector3.zero;
@@ -28,30 +27,34 @@ public class RobotController : MonoBehaviour
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _propertyProvider = GetComponent<RobotPropertyProvider>();
         ik = new IK(_propertyProvider);
+        //_propertyProvider.XYZ = new Vector3(1,1,1);
+        //_propertyProvider.oldXYZ = _propertyProvider.XYZ;
+        _propertyProvider.JOGpoint.Position = new Vector3(1000, 1000, 1000);
+        SetJogMove(_propertyProvider.JOGpoint);
     }
     public void RobotSetStateEndEffector(StateEndEffectorPropertyProvider cmd)
     {
         _propertyProvider.EndEffectorOn = cmd.Get();
         _eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
     }
-    public void SetJogMove(LinearPointPropertyProvider point)
+    public void SetJogMove(JOGPropertyProvider point)
     {
         if(oldJOGposition != point.Position || _propertyProvider.XYZRot != point.RotationQ)
         {
-            GetPositionInfo(point);
+            GetPositionJOG(point);
             ik.CalculateInverseKinematics();
             if (ik.CheckAngle())
             {
                 ik.CheckLimit();
                 oldJOGposition = point.Position;
                 _propertyProvider.oldXYZ = _propertyProvider.XYZ;
-                _propertyProvider.absoluteOldXYZ = _propertyProvider.absoluteXYZ;
+                //_propertyProvider.absoluteOldXYZ = _propertyProvider.absoluteXYZ;
             }
             else
             {
                 //_propertyProvider.XYZ = _propertyProvider.oldXYZ;
                 ik.thetha = ik.old_thetha.ToArray();
-                point.Position = _propertyProvider.absoluteOldXYZ;
+                point.GlobalPosition = _propertyProvider.absoluteOldXYZ;
             }
             
         }
@@ -71,19 +74,20 @@ public class RobotController : MonoBehaviour
         _propertyProvider.XYZRot = p.transform.rotation;
         Speed = p.Speed;
 
-        _propertyProvider.absoluteXYZ = p.Position;
+        //_propertyProvider.absoluteXYZ = p.Position;
         //PointType = p.pointType;
     }
-    private void GetAbsolutePosition(Vector3 pos)
+    private void GetPositionJOG(JOGPropertyProvider p)
     {
-        Vector3 point = new Vector3();
-        
-        point.x = pos.y / 1000;
-        point.z = pos.x / 1000;
-        point.y = pos.z / 1000;
-        
-        _propertyProvider.absoluteXYZ = _propertyProvider.transform.TransformPoint(point); ;
+        point = _propertyProvider.transform.InverseTransformPoint(p.GlobalPosition);////!!!
+        _propertyProvider.XYZ.y = point.x * 1000;
+        _propertyProvider.XYZ.z = point.y * 1000;
+        _propertyProvider.XYZ.x = point.z * 1000;
+        _propertyProvider.XYZRot = p.transform.rotation;
+
+        //_propertyProvider.absoluteXYZ = p.Position;
     }
+   
 
 
 
@@ -116,7 +120,7 @@ public class RobotController : MonoBehaviour
             currentXYZ += direction * g;
             _propertyProvider.XYZ = currentXYZ;
             _propertyProvider.oldXYZ = currentXYZ;
-            GetAbsolutePosition(currentXYZ);
+
             _propertyProvider.XYZRot = Quaternion.identity;
             _propertyProvider.XYZRot = Quaternion.Lerp(_propertyProvider.oldXYZRot, XYZBuf, ik.Curva2(t0));
             //UnityEngine.Debug.LogWarning("XYZ " + _propertyProvider.XYZRot.eulerAngles.y);

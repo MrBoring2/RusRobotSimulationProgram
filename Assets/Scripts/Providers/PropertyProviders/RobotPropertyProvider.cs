@@ -42,7 +42,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J4Angle = 0;
     public float J5Angle = 0;
     public float J6Angle = 0;
-    public bool EndEffectorOn = false;
+    public bool EndEffectorOn { get; set; }
     public float SpeedEffector = 0.5f;
     //длины звеньев
     public float L1 = 450;
@@ -58,18 +58,18 @@ public class RobotPropertyProvider : BasePropertyProvider
     public Vector3 oldXYZ = Vector3.zero;
     public Quaternion XYZRot;
     public Quaternion oldXYZRot = Quaternion.identity;
-    public Vector3 absoluteXYZ = Vector3.zero;
-    public Vector3 absoluteOldXYZ = Vector3.zero;
+    public Vector3 absoluteXYZ => GetAbsolutePosition(XYZ);
+    public Vector3 absoluteOldXYZ => GetAbsolutePosition(oldXYZ);
     //IK
     public float[] thetha = { 0, 0, 0, 0, 0, 0 };
     public float[] old_thetha = { 0, 90, 90, 0, -90, 0 };
     public float[] step_thetha = { 0, 0, 0, 0, 0, 0 };
 
     //JOG
-    public LinearPointPropertyProvider JOGpoint;
+    public JOGPropertyProvider JOGpoint;
     public void SyncJOGPosition()
     {
-        JOGpoint.transform.position = absoluteXYZ;
+        JOGpoint.GlobalPosition = absoluteXYZ;
         JOGpoint.RotationQ = XYZRot;
     }
 
@@ -284,7 +284,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     {
         return new ProviderSaveData
         {
-            ProviderType = nameof(RobotPropertyProvider)
+            ProviderType = nameof(RobotPropertyProvider),
         };
     }
 
@@ -296,5 +296,17 @@ public class RobotPropertyProvider : BasePropertyProvider
     public override void RestoreCustomState(ProviderSaveData data)
     {
         
+    }
+
+    private Vector3  GetAbsolutePosition(Vector3 pos)
+    {
+ 
+        Vector3 point = new Vector3();
+
+        point.x = pos.y / 1000;
+        point.z = pos.x / 1000;
+        point.y = pos.z / 1000;
+
+        return transform.TransformPoint(point); ;
     }
 }

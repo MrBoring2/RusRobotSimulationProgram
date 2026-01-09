@@ -19,7 +19,7 @@ public class SimulationManager : MonoBehaviour,IService
         _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
         _eventBus.Subscribe<PauseSimulationSignal>(PauseSim);
 
-        //_eventBus.Subscribe<---->(StopSim);  //ÕÛÊÂÌ ÒË„Ì‡Î —“Œœ_—»Ã”Àﬂ÷»ﬂ
+        _eventBus.Subscribe<StopSimulationSignal>(StopSim);  //ÕÛÊÂÌ ÒË„Ì‡Î —“Œœ_—»Ã”Àﬂ÷»ﬂ
 
     }
 
@@ -31,7 +31,7 @@ public class SimulationManager : MonoBehaviour,IService
         }
         else
         {
-            SimulationMode = MODE.NO_STEP;
+            SimulationMode = MODE.NONE;
         }
     }
 
@@ -39,7 +39,7 @@ public class SimulationManager : MonoBehaviour,IService
     {
         if(1==1/*SimulationStat != SIM_STAT.RESUME*/)
         {
-            SimulationStat = SIM_STAT.RESUME;
+            SimulationStat = SIM_STAT.PLAY;
             SimulationMode = MODE.NONE;
             _eventBus.Invoke(new StartProgramm());
         }
@@ -52,7 +52,7 @@ public class SimulationManager : MonoBehaviour,IService
             _eventBus.Invoke(new PauseProgramm());
         }
     }
-    private void StopSim(/*--*/)
+    private void StopSim(StopSimulationSignal s)
     {
         if (SimulationStat != SIM_STAT.STOP)
         {
@@ -76,16 +76,13 @@ public class SimulationManager : MonoBehaviour,IService
 
 public enum SIM_STAT
 {
-    START,
+    PLAY,
     STOP,
     PAUSE,
-    RESUME,
-    NONE
 }
 public enum MODE
 {
     STEP,
-    NO_STEP,
     JOG_MODE,
     NONE
 }
