@@ -22,7 +22,7 @@ namespace Assets.Scripts.Models
             PropertyInfo propertyInfo = null;
 
             // Находим свойство один раз
-            propertyInfo = target.GetType().GetProperty(propertyName,
+            propertyInfo = target.GetType() .GetProperty(propertyName,
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (propertyInfo == null)
