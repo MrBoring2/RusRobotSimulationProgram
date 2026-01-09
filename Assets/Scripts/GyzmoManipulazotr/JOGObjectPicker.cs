@@ -19,7 +19,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
 {
     public class JOGObjectPicker : MonoBehaviour
     {
-        public JOGManipulator manipulator;
+        //public JOGManipulator manipulator;
         private AxisHandleJOG currentHandle;
         //[SerializeField] private UIBlocker uIBlocker;
         //public PropertiesPanelEvents propertiesPanel;
@@ -31,23 +31,20 @@ namespace Assets.Scripts.GyzmoManipulazotr
         private SceneObjectsManager _sceneObjectsManager;
         private UndoRedoManager _undoRedoManager;
         private SceneManipulatorModeManager _modeManager;
+
+        private JOGManipulator _currentActiveManipulator;
         //public bool IsDraggingManipulator => currentHandle != null;
         private void Start()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
+            
             //_eventBus.Subscribe<PickObjectSignal>(OnPickObject);
             //_eventBus.Subscribe<UnpickObjectSignal>(OnUnpickObject);
             _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
             _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
             _modeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
-            if (manipulator != null)
-            {
-                //manipulator.gameObject.SetActive(false);
-                manipulator.OnTargetTransformChanged += HandleTransformChanged;
-                manipulator.OnDragEnd += Manipulator_OnDragEnd;
-                manipulator.OnDragStart += Manipulator_OnDragStart;
-            }
+            _currentActiveManipulator.gameObject.SetActive(false);
         }
 
         //private void OnUnpickObject(UnpickObjectSignal signal)
@@ -62,7 +59,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
         private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
         {
-
+            _currentActiveManipulator.gameObject.SetActive(false);
         }
 
         private void Manipulator_OnDragStart(Transform obj)
@@ -94,7 +91,33 @@ namespace Assets.Scripts.GyzmoManipulazotr
             //}
 
         }
+        private void SetActiveManipulator(JOGManipulator newManipulator)
+        {
+            // Отписываемся от событий старого манипулятора, если он существует
+            if (_currentActiveManipulator != null)
+            {
+                _currentActiveManipulator.OnTargetTransformChanged -= HandleTransformChanged;
+                _currentActiveManipulator.OnDragEnd -= Manipulator_OnDragEnd;
+                _currentActiveManipulator.OnDragStart -= Manipulator_OnDragStart;
 
+                // Деактивируем старый манипулятор
+                _currentActiveManipulator.gameObject.SetActive(false);
+            }
+
+            // Устанавливаем новый манипулятор
+            _currentActiveManipulator = newManipulator;
+
+            if (_currentActiveManipulator != null)
+            {
+                // Подписываемся на события нового манипулятора
+                _currentActiveManipulator.OnTargetTransformChanged += HandleTransformChanged;
+                _currentActiveManipulator.OnDragEnd += Manipulator_OnDragEnd;
+                _currentActiveManipulator.OnDragStart += Manipulator_OnDragStart;
+
+                // Активируем новый манипулятор
+                _currentActiveManipulator.gameObject.SetActive(true);
+            }
+        }
         private void HandleTransformChanged(Transform transform)
         {
             if (transform == null) return;
@@ -108,10 +131,13 @@ namespace Assets.Scripts.GyzmoManipulazotr
         {
             if (_modeManager.Mode != SceneManipulatorMode.JOG)
             {
-                if (manipulator != null)
-                    manipulator.gameObject.SetActive(false);
+                if (_currentActiveManipulator != null)
+                    _currentActiveManipulator.gameObject.SetActive(false);
                 return;
             }
+            
+
+
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             int manipLayerMask = LayerMask.GetMask("Manipulator");
 
@@ -150,19 +176,20 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
                                 var jogPoint = FindInChildren(obj.Reference.transform, "JOG_Manipulator");
                                 if (jogPoint == null) break;
-                                if (manipulator != null) manipulator.gameObject.SetActive(false);
-                                manipulator = jogPoint.GetComponent<JOGManipulator>();
-                                manipulator.gameObject.SetActive(true);
+
+                                var newManipulator = jogPoint.GetComponent<JOGManipulator>();
+                                if (newManipulator != null)
+                                {
+                                    // Используем метод для смены манипулятора
+                                    SetActiveManipulator(newManipulator);
+                                }
+
                                 var pointProvier = jogPoint.GetComponent<JOGPropertyProvider>();
                                 if (pointProvier == null) break;
 
                                 currentProvider = pointProvier;
-                                //var a = _sceneObjectsManager.GetById(currentProvider.Id);
                                 _eventBus.Invoke(new SelectObjectInScene(currentProvider.Id));
                                 _eventBus.Invoke(new ChangePropertiesProviderSignal(currentProvider));
-                                //propertiesPanel.ShowPanel();
-                                //propertiesPanel.ShowProperties(provider);
-                                //PickObject(providerTransform.gameObject);
                                 break; // Выходим после нахождения первого подходящего объекта
                             }
                         }
