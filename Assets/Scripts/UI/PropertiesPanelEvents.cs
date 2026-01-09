@@ -257,7 +257,7 @@ public class PropertiesPanelEvents : MonoBehaviour
             if (current != null)
             {
                 current.Name = name.value;
-                _eventBus.Invoke(new ChangeNamePropertySignal());
+                _eventBus.Invoke(new ChangeNamePropertySignal(current.Id, name.value));
                 //OnTargetNameChanged?.Invoke();
             }
         }));
