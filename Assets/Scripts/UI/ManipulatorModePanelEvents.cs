@@ -39,10 +39,10 @@ public class ManipulatorModePanelEvents : MonoBehaviour
         moveButton.RegisterCallback<ClickEvent>(OnMoveModeClick);
         rotateButton.RegisterCallback<ClickEvent>(OnRotationModeClick);
         jogButton.RegisterCallback<ClickEvent>(OnJogClick);
-        tooltipEvents.RegisterTooltip(lookButton, "Режим просмотра");
-        tooltipEvents.RegisterTooltip(moveButton, "Режим перемещения");
-        tooltipEvents.RegisterTooltip(rotateButton, "Режим вращения");
-        tooltipEvents.RegisterTooltip(jogButton, "Режим JOG");
+        tooltipEvents.RegisterTooltip(lookButton, "пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
+        tooltipEvents.RegisterTooltip(moveButton, "пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
+        tooltipEvents.RegisterTooltip(rotateButton, "пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
+        tooltipEvents.RegisterTooltip(jogButton, "пїЅпїЅпїЅпїЅпїЅ JOG");
         moveButton.AddToClassList("active");
         _sceneManipulatorModeManager.SetManipulatorMode(SceneManipulatorMode.Move);
         //manipulator.SetManipulatorMode(new MoveMode());

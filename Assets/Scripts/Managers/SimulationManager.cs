@@ -17,16 +17,15 @@ public class SimulationManager : MonoBehaviour,IService
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<StartSimulationSignal>(StartSim);
         _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
-        //_eventBus.Subscribe<PauseSimulationSignal>(PauseSim);
+        _eventBus.Subscribe<PauseSimulationSignal>(PauseSim);
 
-        _eventBus.Subscribe<PauseSimulationSignal>(JOGHandler); //нужен сигнал JOG  один и тот же сигнал на вкл и выкл
         //_eventBus.Subscribe<---->(StopSim);  //Ќужен сигнал —“ќѕ_—»ћ”Ћя÷»я
 
     }
 
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
     {
-        if (SimulationStat == SIM_STAT.STOP && signal.Mode == Assets.Scripts.Managers.SceneManipulatorMode.JOG)
+        if (signal.Mode == Assets.Scripts.Managers.SceneManipulatorMode.JOG)
         {
             SimulationMode = MODE.JOG_MODE;
         }
@@ -59,17 +58,6 @@ public class SimulationManager : MonoBehaviour,IService
         {
             SimulationStat = SIM_STAT.STOP;
             _eventBus.Invoke(new StopProgramm());
-        }
-    }
-    private void JOGHandler(PauseSimulationSignal s)
-    {
-        if(SimulationStat == SIM_STAT.STOP && SimulationMode != MODE.JOG_MODE)
-        {
-            SimulationMode = MODE.JOG_MODE;
-        }
-        else if(SimulationStat == SIM_STAT.STOP)
-        {
-            SimulationMode = MODE.NONE;
         }
     }
 
