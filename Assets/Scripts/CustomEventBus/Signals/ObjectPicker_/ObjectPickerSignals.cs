@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Assets.Scripts.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,9 +10,9 @@ namespace Assets.Scripts.CustomEventBus.Signals.ObjectPicker_
 {
     public class PickObjectSignal
     {
-        public readonly GameObject Object;
+        public readonly SceneObject Object;
 
-        public PickObjectSignal(GameObject @object)
+        public PickObjectSignal(SceneObject @object)
         {
             Object = @object;
         }
@@ -19,5 +20,13 @@ namespace Assets.Scripts.CustomEventBus.Signals.ObjectPicker_
     public class UnpickObjectSignal
     {
 
+    }
+    public class PickCommandSignal
+    {
+        public readonly SceneObject Point;
+        public PickCommandSignal(SceneObject point)
+        {
+            Point = point;
+        }
     }
 }

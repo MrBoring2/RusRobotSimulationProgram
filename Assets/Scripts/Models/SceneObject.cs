@@ -13,6 +13,7 @@ namespace Assets.Scripts.Models
         public ObjectType Type { get; private set; }
         public GameObject Reference { get; private set; }
         public string ParentId { get; private set; }
+        public IPropertyProvider PropertyProvider => Reference?.GetComponent<IPropertyProvider>();
         public SceneObject(string id, ObjectType type, GameObject reference, string parentId = null)
         {
             Id = id;

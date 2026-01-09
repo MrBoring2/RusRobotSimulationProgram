@@ -28,3 +28,15 @@
 	border-top-color: rgb(133, 166, 250);
 	border-bottom-color: rgb(133, 166, 250);
 }
+
+#icon_start{
+	background-image: url("project://database/Assets/Resources/Icons/icon_start.png");
+}
+
+#start-simulation-button.start > #icon_start {
+    background-image: url("project://database/Assets/Resources/Icons/icon_start.png");
+}
+
+#start-simulation-button.stop > #icon_start{
+    background-image: url("project://database/Assets/Resources/Icons/icon_stop.png");
+}
