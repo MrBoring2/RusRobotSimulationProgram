@@ -9,12 +9,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 
 namespace Assets.Scripts.GyzmoManipulazotr
 {
     public class JOGManipulator : MonoBehaviour
     {
+        public TextMeshPro angleTextPrefab;
         public JOGMode CurrentManipulatorMode { get; private set; }
         public Transform Target { get; private set; }
         public AxisMode? CurrentAxisMode { get; private set; }
@@ -26,7 +28,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
         public Camera cam;
         public float gizmoScaleKoeficient = 0.1f;
-
+        public Vector3 textOffset = new Vector3(0, 0.15f, 0);
         public Transform gizmoRoot;
         [HideInInspector] public Quaternion gizmoRootStartRotation;
         public event Action<Transform> OnTargetTransformChanged;
@@ -54,7 +56,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
         private void Awake()
         {
             Target = transform;
-            CurrentManipulatorMode = new JOGMode();
+            
             gizmoRoot = transform;
             _pointProvider = gameObject.GetComponent<LinearPointPropertyProvider>();
             gameObject.SetActive(false);
@@ -71,6 +73,10 @@ namespace Assets.Scripts.GyzmoManipulazotr
             }
             //SetAxisMode(AxisMode.Global);
             CurrentAxisMode = AxisMode.Local;
+            angleTextPrefab = GameObject.Find("PreviewRotationText").GetComponent<TextMeshPro>();
+            CurrentManipulatorMode = new JOGMode();
+            CurrentManipulatorMode.cursorAngleText = angleTextPrefab;
+            //angleTextPrefab.gameObject.SetActive(true);
         }
         private void Update()
         {
@@ -79,8 +85,10 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
             float dist = Vector3.Distance(cam.transform.position, gizmoRoot.position);
             gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
+            angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
 
             UpdateHandlesOrientation();
+            UpdateJogText();
         }
 
 
@@ -93,6 +101,16 @@ namespace Assets.Scripts.GyzmoManipulazotr
             // привязка moveHandles и plane к локальной системе объекта
             moveHandlesGroup.transform.localRotation = Quaternion.identity;
 
+        }
+        private void UpdateJogText()
+        {
+            if (angleTextPrefab == null) return;
+
+            angleTextPrefab.transform.position = gizmoRoot.position + textOffset;
+
+            angleTextPrefab.transform.rotation = Quaternion.LookRotation(
+                angleTextPrefab.transform.position - cam.transform.position
+            );
         }
     }
 }

@@ -68,7 +68,7 @@ public class GyzmoManupulator : MonoBehaviour
         _eventBus.Subscribe<SetAxisModeSignal>(OnSetAxisMode);
         _axisModeManager = ServiceManager.Current.Get<AxisModeManager>();
         _manipulatorModeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
-        SetManipulatorMode(new MoveMode());
+        SetManipulatorMode(_manipulatorModeManager.Mode);
         if(cam == null)
         {
             cam = Camera.main;
@@ -83,26 +83,7 @@ public class GyzmoManupulator : MonoBehaviour
 
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
     {
-        switch (signal.Mode)
-        {
-            case SceneManipulatorMode.Drag:
-                SetManipulatorMode(null);
-                break;
-            case SceneManipulatorMode.Move:
-                SetManipulatorMode(new MoveMode());
-                break;
-            case SceneManipulatorMode.Rotation:
-                var rotateMode = new RotateMode();
-                SetManipulatorMode(rotateMode);
-                rotateMode.cursorAngleText = angleTextPrefab; // angleTextPrefab — это уже TextMeshProUGUI на Canvas
-                rotateMode.cursorAngleText.gameObject.SetActive(false);
-                break;
-            case SceneManipulatorMode.JOG:
-                SetManipulatorMode(null);
-                break;
-            default:
-                break;
-        }
+        SetManipulatorMode(signal.Mode);
         
         //CurrentManipulatorMode = ;
     }
@@ -114,7 +95,7 @@ public class GyzmoManupulator : MonoBehaviour
 
         float dist = Vector3.Distance(cam.transform.position, gizmoRoot.position);
         gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
-
+        angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
         UpdateHandlesOrientation();
     }
 
@@ -135,20 +116,41 @@ public class GyzmoManupulator : MonoBehaviour
 
     public void SetManipulatorModeCamera()
     {
-        SetManipulatorMode(null);
+        SetManipulatorMode(SceneManipulatorMode.Drag);
         CameraModeActive = true;
     }
-    public void SetManipulatorMode(IManipulatorMode mode)
+    public void SetManipulatorMode(SceneManipulatorMode mode)
     {
+        IManipulatorMode manipulatorMode = null;
+        switch (mode)
+        {
+            case SceneManipulatorMode.Drag:
+                manipulatorMode = null;
+                break;
+            case SceneManipulatorMode.Move:
+                manipulatorMode = new MoveMode();
+                break;
+            case SceneManipulatorMode.Rotation:
+                var rotateMode = new RotateMode();
+                rotateMode.cursorAngleText = angleTextPrefab; // angleTextPrefab — это уже TextMeshProUGUI на Canvas
+                rotateMode.cursorAngleText.gameObject.SetActive(false);
+                manipulatorMode = rotateMode;
+                break;
+            case SceneManipulatorMode.JOG:
+                manipulatorMode = null;
+                break;
+            default:
+                break;
+        }
         CameraModeActive = false;
-        CurrentManipulatorMode = mode;
-        if (mode == null) return;
+        CurrentManipulatorMode = manipulatorMode;
+        if (manipulatorMode == null) return;
 
-        moveHandlesGroup.SetActive(mode is MoveMode);
-        rotateHandlesGroup.SetActive(mode is RotateMode);
+        moveHandlesGroup.SetActive(manipulatorMode is MoveMode);
+        rotateHandlesGroup.SetActive(manipulatorMode is RotateMode);
 
         if (Target != null)
-            mode.OnObjectSelected(Target, this);
+            manipulatorMode.OnObjectSelected(Target, this);
     }
 
     public void SetAxisMode(AxisMode mode)
