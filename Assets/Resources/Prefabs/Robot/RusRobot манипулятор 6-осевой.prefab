@@ -257,37 +257,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -902732175398203737, guid: 1566e4b90bb5e6147a327308b4de6c2b, type: 3}
---- !u!1 &1093400836396925207
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 146432306174902074}
-  m_Layer: 0
-  m_Name: JOG
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &146432306174902074
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1093400836396925207}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 338621209258235640}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2156264206864955621
 GameObject:
   m_ObjectHideFlags: 0
@@ -443,8 +412,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2423190242658182375}
-  - component: {fileID: 2117359983579357880}
   - component: {fileID: 2530315365824414446}
+  - component: {fileID: 8847216311470501691}
   m_Layer: 6
   m_Name: JOG_Manipulator
   m_TagString: Untagged
@@ -469,21 +438,6 @@ Transform:
   - {fileID: 2523007480198625557}
   m_Father: {fileID: 338621209258235640}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2117359983579357880
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2740521812811356901}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 831e9c3d93bbb764eada140225da6de5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.LinearPointPropertyProvider
-  ShowVisual: 1
-  material: {fileID: 0}
-  PointSize: 0.3
 --- !u!114 &2530315365824414446
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -496,12 +450,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6857612ea4787e74ba84ca73eeae8722, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.GyzmoManipulazotr.JOGManipulator
+  angleTextPrefab: {fileID: 0}
   moveHandlesGroup: {fileID: 1689719684669343561}
   rotateHandlesGroup: {fileID: 2156264206864955621}
   cam: {fileID: 0}
   gizmoScaleKoeficient: 0.3
+  textOffset: {x: 0, y: 0.15, z: 0}
   gizmoRoot: {fileID: 0}
   gizmoRootStartRotation: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &8847216311470501691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2740521812811356901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ced2a471ef6252489062f8db7db56a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.JOGPropertyProvider
+  ShowVisual: 1
+  material: {fileID: 0}
+  PointSize: 0.3
 --- !u!1 &3126245551890948002
 GameObject:
   m_ObjectHideFlags: 0
@@ -538,7 +509,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4200335381418820858}
-  - {fileID: 146432306174902074}
   - {fileID: 2423190242658182375}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -616,8 +586,6 @@ MonoBehaviour:
   oldXYZ: {x: 0, y: 0, z: 0}
   XYZRot: {x: 0, y: 0, z: 0, w: 0}
   oldXYZRot: {x: 0, y: 0, z: 0, w: 1}
-  absoluteXYZ: {x: 0, y: 0, z: 0}
-  absoluteOldXYZ: {x: 0, y: 0, z: 0}
   thetha:
   - 0
   - 0
@@ -639,7 +607,7 @@ MonoBehaviour:
   - 0
   - 0
   - 0
-  JOGpoint: {fileID: 2117359983579357880}
+  JOGpoint: {fileID: 8847216311470501691}
 --- !u!114 &7573109030372696143
 MonoBehaviour:
   m_ObjectHideFlags: 0

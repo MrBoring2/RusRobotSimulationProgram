@@ -45,6 +45,12 @@ namespace Assets.Scripts.Providers
         public bool DisplayRotation { get => displayRotation; set => displayRotation = value; }
         public bool DisplayScale { get => displayScale; set => displayScale = value; }
 
+        private RobotPropertyProvider _robotPropertyProvider;
+        private bool EndEffectorOn
+        {
+            get => _robotPropertyProvider.EndEffectorOn;
+            set => _robotPropertyProvider.EndEffectorOn = value;
+         }
 
 
 
@@ -83,6 +89,7 @@ namespace Assets.Scripts.Providers
 
         private void Awake()
         {
+            _robotPropertyProvider = transform.parent.GetComponent<RobotPropertyProvider>();
             displayScale = false;
             if (ShowVisual)
             {
@@ -94,16 +101,28 @@ namespace Assets.Scripts.Providers
         {
             return new ProviderSaveData
             {
+                ProviderType = nameof(RobotPropertyProvider),
+                BoolValues = {
+                ["EndEffectorOn"] = EndEffectorOn  //Изм. на буферизацию компонента!
+            }
             };
         }
 
         public  IEnumerable<CustomProperty> GetCustomProperties()
         {
-            return null;
+            yield return new CustomProperty(
+            "EndEffectorOn",
+            "Состояние захвата",
+            typeof(bool),
+            () => EndEffectorOn,
+            val => EndEffectorOn = (bool)val //Изм. на буферизацию компонента!
+        );
         }
 
         public  void RestoreCustomState(ProviderSaveData data)
         {
+            if (data.BoolValues.TryGetValue("EndEffectorOn", out var v))
+                EndEffectorOn = v;  //Изм. на буферизацию компонента!
         }
 
         private void CreateMeshVisual()

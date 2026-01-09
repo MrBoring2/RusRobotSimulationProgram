@@ -34,8 +34,8 @@ public class RobotProgrammSimulation : MonoBehaviour
 
         RC = gameObject.GetComponent<RobotController>();
         _eventBus.Subscribe<StartProgramm>(StartSim);
-        _eventBus.Subscribe<PauseProgramm>(StopSim);
-        //_eventBus.Subscribe<StopProgramm>(StopSim);
+        _eventBus.Subscribe<PauseProgramm>(PauseSim);
+        _eventBus.Subscribe<StopProgramm>(StopSim);
         _eventBus.Subscribe<RobotEndMove>(EndCurrentMove);
 
         _propertyProvider.oldXYZ = Vector3.zero;
@@ -121,7 +121,7 @@ public class RobotProgrammSimulation : MonoBehaviour
         LocalSimStat = SIM_STAT.PAUSE;
         RC.SetAllowNextMove(false);
     }
-    private void StopSim(PauseProgramm s)
+    private void StopSim(StopProgramm s)
     {
         LocalSimStat = SIM_STAT.STOP;
         RC.StopSim();

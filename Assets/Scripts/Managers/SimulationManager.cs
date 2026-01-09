@@ -19,7 +19,7 @@ public class SimulationManager : MonoBehaviour,IService
         _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
         _eventBus.Subscribe<PauseSimulationSignal>(PauseSim);
 
-        //_eventBus.Subscribe<---->(StopSim);  //Ќужен сигнал —“ќѕ_—»ћ”Ћя÷»я
+        _eventBus.Subscribe<StopSimulationSignal>(StopSim);  //Ќужен сигнал —“ќѕ_—»ћ”Ћя÷»я
 
     }
 
@@ -52,7 +52,7 @@ public class SimulationManager : MonoBehaviour,IService
             _eventBus.Invoke(new PauseProgramm());
         }
     }
-    private void StopSim(/*--*/)
+    private void StopSim(StopSimulationSignal s)
     {
         if (SimulationStat != SIM_STAT.STOP)
         {

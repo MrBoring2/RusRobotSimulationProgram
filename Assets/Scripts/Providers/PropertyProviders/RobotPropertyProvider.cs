@@ -42,7 +42,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J4Angle = 0;
     public float J5Angle = 0;
     public float J6Angle = 0;
-    public bool EndEffectorOn = false;
+    public bool EndEffectorOn { get; set; }
     public float SpeedEffector = 0.5f;
     //длины звеньев
     public float L1 = 450;
@@ -284,7 +284,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     {
         return new ProviderSaveData
         {
-            ProviderType = nameof(RobotPropertyProvider)
+            ProviderType = nameof(RobotPropertyProvider),
         };
     }
 
