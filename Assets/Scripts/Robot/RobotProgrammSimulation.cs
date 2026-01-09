@@ -168,5 +168,13 @@ public class RobotProgrammSimulation : MonoBehaviour
         }
         
     }
+
+    private void OnDestroy()
+    {
+        _eventBus?.Unsubcribe<StartProgramm>(StartSim);
+        _eventBus?.Unsubcribe<PauseProgramm>(PauseSim);
+        _eventBus?.Unsubcribe<StopProgramm>(StopSim);
+        _eventBus?.Unsubcribe<RobotEndMove>(EndCurrentMove);
+    }
 }
 
