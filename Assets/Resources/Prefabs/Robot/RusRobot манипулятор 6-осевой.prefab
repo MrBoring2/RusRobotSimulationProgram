@@ -573,7 +573,6 @@ MonoBehaviour:
   J4Angle: 0
   J5Angle: 0
   J6Angle: 0
-  EndEffectorOn: 0
   SpeedEffector: 0.5
   L1: 450
   L2: 447
@@ -621,7 +620,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
   type: 7
-  sourcePath: "Prefabs/Robot/\u0420\u041E\u0411\u041E\u04221"
+  sourcePath: "Prefabs/Robot/RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
+    6-\u043E\u0441\u0435\u0432\u043E\u0439"
 --- !u!1 &3137455119182969186
 GameObject:
   m_ObjectHideFlags: 0

@@ -60,6 +60,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
             gizmoRoot = transform;
             _pointProvider = gameObject.GetComponent<JOGPropertyProvider>();
             gameObject.SetActive(false);
+            angleTextPrefab = GameObject.Find("PreviewRotationText").GetComponent<TextMeshPro>();
         }
         private void Start()
         {
@@ -73,7 +74,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
             }
             //SetAxisMode(AxisMode.Global);
             CurrentAxisMode = AxisMode.Local;
-            angleTextPrefab = GameObject.Find("PreviewRotationText").GetComponent<TextMeshPro>();
+            
             CurrentManipulatorMode = new JOGMode();
             CurrentManipulatorMode.cursorAngleText = angleTextPrefab;
             //angleTextPrefab.gameObject.SetActive(true);

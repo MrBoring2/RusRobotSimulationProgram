@@ -10,19 +10,12 @@ using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
-using Assets.Scripts.SystemManager;
-using Assets.Scripts.UI;
 using Assets.UI.CustomElements;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
-using static UnityEngine.GraphicsBuffer;
 
 public class HierarchyPanelEvents : MonoBehaviour
 {
