@@ -84,8 +84,11 @@ namespace Assets.Scripts.GyzmoManipulazotr
             //    gizmoRoot.position = Target.position;
 
             float dist = Vector3.Distance(cam.transform.position, gizmoRoot.position);
-            gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
-            angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
+            if (dist > 3)
+            {
+                gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
+                angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
+            }
 
             UpdateHandlesOrientation();
             UpdateJogText();
@@ -105,11 +108,12 @@ namespace Assets.Scripts.GyzmoManipulazotr
         private void UpdateJogText()
         {
             if (angleTextPrefab == null) return;
+            Transform cam = Camera.main.transform;
 
             angleTextPrefab.transform.position = gizmoRoot.position + textOffset;
 
             angleTextPrefab.transform.rotation = Quaternion.LookRotation(
-                angleTextPrefab.transform.position - cam.transform.position
+                angleTextPrefab.transform.position - cam.transform.position, cam.up
             );
         }
     }

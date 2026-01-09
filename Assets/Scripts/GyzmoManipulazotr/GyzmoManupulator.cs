@@ -87,15 +87,18 @@ public class GyzmoManupulator : MonoBehaviour
         
         //CurrentManipulatorMode = ;
     }
-
+                                                    
     private void Update()
     {
         if (Target != null)
             gizmoRoot.position = Target.position;
 
         float dist = Vector3.Distance(cam.transform.position, gizmoRoot.position);
-        gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
-        angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
+        if (dist > 4)
+        {
+            gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
+            angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
+        }
         UpdateHandlesOrientation();
     }
 

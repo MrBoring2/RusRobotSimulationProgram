@@ -1145,18 +1145,55 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 522497743659282442, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 844208916532001711, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1188778875212008399, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1567506610091650615, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_Convex
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1567506610091650615, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1863487423184623775, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3064869760844929018, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_Convex
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3064869760844929018, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3126245551890948002, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_Name
-      value: RusRobot RR 120-2900
+      value: "RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
+        6-\u043E\u0441\u0435\u0432\u043E\u0439"
       objectReference: {fileID: 0}
     - target: {fileID: 3784784265109912282, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: JOGpoint
       value: 
       objectReference: {fileID: 706125392}
+    - target: {fileID: 4759874188888006905, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_Convex
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4759874188888006905, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4841013436529971194, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_IsKinematic
       value: 0
@@ -1278,8 +1315,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 3
-  m_fontSizeBase: 3
+  m_fontSize: 2
+  m_fontSizeBase: 2
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1753,6 +1790,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbc41a9967f4ee143b380b3d90825f80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.SimulationPanelEvents
+  tooltipEvents: {fileID: 1239946568}
 --- !u!1 &1289876334
 GameObject:
   m_ObjectHideFlags: 0
@@ -1919,6 +1957,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8542470662968175446}
     m_Modifications:
+    - target: {fileID: 78789746038012248, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 335632766540389536, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
+      propertyPath: m_Convex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 335632766540389536, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 440114525010294238, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
       propertyPath: m_Name
       value: MoveMode
@@ -1935,6 +1985,14 @@ PrefabInstance:
       propertyPath: manipulator
       value: 
       objectReference: {fileID: 1068335000}
+    - target: {fileID: 627373903632280072, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1596743908976018077, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2533641777601444817, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
       propertyPath: m_Layer
       value: 6
@@ -1983,6 +2041,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4314470445147907437, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
+      propertyPath: m_Convex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4314470445147907437, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4359651671893816691, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
       propertyPath: manipulator
       value: 
@@ -1990,6 +2056,14 @@ PrefabInstance:
     - target: {fileID: 5497833759717512949, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
       propertyPath: m_Layer
       value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6009761881058808430, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
+      propertyPath: m_Convex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6009761881058808430, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6036008228612854757, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
       propertyPath: manipulator

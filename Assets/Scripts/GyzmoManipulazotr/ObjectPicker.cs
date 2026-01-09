@@ -52,7 +52,8 @@ public class ObjectPicker : MonoBehaviour
 
     private void OnPickObject(PickObjectSignal signal)
     {
-        PickObject(signal.Object);
+        PickObject(signal.Object.Reference);
+       
     }
 
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
@@ -197,6 +198,14 @@ public class ObjectPicker : MonoBehaviour
         {
             Debug.LogWarning($"На объекте {target.name} нет IPropertyProvider");
             return;
+        }
+        var obj = _sceneObjectsManager.GetById(provider.Id);
+        if (obj != null)
+        {
+            if (obj.Type == ObjectType.LinearMoveCommand)
+            {
+                _eventBus.Invoke(new PickCommandSignal(obj));
+            }
         }
         manipulator.Attach(gameObject.transform);
         currentProvider = gameObject.GetComponent<IPropertyProvider>();

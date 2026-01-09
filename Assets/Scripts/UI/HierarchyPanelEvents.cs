@@ -556,18 +556,18 @@ public class HierarchyPanelEvents : MonoBehaviour
                         if (!string.IsNullOrEmpty(element.userData.ToString()) &&
                                 _lineManager.IsCommandInCurrentProgram(objectId))
                         {
-                            _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
+                            _eventBus.Invoke(new PickObjectSignal(gameObject));
                         }
                         else
                         {
-                            _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
+                            _eventBus.Invoke(new PickObjectSignal(gameObject));
                             _eventBus.Invoke(new StopLineDrawer());
                         }
                         break;
                     case ObjectType.StateEndEffectorCommand:
                         break;
                     default:
-                        _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
+                        _eventBus.Invoke(new PickObjectSignal(gameObject));
                         _eventBus.Invoke(new StopLineDrawer());
                         break;
                 }

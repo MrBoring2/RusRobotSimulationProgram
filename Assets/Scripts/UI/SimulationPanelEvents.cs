@@ -17,25 +17,79 @@ namespace Assets.Scripts.UI
         private Button _pauseSimulationButton;
         private VisualElement root;
         private EventBus _eventBus;
+        private SimulationManager _simulationManager;
+        public TooltipEvents tooltipEvents;
         private void Start()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
+            _simulationManager = ServiceManager.Current.Get<SimulationManager>();
             root = GetComponent<UIDocument>().rootVisualElement;
             _startSimulationButton = root.Q<Button>("start-simulation-button");
             _pauseSimulationButton = root.Q<Button>("pause-simulation-button");
             RegisterEvents();
+            tooltipEvents.RegisterTooltip(_startSimulationButton, "Начать симуляцию");
+            tooltipEvents.RegisterTooltip(_pauseSimulationButton, "Поставить симуляцию на паузу");
+            SetStartIcon(false);
+            _pauseSimulationButton.SetEnabled(false);
         }
 
         private void RegisterEvents()
         {
             _startSimulationButton.RegisterCallback<ClickEvent>(e =>
             {
-                _eventBus.Invoke(new StartSimulationSignal());
+                var a = _simulationManager.GetStatusSim();
+                if (_simulationManager.GetStatusSim() == SIM_STAT.NONE ||
+                    _simulationManager.GetStatusSim() == SIM_STAT.STOP)
+                {
+                   
+                    _eventBus.Invoke(new StartSimulationSignal());
+                    var b = _simulationManager.GetStatusSim();
+                    if (_simulationManager.GetStatusSim() == SIM_STAT.START ||
+                        _simulationManager.GetStatusSim() == SIM_STAT.RESUME)
+                    {
+                        tooltipEvents.UnregisterTooltip(_startSimulationButton);
+                        tooltipEvents.RegisterTooltip(_startSimulationButton, "Остановить симуляцию");
+                        tooltipEvents.ForceUpdateTooltip(_startSimulationButton);
+                        SetStartIcon(true);
+                        _pauseSimulationButton.SetEnabled(true);
+                    }
+                }
+                else if (_simulationManager.GetStatusSim() == SIM_STAT.START ||
+                         _simulationManager.GetStatusSim() == SIM_STAT.PAUSE ||
+                         _simulationManager.GetStatusSim() == SIM_STAT.RESUME)
+                {
+                    _eventBus.Invoke(new StopSimulationSignal());
+                    if (_simulationManager.GetStatusSim() == SIM_STAT.STOP)
+                    {
+                        tooltipEvents.UnregisterTooltip(_startSimulationButton);
+                        tooltipEvents.RegisterTooltip(_startSimulationButton, "Начать симуляцию");
+                        tooltipEvents.ForceUpdateTooltip(_startSimulationButton);
+                        SetStartIcon(false);
+                        _pauseSimulationButton.SetEnabled(false);
+                    }
+                }
             });
             _pauseSimulationButton.RegisterCallback<ClickEvent>(e =>
             {
-                _eventBus.Invoke(new PauseSimulationSignal());
+                var a = _simulationManager.GetStatusSim();
+                if (_simulationManager.GetStatusSim() == SIM_STAT.RESUME)
+                {
+                    _eventBus.Invoke(new PauseSimulationSignal());
+                    _pauseSimulationButton.AddToClassList("active");
+                }
+                else
+                {
+                    _eventBus.Invoke(new StartSimulationSignal());
+                    _pauseSimulationButton.RemoveFromClassList("active");
+                }
             });
         }
+        private void SetStartIcon(bool isRunning)
+        {
+            _startSimulationButton.RemoveFromClassList("start");
+            _startSimulationButton.RemoveFromClassList("stop");
+            _startSimulationButton.AddToClassList(isRunning ? "stop" : "start");
+        }
     }
+
 }

@@ -20,4 +20,9 @@ namespace Assets.Scripts.CustomEventBus.Signals.Simulation
 
         }
     }
+
+    public class StopSimulationSignal
+    {
+
+    }
 }

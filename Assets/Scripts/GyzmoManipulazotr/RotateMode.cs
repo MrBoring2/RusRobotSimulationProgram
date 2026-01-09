@@ -111,13 +111,18 @@ public class RotateMode : IManipulatorMode
     {
         if (cursorAngleText == null || targetTransform == null) return;
 
-        // Позиция чуть выше объекта
-        cursorAngleText.transform.position = targetTransform.position + Vector3.up * 0.5f;
+        Transform cam = Camera.main.transform;
 
-        // Поворачиваем к камере
-        cursorAngleText.transform.rotation = Quaternion.LookRotation(
-            cursorAngleText.transform.position - Camera.main.transform.position
-        );
+        // позиция
+        cursorAngleText.transform.position =
+            targetTransform.position + Vector3.up * 0.5f;
+
+        // 🔥 billboard БЕЗ зеркала
+        cursorAngleText.transform.rotation =
+            Quaternion.LookRotation(
+                cursorAngleText.transform.position - cam.position,
+                cam.up
+            );
 
         // Меняем цвет в зависимости от оси
         SetAxisColor(axisLocal);
@@ -132,5 +137,11 @@ public class RotateMode : IManipulatorMode
             cursorAngleText.color = Color.blue;
         else
             cursorAngleText.color = Color.white;
+    }
+
+
+    private void UpdateTextBillboard()
+    {
+
     }
 }
