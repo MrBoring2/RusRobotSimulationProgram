@@ -1,17 +1,8 @@
 ﻿using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.HierarhyPanel;
-using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
-using SFB;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEditor.Build.Content;
-using UnityEditor.Overlays;
 using UnityEngine;
 using UnityEngine.UIElements;
 
