@@ -24,7 +24,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
         public GameObject moveHandlesGroup;
         public GameObject rotateHandlesGroup;
         private SceneManipulatorModeManager _manipulatorModeManager;
-        private LinearPointPropertyProvider _pointProvider;
+        private JOGPropertyProvider _pointProvider;
 
         public Camera cam;
         public float gizmoScaleKoeficient = 0.1f;
@@ -58,7 +58,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
             Target = transform;
             
             gizmoRoot = transform;
-            _pointProvider = gameObject.GetComponent<LinearPointPropertyProvider>();
+            _pointProvider = gameObject.GetComponent<JOGPropertyProvider>();
             gameObject.SetActive(false);
         }
         private void Start()
@@ -78,13 +78,13 @@ namespace Assets.Scripts.GyzmoManipulazotr
             CurrentManipulatorMode.cursorAngleText = angleTextPrefab;
             //angleTextPrefab.gameObject.SetActive(true);
         }
-        private void Update()
+        private void FixedUpdate()
         {
             //if (Target != null)
             //    gizmoRoot.position = Target.position;
 
             float dist = Vector3.Distance(cam.transform.position, gizmoRoot.position);
-            if (dist > 3)
+            if (dist > 2)
             {
                 gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
                 angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;

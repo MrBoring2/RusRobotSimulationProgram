@@ -38,14 +38,12 @@ namespace Assets.Scripts.UI
             _startSimulationButton.RegisterCallback<ClickEvent>(e =>
             {
                 var a = _simulationManager.GetStatusSim();
-                if (_simulationManager.GetStatusSim() == SIM_STAT.NONE ||
-                    _simulationManager.GetStatusSim() == SIM_STAT.STOP)
+                if (_simulationManager.GetStatusSim() == SIM_STAT.STOP)
                 {
                    
                     _eventBus.Invoke(new StartSimulationSignal());
                     var b = _simulationManager.GetStatusSim();
-                    if (_simulationManager.GetStatusSim() == SIM_STAT.START ||
-                        _simulationManager.GetStatusSim() == SIM_STAT.RESUME)
+                    if (_simulationManager.GetStatusSim() == SIM_STAT.PLAY)
                     {
                         tooltipEvents.UnregisterTooltip(_startSimulationButton);
                         tooltipEvents.RegisterTooltip(_startSimulationButton, "Остановить симуляцию");
@@ -54,9 +52,8 @@ namespace Assets.Scripts.UI
                         _pauseSimulationButton.SetEnabled(true);
                     }
                 }
-                else if (_simulationManager.GetStatusSim() == SIM_STAT.START ||
-                         _simulationManager.GetStatusSim() == SIM_STAT.PAUSE ||
-                         _simulationManager.GetStatusSim() == SIM_STAT.RESUME)
+                else if (_simulationManager.GetStatusSim() == SIM_STAT.PLAY ||
+                            _simulationManager.GetStatusSim() == SIM_STAT.PAUSE)
                 {
                     _eventBus.Invoke(new StopSimulationSignal());
                     if (_simulationManager.GetStatusSim() == SIM_STAT.STOP)
@@ -72,7 +69,7 @@ namespace Assets.Scripts.UI
             _pauseSimulationButton.RegisterCallback<ClickEvent>(e =>
             {
                 var a = _simulationManager.GetStatusSim();
-                if (_simulationManager.GetStatusSim() == SIM_STAT.RESUME)
+                if (_simulationManager.GetStatusSim() == SIM_STAT.PLAY)
                 {
                     _eventBus.Invoke(new PauseSimulationSignal());
                     _pauseSimulationButton.AddToClassList("active");

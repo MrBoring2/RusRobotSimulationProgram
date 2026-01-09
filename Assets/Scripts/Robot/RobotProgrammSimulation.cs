@@ -34,8 +34,8 @@ public class RobotProgrammSimulation : MonoBehaviour
 
         RC = gameObject.GetComponent<RobotController>();
         _eventBus.Subscribe<StartProgramm>(StartSim);
-        _eventBus.Subscribe<PauseProgramm>(StopSim);
-        //_eventBus.Subscribe<StopProgramm>(StopSim);
+        _eventBus.Subscribe<PauseProgramm>(PauseSim);
+        _eventBus.Subscribe<StopProgramm>(StopSim);
         _eventBus.Subscribe<RobotEndMove>(EndCurrentMove);
 
         _propertyProvider.oldXYZ = Vector3.zero;
@@ -65,7 +65,7 @@ public class RobotProgrammSimulation : MonoBehaviour
             {
                 RobotProgrammElement element = Programm[currentCommandIndex];
 
-                yield return new WaitUntil(() => allowNextCommand && LocalSimStat == SIM_STAT.RESUME );
+                yield return new WaitUntil(() => allowNextCommand && LocalSimStat == SIM_STAT.PLAY );
 
                 yield return ExecuteElementProgramm(element);
 
@@ -98,7 +98,7 @@ public class RobotProgrammSimulation : MonoBehaviour
     {
         foreach (var element in subProgramm.Get())
         {
-            yield return new WaitUntil(() => allowNextCommand && LocalSimStat == SIM_STAT.RESUME );
+            yield return new WaitUntil(() => allowNextCommand && LocalSimStat == SIM_STAT.PLAY );
 
             yield return ExecuteElementProgramm(element);
         }
@@ -110,7 +110,7 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     private void StartSim(StartProgramm s)
     {
-        LocalSimStat = SIM_STAT.RESUME;
+        LocalSimStat = SIM_STAT.PLAY;
         allowNextCommand = true;
         RC.SetAllowNextMove(true);
         StartProgramm();
@@ -121,7 +121,7 @@ public class RobotProgrammSimulation : MonoBehaviour
         LocalSimStat = SIM_STAT.PAUSE;
         RC.SetAllowNextMove(false);
     }
-    private void StopSim(PauseProgramm s)
+    private void StopSim(StopProgramm s)
     {
         LocalSimStat = SIM_STAT.STOP;
         RC.StopSim();
