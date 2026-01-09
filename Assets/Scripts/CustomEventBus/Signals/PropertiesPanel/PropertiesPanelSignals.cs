@@ -29,6 +29,12 @@ namespace Assets.Scripts.CustomEventBus.Signals.PropertiesPanel
     //}
     public class ChangeNamePropertySignal
     {
-
+        public readonly string Id;
+        public readonly string Name;
+        public ChangeNamePropertySignal(string id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
     }
 }

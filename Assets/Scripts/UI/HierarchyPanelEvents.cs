@@ -142,11 +142,29 @@ public class HierarchyPanelEvents : MonoBehaviour
     private void OnObjectAdded(AddSceneObjectSignal evt) => AddHierarchyItem(evt.GameObject);
     private void OnObjectRemoved(RemoveSceneObjectSignal evt) => RemoveHierarchyItem(evt.GameObject.Id);
     private void OnObjectSelectedInLibrary(SelectObjectinLibrary evt) => AddObject(evt.Prefab);
-    private void OnObjectNameChanged(ChangeObjectNameSignal evt) { }
+    private void OnObjectNameChanged(ChangeObjectNameSignal evt)
+    {
+
+    }
     private void OnExecuteCommand(ChangeObjectNameSignal evt) { }
     private void OnObjectsLoaded(LoadObjectsSignal evt) => UpdateHierarchy();
     private void OnLoadObjects(LoadObjectsSignal signal) => UpdateHierarchy();
-    private void OnChangeNameProperty(ChangeNamePropertySignal signal) => UpdateHierarchy();
+    private void OnChangeNameProperty(ChangeNamePropertySignal signal)
+    {
+        var elem = FindElementByUserIdCached(signal.Id);
+        if (elem is CustomFoldout f)
+        {
+            f.Text = signal.Name;
+        }
+        else if (elem is Label l)
+        {
+            l.text = signal.Name;
+        }
+        UpdateHierarchy();
+        //signal.Name
+        //signal.Id
+        //обновить имя
+    }
     #endregion
     #region Методы для работы с иерархией
 
@@ -306,7 +324,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             {
                 // При восстановлении - восстанавливаем сохраненное состояние
                 newFold.SetExpanded(savedStates[item.Id]);
-            }   
+            }
 
             if (selectedElementId == item.Id)
             {
@@ -328,27 +346,27 @@ public class HierarchyPanelEvents : MonoBehaviour
     private Dictionary<string, bool> SaveFoldoutStates()
     {
         var states = new Dictionary<string, bool>();
-    
-    // Сохраняем состояние из словаря и проверяем актуальное состояние
-    foreach (var kvp in expandedFoldouts)
-    {
-        states[kvp.Key] = kvp.Value;
-    }
-    
-    // Дополнительная проверка актуального состояния элементов
-    foreach (var kvp in elementCache)
-    {
-        if (kvp.Value is CustomFoldout foldout && foldout.userData != null)
+
+        // Сохраняем состояние из словаря и проверяем актуальное состояние
+        foreach (var kvp in expandedFoldouts)
         {
-            string id = foldout.userData.ToString();
-            if (!states.ContainsKey(id))
+            states[kvp.Key] = kvp.Value;
+        }
+
+        // Дополнительная проверка актуального состояния элементов
+        foreach (var kvp in elementCache)
+        {
+            if (kvp.Value is CustomFoldout foldout && foldout.userData != null)
             {
-                states[id] = foldout.IsExpanded;
+                string id = foldout.userData.ToString();
+                if (!states.ContainsKey(id))
+                {
+                    states[id] = foldout.IsExpanded;
+                }
             }
         }
-    }
-    
-    return states;
+
+        return states;
     }
     /// <summary>
     /// Удалить элемент из иерархии
