@@ -65,7 +65,7 @@ public class RobotProgrammSimulation : MonoBehaviour
             {
                 RobotProgrammElement element = Programm[currentCommandIndex];
 
-                yield return new WaitUntil(() => allowNextCommand && LocalSimStat == SIM_STAT.RESUME );
+                yield return new WaitUntil(() => allowNextCommand && LocalSimStat == SIM_STAT.PLAY );
 
                 yield return ExecuteElementProgramm(element);
 
@@ -98,7 +98,7 @@ public class RobotProgrammSimulation : MonoBehaviour
     {
         foreach (var element in subProgramm.Get())
         {
-            yield return new WaitUntil(() => allowNextCommand && LocalSimStat == SIM_STAT.RESUME );
+            yield return new WaitUntil(() => allowNextCommand && LocalSimStat == SIM_STAT.PLAY );
 
             yield return ExecuteElementProgramm(element);
         }
@@ -110,7 +110,7 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     private void StartSim(StartProgramm s)
     {
-        LocalSimStat = SIM_STAT.RESUME;
+        LocalSimStat = SIM_STAT.PLAY;
         allowNextCommand = true;
         RC.SetAllowNextMove(true);
         StartProgramm();

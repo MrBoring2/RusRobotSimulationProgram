@@ -31,7 +31,7 @@ public class SimulationManager : MonoBehaviour,IService
         }
         else
         {
-            SimulationMode = MODE.NO_STEP;
+            SimulationMode = MODE.NONE;
         }
     }
 
@@ -39,7 +39,7 @@ public class SimulationManager : MonoBehaviour,IService
     {
         if(1==1/*SimulationStat != SIM_STAT.RESUME*/)
         {
-            SimulationStat = SIM_STAT.RESUME;
+            SimulationStat = SIM_STAT.PLAY;
             SimulationMode = MODE.NONE;
             _eventBus.Invoke(new StartProgramm());
         }
@@ -76,16 +76,13 @@ public class SimulationManager : MonoBehaviour,IService
 
 public enum SIM_STAT
 {
-    START,
+    PLAY,
     STOP,
     PAUSE,
-    RESUME,
-    NONE
 }
 public enum MODE
 {
     STEP,
-    NO_STEP,
     JOG_MODE,
     NONE
 }
