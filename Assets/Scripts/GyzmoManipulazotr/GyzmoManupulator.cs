@@ -28,7 +28,7 @@ public class GyzmoManupulator : MonoBehaviour
     public Camera cam;
     public float gizmoScaleKoeficient = 0.1f;
 
-    public Transform gizmoRoot; 
+    public Transform gizmoRoot;
     [HideInInspector] public Quaternion gizmoRootStartRotation;
     public event Action<Transform> OnTargetTransformChanged;
     public event Action<Transform> OnDragStart;
@@ -69,7 +69,7 @@ public class GyzmoManupulator : MonoBehaviour
         _axisModeManager = ServiceManager.Current.Get<AxisModeManager>();
         _manipulatorModeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
         SetManipulatorMode(_manipulatorModeManager.Mode);
-        if(cam == null)
+        if (cam == null)
         {
             cam = Camera.main;
         }
@@ -84,20 +84,25 @@ public class GyzmoManupulator : MonoBehaviour
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
     {
         SetManipulatorMode(signal.Mode);
-        
+
         //CurrentManipulatorMode = ;
     }
-                                                    
+
     private void Update()
     {
         if (Target != null)
             gizmoRoot.position = Target.position;
 
         float dist = Vector3.Distance(cam.transform.position, gizmoRoot.position);
-        if (dist > 4)
+        if (dist > 3)
         {
             gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
             angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
+        }
+        else
+        {
+            gizmoRoot.localScale = Vector3.one * 3 * gizmoScaleKoeficient;
+            angleTextPrefab.gameObject.transform.localScale = Vector3.one * 3 * gizmoScaleKoeficient;
         }
         UpdateHandlesOrientation();
     }
