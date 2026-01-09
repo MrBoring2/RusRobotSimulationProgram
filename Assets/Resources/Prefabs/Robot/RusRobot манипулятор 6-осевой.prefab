@@ -517,7 +517,8 @@ GameObject:
   - component: {fileID: 3784784265109912282}
   - component: {fileID: 7573109030372696143}
   m_Layer: 0
-  m_Name: "\u0420\u041E\u0411\u041E\u04221"
+  m_Name: "RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
+    6-\u043E\u0441\u0435\u0432\u043E\u0439"
   m_TagString: SceneObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

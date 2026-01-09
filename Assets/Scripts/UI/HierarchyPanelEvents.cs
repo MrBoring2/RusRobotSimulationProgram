@@ -21,6 +21,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using static UnityEngine.GraphicsBuffer;
 
 public class HierarchyPanelEvents : MonoBehaviour
@@ -42,6 +43,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     private VisualElement lastSelectedElement;
     private CustomScrollView customScrollView;
     private Dictionary<string, VisualElement> elementCache = new Dictionary<string, VisualElement>();
+    private Dictionary<string, bool> expandedFoldouts = new Dictionary<string, bool>();
     private UndoRedoManager _undoRedoManager;
     private UIStatusManager _uIStatusManager;
 
@@ -195,7 +197,17 @@ public class HierarchyPanelEvents : MonoBehaviour
         // Добавляем элемент
         if (parentElement is CustomFoldout parentFoldout)
         {
-            DrawSingleItem(item, parentFoldout);
+            // Сохраняем текущее состояние foldout
+            //bool wasExpanded = parentFoldout.IsExpanded;
+
+            //// Раскрываем только если foldout был свернут
+            //if (!wasExpanded)
+            //{
+            //    parentFoldout.SetExpanded(true);
+            //    expandedFoldouts[parentFoldout.userData?.ToString() ?? "root"] = true;
+            //}
+
+            DrawSingleItem(item, parentFoldout, null, false);
         }
     }
 
@@ -204,9 +216,45 @@ public class HierarchyPanelEvents : MonoBehaviour
     /// </summary>
     /// <param name="item">Ссылка на объект</param>
     /// <param name="parent">Ссылка на родительский элемент, в котором размещать объект</param>
-    private void DrawSingleItem(SceneObject item, CustomFoldout parent)
+    private void DrawSingleItem(SceneObject item, CustomFoldout parent, Dictionary<string, bool> savedStates, bool restoreState = false)
     {
         VisualElement element = null;
+
+        //if (!expandedFoldouts.ContainsKey(parent.userData.ToString()))
+        //{
+        //    expandedFoldouts.Add(parent.userData.ToString(), parent.IsExpanded);
+        //}
+        //else expandedFoldouts[parent.userData.ToString()] = parent.IsExpanded;
+        //if (parent.userData != null)
+        //{
+        //    expandedFoldouts[parent.userData.ToString()] = parent.IsExpanded;
+        //}
+        var cachedElem = FindElementByUserIdCached(item.Id);
+        if (cachedElem != null)
+        {
+            parent.AddChild(cachedElem);
+            if (restoreState && cachedElem is CustomFoldout fold && savedStates != null && savedStates.ContainsKey(item.Id))
+            {
+                fold.SetExpanded(savedStates[item.Id]);
+            }
+            if (selectedElementId == item.Id)
+            {
+                SelectHierarchyItem(cachedElem);
+            }
+
+            var children = _sceneObjectManager.GetGameObjectsList()
+                                            .Where(o => o.ParentId == item.Id && o.Reference.activeSelf);
+
+            foreach (var child in children)
+            {
+                if (cachedElem is CustomFoldout foldout)
+                {
+                    DrawSingleItem(child, foldout, savedStates, restoreState);
+                }
+            }
+
+            return;
+        }
 
         switch (item.Type)
         {
@@ -214,11 +262,27 @@ public class HierarchyPanelEvents : MonoBehaviour
                 element = new CustomFoldout { Text = item.Reference.name };
                 element.name = "hierarchy-item-robot";
                 element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
+                var robotFoldout = (CustomFoldout)element;
+                robotFoldout.OnExpandedChanged += (isExpanded) =>
+                {
+                    if (robotFoldout.userData != null)
+                    {
+                        expandedFoldouts[robotFoldout.userData.ToString()] = isExpanded;
+                    }
+                };
                 break;
             case ObjectType.Program:
                 element = new CustomFoldout { Text = item.Reference.name };
                 element.name = "hierarchy-item-program";
                 element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
+                var programFoldout = (CustomFoldout)element;
+                programFoldout.OnExpandedChanged += (isExpanded) =>
+                {
+                    if (programFoldout.userData != null)
+                    {
+                        expandedFoldouts[programFoldout.userData.ToString()] = isExpanded;
+                    }
+                };
                 break;
             case ObjectType.LinearMoveCommand or ObjectType.StateEndEffectorCommand:
                 element = CreateHierarchyElement("hierarchy-item-command", item.Reference.name, item.Id);
@@ -235,7 +299,14 @@ public class HierarchyPanelEvents : MonoBehaviour
 
             CacheElement(element, item.Id);
 
-            parent.AddContent(element);
+            parent.AddChild(element);
+
+            // При обновлении иерархии восстанавливаем состояние
+            if (restoreState && savedStates != null && savedStates.ContainsKey(item.Id) && element is CustomFoldout newFold)
+            {
+                // При восстановлении - восстанавливаем сохраненное состояние
+                newFold.SetExpanded(savedStates[item.Id]);
+            }   
 
             if (selectedElementId == item.Id)
             {
@@ -249,12 +320,36 @@ public class HierarchyPanelEvents : MonoBehaviour
             {
                 if (element is CustomFoldout fold)
                 {
-                    DrawSingleItem(child, fold);
+                    DrawSingleItem(child, fold, savedStates, restoreState);
                 }
             }
         }
     }
-
+    private Dictionary<string, bool> SaveFoldoutStates()
+    {
+        var states = new Dictionary<string, bool>();
+    
+    // Сохраняем состояние из словаря и проверяем актуальное состояние
+    foreach (var kvp in expandedFoldouts)
+    {
+        states[kvp.Key] = kvp.Value;
+    }
+    
+    // Дополнительная проверка актуального состояния элементов
+    foreach (var kvp in elementCache)
+    {
+        if (kvp.Value is CustomFoldout foldout && foldout.userData != null)
+        {
+            string id = foldout.userData.ToString();
+            if (!states.ContainsKey(id))
+            {
+                states[id] = foldout.IsExpanded;
+            }
+        }
+    }
+    
+    return states;
+    }
     /// <summary>
     /// Удалить элемент из иерархии
     /// </summary>
@@ -272,7 +367,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             }
 
             elementCache.Remove(itemId);
-
+            expandedFoldouts.Remove(itemId);
             if (selectedElementId == itemId)
             {
                 ClearAllSelections();
@@ -461,18 +556,18 @@ public class HierarchyPanelEvents : MonoBehaviour
                         if (!string.IsNullOrEmpty(element.userData.ToString()) &&
                                 _lineManager.IsCommandInCurrentProgram(objectId))
                         {
-                            _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
+                            _eventBus.Invoke(new PickObjectSignal(gameObject));
                         }
                         else
                         {
-                            _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
+                            _eventBus.Invoke(new PickObjectSignal(gameObject));
                             _eventBus.Invoke(new StopLineDrawer());
                         }
                         break;
                     case ObjectType.StateEndEffectorCommand:
                         break;
                     default:
-                        _eventBus.Invoke(new PickObjectSignal(gameObject.Reference));
+                        _eventBus.Invoke(new PickObjectSignal(gameObject));
                         _eventBus.Invoke(new StopLineDrawer());
                         break;
                 }
@@ -755,15 +850,15 @@ public class HierarchyPanelEvents : MonoBehaviour
     /// </summary>
     private void UpdateHierarchy()
     {
-        ClearCache();
-        MainHierarchyItem.ClearContent();
+        var savedStates = SaveFoldoutStates();
+        MainHierarchyItem.ClearContent(true);
         var rootObjects = _sceneObjectManager.GetGameObjectsList()
                                          .Where(o => string.IsNullOrEmpty(o.ParentId));
         foreach (var item in rootObjects)
         {
             if (item.Reference.activeSelf == false) continue;
 
-            DrawSingleItem(item, MainHierarchyItem);
+            DrawSingleItem(item, MainHierarchyItem, savedStates, true);
             //DrawItemRecursive(item, MainHierarchyItem);
         }
         if (customScrollView != null)
@@ -1495,6 +1590,16 @@ public class HierarchyPanelEvents : MonoBehaviour
         customScrollView = root.Q<CustomScrollView>("custom-scroll-view");
         MainHierarchyItem = root.Q<CustomFoldout>("main-item");
         root.RegisterCallback<MouseDownEvent>(OnMouseDownInsidePanel);
+        MainHierarchyItem.userData = Guid.NewGuid().ToString();
+        MainHierarchyItem.SetExpanded(true);
+        expandedFoldouts.Add(MainHierarchyItem.userData.ToString(), MainHierarchyItem.IsExpanded);
+        MainHierarchyItem.OnExpandedChanged += (isExpanded) =>
+        {
+            if (MainHierarchyItem.userData != null)
+            {
+                expandedFoldouts[MainHierarchyItem.userData.ToString()] = isExpanded;
+            }
+        };
     }
     #endregion
 }
