@@ -120,10 +120,18 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     private void StartSim(StartProgramm s)
     {
-        LocalSimStat = SIM_STAT.PLAY;
-        allowNextCommand = true;
-        RC.SetAllowNextMove(true);
-        StartProgramm();
+        if(LocalSimStat == SIM_STAT.PAUSE)
+        {
+            ContinueSim();
+        }
+        else
+        {
+            LocalSimStat = SIM_STAT.PLAY;
+            allowNextCommand = true;
+            RC.SetAllowNextMove(true);
+            StartProgramm();
+        }
+        
 
     }
     private void PauseSim(PauseProgramm s)
@@ -136,6 +144,11 @@ public class RobotProgrammSimulation : MonoBehaviour
         LocalSimStat = SIM_STAT.STOP;
         RC.StopSim();
         StopAllCoroutines();
+    }
+    private void ContinueSim()
+    {
+        LocalSimStat = SIM_STAT.PLAY;
+        RC.SetAllowNextMove(true);
     }
     private void EndCurrentMove(RobotEndMove s)
     {
