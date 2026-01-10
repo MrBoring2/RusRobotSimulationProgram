@@ -254,7 +254,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             }
 
             var children = _sceneObjectManager.GetGameObjectsList()
-                                            .Where(o => o.ParentId == item.Id && o.Reference.activeSelf);
+                                            .Where(o => o.ParentId == item.Id);
 
             foreach (var child in children)
             {
@@ -494,6 +494,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         return null;
     }
 
+
     /// <summary>
     /// Найти элемент рекурсивно
     /// </summary>
@@ -726,10 +727,9 @@ public class HierarchyPanelEvents : MonoBehaviour
         //contextMenu.style.paddingBottom = 2;
         //contextMenu.style.paddingLeft = 4;
         //contextMenu.style.paddingRight = 4;
-
         if (clickedElement != null && clickedElement.name.Contains("hierarchy-item"))
         {
-            contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+            
         }
 
         if (clickedElement.name == "")
@@ -747,14 +747,16 @@ public class HierarchyPanelEvents : MonoBehaviour
                 }
                 else if (foldout.name == "hierarchy-item-program")
                 {
-                    ;
                     var parentId = foldout.userData.ToString();
                     contextMenu.Add(CreateMenuButton("Добавить команду", () => CreatePoint(parentId)));
                     contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(parentId)));
                     contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(parentId)));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
-                else { contextMenu = null; return; }
+                else 
+                {
+                    contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+                }
 
             }
 
@@ -891,8 +893,10 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
         var savedStates = SaveFoldoutStates();
         MainHierarchyItem.ClearContent(true);
+        elementCache.Clear();
         var rootObjects = _sceneObjectManager.GetGameObjectsList()
-                                         .Where(o => string.IsNullOrEmpty(o.ParentId));
+                              .Where(o => string.IsNullOrEmpty(o.ParentId));
+        
         foreach (var item in rootObjects)
         {
             if (item.Reference.activeSelf == false) continue;
@@ -1619,7 +1623,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
         // Создаем контейнер для элемента
         var container = new VisualElement();
-        container.AddToClassList("hierarhy-item-container-base");
+        container.AddToClassList("hierarchy-item-container-base");
         container.style.flexDirection = FlexDirection.Row;
         container.style.alignItems = Align.Center;
         container.name = elemName;

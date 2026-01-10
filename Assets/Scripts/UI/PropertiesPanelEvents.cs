@@ -519,5 +519,7 @@ public class PropertiesPanelEvents : MonoBehaviour
     void OnDestroy()
     {
         ClearBindings();
+        _UIStatusManager.SetInputMode(false);
+        _UIStatusManager.SetPointerOberUI(false);
     }
 }

@@ -1,0 +1,14 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement style="width: 400px; height: 600px; flex-direction: column;">
+        <ui:ScrollView name="Scroll" mode="Horizontal" style="flex-grow: 1; flex-direction: row;">
+            <ui:VisualElement style="flex-direction: row; flex-grow: 1; align-items: stretch;">
+                <ui:VisualElement style="width: 20px; background-color: rgb(231, 231, 231);">
+                    <ui:TextField placeholder-text="filler text" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; height: 100%;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-grow: 1; background-color: rgb(255, 83, 83);">
+                    <ui:TextField placeholder-text="filler text" multiline="true" vertical-scroller-visibility="Hidden" is-delayed="true" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; height: 100%; align-items: stretch; justify-content: flex-start;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>
