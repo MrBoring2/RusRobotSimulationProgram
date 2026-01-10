@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
+using Assets.Scripts.Providers;
 
 public class RobotProgrammSimulation : MonoBehaviour
 {
@@ -46,7 +47,8 @@ public class RobotProgrammSimulation : MonoBehaviour
         {
             if(s.Point.Type == ObjectType.LinearMoveCommand)
             {
-                //!!
+                RC.TeleportToPoint((LinearPointPropertyProvider)s.Point.PropertyProvider);
+                _propertyProvider.SyncJOGPosition();
             }
         }
     }

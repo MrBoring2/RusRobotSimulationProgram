@@ -86,6 +86,14 @@ public class RobotController : MonoBehaviour
         }
 
     }
+    public void TeleportToPoint(LinearPointPropertyProvider p)
+    {
+        GetPositionInfo(p);
+        ik.CalculateInverseKinematics();
+        ik.CheckAngle();
+        _propertyProvider.oldXYZ = _propertyProvider.XYZ;
+        _propertyProvider.SyncJOGPosition();
+    }
     public void GetPositionInfo(LinearPointPropertyProvider p)
     {
         point = _propertyProvider.transform.InverseTransformPoint(p.Position);////!!!
