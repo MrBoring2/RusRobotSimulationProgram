@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
+using Assets.Scripts.Providers;
 
 public class RobotProgrammSimulation : MonoBehaviour
 {
@@ -46,7 +47,8 @@ public class RobotProgrammSimulation : MonoBehaviour
         {
             if(s.Point.Type == ObjectType.LinearMoveCommand)
             {
-                //!!
+                RC.TeleportToPoint((LinearPointPropertyProvider)s.Point.PropertyProvider);
+                _propertyProvider.SyncJOGPosition();
             }
         }
     }
@@ -120,10 +122,18 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     private void StartSim(StartProgramm s)
     {
-        LocalSimStat = SIM_STAT.PLAY;
-        allowNextCommand = true;
-        RC.SetAllowNextMove(true);
-        StartProgramm();
+        if(LocalSimStat == SIM_STAT.PAUSE)
+        {
+            ContinueSim();
+        }
+        else
+        {
+            LocalSimStat = SIM_STAT.PLAY;
+            allowNextCommand = true;
+            RC.SetAllowNextMove(true);
+            StartProgramm();
+        }
+        
 
     }
     private void PauseSim(PauseProgramm s)
@@ -136,6 +146,11 @@ public class RobotProgrammSimulation : MonoBehaviour
         LocalSimStat = SIM_STAT.STOP;
         RC.StopSim();
         StopAllCoroutines();
+    }
+    private void ContinueSim()
+    {
+        LocalSimStat = SIM_STAT.PLAY;
+        RC.SetAllowNextMove(true);
     }
     private void EndCurrentMove(RobotEndMove s)
     {
@@ -158,27 +173,8 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     public void HandlerCommand(RobotProgrammElement c)
     {
-        switch (c.TypeComand)
-        {
-            case ENUM_COMMANDS.MOVE_PTP:
-                
-                break;
-            case ENUM_COMMANDS.MOVE_LIN:
-                CommandMove comand0 = (CommandMove)c;
-                InProgress();
-                comand0.Execute(RC);
-                break;
-            case ENUM_COMMANDS.WAIT: 
-
-                break;
-            case ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR:
-                ComandSetStateEndEffector comand1 = (ComandSetStateEndEffector)c;
-                InProgress();
-                comand1.Execute(RC);
-                break;
-            default: break;
-        }
-        
+        InProgress();
+        c.Execute(RC);  
     }
     private void OnDestroy()
     {

@@ -37,7 +37,12 @@ public class RobotController : MonoBehaviour
     /// </summary>
     public void RobotSetWait(WaitPropertyProvider cmd)
     {
-        /////обработка
+        StartCoroutine(SetWait(cmd.Get()));
+    }
+    private IEnumerator SetWait(float time)
+    {
+        yield return new WaitForSeconds(time*Time.fixedDeltaTime);
+        _eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
     }
     /// <summary>
     /// Вып. команды изменения состояния эффектора
@@ -80,6 +85,14 @@ public class RobotController : MonoBehaviour
 
         }
 
+    }
+    public void TeleportToPoint(LinearPointPropertyProvider p)
+    {
+        GetPositionInfo(p);
+        ik.CalculateInverseKinematics();
+        ik.CheckAngle();
+        _propertyProvider.oldXYZ = _propertyProvider.XYZ;
+        _propertyProvider.SyncJOGPosition();
     }
     public void GetPositionInfo(LinearPointPropertyProvider p)
     {
