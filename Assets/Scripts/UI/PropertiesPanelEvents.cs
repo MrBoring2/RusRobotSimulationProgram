@@ -93,6 +93,7 @@ public class PropertiesPanelEvents : MonoBehaviour
         if (signal.PropertyProvider != null)
             _UIStatusManager.SetPropertiesPanelVisibility(true);
         else _UIStatusManager.SetPropertiesPanelVisibility(false);
+        Debug.Log($"[UI] current provider instance = {(signal.PropertyProvider as MonoBehaviour)?.GetInstanceID()}");
     }
 
     private void OnTransformChanged(PropertiesTransformUpdateSignal signal)

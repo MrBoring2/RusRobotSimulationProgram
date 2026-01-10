@@ -32,6 +32,10 @@ namespace Assets.Scripts.Managers
         }
         public void SetPointerOberUI(bool isPointerOverUI)
         {
+            if(isPointerOverUI == false)
+            {
+
+            }
             this.isPointerOverUI = isPointerOverUI;
         }
 

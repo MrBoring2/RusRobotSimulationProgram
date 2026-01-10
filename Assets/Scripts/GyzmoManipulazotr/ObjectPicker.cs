@@ -172,7 +172,8 @@ public class ObjectPicker : MonoBehaviour
                 }
                 else
                 {
-                    manipulator.Detach();
+                    if(!_uiStatusManager.isPointerOverUI)
+                        manipulator.Detach();
                 }
             }
         }
@@ -190,6 +191,7 @@ public class ObjectPicker : MonoBehaviour
 
     public void PickObject(GameObject gameObject)
     {
+        manipulator.gameObject.SetActive(true);
         IPropertyProvider provider = null;
         GameObject target = gameObject;
 
@@ -207,9 +209,10 @@ public class ObjectPicker : MonoBehaviour
                 _eventBus.Invoke(new PickCommandSignal(obj));
             }
         }
+        currentProvider = provider;
         manipulator.Attach(gameObject.transform);
-        currentProvider = gameObject.GetComponent<IPropertyProvider>();
-        manipulator.gameObject.SetActive(true);
+       
+        
     }
     public void UnpickObject()
     {

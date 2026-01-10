@@ -107,6 +107,7 @@ public class RobotPropertyProvider : BasePropertyProvider
                 sceneObj.ParentId == Id &&
                 (sceneObj.Type == ObjectType.LinearMoveCommand ||
                  sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+                 sceneObj.Type == ObjectType.WaitCommand ||
                  sceneObj.Type == ObjectType.Program))
             {
                 result.Add(ConvertToRobotProgrammElement(sceneObj));
@@ -138,6 +139,7 @@ public class RobotPropertyProvider : BasePropertyProvider
                 sceneObj.ParentId == parentId &&
                 (sceneObj.Type == ObjectType.LinearMoveCommand ||
                  sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+                 sceneObj.Type == ObjectType.WaitCommand ||
                  sceneObj.Type == ObjectType.Program))
             {
                 childrenInOrder.Add(sceneObj);
@@ -173,6 +175,12 @@ public class RobotPropertyProvider : BasePropertyProvider
             var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
             return command;
         }
+        else if (obj.Type == ObjectType.WaitCommand)
+        {
+
+            var command = new ComandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+            return command;
+        }
         else if (obj.Type == ObjectType.Program)
         {
             // Получаем дочерние элементы в правильном порядке
@@ -187,7 +195,8 @@ public class RobotPropertyProvider : BasePropertyProvider
                     if (sceneObj != null &&
                         sceneObj.ParentId == obj.Id &&
                         (sceneObj.Type == ObjectType.LinearMoveCommand ||
-                         sceneObj.Type == ObjectType.StateEndEffectorCommand))
+                         sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+                         sceneObj.Type == ObjectType.WaitCommand))
                     {
                         subItems.Add(ConvertToRobotProgrammElement(sceneObj));
                     }
