@@ -117,7 +117,7 @@ public class RobotProgrammSimulation : MonoBehaviour
             
             yield return new WaitUntil(() => allowNextCommand);
         }
-        else if (EP is SubProgramm)
+        else if (EP.TypeComand == ENUM_COMMANDS.SUBPROGRAMM)
         {
             SubProgramm subProgramm = (SubProgramm)EP;
 

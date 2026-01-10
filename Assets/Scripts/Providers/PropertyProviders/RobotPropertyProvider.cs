@@ -13,6 +13,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
+using static UnityEngine.EventSystems.EventTrigger;
 public class RobotElement
 {
     public string Id;
@@ -24,7 +25,7 @@ public class RobotPropertyProvider : BasePropertyProvider
 {
     private EventBus _eventBus;
     private SceneObjectsManager _sceneObjectManager;
-    public IEnumerable<RobotProgrammElement> Programm 
+    public List<RobotProgrammElement> Programm 
     {
         get
         {
@@ -92,7 +93,7 @@ public class RobotPropertyProvider : BasePropertyProvider
         Id = id;
     }
 
-    public IEnumerable<RobotProgrammElement> GetRootElements()
+    /*public IEnumerable<RobotProgrammElement> GetRootElements()
     {
         var itemsDict = _sceneObjectManager.Items;
         if (itemsDict == null) return Enumerable.Empty<RobotProgrammElement>();
@@ -115,21 +116,22 @@ public class RobotPropertyProvider : BasePropertyProvider
         }
 
         return result;
-    }
+    }*/
 
 
-    public IEnumerable<RobotProgrammElement> BuildTree()
+    public List<RobotProgrammElement> BuildTree()
     {
         return BuildTreeInternal(Id);
     }
 
-    private IEnumerable<RobotProgrammElement> BuildTreeInternal(string parentId)
+    private List<RobotProgrammElement> BuildTreeInternal(string parentId)
     {
+        List<RobotProgrammElement> Programm = new();
         var itemsDict = _sceneObjectManager.Items;
-        if (itemsDict == null) yield break;
+        if (itemsDict == null) return null;
 
         // Ñíà÷àëà ñîáèðàåì âñåõ äåòåé â ïðàâèëüíîì ïîðÿäêå
-        var childrenInOrder = new List<SceneObject>();
+        List<SceneObject> childrenInOrder = new();
 
         foreach (DictionaryEntry entry in itemsDict)
         {
@@ -149,10 +151,9 @@ public class RobotPropertyProvider : BasePropertyProvider
         // Òåïåðü îáðàáàòûâàåì â ïðàâèëüíîì ïîðÿäêå
         foreach (var child in childrenInOrder)
         {
-            var node = ConvertToRobotProgrammElement(child);
-            yield return node;
+            ConvertToRobotProgrammElement(child, Programm);
 
-            if (node is SubProgramm subProgramm)
+            /*if (node is SubProgramm subProgramm)
             {
                 // Ðåêóðñèâíî ïîëó÷àåì ýëåìåíòû ïîäïðîãðàììû
                 var subChildren = BuildTreeInternal(child.Id).ToList();
@@ -160,36 +161,37 @@ public class RobotPropertyProvider : BasePropertyProvider
                 {
                     yield return subChild;
                 }
-            }
+            }*/
         }
+        return Programm;
     }
-    private RobotProgrammElement ConvertToRobotProgrammElement(SceneObject obj)
+    private void ConvertToRobotProgrammElement(SceneObject obj, List<RobotProgrammElement> Programm)
     {
         if (obj.Type == ObjectType.LinearMoveCommand)
         {
             var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
-            return command;
+            Programm.Add(command);
         }
         else if(obj.Type == ObjectType.StateEndEffectorCommand)
         {
             var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
-            return command;
+            Programm.Add(command);
         }
         else if (obj.Type == ObjectType.WaitCommand)
         {
 
             var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
-            return command;
+            Programm.Add(command);
         }
         else if (obj.Type == ObjectType.Program)
         {
             // Ïîëó÷àåì äî÷åðíèå ýëåìåíòû â ïðàâèëüíîì ïîðÿäêå
-            var subItems = new List<RobotProgrammElement>();
+            List<RobotProgrammElement> subItems = new();
 
-            var itemsDict = _sceneObjectManager.Items;
-            if (itemsDict != null)
+            //var itemsDict = _sceneObjectManager.Items;
+            if (_sceneObjectManager.Items != null)
             {
-                foreach (DictionaryEntry entry in itemsDict)
+                foreach (DictionaryEntry entry in _sceneObjectManager.Items)
                 {
                     var sceneObj = entry.Value as SceneObject;
                     if (sceneObj != null &&
@@ -198,15 +200,31 @@ public class RobotPropertyProvider : BasePropertyProvider
                          sceneObj.Type == ObjectType.StateEndEffectorCommand ||
                          sceneObj.Type == ObjectType.WaitCommand))
                     {
-                        subItems.Add(ConvertToRobotProgrammElement(sceneObj));
+                        if (sceneObj.Type == ObjectType.LinearMoveCommand)
+                        {
+                            var command = new CommandMove(sceneObj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
+                            subItems.Add(command);
+                        }
+                        else if (sceneObj.Type == ObjectType.StateEndEffectorCommand)
+                        {
+                            var command = new ComandSetStateEndEffector(sceneObj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
+                            subItems.Add(command);
+                        }
+                        else if (sceneObj.Type == ObjectType.WaitCommand)
+                        {
+
+                            var command = new CommandWait(sceneObj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+                            subItems.Add(command);
+                        }
+
+                         
                     }
                 }
             }
 
             var subProgram = new SubProgramm(subItems, ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
-            return subProgram;
+            Programm.Add(subProgram);
         }
-        return null;
     }
 
     /// <summary>
