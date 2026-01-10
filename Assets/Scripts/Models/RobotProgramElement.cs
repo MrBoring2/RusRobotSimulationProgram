@@ -36,10 +36,10 @@ namespace Assets.Scripts.Models
             rc.RobotSetLinMove(Point);
         }
     }
-    public class ComandWait : RobotProgrammElement
+    public class CommandWait : RobotProgrammElement
     {
         private WaitPropertyProvider Wait { get; set; }
-        public ComandWait(WaitPropertyProvider p, ENUM_COMMANDS tc, string id) : base(id)
+        public CommandWait(WaitPropertyProvider p, ENUM_COMMANDS tc, string id) : base(id)
         {
             Wait = p;
             TypeComand = tc;

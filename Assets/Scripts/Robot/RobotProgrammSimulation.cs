@@ -10,6 +10,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
 
 public class RobotProgrammSimulation : MonoBehaviour
 {
@@ -30,15 +31,26 @@ public class RobotProgrammSimulation : MonoBehaviour
         _simManager = ServiceManager.Current.Get<SimulationManager>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
         RC = gameObject.GetComponent<RobotController>();
-        //—игналы//
+        //—игналы симул€ции//
         _eventBus.Subscribe<StartProgramm>(StartSim);
         _eventBus.Subscribe<PauseProgramm>(PauseSim);
         _eventBus.Subscribe<StopProgramm>(StopSim);
         _eventBus.Subscribe<RobotEndMove>(EndCurrentMove);
-
-        //_propertyProvider.oldXYZ = Vector3.zero;
+        //--//
+        _eventBus.Subscribe<PickCommandSignal>(MoveToPoint);
 
     }
+    private void MoveToPoint(PickCommandSignal s)
+    {
+        if(_simManager.GetStatusSim() == SIM_STAT.STOP)
+        {
+            if(s.Point.Type == ObjectType.LinearMoveCommand)
+            {
+                //!!
+            }
+        }
+    }
+
     private void FixedUpdate()
     {
         if(_simManager.GetModeSim() == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
