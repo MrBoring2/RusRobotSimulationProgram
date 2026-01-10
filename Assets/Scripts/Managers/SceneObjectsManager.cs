@@ -131,13 +131,25 @@ namespace Assets.Scripts.Managers
             return objects;
         }
 
-        public List<SceneObject> GetGameObjectsList()
+        public List<SceneObject> GetGameObjectsList(bool getOnlyActive = true)
         {
-            return Items.Values.Cast<SceneObject>().Where(p => p.Reference.activeSelf == true).ToList();
+
+            if (getOnlyActive)
+            {
+                return Items.Values.Cast<SceneObject>().Where(p => p.Reference.activeSelf == getOnlyActive).ToList();
+            }
+            else
+            {
+                return Items.Values.Cast<SceneObject>().ToList();
+            }
+            
         }
+
+        
+
         public void ClearScene()
         {
-            foreach (var gameObject in GetGameObjectsList())
+            foreach (var gameObject in GetGameObjectsList(false))
             {
                 Remove(gameObject.Id);
             }
