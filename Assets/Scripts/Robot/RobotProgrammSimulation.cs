@@ -158,27 +158,8 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     public void HandlerCommand(RobotProgrammElement c)
     {
-        switch (c.TypeComand)
-        {
-            case ENUM_COMMANDS.MOVE_PTP:
-                
-                break;
-            case ENUM_COMMANDS.MOVE_LIN:
-                CommandMove comand0 = (CommandMove)c;
-                InProgress();
-                comand0.Execute(RC);
-                break;
-            case ENUM_COMMANDS.WAIT: 
-
-                break;
-            case ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR:
-                ComandSetStateEndEffector comand1 = (ComandSetStateEndEffector)c;
-                InProgress();
-                comand1.Execute(RC);
-                break;
-            default: break;
-        }
-        
+        InProgress();
+        c.Execute(RC);  
     }
     private void OnDestroy()
     {

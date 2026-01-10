@@ -178,7 +178,7 @@ public class RobotPropertyProvider : BasePropertyProvider
         else if (obj.Type == ObjectType.WaitCommand)
         {
 
-            var command = new ComandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+            var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
             return command;
         }
         else if (obj.Type == ObjectType.Program)
