@@ -19,6 +19,7 @@
             <ui:VisualElement name="hierarchy-container" enabled="true" class="left-panel">
                 <ui:Instance template="HierarchyPAnel" />
             </ui:VisualElement>
+              <ui:VisualElement name="hierarchy-resizer" class="resizer-vertical" />
             <ui:VisualElement name="content-container" style="flex-grow: 1; align-items: flex-start; align-self: auto; align-content: auto; justify-content: flex-start; position: relative; flex-wrap: nowrap; flex-direction: column-reverse; margin-left: 10px; margin-bottom: 10px;">
                 <ui:Instance template="PerspectivePanel" />
             </ui:VisualElement>

@@ -44,7 +44,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
             _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
             _modeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
-            _currentActiveManipulator.gameObject.SetActive(false);
+            _currentActiveManipulator?.gameObject.SetActive(false);
         }
 
         //private void OnUnpickObject(UnpickObjectSignal signal)
