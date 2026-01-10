@@ -43,7 +43,7 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     private void TeleportToPoint(PickCommandSignal s)
     {
-        if(_simManager.GetStatusSim() == SIM_STAT.STOP)
+        if(_simManager.GetStatusSim() == SIM_STAT.STOP && s.Point.ParentId == _propertyProvider.Id)
         {
             if(s.Point.Type == ObjectType.LinearMoveCommand)
             {
