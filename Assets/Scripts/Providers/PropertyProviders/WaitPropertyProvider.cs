@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 public class WaitPropertyProvider : BasePropertyProvider
 {
-    public float Time { get; set; } = 0;
+    public float Time { get; set; }
     private void Awake()
     {
         displayScale = false;
@@ -31,19 +31,29 @@ public class WaitPropertyProvider : BasePropertyProvider
 
     public override IEnumerable<CustomProperty> GetCustomProperties()
     {
+        Debug.Log($"[GetCustomProperties] instance {GetInstanceID()} Time = {Time}");
+
         yield return new CustomProperty(
             "Time",
             "Время",
             typeof(float),
-            () => Time,
+            () =>
+            {
+                Debug.Log($"[Getter] instance {GetInstanceID()} Time = {Time}");
+                return Time;
+            },
             val => Time = (float)val
         );
     }
 
     public override void RestoreCustomState(ProviderSaveData data)
     {
+        Debug.Log($"[Restore] instance {GetInstanceID()} BEFORE = {Time}");
+
         if (data.FloatValues.TryGetValue("Time", out var v))
             Time = v;
+
+        Debug.Log($"[Restore] instance {GetInstanceID()} AFTER = {Time}");
     }
 
 

@@ -4,6 +4,7 @@ using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
+using Assets.Scripts.Providers.PropertyProviders;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -161,14 +162,21 @@ namespace Assets.Scripts.Managers
             {
                 var prefab = Resources.Load<GameObject>(item.SourcePath);
                 var instance = Create(prefab, Vector3.zero, item.ObjectType, item.Id, item.ParentId);
-                var provider = GetProvider(instance.Reference, item.ProviderData.ProviderType);
+                var provider = instance.Reference.GetComponent<IPropertyProvider>();// GetProvider(instance.Reference, item.ProviderData.ProviderType);
+                if (provider is WaitPropertyProvider a)
+                {
+
+                }
                 provider?.RestoreCustomState(item.ProviderData);
+                if (provider is WaitPropertyProvider b)
+                {
+
+                }
                 instance.Reference.name = item.Name;
                 instance.Reference.tag = "SceneObject";
                 instance.Reference.transform.position = item.Position.ToVector3();
                 instance.Reference.transform.rotation = item.Rotation.ToQuaternion();
                 instance.Reference.transform.localScale = item.Scale.ToVector3();
-
                 var m = instance.Reference.AddComponent<SceneObjectMarker>();
                 m.type = item.ObjectType;
                 m.sourcePath = item.SourcePath;
@@ -177,15 +185,19 @@ namespace Assets.Scripts.Managers
             }
 
         }
-        private IPropertyProvider GetProvider(GameObject obj, string type)
-        {
-            return type switch
-            {
-                nameof(PrimitivePropertyProvider) => obj.AddComponent<PrimitivePropertyProvider>(),
-                nameof(RobotPropertyProvider) => obj.AddComponent<RobotPropertyProvider>(),
-                _ => null
-            };
-        }
+        //private IPropertyProvider GetProvider(GameObject obj, string type)
+        //{
+        //    return type switch
+        //    {
+        //        nameof(PrimitivePropertyProvider) => obj.AddComponent<PrimitivePropertyProvider>(),
+        //        nameof(RobotPropertyProvider) => obj.AddComponent<RobotPropertyProvider>(),
+        //        nameof(LinearPointPropertyProvider) => obj.AddComponent<LinearPointPropertyProvider>(),
+        //        nameof(StateEndEffectorPropertyProvider) => obj.AddComponent<StateEndEffectorPropertyProvider>(),
+        //        nameof(RobotProgramPropertyProvider) => obj.AddComponent<RobotProgramPropertyProvider>(),
+        //        nameof(WaitPropertyProvider) => obj.AddComponent<WaitPropertyProvider>(),
+        //        _ => null
+        //    };
+        //}
         private void InitExistedObjects()
         {
             foreach (var obj in GetGameObjectsList2())
