@@ -73,7 +73,7 @@ public class RobotPropertyProvider : BasePropertyProvider
         JOGpoint.RotationQ = XYZRot;
     }
 
-    private float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 }; //ãð/ñ
+    private float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 }; 
 
 
     public void ResetPositionEffector()
