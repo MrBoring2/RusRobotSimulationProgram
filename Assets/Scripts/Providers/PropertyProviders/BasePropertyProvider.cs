@@ -13,28 +13,7 @@ namespace Assets.Scripts.Providers
         public string Id { get => id; set => id = value; }
 
         public string Name { get => gameObject.name; set { gameObject.name = value; } }
-        //public Vector3 Position { get => transform.position; set => transform.position = value; }
-        public Vector3 Position
-        {
-            get
-            {
-
-                Vector3 pos;
-                pos.z = transform.position.y;
-                pos.x = transform.position.z;
-                pos.y = transform.position.x;
-                return pos;
-            }
-            set
-            {
-                Vector3 pos;
-                pos.z = value.x;
-                pos.x = value.y;
-                pos.y = value.z;
-                transform.position = pos;
-
-            }
-        }
+        public Vector3 Position { get => transform.position; set => transform.position = value; }
         protected Vector3 rotationEuler;
         protected string id;
         protected bool displayName = true;
