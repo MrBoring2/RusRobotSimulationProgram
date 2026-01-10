@@ -38,17 +38,17 @@ public class RobotProgrammSimulation : MonoBehaviour
         _eventBus.Subscribe<StopProgramm>(StopSim);
         _eventBus.Subscribe<RobotEndMove>(EndCurrentMove);
         //--//
-        _eventBus.Subscribe<PickCommandSignal>(MoveToPoint);
+        _eventBus.Subscribe<PickCommandSignal>(TeleportToPoint);
 
     }
-    private void MoveToPoint(PickCommandSignal s)
+    private void TeleportToPoint(PickCommandSignal s)
     {
         if(_simManager.GetStatusSim() == SIM_STAT.STOP)
         {
             if(s.Point.Type == ObjectType.LinearMoveCommand)
             {
                 RC.TeleportToPoint((LinearPointPropertyProvider)s.Point.PropertyProvider);
-                _propertyProvider.SyncJOGPosition();
+                
             }
         }
     }
@@ -182,6 +182,8 @@ public class RobotProgrammSimulation : MonoBehaviour
         _eventBus?.Unsubcribe<PauseProgramm>(PauseSim);
         _eventBus?.Unsubcribe<StopProgramm>(StopSim);
         _eventBus?.Unsubcribe<RobotEndMove>(EndCurrentMove);
+
+        _eventBus?.Unsubcribe<PickCommandSignal>(TeleportToPoint);
     }
 }
 
