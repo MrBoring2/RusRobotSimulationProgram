@@ -53,7 +53,7 @@ namespace Assets.Scripts.Models
             {
                 field.focusable = false;
                 uIStatusManager.SetInputMode(false);
-                uIStatusManager.SetPointerOberUI(false);
+                //uIStatusManager.SetPointerOberUI(false);
             };
 
 

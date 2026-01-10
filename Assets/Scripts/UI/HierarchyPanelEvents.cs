@@ -277,6 +277,9 @@ public class HierarchyPanelEvents : MonoBehaviour
             case ObjectType.StateEndEffectorCommand:
                 texture = Resources.Load<Texture2D>("Icons/icon_grip");
                 break;
+            case ObjectType.WaitCommand:
+                texture = Resources.Load<Texture2D>("Icons/icon_wait");
+                break;
             case ObjectType.Primitive:
                 texture = Resources.Load<Texture2D>("Icons/icon_primitive");
                 break;
@@ -323,7 +326,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                     }
                 };
                 break;
-            case ObjectType.LinearMoveCommand or ObjectType.StateEndEffectorCommand:
+            case ObjectType.LinearMoveCommand or ObjectType.StateEndEffectorCommand or ObjectType.WaitCommand:
                 element = CreateHierarchyElement("hierarchy-item-command", item.Reference.name, item.Id, texture);
                 break;
             default:
@@ -604,7 +607,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                             _eventBus.Invoke(new StopLineDrawer());
                         }
                         break;
-                    case ObjectType.StateEndEffectorCommand:
+                    case ObjectType.StateEndEffectorCommand or ObjectType.WaitCommand:
                         break;
                     default:
                         _eventBus.Invoke(new PickObjectSignal(gameObject));
@@ -729,7 +732,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         //contextMenu.style.paddingRight = 4;
         if (clickedElement != null && clickedElement.name.Contains("hierarchy-item"))
         {
-            
+
         }
 
         if (clickedElement.name == "")
@@ -742,6 +745,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                     var robot = _sceneObjectManager.GetById(foldout.userData.ToString());
                     contextMenu.Add(CreateMenuButton("Добавить линейное движение", () => CreatePoint(robot)));
                     contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(robot)));
+                    contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(robot)));
                     contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(robot)));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
@@ -750,10 +754,11 @@ public class HierarchyPanelEvents : MonoBehaviour
                     var parentId = foldout.userData.ToString();
                     contextMenu.Add(CreateMenuButton("Добавить команду", () => CreatePoint(parentId)));
                     contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(parentId)));
+                    contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(parentId)));
                     contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(parentId)));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
-                else 
+                else
                 {
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
@@ -772,6 +777,17 @@ public class HierarchyPanelEvents : MonoBehaviour
 
         root.Add(contextMenu);
         iBlocker.AddNewContextMenu(contextMenu);
+    }
+
+    private void CreateWaitCommand(SceneObject robot)
+    {
+        var prefab = Resources.Load<GameObject>("Prefabs/Program/Ожидание");
+        AddObject(prefab, robot.Id);
+    }
+    private void CreateWaitCommand(string programId)
+    {
+        var prefab = Resources.Load<GameObject>("Prefabs/Program/Ожидание");
+        AddObject(prefab, programId);
     }
 
     /// <summary>
@@ -896,7 +912,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         elementCache.Clear();
         var rootObjects = _sceneObjectManager.GetGameObjectsList()
                               .Where(o => string.IsNullOrEmpty(o.ParentId));
-        
+
         foreach (var item in rootObjects)
         {
             if (item.Reference.activeSelf == false) continue;
@@ -1217,7 +1233,8 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
         return obj.Type == ObjectType.Program
             || obj.Type == ObjectType.LinearMoveCommand
-            || obj.Type == ObjectType.StateEndEffectorCommand;
+            || obj.Type == ObjectType.StateEndEffectorCommand
+            || obj.Type == ObjectType.WaitCommand;
     }
 
     private List<VisualElement> GetHierarchyElementsInOrder()
@@ -1307,7 +1324,9 @@ public class HierarchyPanelEvents : MonoBehaviour
             }
 
             if (target.Type == ObjectType.Program &&
-                (dragged.Type == ObjectType.LinearMoveCommand || dragged.Type == ObjectType.StateEndEffectorCommand))
+                (dragged.Type == ObjectType.LinearMoveCommand 
+                || dragged.Type == ObjectType.StateEndEffectorCommand 
+                || dragged.Type == ObjectType.WaitCommand))
             {
                 return new DropTargetInfo
                 {

@@ -35,7 +35,7 @@ public class RobotPropertyProvider : BasePropertyProvider
      }
     public float RotSpeedPercent { get; set; } = 100f;
 
-    //Углы применяемые каждый FixedUpdate
+    //Г“ГЈГ«Г» ГЇГ°ГЁГ¬ГҐГ­ГїГҐГ¬Г»ГҐ ГЄГ Г¦Г¤Г»Г© FixedUpdate
     public float J1Angle = 0;
     public float J2Angle = 90;
     public float J3Angle = 90;
@@ -44,7 +44,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J6Angle = 0;
     public bool EndEffectorOn { get; set; }
     public float SpeedEffector = 0.5f;
-    //длины звеньев
+    //Г¤Г«ГЁГ­Г» Г§ГўГҐГ­ГјГҐГў
     public float L1 = 450;
     public float L2 = 447;
     public float L3 = 1150;
@@ -73,7 +73,7 @@ public class RobotPropertyProvider : BasePropertyProvider
         JOGpoint.RotationQ = XYZRot;
     }
 
-    private float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 }; //гр/с
+    private float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 }; //ГЈГ°/Г±
 
 
     public void ResetPositionEffector()
@@ -99,7 +99,7 @@ public class RobotPropertyProvider : BasePropertyProvider
 
         var result = new List<RobotProgrammElement>();
 
-        // Перебираем в порядке добавления
+        // ГЏГҐГ°ГҐГЎГЁГ°Г ГҐГ¬ Гў ГЇГ®Г°ГїГ¤ГЄГҐ Г¤Г®ГЎГ ГўГ«ГҐГ­ГЁГї
         foreach (DictionaryEntry entry in itemsDict)
         {
             var sceneObj = entry.Value as SceneObject;
@@ -107,6 +107,7 @@ public class RobotPropertyProvider : BasePropertyProvider
                 sceneObj.ParentId == Id &&
                 (sceneObj.Type == ObjectType.LinearMoveCommand ||
                  sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+                 sceneObj.Type == ObjectType.WaitCommand ||
                  sceneObj.Type == ObjectType.Program))
             {
                 result.Add(ConvertToRobotProgrammElement(sceneObj));
@@ -127,7 +128,7 @@ public class RobotPropertyProvider : BasePropertyProvider
         var itemsDict = _sceneObjectManager.Items;
         if (itemsDict == null) yield break;
 
-        // Сначала собираем всех детей в правильном порядке
+        // Г‘Г­Г Г·Г Г«Г  Г±Г®ГЎГЁГ°Г ГҐГ¬ ГўГ±ГҐГµ Г¤ГҐГІГҐГ© Гў ГЇГ°Г ГўГЁГ«ГјГ­Г®Г¬ ГЇГ®Г°ГїГ¤ГЄГҐ
         var childrenInOrder = new List<SceneObject>();
 
         foreach (DictionaryEntry entry in itemsDict)
@@ -138,14 +139,14 @@ public class RobotPropertyProvider : BasePropertyProvider
                 sceneObj.ParentId == parentId &&
                 (sceneObj.Type == ObjectType.LinearMoveCommand ||
                  sceneObj.Type == ObjectType.StateEndEffectorCommand ||
-                 sceneObj.Type == ObjectType.Program ||
-                 sceneObj.Type == ObjectType.WaitCommand))
+                 sceneObj.Type == ObjectType.WaitCommand ||
+                 sceneObj.Type == ObjectType.Program))
             {
                 childrenInOrder.Add(sceneObj);
             }
         }
 
-        // Теперь обрабатываем в правильном порядке
+        // Г’ГҐГЇГҐГ°Гј Г®ГЎГ°Г ГЎГ ГІГ»ГўГ ГҐГ¬ Гў ГЇГ°Г ГўГЁГ«ГјГ­Г®Г¬ ГЇГ®Г°ГїГ¤ГЄГҐ
         foreach (var child in childrenInOrder)
         {
             var node = ConvertToRobotProgrammElement(child);
@@ -153,7 +154,7 @@ public class RobotPropertyProvider : BasePropertyProvider
 
             if (node is SubProgramm subProgramm)
             {
-                // Рекурсивно получаем элементы подпрограммы
+                // ГђГҐГЄГіГ°Г±ГЁГўГ­Г® ГЇГ®Г«ГіГ·Г ГҐГ¬ ГЅГ«ГҐГ¬ГҐГ­ГІГ» ГЇГ®Г¤ГЇГ°Г®ГЈГ°Г Г¬Г¬Г»
                 var subChildren = BuildTreeInternal(child.Id).ToList();
                 foreach (var subChild in subChildren)
                 {
@@ -176,12 +177,13 @@ public class RobotPropertyProvider : BasePropertyProvider
         }
         else if (obj.Type == ObjectType.WaitCommand)
         {
-            var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+
+            var command = new ComandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
             return command;
         }
         else if (obj.Type == ObjectType.Program)
         {
-            // Получаем дочерние элементы в правильном порядке
+            // ГЏГ®Г«ГіГ·Г ГҐГ¬ Г¤Г®Г·ГҐГ°Г­ГЁГҐ ГЅГ«ГҐГ¬ГҐГ­ГІГ» Гў ГЇГ°Г ГўГЁГ«ГјГ­Г®Г¬ ГЇГ®Г°ГїГ¤ГЄГҐ
             var subItems = new List<RobotProgrammElement>();
 
             var itemsDict = _sceneObjectManager.Items;
@@ -208,7 +210,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     }
 
     /// <summary>
-    /// Класс для многоуровневой структуры
+    /// ГЉГ«Г Г±Г± Г¤Г«Гї Г¬Г­Г®ГЈГ®ГіГ°Г®ГўГ­ГҐГўГ®Г© Г±ГІГ°ГіГЄГІГіГ°Г»
     /// </summary>
 
 

@@ -17,7 +17,16 @@ public enum AxisMode
 public class GyzmoManupulator : MonoBehaviour
 {
     public TextMeshPro angleTextPrefab;
-    public Transform Target { get; private set; }
+    private Transform _targer;
+    // public Transform Target { get; private set; }
+    public Transform Target
+    { 
+        get => _targer;
+        private set
+        {
+            _targer = value;
+        }
+    }
     public IManipulatorMode CurrentManipulatorMode { get; private set; }
     public AxisMode? CurrentAxisMode => _axisModeManager?.Mode;
     public bool CameraModeActive { get; private set; } = false;

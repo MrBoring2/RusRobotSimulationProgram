@@ -129,11 +129,11 @@ namespace Assets.Scripts.GyzmoManipulazotr
         }
         private void SetAxisColor(Vector3 localAxis)
         {
-            if (Vector3.Dot(localAxis, Vector3.right) > 0.99f)
+            if (Vector3.Dot(localAxis, Vector3.forward) > 0.99f)
                 cursorAngleText.color = Color.red;
-            else if (Vector3.Dot(localAxis, Vector3.up) > 0.99f)
+            else if (Vector3.Dot(localAxis, Vector3.right) > 0.99f)
                 cursorAngleText.color = Color.green;
-            else if (Vector3.Dot(localAxis, Vector3.forward) > 0.99f)
+            else if (Vector3.Dot(localAxis, Vector3.up) > 0.99f)
                 cursorAngleText.color = Color.blue;
             else
                 cursorAngleText.color = Color.white;
