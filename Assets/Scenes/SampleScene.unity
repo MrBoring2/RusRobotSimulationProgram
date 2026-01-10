@@ -173,67 +173,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3311927857407002060, guid: 031fe42d88d42de43b420b1142ee5c95, type: 3}
   m_PrefabInstance: {fileID: 1601748049}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &302871806
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.67352
-      objectReference: {fileID: 0}
-    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 2.46625
-      objectReference: {fileID: 0}
-    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3126245551890948002, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_Name
-      value: "RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
-        6-\u043E\u0441\u0435\u0432\u043E\u0439"
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2662440733235826368, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-  m_SourcePrefab: {fileID: 100100000, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
 --- !u!1 &323597818
 GameObject:
   m_ObjectHideFlags: 0
@@ -1615,6 +1554,67 @@ MonoBehaviour:
   direction: {x: 0, y: 1, z: 0}
   planeNormal: {x: 0, y: 0, z: 0}
   manipulator: {fileID: 1068335000}
+--- !u!1001 &1159832440
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.48005
+      objectReference: {fileID: 0}
+    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 2.79303
+      objectReference: {fileID: 0}
+    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3126245551890948002, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_Name
+      value: "RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
+        6-\u043E\u0441\u0435\u0432\u043E\u0439"
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2662440733235826368, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+  m_SourcePrefab: {fileID: 100100000, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
 --- !u!1 &1239946554
 GameObject:
   m_ObjectHideFlags: 0
@@ -2746,5 +2746,5 @@ SceneRoots:
   - {fileID: 1095323857}
   - {fileID: 469165501}
   - {fileID: 1032703448}
-  - {fileID: 302871806}
   - {fileID: 348723815}
+  - {fileID: 1159832440}
