@@ -1,20 +1,23 @@
 Shader "Custom/GyzmoManipulatorShader"
 {
-    Properties
+   Properties
     {
-        _Color ("Color", Color) = (1,1,1,1)
+        _Color ("Color", Color) = (1,1,1,0.5)  // Альфа = 0.5 по умолчанию
         _MainTex ("Texture", 2D) = "white" {}
+        _AlphaMultiplier ("Alpha Multiplier", Range(0, 1)) = 1.0
     }
     
     SubShader
     {
         Tags { 
-            "Queue" = "Geometry+1000" 
-            "RenderType" = "Opaque"
+            "Queue" = "Transparent+1000"
+            "RenderType" = "Transparent"
+            "IgnoreProjector" = "True"
         }
         
         ZTest Always
         ZWrite Off
+        Blend SrcAlpha OneMinusSrcAlpha
         
         Pass
         {
@@ -37,6 +40,7 @@ Shader "Custom/GyzmoManipulatorShader"
             
             sampler2D _MainTex;
             float4 _Color;
+            float _AlphaMultiplier;
             
             v2f vert (appdata v)
             {
@@ -49,6 +53,7 @@ Shader "Custom/GyzmoManipulatorShader"
             fixed4 frag (v2f i) : SV_Target
             {
                 fixed4 col = tex2D(_MainTex, i.uv) * _Color;
+                col.a *= _AlphaMultiplier;  // Контроль прозрачности
                 return col;
             }
             ENDCG

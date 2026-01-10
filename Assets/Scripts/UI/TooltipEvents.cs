@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static UnityEditor.Rendering.FilterWindow;
 
 namespace Assets.Scripts.UI
 {
