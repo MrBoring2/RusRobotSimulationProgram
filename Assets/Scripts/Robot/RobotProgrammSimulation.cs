@@ -10,6 +10,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
+using Assets.Scripts.Providers;
 
 public class RobotProgrammSimulation : MonoBehaviour
 {
@@ -30,15 +32,27 @@ public class RobotProgrammSimulation : MonoBehaviour
         _simManager = ServiceManager.Current.Get<SimulationManager>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
         RC = gameObject.GetComponent<RobotController>();
-        //—игналы//
+        //—игналы симул€ции//
         _eventBus.Subscribe<StartProgramm>(StartSim);
         _eventBus.Subscribe<PauseProgramm>(PauseSim);
         _eventBus.Subscribe<StopProgramm>(StopSim);
         _eventBus.Subscribe<RobotEndMove>(EndCurrentMove);
-
-        //_propertyProvider.oldXYZ = Vector3.zero;
+        //--//
+        _eventBus.Subscribe<PickCommandSignal>(MoveToPoint);
 
     }
+    private void MoveToPoint(PickCommandSignal s)
+    {
+        if(_simManager.GetStatusSim() == SIM_STAT.STOP)
+        {
+            if(s.Point.Type == ObjectType.LinearMoveCommand)
+            {
+                RC.TeleportToPoint((LinearPointPropertyProvider)s.Point.PropertyProvider);
+                _propertyProvider.SyncJOGPosition();
+            }
+        }
+    }
+
     private void FixedUpdate()
     {
         if(_simManager.GetModeSim() == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
@@ -108,10 +122,18 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     private void StartSim(StartProgramm s)
     {
-        LocalSimStat = SIM_STAT.PLAY;
-        allowNextCommand = true;
-        RC.SetAllowNextMove(true);
-        StartProgramm();
+        if(LocalSimStat == SIM_STAT.PAUSE)
+        {
+            ContinueSim();
+        }
+        else
+        {
+            LocalSimStat = SIM_STAT.PLAY;
+            allowNextCommand = true;
+            RC.SetAllowNextMove(true);
+            StartProgramm();
+        }
+        
 
     }
     private void PauseSim(PauseProgramm s)
@@ -124,6 +146,11 @@ public class RobotProgrammSimulation : MonoBehaviour
         LocalSimStat = SIM_STAT.STOP;
         RC.StopSim();
         StopAllCoroutines();
+    }
+    private void ContinueSim()
+    {
+        LocalSimStat = SIM_STAT.PLAY;
+        RC.SetAllowNextMove(true);
     }
     private void EndCurrentMove(RobotEndMove s)
     {
@@ -146,27 +173,8 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     public void HandlerCommand(RobotProgrammElement c)
     {
-        switch (c.TypeComand)
-        {
-            case ENUM_COMMANDS.MOVE_PTP:
-                
-                break;
-            case ENUM_COMMANDS.MOVE_LIN:
-                CommandMove comand0 = (CommandMove)c;
-                InProgress();
-                comand0.Execute(RC);
-                break;
-            case ENUM_COMMANDS.WAIT: 
-
-                break;
-            case ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR:
-                ComandSetStateEndEffector comand1 = (ComandSetStateEndEffector)c;
-                InProgress();
-                comand1.Execute(RC);
-                break;
-            default: break;
-        }
-        
+        InProgress();
+        c.Execute(RC);  
     }
     private void OnDestroy()
     {
