@@ -36,7 +36,23 @@ namespace Assets.Scripts.Models
             rc.RobotSetLinMove(Point);
         }
     }
-
+    public class ComandWait : RobotProgrammElement
+    {
+        private WaitPropertyProvider Wait { get; set; }
+        public ComandWait(WaitPropertyProvider p, ENUM_COMMANDS tc, string id) : base(id)
+        {
+            Wait = p;
+            TypeComand = tc;
+        }
+        public WaitPropertyProvider Get()
+        {
+            return Wait;
+        }
+        public override void Execute(RobotController rc)
+        {
+            rc.RobotSetWait(Wait);
+        }
+    }
     public class ComandSetStateEndEffector : RobotProgrammElement
     {
         private StateEndEffectorPropertyProvider stateEndEffectorProperty;

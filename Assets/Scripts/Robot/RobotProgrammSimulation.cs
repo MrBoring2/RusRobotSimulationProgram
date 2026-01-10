@@ -13,32 +13,30 @@ using UnityEngine;
 
 public class RobotProgrammSimulation : MonoBehaviour
 {
+    private EventBus _eventBus;
     private SimulationManager _simManager;
     private SIM_STAT LocalSimStat;
-
     private RobotController RC;
     private RobotPropertyProvider _propertyProvider => gameObject.GetComponent<RobotPropertyProvider>();
-
-    //public EVENTS EVENTS;
-    public bool allowNextCommand = true;
     public List<RobotProgrammElement> Programm => _propertyProvider.Programm.ToList();
-    private EventBus _eventBus;
-
+    
+    //---//
     private int currentCommandIndex = 0;//текущая выполняемая в программе, именно на вехрнем уровне не в подпрограммах
+    public bool allowNextCommand = true;//разреш. на след. команду
 
 
     private void Start()
     {
         _simManager = ServiceManager.Current.Get<SimulationManager>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
-
         RC = gameObject.GetComponent<RobotController>();
+        //Сигналы//
         _eventBus.Subscribe<StartProgramm>(StartSim);
         _eventBus.Subscribe<PauseProgramm>(PauseSim);
         _eventBus.Subscribe<StopProgramm>(StopSim);
         _eventBus.Subscribe<RobotEndMove>(EndCurrentMove);
 
-        _propertyProvider.oldXYZ = Vector3.zero;
+        //_propertyProvider.oldXYZ = Vector3.zero;
 
     }
     private void FixedUpdate()
@@ -158,7 +156,9 @@ public class RobotProgrammSimulation : MonoBehaviour
                 InProgress();
                 comand0.Execute(RC);
                 break;
-            case ENUM_COMMANDS.WAIT: break;
+            case ENUM_COMMANDS.WAIT: 
+
+                break;
             case ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR:
                 ComandSetStateEndEffector comand1 = (ComandSetStateEndEffector)c;
                 InProgress();
@@ -168,7 +168,6 @@ public class RobotProgrammSimulation : MonoBehaviour
         }
         
     }
-
     private void OnDestroy()
     {
         _eventBus?.Unsubcribe<StartProgramm>(StartSim);

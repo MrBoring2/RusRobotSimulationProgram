@@ -15,9 +15,9 @@
             <ui:VisualElement name="position-property-container">
                 <ui:Label text="Расположение" />
                 <ui:VisualElement name="position-input-container">
-                    <ui:FloatField label="X" name="position-x" />
-                    <ui:FloatField label="Y" name="position-y" />
-                    <ui:FloatField label="Z" name="position-z" />
+                    <ui:FloatField label="X" name="position-z"/>
+                    <ui:FloatField label="Y" name="position-x"/>
+                    <ui:FloatField label="Z" name="position-y"/>
                 </ui:VisualElement>
             </ui:VisualElement>
 
