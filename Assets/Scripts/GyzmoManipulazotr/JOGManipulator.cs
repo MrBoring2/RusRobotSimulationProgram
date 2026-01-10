@@ -1,6 +1,8 @@
 ﻿using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.AxisModes;
 using Assets.Scripts.CustomEventBus.Signals.Manipulator;
+using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
+using Assets.Scripts.CustomEventBus.Signals.Simulation;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Providers;
@@ -66,6 +68,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
         {
 
             _eventBus = ServiceManager.Current.Get<EventBus>();
+            _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
             _manipulatorModeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
             //SetManipulatorMode(new MoveMode());
             if (cam == null)
@@ -79,6 +82,20 @@ namespace Assets.Scripts.GyzmoManipulazotr
             CurrentManipulatorMode.cursorAngleText = angleTextPrefab;
             //angleTextPrefab.gameObject.SetActive(true);
         }
+
+        private void OnStartSimulation(StartSimulationSignal signal)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
+        {
+            if(signal.Mode != SceneManipulatorMode.JOG)
+            {
+                _eventBus.Invoke(new ChangePropertiesProviderSignal(null));
+            }
+        }
+
         private void FixedUpdate()
         {
             //if (Target != null)

@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5782663322389934629}
   - component: {fileID: 6216727589939552882}
   - component: {fileID: 4873874282588785345}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: "\u041B\u0438\u043D\u0435\u0439\u043D\u0430\u044F \u0442\u043E\u0447\u043A\u0430"
   m_TagString: SceneObject
   m_Icon: {fileID: 0}
@@ -121,9 +121,6 @@ MonoBehaviour:
   ShowVisual: 1
   material: {fileID: 2100000, guid: 3753d7944e6b6a44bb2553db2fdb9bfd, type: 2}
   PointSize: 0.05
-  pointType: 1
-  magnitStatus: 2
-  delay: 0
 --- !u!64 &4873874282588785345
 MeshCollider:
   m_ObjectHideFlags: 0

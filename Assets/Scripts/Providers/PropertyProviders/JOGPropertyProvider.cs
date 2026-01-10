@@ -17,7 +17,7 @@ namespace Assets.Scripts.Providers
 
 
         public string Id { get => id; set => id = value; }
-
+        public bool IsReadondly { get; set; }
         public string Name { get => gameObject.name; set { gameObject.name = value; } }
         protected Vector3 rotationEuler;
         protected string id;

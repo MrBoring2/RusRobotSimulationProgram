@@ -1,0 +1,13 @@
+.scroll-container {
+    flex-grow: 1;
+}
+
+.scroll-content {
+    flex-direction: row;
+    min-height: 100%;
+    min-width: 100%;
+}
+
+.scroll-item {
+    min-height: 100%;
+}
