@@ -138,7 +138,8 @@ public class RobotPropertyProvider : BasePropertyProvider
                 sceneObj.ParentId == parentId &&
                 (sceneObj.Type == ObjectType.LinearMoveCommand ||
                  sceneObj.Type == ObjectType.StateEndEffectorCommand ||
-                 sceneObj.Type == ObjectType.Program))
+                 sceneObj.Type == ObjectType.Program ||
+                 sceneObj.Type == ObjectType.WaitCommand))
             {
                 childrenInOrder.Add(sceneObj);
             }
@@ -173,6 +174,11 @@ public class RobotPropertyProvider : BasePropertyProvider
             var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
             return command;
         }
+        else if (obj.Type == ObjectType.WaitCommand)
+        {
+            var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+            return command;
+        }
         else if (obj.Type == ObjectType.Program)
         {
             // Получаем дочерние элементы в правильном порядке
@@ -187,7 +193,8 @@ public class RobotPropertyProvider : BasePropertyProvider
                     if (sceneObj != null &&
                         sceneObj.ParentId == obj.Id &&
                         (sceneObj.Type == ObjectType.LinearMoveCommand ||
-                         sceneObj.Type == ObjectType.StateEndEffectorCommand))
+                         sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+                         sceneObj.Type == ObjectType.WaitCommand))
                     {
                         subItems.Add(ConvertToRobotProgrammElement(sceneObj));
                     }
@@ -196,15 +203,6 @@ public class RobotPropertyProvider : BasePropertyProvider
 
             var subProgram = new SubProgramm(subItems, ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
             return subProgram;
-            //var subProgram = new SubProgramm(
-            //    _sceneObjectManager.Items.Values
-            //        .Where(x => x.ParentId == obj.Id && (x.Type == ObjectType.LinearMoveCommand || x.Type == ObjectType.StateEndEffectorCommand))
-            //        .Select(x => ConvertToRobotProgrammElement(x))
-            //        .ToList(),
-            //    ENUM_COMANDS.SUBPROGRAMM,
-            //    obj.Id
-            //);
-            //return subProgram;
         }
         return null;
     }

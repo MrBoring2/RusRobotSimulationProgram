@@ -12,7 +12,8 @@ public enum ObjectType
     Static,
     Dynamic,
     Program,
-    Robot
+    Robot,
+    WaitCommand
 }
 [System.Serializable]
 public class ObjectInfo
