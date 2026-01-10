@@ -20,6 +20,7 @@ namespace Assets.Scripts.Providers
         protected bool displayPosition = true;
         protected bool displayRotation = true;
         protected bool displayScale = true;
+        public bool IsReadondly { get; set; }
    
         public Vector3 Rotation
         {
