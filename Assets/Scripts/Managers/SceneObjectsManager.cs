@@ -21,8 +21,8 @@ namespace Assets.Scripts.Managers
             _eventBus = ServiceManager.Current.Get<EventBus>();
             InitExistedObjects();
         }
-                                                                                                                                    
-        public OrderedDictionary Items { get; private set; }  = new OrderedDictionary();
+
+        public OrderedDictionary Items { get; private set; } = new OrderedDictionary();
 
         public SceneObject Create(GameObject prefab, Vector3 position, ObjectType type, string id = null, string parentId = null)
         {
@@ -43,7 +43,7 @@ namespace Assets.Scripts.Managers
                         if (!string.IsNullOrEmpty(parentId))
                         {
                             var parentObj = ((SceneObject)Items[parentId]).Reference;
-                            obj.transform.SetParent(parentObj.transform, false); 
+                            obj.transform.SetParent(parentObj.transform, false);
                         }
                         Items[id] = sceneObj;
                         sceneObj.Reference.GetComponent<IPropertyProvider>().Id = id;
@@ -74,7 +74,7 @@ namespace Assets.Scripts.Managers
         //    Items[id] = sceneObj;
 
         //    // Если есть родитель (подпрограмма), сохраняем связь в сцене
-           
+
 
         //    _eventBus.Invoke(new AddSceneObjectSignal(sceneObj));
         //    return sceneObj;
@@ -133,7 +133,7 @@ namespace Assets.Scripts.Managers
 
         public List<SceneObject> GetGameObjectsList()
         {
-            return Items.Values.Cast<SceneObject>().ToList();
+            return Items.Values.Cast<SceneObject>().Where(p => p.Reference.activeSelf == true).ToList();
         }
         public void ClearScene()
         {
@@ -163,7 +163,7 @@ namespace Assets.Scripts.Managers
 
                 //var sceneObject = new SceneObject(item.Id, item.ObjectType, instance, item.ParentId);
             }
-            
+
         }
         private IPropertyProvider GetProvider(GameObject obj, string type)
         {

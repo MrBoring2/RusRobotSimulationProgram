@@ -16,6 +16,7 @@ public partial class CustomFoldout : VisualElement
     private Button toggleButton;
     private VisualElement content;
     private string text;
+    private Image imageContainer;
 
     [UxmlAttribute]
     public string Text
@@ -27,7 +28,22 @@ public partial class CustomFoldout : VisualElement
             label.text = Text;
         }
     }
-
+    public Texture2D HeaderImage
+    {
+        get => imageContainer.image as Texture2D;
+        set
+        {
+            if (value != null)
+            {
+                imageContainer.image = value;
+                imageContainer.style.display = DisplayStyle.Flex;
+            }
+            else
+            {
+                imageContainer.style.display = DisplayStyle.None;
+            }
+        }
+    }
     public CustomFoldout()
     {
         // Применяем класс для кастомного foldout
@@ -35,6 +51,7 @@ public partial class CustomFoldout : VisualElement
 
         // Заголовок (header)
         header = new VisualElement();
+        header.name = "foldout-header";
         header.AddToClassList("header");
         header.style.flexDirection = FlexDirection.Row;
         Add(header);
@@ -43,6 +60,15 @@ public partial class CustomFoldout : VisualElement
         toggleButton = new Button(() => Toggle()) { text = "+" };
         toggleButton.AddToClassList("toggle-button");
         header.Add(toggleButton);
+
+        imageContainer = new Image();
+        imageContainer.AddToClassList("header-image");
+        imageContainer.style.width = 16;
+        imageContainer.style.height = 16;
+        imageContainer.style.marginRight = 8;
+        imageContainer.style.paddingLeft = 4;
+        imageContainer.style.display = DisplayStyle.None; // По умолчанию скрыто
+        header.Add(imageContainer);
 
         // Метка с текстом
         label = new Label(text);
@@ -54,6 +80,24 @@ public partial class CustomFoldout : VisualElement
         content.AddToClassList("content");
         content.style.display = DisplayStyle.None;
         Add(content);
+    }
+    public void SetHeaderImage(Texture2D texture, int width = 16, int height = 16)
+    {
+        if (texture != null)
+        {
+            imageContainer.style.backgroundImage = new StyleBackground(texture);
+            imageContainer.style.width = width;
+            imageContainer.style.height = height;
+            imageContainer.style.display = DisplayStyle.Flex;
+        }
+        else
+        {
+            imageContainer.style.display = DisplayStyle.None;
+        }
+    }
+    public void AddImage(VisualElement element)
+    {
+        header.Add(element);
     }
     public void ClearContent(bool expand = false)
     {

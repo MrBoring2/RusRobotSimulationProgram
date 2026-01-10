@@ -56,14 +56,15 @@ namespace Assets.Scripts.GyzmoManipulazotr
         private void Awake()
         {
             Target = transform;
-            
+
             gizmoRoot = transform;
             _pointProvider = gameObject.GetComponent<JOGPropertyProvider>();
             gameObject.SetActive(false);
+            //angleTextPrefab = GameObject.Find("PreviewRotationText").GetComponent<TextMeshPro>();
         }
         private void Start()
         {
-           
+
             _eventBus = ServiceManager.Current.Get<EventBus>();
             _manipulatorModeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
             //SetManipulatorMode(new MoveMode());
@@ -73,7 +74,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
             }
             //SetAxisMode(AxisMode.Global);
             CurrentAxisMode = AxisMode.Local;
-            angleTextPrefab = GameObject.Find("PreviewRotationText").GetComponent<TextMeshPro>();
+
             CurrentManipulatorMode = new JOGMode();
             CurrentManipulatorMode.cursorAngleText = angleTextPrefab;
             //angleTextPrefab.gameObject.SetActive(true);
@@ -88,6 +89,13 @@ namespace Assets.Scripts.GyzmoManipulazotr
             {
                 gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
                 angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
+            }
+            else
+            {
+
+                gizmoRoot.localScale = Vector3.one * 2 * gizmoScaleKoeficient;
+                angleTextPrefab.gameObject.transform.localScale = Vector3.one * 2 * gizmoScaleKoeficient;
+
             }
 
             UpdateHandlesOrientation();
