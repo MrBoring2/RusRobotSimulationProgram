@@ -266,11 +266,38 @@ public class HierarchyPanelEvents : MonoBehaviour
 
             return;
         }
-
+        Texture2D texture = null;
+        switch (item.Type)
+        {
+            case ObjectType.Unknown:
+                break;
+            case ObjectType.LinearMoveCommand:
+                texture = Resources.Load<Texture2D>("Icons/icon_line_mode");
+                break;
+            case ObjectType.StateEndEffectorCommand:
+                texture = Resources.Load<Texture2D>("Icons/icon_grip");
+                break;
+            case ObjectType.Primitive:
+                texture = Resources.Load<Texture2D>("Icons/icon_primitive");
+                break;
+            case ObjectType.Static:
+                break;
+            case ObjectType.Dynamic:
+                break;
+            case ObjectType.Program:
+                texture = Resources.Load<Texture2D>("Icons/icon_program");
+                break;
+            case ObjectType.Robot:
+                texture = Resources.Load<Texture2D>("Icons/icon_robot");
+                break;
+            default:
+                break;
+        }
         switch (item.Type)
         {
             case ObjectType.Robot:
-                element = new CustomFoldout { Text = item.Reference.name };
+                element = new CustomFoldout { Text = item.Reference.name } as CustomFoldout;
+                ((CustomFoldout)element).SetHeaderImage(texture);
                 element.name = "hierarchy-item-robot";
                 element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
                 var robotFoldout = (CustomFoldout)element;
@@ -284,6 +311,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 break;
             case ObjectType.Program:
                 element = new CustomFoldout { Text = item.Reference.name };
+                ((CustomFoldout)element).SetHeaderImage(texture);
                 element.name = "hierarchy-item-program";
                 element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
                 var programFoldout = (CustomFoldout)element;
@@ -296,10 +324,10 @@ public class HierarchyPanelEvents : MonoBehaviour
                 };
                 break;
             case ObjectType.LinearMoveCommand or ObjectType.StateEndEffectorCommand:
-                element = CreateHierarchyElement("hierarchy-item-command", item.Reference.name, item.Id);
+                element = CreateHierarchyElement("hierarchy-item-command", item.Reference.name, item.Id, texture);
                 break;
             default:
-                element = CreateHierarchyElement("hierarchy-item", item.Reference.name, item.Id);
+                element = CreateHierarchyElement("hierarchy-item", item.Reference.name, item.Id, texture);
                 break;
         }
 
@@ -537,7 +565,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
             if (element.name == "")
             {
-                element = GetFoldoutFromElement(element);
+                element = GetParentElement(element);
             }
 
             var gameObject = _sceneObjectManager.GetById(element.userData.ToString());
@@ -706,7 +734,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
         if (clickedElement.name == "")
         {
-            var foldout = GetFoldoutFromElement(clickedElement);
+            var foldout = GetParentElement(clickedElement);
             if (foldout != null)
             {
                 if (foldout.name == "hierarchy-item-robot")
@@ -886,7 +914,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
         if (clickedElement.name == "")
         {
-            var foldout = GetFoldoutFromElement(clickedElement);
+            var foldout = GetParentElement(clickedElement);
             if (foldout != null)
             {
                 clickedElement = foldout;
@@ -1562,13 +1590,22 @@ public class HierarchyPanelEvents : MonoBehaviour
     /// </summary>
     /// <param name="element">Ссылка на элемент</param>
     /// <returns></returns>
-    private CustomFoldout GetFoldoutFromElement(VisualElement element)
+    private VisualElement GetParentElement(VisualElement element)
     {
-        while (element != null && !(element is CustomFoldout))
+        while (element != null)
         {
+            if (element is CustomFoldout)
+            {
+                return element;
+            }
+                
+            else if (element.name == "hierarchy-item-command" || element.name == "hierarchy-item")
+            {
+                return element;
+            }
             element = element.parent;
         }
-        return element as CustomFoldout;
+        return element;
     }
 
     /// <summary>
@@ -1578,19 +1615,73 @@ public class HierarchyPanelEvents : MonoBehaviour
     /// <param name="text">Отображаемый текст</param>
     /// <param name="id">Id элемента</param>
     /// <returns></returns>
-    private VisualElement CreateHierarchyElement(string elemName, string text, string id)
+    private VisualElement CreateHierarchyElement(string elemName, string text, string id, Texture2D texture)
     {
-        var element = new Label(text);
-        element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
-        element.name = elemName;
-        element.style.color = new StyleColor(new Color(255, 255, 255));
-        element.userData = id;
-        element.style.fontSize = 12;
-        element.style.height = 20;
-        element.style.marginTop = 2;
-        element.style.marginBottom = 2;
-        element.style.paddingLeft = 10;
-        return element;
+        // Создаем контейнер для элемента
+        var container = new VisualElement();
+        container.AddToClassList("hierarhy-item-container-base");
+        container.style.flexDirection = FlexDirection.Row;
+        container.style.alignItems = Align.Center;
+        container.name = elemName;
+        container.userData = id;
+
+        // Добавляем обработчик клика на весь контейнер
+        container.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
+
+        // Добавляем картинку, если указан путь
+        var imageElement = CreateImageElement(texture);
+        if (imageElement != null)
+        {
+            container.Add(imageElement);
+        }
+
+
+        // Создаем текстовый элемент
+        var label = new Label(text);
+        label.style.color = new StyleColor(new Color(255, 255, 255));
+        label.style.fontSize = 12;
+
+        label.style.unityTextAlign = TextAnchor.MiddleLeft;
+        label.style.flexGrow = 1;
+
+        // Добавляем текст в контейнер
+        container.Add(label);
+        container.style.height = 20;
+        container.style.marginTop = 2;
+        container.style.marginBottom = 2;
+        container.style.marginLeft = 10;
+
+        return container;
+        //var element = new Label(text);
+        //element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
+        //element.name = elemName;
+        //element.style.color = new StyleColor(new Color(255, 255, 255));
+        //element.userData = id;
+        //element.style.fontSize = 12;
+        //element.style.height = 20;
+        //element.style.marginTop = 2;
+        //element.style.marginBottom = 2;
+        //element.style.paddingLeft = 10;
+        //return element;
+    }
+
+    private VisualElement CreateImageElement(Texture2D texture, int width = 16, int height = 16)
+    {
+
+        if (texture == null)
+        {
+            return null;
+        }
+
+        // Создаем элемент для изображения
+        var imageElement = new Image();
+        imageElement.image = texture;
+        imageElement.style.width = width;
+        imageElement.style.height = height;
+        imageElement.style.marginRight = 8;
+        imageElement.style.paddingLeft = 4;
+
+        return imageElement;
     }
 
     /// <summary>

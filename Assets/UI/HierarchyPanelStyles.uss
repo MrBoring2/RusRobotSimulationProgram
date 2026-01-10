@@ -139,7 +139,7 @@
 }
 
 
-Label.selected {
+.hierarhy-item-container-base.selected {
     background-color: #2a6cff;
     border-radius: 3px;
 }
