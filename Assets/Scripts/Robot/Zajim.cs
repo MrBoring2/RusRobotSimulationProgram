@@ -1,3 +1,4 @@
+using Assets.Scripts.Providers.PropertyProviders;
 using UnityEngine;
 
 public class Zajim : MonoBehaviour
@@ -37,7 +38,8 @@ public class Zajim : MonoBehaviour
         {
             if((z1Col==true) && (z2Col == true))
             {
-                if ((z1Collision == z2Collision) && (z1Collision.transform.tag == "Деталь"))
+                //if ((z1Collision == z2Collision) && (z1Collision.transform.tag == "Деталь"))
+                if ((z1Collision == z2Collision) && (z1Collision.gameObject.GetComponent<IPropertyProvider>() is WorkpiecePropertyProvider))
                 {
                     ZObj = z1Collision.gameObject;
                     z1Collision.transform.parent = Base.transform;
