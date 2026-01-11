@@ -32,14 +32,40 @@ public class RobotController : MonoBehaviour
         _propertyProvider.JOGpoint.Position = new Vector3(1000, 1000, 1000);
         SetJogMove(_propertyProvider.JOGpoint);
     }
+    /// <summary>
+    /// Вып. команды ожидания
+    /// </summary>
+    public void RobotSetWait(WaitPropertyProvider cmd)
+    {
+        StartCoroutine(SetWait(cmd.Get()));
+    }
+    private IEnumerator SetWait(float time)
+    {
+        yield return new WaitForSeconds(time*Time.fixedDeltaTime);
+        _eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
+    }
+    /// <summary>
+    /// Вып. команды изменения состояния эффектора
+    /// </summary>
     public void RobotSetStateEndEffector(StateEndEffectorPropertyProvider cmd)
     {
         _propertyProvider.EndEffectorOn = cmd.Get();
         _eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
     }
+    /// <summary>
+    /// Вып. команды линейного движения
+    /// </summary>
+    public void RobotSetLinMove(LinearPointPropertyProvider point)
+    {
+        GetPositionInfo(point);
+        StartCoroutine(LinMove());
+    }
+    /// <summary>
+    /// Ручное управление
+    /// </summary>
     public void SetJogMove(JOGPropertyProvider point)
     {
-        if(oldJOGposition != point.Position || _propertyProvider.XYZRot != point.RotationQ)
+        if (oldJOGposition != point.Position || _propertyProvider.XYZRot != point.RotationQ)
         {
             GetPositionJOG(point);
             ik.CalculateInverseKinematics();
@@ -56,17 +82,21 @@ public class RobotController : MonoBehaviour
                 ik.thetha = ik.old_thetha.ToArray();
                 point.GlobalPosition = _propertyProvider.absoluteOldXYZ;
             }
-            
+
         }
-        
+
     }
-    public void RobotSetLinMove(LinearPointPropertyProvider point)
+    public void TeleportToPoint(LinearPointPropertyProvider p)
     {
-        GetPositionInfo(point);
-        StartCoroutine(LinMove());
+        GetPositionInfo(p);
+        ik.CalculateInverseKinematics();
+        ik.CheckAngle();
+        _propertyProvider.oldXYZ = _propertyProvider.XYZ;
+        _propertyProvider.SyncJOGPosition();
     }
-    private void GetPositionInfo(LinearPointPropertyProvider p)
+    public void GetPositionInfo(LinearPointPropertyProvider p)
     {
+        var a = gameObject;
         point = _propertyProvider.transform.InverseTransformPoint(p.Position);////!!!
         _propertyProvider.XYZ.y = point.x * 1000;
         _propertyProvider.XYZ.z = point.y * 1000;

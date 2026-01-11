@@ -25,7 +25,7 @@ namespace Assets.Scripts.Providers.PropertyProviders
         {
             return new ProviderSaveData
             {
-                ProviderType = nameof(LinearPointPropertyProvider),
+                ProviderType = nameof(StateEndEffectorPropertyProvider),
                 BoolValues =
                 {
                     ["StatusEndEffector"] = StatusEndEffector
@@ -37,7 +37,7 @@ namespace Assets.Scripts.Providers.PropertyProviders
         {
             yield return new CustomProperty(
                 "StatusEndEffector",
-                "Открыть захват",
+                "Захват закрыт",
                 typeof(bool),
                 () => StatusEndEffector,
                 val => StatusEndEffector = (bool)val

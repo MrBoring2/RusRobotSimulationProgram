@@ -6,7 +6,6 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.Windows;
-using static UnityEngine.GraphicsBuffer;
 
 namespace Assets.Scripts.Models
 {
@@ -50,6 +49,12 @@ namespace Assets.Scripts.Models
             {
                 field.focusable = false;
             };
+            EventCallback<DetachFromPanelEvent> onDestroy = evt =>
+            {
+                field.focusable = false;
+                uIStatusManager.SetInputMode(false);
+                //uIStatusManager.SetPointerOberUI(false);
+            };
 
 
             EventCallback<BlurEvent> blurHandler = _ =>
@@ -69,6 +74,7 @@ namespace Assets.Scripts.Models
             field.RegisterCallback(blurHandler);
             field.RegisterCallback(mouseEnterHandler);
             field.RegisterCallback(mouseLeaveHandler);
+            field.RegisterCallback(onDestroy);
 
             // Возвращаем функцию для отписки
             return () =>

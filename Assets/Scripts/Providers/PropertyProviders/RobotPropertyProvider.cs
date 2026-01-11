@@ -13,6 +13,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
+using static UnityEngine.EventSystems.EventTrigger;
 public class RobotElement
 {
     public string Id;
@@ -24,18 +25,10 @@ public class RobotPropertyProvider : BasePropertyProvider
 {
     private EventBus _eventBus;
     private SceneObjectsManager _sceneObjectManager;
-    public IEnumerable<RobotProgrammElement> Programm 
-    {
-        get
-        {
-            var a = BuildTreeInternal(Id);
-            return a;
-        }
-        
-     }
+    
     public float RotSpeedPercent { get; set; } = 100f;
 
-    //Углы применяемые каждый FixedUpdate
+    //Г“ГЈГ«Г» ГЇГ°ГЁГ¬ГҐГ­ГїГҐГ¬Г»ГҐ ГЄГ Г¦Г¤Г»Г© FixedUpdate
     public float J1Angle = 0;
     public float J2Angle = 90;
     public float J3Angle = 90;
@@ -44,7 +37,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J6Angle = 0;
     public bool EndEffectorOn { get; set; }
     public float SpeedEffector = 0.5f;
-    //длины звеньев
+    //Г¤Г«ГЁГ­Г» Г§ГўГҐГ­ГјГҐГў
     public float L1 = 450;
     public float L2 = 447;
     public float L3 = 1150;
@@ -73,7 +66,7 @@ public class RobotPropertyProvider : BasePropertyProvider
         JOGpoint.RotationQ = XYZRot;
     }
 
-    private float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 }; //гр/с
+    private float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 }; 
 
 
     public void ResetPositionEffector()
@@ -92,43 +85,125 @@ public class RobotPropertyProvider : BasePropertyProvider
         Id = id;
     }
 
-    public IEnumerable<RobotProgrammElement> GetRootElements()
+    //public List<RobotProgrammElement> Programm
+    //{
+    //    get
+    //    {
+    //        var a = BuildTreeInternal(Id);
+    //        return a;
+    //    }
+
+    //}
+
+    //private List<RobotProgrammElement> BuildTreeInternal(string parentId)
+    //{
+    //    List<RobotProgrammElement> Programm = new();
+    //    var itemsDict = _sceneObjectManager.Items;
+    //    if (itemsDict == null) return null;
+
+    //    // Г‘Г­Г Г·Г Г«Г  Г±Г®ГЎГЁГ°Г ГҐГ¬ ГўГ±ГҐГµ Г¤ГҐГІГҐГ© Гў ГЇГ°Г ГўГЁГ«ГјГ­Г®Г¬ ГЇГ®Г°ГїГ¤ГЄГҐ
+    //    List<SceneObject> childrenInOrder = new();
+
+    //    foreach (DictionaryEntry entry in itemsDict)
+    //    {
+    //        var sceneObj = entry.Value as SceneObject;
+    //        if (sceneObj != null &&
+    //            sceneObj.Reference.activeSelf == true &&
+    //            sceneObj.ParentId == parentId &&
+    //            (sceneObj.Type == ObjectType.LinearMoveCommand ||
+    //             sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+    //             sceneObj.Type == ObjectType.WaitCommand ||
+    //             sceneObj.Type == ObjectType.Program))
+    //        {
+    //            childrenInOrder.Add(sceneObj);
+    //        }
+    //    }
+
+    //    // Г’ГҐГЇГҐГ°Гј Г®ГЎГ°Г ГЎГ ГІГ»ГўГ ГҐГ¬ Гў ГЇГ°Г ГўГЁГ«ГјГ­Г®Г¬ ГЇГ®Г°ГїГ¤ГЄГҐ
+    //    foreach (var child in childrenInOrder)
+    //    {
+    //        ConvertToRobotProgrammElement(child, Programm);
+    //    }
+    //    return Programm;
+    //}
+    //private void ConvertToRobotProgrammElement(SceneObject obj, List<RobotProgrammElement> Programm)
+    //{
+    //    if (obj.Type == ObjectType.LinearMoveCommand)
+    //    {
+    //        var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
+    //        Programm.Add(command);
+    //    }
+    //    else if(obj.Type == ObjectType.StateEndEffectorCommand)
+    //    {
+    //        var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
+    //        Programm.Add(command);
+    //    }
+    //    else if (obj.Type == ObjectType.WaitCommand)
+    //    {
+
+    //        var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+    //        Programm.Add(command);
+    //    }
+    //    else if (obj.Type == ObjectType.Program)
+    //    {
+    //        // ГЏГ®Г«ГіГ·Г ГҐГ¬ Г¤Г®Г·ГҐГ°Г­ГЁГҐ ГЅГ«ГҐГ¬ГҐГ­ГІГ» Гў ГЇГ°Г ГўГЁГ«ГјГ­Г®Г¬ ГЇГ®Г°ГїГ¤ГЄГҐ
+    //        List<RobotProgrammElement> subItems = new();
+
+    //        //var itemsDict = _sceneObjectManager.Items;
+    //        if (_sceneObjectManager.Items != null)
+    //        {
+    //            foreach (DictionaryEntry entry in _sceneObjectManager.Items)
+    //            {
+    //                var sceneObj = entry.Value as SceneObject;
+    //                if (sceneObj != null &&
+    //                    sceneObj.ParentId == obj.Id &&
+    //                    (sceneObj.Type == ObjectType.LinearMoveCommand ||
+    //                     sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+    //                     sceneObj.Type == ObjectType.WaitCommand))
+    //                {
+    //                    if (sceneObj.Type == ObjectType.LinearMoveCommand)
+    //                    {
+    //                        var command = new CommandMove(sceneObj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
+    //                        subItems.Add(command);
+    //                    }
+    //                    else if (sceneObj.Type == ObjectType.StateEndEffectorCommand)
+    //                    {
+    //                        var command = new ComandSetStateEndEffector(sceneObj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
+    //                        subItems.Add(command);
+    //                    }
+    //                    else if (sceneObj.Type == ObjectType.WaitCommand)
+    //                    {
+
+    //                        var command = new CommandWait(sceneObj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+    //                        subItems.Add(command);
+    //                    }
+
+
+    //                }
+    //            }
+    //        }
+
+    //        var subProgram = new SubProgramm(subItems, ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
+    //        Programm.Add(subProgram);
+    //    }
+    //}
+    public List<RobotProgrammElement> Programm
     {
-        var itemsDict = _sceneObjectManager.Items;
-        if (itemsDict == null) return Enumerable.Empty<RobotProgrammElement>();
-
-        var result = new List<RobotProgrammElement>();
-
-        // Перебираем в порядке добавления
-        foreach (DictionaryEntry entry in itemsDict)
+        get
         {
-            var sceneObj = entry.Value as SceneObject;
-            if (sceneObj != null &&
-                sceneObj.ParentId == Id &&
-                (sceneObj.Type == ObjectType.LinearMoveCommand ||
-                 sceneObj.Type == ObjectType.StateEndEffectorCommand ||
-                 sceneObj.Type == ObjectType.Program))
-            {
-                result.Add(ConvertToRobotProgrammElement(sceneObj));
-            }
+            var a = BuildTreeInternal(Id);
+            return a;
         }
-
-        return result;
     }
 
-
-    public IEnumerable<RobotProgrammElement> BuildTree()
+    private List<RobotProgrammElement> BuildTreeInternal(string parentId)
     {
-        return BuildTreeInternal(Id);
-    }
-
-    private IEnumerable<RobotProgrammElement> BuildTreeInternal(string parentId)
-    {
+        List<RobotProgrammElement> programm = new();
         var itemsDict = _sceneObjectManager.Items;
-        if (itemsDict == null) yield break;
+        if (itemsDict == null) return null;
 
-        // Сначала собираем всех детей в правильном порядке
-        var childrenInOrder = new List<SceneObject>();
+        // РЎРЅР°С‡Р°Р»Р° СЃРѕР±РёСЂР°РµРј РІСЃРµС… РґРµС‚РµР№ РІ РїСЂР°РІРёР»СЊРЅРѕРј РїРѕСЂСЏРґРєРµ
+        List<SceneObject> childrenInOrder = new();
 
         foreach (DictionaryEntry entry in itemsDict)
         {
@@ -138,148 +213,48 @@ public class RobotPropertyProvider : BasePropertyProvider
                 sceneObj.ParentId == parentId &&
                 (sceneObj.Type == ObjectType.LinearMoveCommand ||
                  sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+                 sceneObj.Type == ObjectType.WaitCommand ||
                  sceneObj.Type == ObjectType.Program))
             {
                 childrenInOrder.Add(sceneObj);
             }
         }
 
-        // Теперь обрабатываем в правильном порядке
+        // РўРµРїРµСЂСЊ РѕР±СЂР°Р±Р°С‚С‹РІР°РµРј РІ РїСЂР°РІРёР»СЊРЅРѕРј РїРѕСЂСЏРґРєРµ
         foreach (var child in childrenInOrder)
         {
-            var node = ConvertToRobotProgrammElement(child);
-            yield return node;
-
-            if (node is SubProgramm subProgramm)
-            {
-                // Рекурсивно получаем элементы подпрограммы
-                var subChildren = BuildTreeInternal(child.Id).ToList();
-                foreach (var subChild in subChildren)
-                {
-                    yield return subChild;
-                }
-            }
+            ConvertToRobotProgrammElement(child, programm);
         }
+        return programm;
     }
-    private RobotProgrammElement ConvertToRobotProgrammElement(SceneObject obj)
+
+    private void ConvertToRobotProgrammElement(SceneObject obj, List<RobotProgrammElement> programm)
     {
         if (obj.Type == ObjectType.LinearMoveCommand)
         {
             var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
-            return command;
+            programm.Add(command);
         }
-        else if(obj.Type == ObjectType.StateEndEffectorCommand)
+        else if (obj.Type == ObjectType.StateEndEffectorCommand)
         {
             var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
-            return command;
+            programm.Add(command);
+        }
+        else if (obj.Type == ObjectType.WaitCommand)
+        {
+            var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+            programm.Add(command);
         }
         else if (obj.Type == ObjectType.Program)
         {
-            // Получаем дочерние элементы в правильном порядке
-            var subItems = new List<RobotProgrammElement>();
+            // Р РµРєСѓСЂСЃРёРІРЅРѕ РїРѕР»СѓС‡Р°РµРј РґРѕС‡РµСЂРЅРёРµ СЌР»РµРјРµРЅС‚С‹ РґР»СЏ РїРѕРґРїСЂРѕРіСЂР°РјРјС‹
+            List<RobotProgrammElement> subItems = BuildTreeInternal(obj.Id);
 
-            var itemsDict = _sceneObjectManager.Items;
-            if (itemsDict != null)
-            {
-                foreach (DictionaryEntry entry in itemsDict)
-                {
-                    var sceneObj = entry.Value as SceneObject;
-                    if (sceneObj != null &&
-                        sceneObj.ParentId == obj.Id &&
-                        (sceneObj.Type == ObjectType.LinearMoveCommand ||
-                         sceneObj.Type == ObjectType.StateEndEffectorCommand))
-                    {
-                        subItems.Add(ConvertToRobotProgrammElement(sceneObj));
-                    }
-                }
-            }
-
-            var subProgram = new SubProgramm(subItems, ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
-            return subProgram;
-            //var subProgram = new SubProgramm(
-            //    _sceneObjectManager.Items.Values
-            //        .Where(x => x.ParentId == obj.Id && (x.Type == ObjectType.LinearMoveCommand || x.Type == ObjectType.StateEndEffectorCommand))
-            //        .Select(x => ConvertToRobotProgrammElement(x))
-            //        .ToList(),
-            //    ENUM_COMANDS.SUBPROGRAMM,
-            //    obj.Id
-            //);
-            //return subProgram;
+            var subProgram = new SubProgramm(subItems ?? new List<RobotProgrammElement>(), ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
+            programm.Add(subProgram);
         }
-        return null;
     }
 
-    /// <summary>
-    /// Класс для многоуровневой структуры
-    /// </summary>
-
-
-    //public void AddProgram(SubProgramm prog)
-    //{
-    //    robotProgramms.Add(prog);
-    //    _eventBus.Invoke(new AddProgram());
-    //}
-    //public void AddProgram(string parentId, SubProgramm progChild)
-    //{
-    //    var realParent = FindProgramRecursive(parentId);
-    //    if (realParent == null)
-    //    {
-    //        Debug.LogError("Parent program not found");
-    //        return;
-    //    }
-
-    //    realParent.AddSubProgramm(progChild);
-    //    _eventBus.Invoke(new AddProgram());
-    //}
-    //public void AddCommand(string progId, RobotCommand comm)
-    //{
-    //    var parent = FindProgramRecursive(progId);
-    //    if (parent == null)
-    //    {
-    //        Debug.LogWarning($"Program {progId} not found");
-    //        return;
-    //    }
-
-    //    parent.ADDcomand(comm);
-    //    _eventBus.Invoke(new AddCommand());
-    //}
-
-    //public SubProgramm FindProgramRecursive(string id)
-    //{
-    //    foreach (var elem in robotProgramms)
-    //    {
-    //        if (elem is SubProgramm prog)
-    //        {
-    //            var found = FindInProgram(prog, id);
-    //            if (found != null)
-    //                return found;
-    //        }
-    //    }
-    //    return null;
-    //}
-
-    //private SubProgramm FindInProgram(SubProgramm prog, string id)
-    //{
-    //    if (prog.ID == id)
-    //        return prog;
-
-    //    foreach (var child in prog.Get())
-    //    {
-    //        if (child is SubProgramm childProg)
-    //        {
-    //            var found = FindInProgram(childProg, id);
-    //            if (found != null)
-    //                return found;
-    //        }
-    //    }
-    //    return null;
-    //}
-
-    //public void AddCommand(RobotCommand comm)
-    //{
-    //    robotProgramms.Add(comm);
-    //    _eventBus.Invoke(new AddCommand());
-    //}
     public override ProviderSaveData CaptureCustomState()
     {
         return new ProviderSaveData

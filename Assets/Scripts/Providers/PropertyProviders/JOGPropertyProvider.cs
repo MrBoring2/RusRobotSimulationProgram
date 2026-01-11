@@ -17,7 +17,7 @@ namespace Assets.Scripts.Providers
 
 
         public string Id { get => id; set => id = value; }
-
+        public bool IsReadondly { get; set; }
         public string Name { get => gameObject.name; set { gameObject.name = value; } }
         protected Vector3 rotationEuler;
         protected string id;
@@ -61,25 +61,7 @@ namespace Assets.Scripts.Providers
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private Mesh sphereMesh;
-        public Vector3 Position {
-            get {
-
-                Vector3 pos;
-                pos.z = transform.localPosition.y * 1000;
-                pos.x = transform.localPosition.z * 1000;
-                pos.y = transform.localPosition.x * 1000;
-                return pos;
-            } 
-            set
-            {
-                Vector3 pos;
-                pos.z = value.x / 1000;
-                pos.x = value.y / 1000;
-                pos.y = value.z / 1000;
-                transform.localPosition = pos;
-
-            }
-        }
+        public Vector3 Position { get => transform.localPosition*1000; set => transform.localPosition = value/1000; }
         public Vector3 GlobalPosition { get => transform.position; set => transform.position = value; }
         public Quaternion RotationQ
         {

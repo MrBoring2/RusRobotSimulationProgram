@@ -10,37 +10,69 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
+using Assets.Scripts.Providers;
+using Assets.Scripts.Managers;
 
 public class RobotProgrammSimulation : MonoBehaviour
 {
+    private EventBus _eventBus;
     private SimulationManager _simManager;
+    private SceneObjectsManager _sceneObjectsManager;
     private SIM_STAT LocalSimStat;
-
     private RobotController RC;
     private RobotPropertyProvider _propertyProvider => gameObject.GetComponent<RobotPropertyProvider>();
-
-    //public EVENTS EVENTS;
-    public bool allowNextCommand = true;
     public List<RobotProgrammElement> Programm => _propertyProvider.Programm.ToList();
-    private EventBus _eventBus;
-
-    private int currentCommandIndex = 0;//текущая выполняемая в программе, именно на вехрнем уровне не в подпрограммах
+    
+    //---//
+    private int currentCommandIndex = 0;//ГІГҐГЄГіГ№Г Гї ГўГ»ГЇГ®Г«Г­ГїГҐГ¬Г Гї Гў ГЇГ°Г®ГЈГ°Г Г¬Г¬ГҐ, ГЁГ¬ГҐГ­Г­Г® Г­Г  ГўГҐГµГ°Г­ГҐГ¬ ГіГ°Г®ГўГ­ГҐ Г­ГҐ Гў ГЇГ®Г¤ГЇГ°Г®ГЈГ°Г Г¬Г¬Г Гµ
+    public bool allowNextCommand = true;//Г°Г Г§Г°ГҐГё. Г­Г  Г±Г«ГҐГ¤. ГЄГ®Г¬Г Г­Г¤Гі
 
 
     private void Start()
     {
         _simManager = ServiceManager.Current.Get<SimulationManager>();
+        _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
-
         RC = gameObject.GetComponent<RobotController>();
+        //Г‘ГЁГЈГ­Г Г«Г» Г±ГЁГ¬ГіГ«ГїГ¶ГЁГЁ//
         _eventBus.Subscribe<StartProgramm>(StartSim);
         _eventBus.Subscribe<PauseProgramm>(PauseSim);
         _eventBus.Subscribe<StopProgramm>(StopSim);
         _eventBus.Subscribe<RobotEndMove>(EndCurrentMove);
-
-        _propertyProvider.oldXYZ = Vector3.zero;
+        //--//
+        _eventBus.Subscribe<PickCommandSignal>(TeleportToPoint);
 
     }
+    private void TeleportToPoint(PickCommandSignal s)
+    {
+        if(_simManager.GetStatusSim() == SIM_STAT.STOP)
+        {
+            SceneObject obj = s.Point;
+            for(int i = 0; i < 20; i++)
+            {
+                if( obj.Type == ObjectType.Robot && obj.Id == _propertyProvider.Id)
+                {
+                    if (s.Point.Type == ObjectType.LinearMoveCommand)
+                    {
+                        RC.TeleportToPoint((LinearPointPropertyProvider)s.Point.PropertyProvider);
+                        break;
+                    }
+                }
+                else
+                {
+                    if(obj.ParentId != null)
+                    {
+                        obj = _sceneObjectsManager.GetById(obj.ParentId);
+                    }
+                    
+                }
+                
+            }
+            
+        }
+    }
+
     private void FixedUpdate()
     {
         if(_simManager.GetModeSim() == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
@@ -54,7 +86,7 @@ public class RobotProgrammSimulation : MonoBehaviour
         StartCoroutine(ExecuteProgramm());
     }
 
-    // Корутина для последовательного выполнения программы
+    // ГЉГ®Г°ГіГІГЁГ­Г  Г¤Г«Гї ГЇГ®Г±Г«ГҐГ¤Г®ГўГ ГІГҐГ«ГјГ­Г®ГЈГ® ГўГ»ГЇГ®Г«Г­ГҐГ­ГЁГї ГЇГ°Г®ГЈГ°Г Г¬Г¬Г»
     private IEnumerator ExecuteProgramm()
     {
         currentCommandIndex = 0;
@@ -85,7 +117,7 @@ public class RobotProgrammSimulation : MonoBehaviour
             
             yield return new WaitUntil(() => allowNextCommand);
         }
-        else if (EP is SubProgramm)
+        else if (EP.TypeComand == ENUM_COMMANDS.SUBPROGRAMM)
         {
             SubProgramm subProgramm = (SubProgramm)EP;
 
@@ -110,10 +142,18 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     private void StartSim(StartProgramm s)
     {
-        LocalSimStat = SIM_STAT.PLAY;
-        allowNextCommand = true;
-        RC.SetAllowNextMove(true);
-        StartProgramm();
+        if(LocalSimStat == SIM_STAT.PAUSE)
+        {
+            ContinueSim();
+        }
+        else
+        {
+            LocalSimStat = SIM_STAT.PLAY;
+            allowNextCommand = true;
+            RC.SetAllowNextMove(true);
+            StartProgramm();
+        }
+        
 
     }
     private void PauseSim(PauseProgramm s)
@@ -126,6 +166,11 @@ public class RobotProgrammSimulation : MonoBehaviour
         LocalSimStat = SIM_STAT.STOP;
         RC.StopSim();
         StopAllCoroutines();
+    }
+    private void ContinueSim()
+    {
+        LocalSimStat = SIM_STAT.PLAY;
+        RC.SetAllowNextMove(true);
     }
     private void EndCurrentMove(RobotEndMove s)
     {
@@ -148,33 +193,17 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     public void HandlerCommand(RobotProgrammElement c)
     {
-        switch (c.TypeComand)
-        {
-            case ENUM_COMMANDS.MOVE_PTP:
-                
-                break;
-            case ENUM_COMMANDS.MOVE_LIN:
-                CommandMove comand0 = (CommandMove)c;
-                InProgress();
-                comand0.Execute(RC);
-                break;
-            case ENUM_COMMANDS.WAIT: break;
-            case ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR:
-                ComandSetStateEndEffector comand1 = (ComandSetStateEndEffector)c;
-                InProgress();
-                comand1.Execute(RC);
-                break;
-            default: break;
-        }
-        
+        InProgress();
+        c.Execute(RC);  
     }
-
     private void OnDestroy()
     {
         _eventBus?.Unsubcribe<StartProgramm>(StartSim);
         _eventBus?.Unsubcribe<PauseProgramm>(PauseSim);
         _eventBus?.Unsubcribe<StopProgramm>(StopSim);
         _eventBus?.Unsubcribe<RobotEndMove>(EndCurrentMove);
+
+        _eventBus?.Unsubcribe<PickCommandSignal>(TeleportToPoint);
     }
 }
 

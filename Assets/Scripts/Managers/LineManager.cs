@@ -50,8 +50,6 @@ namespace Assets.Scripts.Managers
         void OnDrawProgramRoute(StartLineDrawer signal)
         {
             Debug.Log($"LineManager: Получен сигнал StartLineDrawer для программы {signal.ProgramId}");
-
-            ClearAllLines();
             _currentProgramId = signal.ProgramId;
             _isDrawing = true;
 
@@ -70,6 +68,7 @@ namespace Assets.Scripts.Managers
 
         void DrawProgramRoute(string programId)
         {
+            ClearAllLines();
             // Получаем ВСЕХ детей программы (команды + подпрограммы)
             var allChildren = GetChildrenOfProgram(programId);
 
@@ -127,17 +126,16 @@ namespace Assets.Scripts.Managers
             if (_sceneManager?.Items == null) return children;
 
             // Получаем Items как OrderedDictionary
-            var itemsDict = _sceneManager.Items;
+            var itemsDict = _sceneManager;
             if (itemsDict == null) return children;
 
             // Перебираем в порядке добавления
-            foreach (DictionaryEntry entry in itemsDict)
+            foreach (var entry in itemsDict.GetGameObjectsList())
             {
-                var obj = entry.Value as SceneObject;
-                if (obj != null && obj.ParentId == programId)
+                if (entry != null && entry.ParentId == programId)
                 {
-                    children.Add(obj);
-                    Debug.Log($"  Ребёнок: {obj.Id}, Тип: {obj.Type}");
+                    children.Add(entry);
+                    Debug.Log($"  Ребёнок: {entry.Id}, Тип: {entry.Type}");
                 }
             }
             //// Так как Items отсортирован, дети программы идут подряд

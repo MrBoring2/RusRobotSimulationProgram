@@ -9,7 +9,6 @@ public partial class CustomFoldout : VisualElement
 {
     public event Action<bool> OnExpandedChanged;
     public bool IsExpanded { get; private set; }
-    public List<VisualElement> Childrens { get; private set; } = new List<VisualElement>();
     private VisualElement header;
     public VisualElement Header => header;
     private Label label;
@@ -118,8 +117,9 @@ public partial class CustomFoldout : VisualElement
     }
     public void AddChild(VisualElement element)
     {
-        Childrens.Add(element);
+       
         content.Add(element);
+
         //IsExpanded = true;
         UpdateVisualState();
     }

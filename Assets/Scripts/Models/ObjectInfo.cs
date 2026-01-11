@@ -12,8 +12,29 @@ public enum ObjectType
     Static,
     Dynamic,
     Program,
-    Robot
+    Robot,
+    WaitCommand,
+    Node,
+    Workpiece
 }
+
+[System.Serializable]
+public class ColorObj
+{
+    public float R { get; set; }
+    public float G { get; set; }
+    public float B { get; set; }
+    public float A { get; set; }
+
+    public ColorObj(float r, float g, float b, float a)
+    {
+        R = r;
+        G = g;
+        B = b;
+        A = a;
+    }
+}
+
 [System.Serializable]
 public class ObjectInfo
 {                                                 
