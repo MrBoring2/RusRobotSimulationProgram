@@ -1,6 +1,9 @@
+using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.RobotPanel;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using SFB;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,6 +28,7 @@ public class RobotPanelEvents : MonoBehaviour
     private int NumberOfLines = 0;
     private bool isDragging = false;
     private Vector2 dragOffset;
+    private EventBus _eventBus;
 
     private void EnableDrag()
     {
@@ -52,7 +56,7 @@ public class RobotPanelEvents : MonoBehaviour
     }
     public void Close()
     {
-        tablet.style.display = DisplayStyle.None;
+        windowRoot.style.display = DisplayStyle.None;
         UIBlocker.RemoveModalWindow(windowRoot);
         StatusManager.SetInputMode(false);
     }
@@ -262,6 +266,8 @@ public class RobotPanelEvents : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
+        _eventBus.Subscribe<OpenRobotPanelSignal>(OnOpenPanel);
         StatusManager = ServiceManager.Current.Get<UIStatusManager>();
         root = GetComponent<UIDocument>().rootVisualElement;
         windowRoot = treeAsset.CloneTree();
@@ -292,6 +298,10 @@ public class RobotPanelEvents : MonoBehaviour
 
         EnableDrag();
         RegisterButtons();
+    }
+
+    private void OnOpenPanel(OpenRobotPanelSignal a)
+    {
         Show();
     }
 
