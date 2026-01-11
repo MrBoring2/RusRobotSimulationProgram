@@ -6,6 +6,7 @@ using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomEventBus.Signals.ObjectsLibrary;
 using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
 using Assets.Scripts.CustomEventBus.Signals.Robot;
+using Assets.Scripts.CustomEventBus.Signals.RobotPanel;
 using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
@@ -773,7 +774,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                     contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(robot)));
                     contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(robot)));
                     contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(robot)));
-                    contextMenu.Add(CreateMenuButton("Открыть планшет робота", () => CreateProgram(robot)));
+                    contextMenu.Add(CreateMenuButton("Открыть планшет робота", () => OpenRobotPanel()));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
                 else if (foldout.name == "hierarchy-item-program")
@@ -814,6 +815,11 @@ public class HierarchyPanelEvents : MonoBehaviour
 
         root.Add(contextMenu);
         iBlocker.AddNewContextMenu(contextMenu);
+    }
+
+    private void OpenRobotPanel()
+    {
+        _eventBus.Invoke(new OpenRobotPanelSignal());
     }
 
     private void CreateWaitCommand(SceneObject robot)
@@ -968,7 +974,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     private SceneObject FindParentRobot(string parentId)
     {
         SceneObject obj = null;
-        while(obj?.Type != ObjectType.Robot)
+        while (obj?.Type != ObjectType.Robot)
         {
             obj = _sceneObjectManager.GetById(parentId);
             parentId = obj.ParentId;
