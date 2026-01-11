@@ -32,7 +32,13 @@ namespace Assets.Scripts.Managers
             SceneObject sceneObj = null;
             if (prefab != null)
             {
-                var obj = Instantiate(prefab, position, rotation);
+                GameObject parent = null;
+                if (!string.IsNullOrEmpty(parentId))
+                {
+                    parent = ((SceneObject)Items[parentId])?.Reference;
+                    if (parent == null) return null;
+                }
+                var obj = Instantiate(prefab, position, rotation, parent?.transform);
                 obj.name = prefab.name;
                 var objectMaker = obj.GetComponent<SceneObjectMarker>();
                 if (objectMaker != null)
@@ -42,13 +48,6 @@ namespace Assets.Scripts.Managers
                     sceneObj = new SceneObject(id, objectMaker.type, obj, parentId);
                     if (!Items.Contains(id))
                     {
-
-                        if (!string.IsNullOrEmpty(parentId))
-                        {
-                            var parentObj = ((SceneObject)Items[parentId])?.Reference;
-                            if (parentObj == null) return null;
-                            obj.transform.SetParent(parentObj.transform, false);
-                        }
                         Items[id] = sceneObj;
                         sceneObj.Reference.GetComponent<IPropertyProvider>().Id = id;
                         _eventBus.Invoke<AddSceneObjectSignal>(new AddSceneObjectSignal(sceneObj));
