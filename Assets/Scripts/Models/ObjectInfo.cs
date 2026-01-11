@@ -13,7 +13,8 @@ public enum ObjectType
     Dynamic,
     Program,
     Robot,
-    WaitCommand
+    WaitCommand,
+    Node
 }
 [System.Serializable]
 public class ObjectInfo

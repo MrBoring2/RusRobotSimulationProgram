@@ -5,8 +5,10 @@ using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using Assets.Scripts.SystemManager;
+using Assets.UI.CustomElements.ColorPicker;
 using System;
 using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.Windows;
@@ -158,10 +160,10 @@ public class PropertiesPanelEvents : MonoBehaviour
     }
     private void PerformUndoRedo(ICommand command)
     {
-        // Если команда относится к текущему объекту, обновляем UI
+        // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ UI
         if (current != null && command is PropertyChangeCommand propertyCommand)
         {
-            // Проверяем, относится ли команда к текущему объекту
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             if (propertyCommand.Target == current ||
                 (propertyCommand.Target is IPropertyProvider provider && provider == current))
             {
@@ -179,7 +181,7 @@ public class PropertiesPanelEvents : MonoBehaviour
 
     private void ClearBindings()
     {
-        // Очищаем все привязки
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         foreach (var cleanup in cleanupActions)
         {
             cleanup?.Invoke();
@@ -191,7 +193,7 @@ public class PropertiesPanelEvents : MonoBehaviour
     {
         if (current == null) return;
 
-        // Позиция - сохраняем Action для отписки
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Action пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posX, current, nameof(IPropertyProvider.Position), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Position = new Vector3(posX.value, current.Position.y, current.Position.z);
@@ -207,7 +209,7 @@ public class PropertiesPanelEvents : MonoBehaviour
             if (current != null) current.Position = new Vector3(current.Position.x, current.Position.y, posZ.value);
         }));
 
-        // Поворот - сохраняем Action для отписки
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Action пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(rotX, current, nameof(IPropertyProvider.Rotation), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Rotation = new Vector3(NormalizeAngle(rotX.value), current.Rotation.y, current.Rotation.z);
@@ -236,7 +238,7 @@ public class PropertiesPanelEvents : MonoBehaviour
         cleanupActions.Add(() => rotY.UnregisterCallback(rotYBlurHandler));
         cleanupActions.Add(() => rotZ.UnregisterCallback(rotZBlurHandler));
 
-        // Масштаб - сохраняем Action для отписки
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Action пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(scaleX, current, nameof(IPropertyProvider.Scale), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null) current.Scale = new Vector3(scaleX.value, current.Scale.y, current.Scale.z);
@@ -252,7 +254,7 @@ public class PropertiesPanelEvents : MonoBehaviour
             if (current != null) current.Scale = new Vector3(current.Scale.x, current.Scale.y, scaleZ.value);
         }));
 
-        // Имя - сохраняем Action для отписки
+        // пїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Action пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(name, current, nameof(IPropertyProvider.Name), _undoRedoManager, _UIStatusManager, () =>
         {
             if (current != null)
@@ -490,6 +492,25 @@ public class PropertiesPanelEvents : MonoBehaviour
                 {
                     prop.Setter(field.value);
                 }));
+            }
+            else if (prop.PropertyType == typeof(Color))
+            {
+                //var container = new VisualElement();
+                ////container.AddToClassList("base-property");
+                //container.AddToClassList("unity-base-field__aligned");
+                //container.Add(new Label(prop.DisplayName));
+                //var field = new Assets.UI.CustomElements.ColorPicker.ColorField();
+                //var colorPopup = root.Q<ColorPopup>("color-popup");
+                //field.ColorPopup = colorPopup;
+                //field.ResetButtonPressed += () => field.value = Color.white;
+                //field.value = (Color)prop.Getter();
+                //container.Add(field);
+                //customContainer.Add(container);
+                //RegisterEventsforInput(field);
+                //cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
+                //{
+                //    prop.Setter(field.value);
+                //}));
             }
         }
     }

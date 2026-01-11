@@ -119,7 +119,9 @@ public class HierarchyPanelEvents : MonoBehaviour
         if (signal.Command is IDestructiveCommand)
         {
             UpdateHierarchy();
+            _eventBus.Invoke(new UpdateLineDrawer());
         }
+
     }
 
     private void OnCommandExecuted(ExecuteCommandSignal signal)
@@ -127,13 +129,22 @@ public class HierarchyPanelEvents : MonoBehaviour
         if (signal.Command is IDestructiveCommand)
         {
             UpdateHierarchy();
+            _eventBus.Invoke(new UpdateLineDrawer());
         }
+
     }
     private void OnToggleObjectsList(ToggleObjectsListSignal signal) => ToggleObjectsList();
 
 
     private void OnObjectAdded(AddSceneObjectSignal evt) => AddHierarchyItem(evt.GameObject);
-    private void OnObjectRemoved(RemoveSceneObjectSignal evt) => RemoveHierarchyItem(evt.GameObject.Id);
+    private void OnObjectRemoved(RemoveSceneObjectSignal evt)
+    {
+        if (evt.GameObject.Type == ObjectType.LinearMoveCommand)
+        {
+            _eventBus.Invoke(new UpdateLineDrawer());
+        }
+        RemoveHierarchyItem(evt.GameObject.Id);
+    }
     private void OnObjectSelectedInLibrary(SelectObjectinLibrary evt) => AddObject(evt.Prefab);
     private void OnObjectNameChanged(ChangeObjectNameSignal evt)
     {
@@ -293,6 +304,9 @@ public class HierarchyPanelEvents : MonoBehaviour
             case ObjectType.Robot:
                 texture = Resources.Load<Texture2D>("Icons/icon_robot");
                 break;
+            case ObjectType.Node:
+                texture = Resources.Load<Texture2D>("Icons/icon_node");
+                break;
             default:
                 break;
         }
@@ -325,6 +339,12 @@ public class HierarchyPanelEvents : MonoBehaviour
                         expandedFoldouts[programFoldout.userData.ToString()] = isExpanded;
                     }
                 };
+                break;
+            case ObjectType.Node:
+                element = new CustomFoldout { Text = item.Reference.name };
+                ((CustomFoldout)element).SetHeaderImage(texture);
+                element.name = "hierarchy-item-node";
+                element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
                 break;
             case ObjectType.LinearMoveCommand or ObjectType.StateEndEffectorCommand or ObjectType.WaitCommand:
                 element = CreateHierarchyElement("hierarchy-item-command", item.Reference.name, item.Id, texture);
@@ -567,7 +587,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         {
             evt.StopPropagation();
 
-            if (element.name == "")
+            if (element.name == "" || element.name == "foldout-header")
             {
                 element = GetParentElement(element);
             }
@@ -735,7 +755,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
         }
 
-        if (clickedElement.name == "")
+        if (clickedElement.name == "" || clickedElement.name == "foldout-header")
         {
             var foldout = GetParentElement(clickedElement);
             if (foldout != null)
@@ -1051,8 +1071,13 @@ public class HierarchyPanelEvents : MonoBehaviour
         dragPreviewElement.style.width = elementWidth;
         dragPreviewElement.style.height = elementHeight;
         dragPreviewElement.Clear();
+        string text = "";
+        if (element.name == "hierarchy-item-command" || element.name == "hierarchy-item")
+        {
+            text = element.Q<Label>("label-hierarchy").text;
+        }
 
-        string text = element is CustomFoldout foldout ? foldout.Text :
+        text = element is CustomFoldout foldout ? foldout.Text :
                       (element is Label label ? label.text : element.name);
 
         var content = new Label(text);
@@ -1126,7 +1151,6 @@ public class HierarchyPanelEvents : MonoBehaviour
 
             if (element is CustomFoldout foldout && foldout.Header != null)
             {
-                // ⚠️ БЕРЁМ ТОЛЬКО HEADER
                 var headerBounds = foldout.Header.worldBound;
 
                 elementLocalBounds = new Rect(
@@ -1223,10 +1247,10 @@ public class HierarchyPanelEvents : MonoBehaviour
         return null;
     }
 
+
     private bool IsRootOnlyType(SceneObject obj)
     {
-        return obj.Type == ObjectType.Primitive
-            || obj.Type == ObjectType.Robot;
+        return obj.Type == ObjectType.Robot;
     }
 
     private bool IsProgramOrCommand(SceneObject obj)
@@ -1307,12 +1331,35 @@ public class HierarchyPanelEvents : MonoBehaviour
                 Distance = Mathf.Abs(localPos.y - (bounds.y + bounds.height))
             };
         }
+        // INSIDE
         else
         {
+            if (target.Type == ObjectType.Node &&
+                dragged.Type == ObjectType.Primitive)
+            {
+                return new DropTargetInfo
+                {
+                    TargetElement = element,
+                    Position = DropPosition.Inside,
+                    Distance = 0
+                };
+            }
+
             if (!(element is CustomFoldout)) return null;
 
+            if (target.Type == ObjectType.Node &&
+                dragged.Type == ObjectType.Node)
+            {
+                return new DropTargetInfo
+                {
+                    TargetElement = element,
+                    Position = DropPosition.Inside,
+                    Distance = 0
+                };
+            }
+
             // Команды/программы могут быть внутри робота
-            if (target.Type == ObjectType.Robot &&
+            else if (target.Type == ObjectType.Robot &&
                 (IsProgramOrCommand(dragged)))
             {
                 return new DropTargetInfo
@@ -1323,9 +1370,9 @@ public class HierarchyPanelEvents : MonoBehaviour
                 };
             }
 
-            if (target.Type == ObjectType.Program &&
-                (dragged.Type == ObjectType.LinearMoveCommand 
-                || dragged.Type == ObjectType.StateEndEffectorCommand 
+            else if (target.Type == ObjectType.Program &&
+                (dragged.Type == ObjectType.LinearMoveCommand
+                || dragged.Type == ObjectType.StateEndEffectorCommand
                 || dragged.Type == ObjectType.WaitCommand))
             {
                 return new DropTargetInfo
@@ -1362,8 +1409,42 @@ public class HierarchyPanelEvents : MonoBehaviour
         // ===== PRIMITIVE =====
         if (dragged.Type == ObjectType.Primitive)
         {
-            // примитивы только в корне
-            return string.IsNullOrEmpty(target.ParentId);
+            // Находим родительскую ноду для dragged
+            SceneObject draggedParent = null;
+            if (!string.IsNullOrEmpty(dragged.ParentId))
+            {
+                draggedParent = _sceneObjectManager.GetById(dragged.ParentId);
+            }
+
+            // Находим родительскую ноду для target
+            SceneObject targetParent = null;
+            if (!string.IsNullOrEmpty(target.ParentId))
+            {
+                targetParent = _sceneObjectManager.GetById(target.ParentId);
+            }
+
+            // Если оба примитива в одной ноде, можно перемещать над/под
+            if (draggedParent != null && targetParent != null &&
+                draggedParent.Type == ObjectType.Node &&
+                targetParent.Type == ObjectType.Node)
+            {
+                return draggedParent.Id == targetParent.Id;
+            }
+
+            // Если оба примитива в корне (нет ParentId), можно перемещать над/под
+            if (string.IsNullOrEmpty(dragged.ParentId) && string.IsNullOrEmpty(target.ParentId))
+            {
+                return true;
+            }
+
+            // Если один примитив в ноде, а другой в корне - нельзя дропать
+            return false;
+        }
+
+        // ===== NODE =====
+        if (dragged.Type == ObjectType.Node)
+        {
+            return string.IsNullOrEmpty(target.ParentId) || target.Type == ObjectType.Node;
         }
 
         // ===== PROGRAM / COMMAND =====
@@ -1479,6 +1560,19 @@ public class HierarchyPanelEvents : MonoBehaviour
                 insertAtIndex = rootObjects.Count;
             }
         }
+        else if (dragged.Type == ObjectType.Primitive && currentDropTarget.Position == DropPosition.Inside)
+        {
+            if (target.Type == ObjectType.Node)
+            {
+                newParentId = target.Id;
+                insertAtIndex = GetDirectChildren(target.Id).Count;
+            }
+            else
+            {
+                CleanupDrag();
+                return;
+            }
+        }
         else
         {
             // Обработка для других типов объектов
@@ -1507,6 +1601,17 @@ public class HierarchyPanelEvents : MonoBehaviour
             CleanupDrag();
             return;
         }
+
+        if (dragged.Type == ObjectType.Primitive && !string.IsNullOrEmpty(newParentId))
+        {
+            var newParent = _sceneObjectManager.GetById(newParentId);
+            if (newParent == null || newParent.Type != ObjectType.Node)
+            {
+                CleanupDrag();
+                return;
+            }
+        }
+
 
         // Command нельзя в другой робот
         if (IsProgramOrCommand(dragged))
@@ -1621,7 +1726,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             {
                 return element;
             }
-                
+
             else if (element.name == "hierarchy-item-command" || element.name == "hierarchy-item")
             {
                 return element;
@@ -1661,6 +1766,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
         // Создаем текстовый элемент
         var label = new Label(text);
+        label.name = "label-hierarchy";
         label.style.color = new StyleColor(new Color(255, 255, 255));
         label.style.fontSize = 12;
 
