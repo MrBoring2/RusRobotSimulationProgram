@@ -23,8 +23,8 @@ public class RobotProgrammSimulation : MonoBehaviour
     public List<RobotProgrammElement> Programm => _propertyProvider.Programm.ToList();
     
     //---//
-    private int currentCommandIndex = 0;//текущая выполняемая в программе, именно на вехрнем уровне не в подпрограммах
-    public bool allowNextCommand = true;//разреш. на след. команду
+    private int currentCommandIndex = 0;//ГІГҐГЄГіГ№Г Гї ГўГ»ГЇГ®Г«Г­ГїГҐГ¬Г Гї Гў ГЇГ°Г®ГЈГ°Г Г¬Г¬ГҐ, ГЁГ¬ГҐГ­Г­Г® Г­Г  ГўГҐГµГ°Г­ГҐГ¬ ГіГ°Г®ГўГ­ГҐ Г­ГҐ Гў ГЇГ®Г¤ГЇГ°Г®ГЈГ°Г Г¬Г¬Г Гµ
+    public bool allowNextCommand = true;//Г°Г Г§Г°ГҐГё. Г­Г  Г±Г«ГҐГ¤. ГЄГ®Г¬Г Г­Г¤Гі
 
 
     private void Start()
@@ -32,23 +32,23 @@ public class RobotProgrammSimulation : MonoBehaviour
         _simManager = ServiceManager.Current.Get<SimulationManager>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
         RC = gameObject.GetComponent<RobotController>();
-        //Сигналы симуляции//
+        //Г‘ГЁГЈГ­Г Г«Г» Г±ГЁГ¬ГіГ«ГїГ¶ГЁГЁ//
         _eventBus.Subscribe<StartProgramm>(StartSim);
         _eventBus.Subscribe<PauseProgramm>(PauseSim);
         _eventBus.Subscribe<StopProgramm>(StopSim);
         _eventBus.Subscribe<RobotEndMove>(EndCurrentMove);
         //--//
-        _eventBus.Subscribe<PickCommandSignal>(MoveToPoint);
+        _eventBus.Subscribe<PickCommandSignal>(TeleportToPoint);
 
     }
-    private void MoveToPoint(PickCommandSignal s)
+    private void TeleportToPoint(PickCommandSignal s)
     {
-        if(_simManager.GetStatusSim() == SIM_STAT.STOP)
+        if(_simManager.GetStatusSim() == SIM_STAT.STOP && s.Point.ParentId == _propertyProvider.Id)
         {
             if(s.Point.Type == ObjectType.LinearMoveCommand)
             {
                 RC.TeleportToPoint((LinearPointPropertyProvider)s.Point.PropertyProvider);
-                _propertyProvider.SyncJOGPosition();
+                
             }
         }
     }
@@ -66,7 +66,7 @@ public class RobotProgrammSimulation : MonoBehaviour
         StartCoroutine(ExecuteProgramm());
     }
 
-    // Корутина для последовательного выполнения программы
+    // ГЉГ®Г°ГіГІГЁГ­Г  Г¤Г«Гї ГЇГ®Г±Г«ГҐГ¤Г®ГўГ ГІГҐГ«ГјГ­Г®ГЈГ® ГўГ»ГЇГ®Г«Г­ГҐГ­ГЁГї ГЇГ°Г®ГЈГ°Г Г¬Г¬Г»
     private IEnumerator ExecuteProgramm()
     {
         currentCommandIndex = 0;
@@ -182,7 +182,8 @@ public class RobotProgrammSimulation : MonoBehaviour
         _eventBus?.Unsubcribe<PauseProgramm>(PauseSim);
         _eventBus?.Unsubcribe<StopProgramm>(StopSim);
         _eventBus?.Unsubcribe<RobotEndMove>(EndCurrentMove);
-        _eventBus?.Unsubcribe<PickCommandSignal>(MoveToPoint);
+
+        _eventBus?.Unsubcribe<PickCommandSignal>(TeleportToPoint);
     }
 }
 
