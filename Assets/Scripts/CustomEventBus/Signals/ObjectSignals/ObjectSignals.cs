@@ -31,6 +31,8 @@ namespace Assets.Scripts.CustomEventBus.Signals.ObjectSignals
     public class ChangeObjectTransfromSignal
     {
     }
+
+    public class ClearSceneSignal { }
     public class SelectObjectInScene
     {
         public readonly string Id;
@@ -41,10 +43,12 @@ namespace Assets.Scripts.CustomEventBus.Signals.ObjectSignals
     }
     public class SelectObjectinLibrary
     {
+        public readonly string ParentId;
         public readonly GameObject Prefab;
-        public SelectObjectinLibrary(GameObject prefab)
+        public SelectObjectinLibrary(GameObject prefab, string parentId)
         {
             Prefab = prefab;
+            ParentId = parentId;
         }
     }
     public class LoadObjectsSignal

@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Models;
@@ -38,7 +39,15 @@ namespace Assets.Scripts.Managers
         public void Init()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
+            _eventBus.Subscribe<ClearSceneSignal>(OnClearScene);
         }
+
+        private void OnClearScene(ClearSceneSignal s)
+        {
+            undoStack.Clear();
+            redoStack.Clear();
+        }
+
         //public event Action<ICommand> OnCommandExecuted;
         //public event Action<ICommand> OnCommandUndone;
         private readonly Stack<ICommand> undoStack = new();

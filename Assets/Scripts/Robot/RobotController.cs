@@ -96,6 +96,7 @@ public class RobotController : MonoBehaviour
     }
     public void GetPositionInfo(LinearPointPropertyProvider p)
     {
+        var a = gameObject;
         point = _propertyProvider.transform.InverseTransformPoint(p.Position);////!!!
         _propertyProvider.XYZ.y = point.x * 1000;
         _propertyProvider.XYZ.z = point.y * 1000;

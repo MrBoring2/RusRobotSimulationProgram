@@ -117,7 +117,9 @@ public partial class CustomFoldout : VisualElement
     }
     public void AddChild(VisualElement element)
     {
+       
         content.Add(element);
+
         //IsExpanded = true;
         UpdateVisualState();
     }

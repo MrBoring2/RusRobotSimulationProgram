@@ -2,9 +2,11 @@
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomEventBus.Signals.ObjectsLibrary;
 using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Models;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
 public class ObjectsLibraryEvents : MonoBehaviour
@@ -24,9 +26,11 @@ public class ObjectsLibraryEvents : MonoBehaviour
     private bool isDragging = false;
     private Vector2 dragOffset;
     private EventBus _eventBus;
+    private string currentParentObjectId = null;
 
     void Start()
     {
+        categories.Add("General", "Общее");
         categories.Add("Primitive", "Примитивы");
         categories.Add("Robot", "Манипуляторы");
         _eventBus = ServiceManager.Current.Get<EventBus>();
@@ -52,6 +56,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
 
     private void OnShowLibrary(ShowObjectsLibrarySignal signal)
     {
+        currentParentObjectId = signal.ParentId;
         Show();
     }
 
@@ -125,14 +130,25 @@ public class ObjectsLibraryEvents : MonoBehaviour
                 var previewImage = prefabItem.Q<Image>("preview");
                 //previewImage.scaleMode = ScaleMode.StretchToFill;
                 var titleLabel = prefabItem.Q<Label>("title");
-
-                previewImage.image = GeneratePreview(prefab);
-                previewImage.scaleMode = ScaleMode.ScaleAndCrop;
+                if (prefab.GetComponent<SceneObjectMarker>()?.type == ObjectType.Node)
+                {
+                    previewImage.image = Resources.Load<Texture2D>("Icons/icon_node");
+                    previewImage.scaleMode = ScaleMode.ScaleToFit;
+                    previewImage.style.width = new Length(150, LengthUnit.Pixel);
+                    previewImage.style.height = new Length(80, LengthUnit.Pixel);
+                }
+                else
+                {
+                    previewImage.image = GeneratePreview(prefab);
+                    previewImage.style.width = new Length(150, LengthUnit.Pixel);
+                    previewImage.style.height = new Length(80, LengthUnit.Pixel);
+                    previewImage.scaleMode = ScaleMode.ScaleAndCrop;
+                }
+               
 
                 // Если нужно растянуть на всю площадь
                 //previewImage.style.flexGrow = 1;
-                previewImage.style.width = new Length(150, LengthUnit.Pixel);
-                previewImage.style.height = new Length(80, LengthUnit.Pixel);
+             
 
                 titleLabel.text = prefab.name;
 
@@ -140,7 +156,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
                 {
                     if (evt.clickCount == 2)
                     {
-                        _eventBus.Invoke(new SelectObjectinLibrary(prefab));
+                        _eventBus.Invoke(new SelectObjectinLibrary(prefab, currentParentObjectId));
                         //OnObjectSelected?.Invoke(prefab);
                         windowRoot.style.display = DisplayStyle.None;
                     }
@@ -164,7 +180,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
         {
             antiAliasing = 8,
             hideFlags = HideFlags.DontSave
-        };
+        }; 
 
         cam.targetTexture = rt;
 
