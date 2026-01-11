@@ -13,6 +13,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
+using static UnityEngine.EventSystems.EventTrigger;
 public class RobotElement
 {
     public string Id;
@@ -24,15 +25,7 @@ public class RobotPropertyProvider : BasePropertyProvider
 {
     private EventBus _eventBus;
     private SceneObjectsManager _sceneObjectManager;
-    public IEnumerable<RobotProgrammElement> Programm 
-    {
-        get
-        {
-            var a = BuildTreeInternal(Id);
-            return a;
-        }
-        
-     }
+    
     public float RotSpeedPercent { get; set; } = 100f;
 
     //Óãëû ïðèìåíÿåìûå êàæäûé FixedUpdate
@@ -92,44 +85,125 @@ public class RobotPropertyProvider : BasePropertyProvider
         Id = id;
     }
 
-    public IEnumerable<RobotProgrammElement> GetRootElements()
+    //public List<RobotProgrammElement> Programm
+    //{
+    //    get
+    //    {
+    //        var a = BuildTreeInternal(Id);
+    //        return a;
+    //    }
+
+    //}
+
+    //private List<RobotProgrammElement> BuildTreeInternal(string parentId)
+    //{
+    //    List<RobotProgrammElement> Programm = new();
+    //    var itemsDict = _sceneObjectManager.Items;
+    //    if (itemsDict == null) return null;
+
+    //    // Ñíà÷àëà ñîáèðàåì âñåõ äåòåé â ïðàâèëüíîì ïîðÿäêå
+    //    List<SceneObject> childrenInOrder = new();
+
+    //    foreach (DictionaryEntry entry in itemsDict)
+    //    {
+    //        var sceneObj = entry.Value as SceneObject;
+    //        if (sceneObj != null &&
+    //            sceneObj.Reference.activeSelf == true &&
+    //            sceneObj.ParentId == parentId &&
+    //            (sceneObj.Type == ObjectType.LinearMoveCommand ||
+    //             sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+    //             sceneObj.Type == ObjectType.WaitCommand ||
+    //             sceneObj.Type == ObjectType.Program))
+    //        {
+    //            childrenInOrder.Add(sceneObj);
+    //        }
+    //    }
+
+    //    // Òåïåðü îáðàáàòûâàåì â ïðàâèëüíîì ïîðÿäêå
+    //    foreach (var child in childrenInOrder)
+    //    {
+    //        ConvertToRobotProgrammElement(child, Programm);
+    //    }
+    //    return Programm;
+    //}
+    //private void ConvertToRobotProgrammElement(SceneObject obj, List<RobotProgrammElement> Programm)
+    //{
+    //    if (obj.Type == ObjectType.LinearMoveCommand)
+    //    {
+    //        var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
+    //        Programm.Add(command);
+    //    }
+    //    else if(obj.Type == ObjectType.StateEndEffectorCommand)
+    //    {
+    //        var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
+    //        Programm.Add(command);
+    //    }
+    //    else if (obj.Type == ObjectType.WaitCommand)
+    //    {
+
+    //        var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+    //        Programm.Add(command);
+    //    }
+    //    else if (obj.Type == ObjectType.Program)
+    //    {
+    //        // Ïîëó÷àåì äî÷åðíèå ýëåìåíòû â ïðàâèëüíîì ïîðÿäêå
+    //        List<RobotProgrammElement> subItems = new();
+
+    //        //var itemsDict = _sceneObjectManager.Items;
+    //        if (_sceneObjectManager.Items != null)
+    //        {
+    //            foreach (DictionaryEntry entry in _sceneObjectManager.Items)
+    //            {
+    //                var sceneObj = entry.Value as SceneObject;
+    //                if (sceneObj != null &&
+    //                    sceneObj.ParentId == obj.Id &&
+    //                    (sceneObj.Type == ObjectType.LinearMoveCommand ||
+    //                     sceneObj.Type == ObjectType.StateEndEffectorCommand ||
+    //                     sceneObj.Type == ObjectType.WaitCommand))
+    //                {
+    //                    if (sceneObj.Type == ObjectType.LinearMoveCommand)
+    //                    {
+    //                        var command = new CommandMove(sceneObj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
+    //                        subItems.Add(command);
+    //                    }
+    //                    else if (sceneObj.Type == ObjectType.StateEndEffectorCommand)
+    //                    {
+    //                        var command = new ComandSetStateEndEffector(sceneObj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
+    //                        subItems.Add(command);
+    //                    }
+    //                    else if (sceneObj.Type == ObjectType.WaitCommand)
+    //                    {
+
+    //                        var command = new CommandWait(sceneObj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+    //                        subItems.Add(command);
+    //                    }
+
+
+    //                }
+    //            }
+    //        }
+
+    //        var subProgram = new SubProgramm(subItems, ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
+    //        Programm.Add(subProgram);
+    //    }
+    //}
+    public List<RobotProgrammElement> Programm
     {
-        var itemsDict = _sceneObjectManager.Items;
-        if (itemsDict == null) return Enumerable.Empty<RobotProgrammElement>();
-
-        var result = new List<RobotProgrammElement>();
-
-        // Ïåðåáèðàåì â ïîðÿäêå äîáàâëåíèÿ
-        foreach (DictionaryEntry entry in itemsDict)
+        get
         {
-            var sceneObj = entry.Value as SceneObject;
-            if (sceneObj != null &&
-                sceneObj.ParentId == Id &&
-                (sceneObj.Type == ObjectType.LinearMoveCommand ||
-                 sceneObj.Type == ObjectType.StateEndEffectorCommand ||
-                 sceneObj.Type == ObjectType.WaitCommand ||
-                 sceneObj.Type == ObjectType.Program))
-            {
-                result.Add(ConvertToRobotProgrammElement(sceneObj));
-            }
+            var a = BuildTreeInternal(Id);
+            return a;
         }
-
-        return result;
     }
 
-
-    public IEnumerable<RobotProgrammElement> BuildTree()
+    private List<RobotProgrammElement> BuildTreeInternal(string parentId)
     {
-        return BuildTreeInternal(Id);
-    }
-
-    private IEnumerable<RobotProgrammElement> BuildTreeInternal(string parentId)
-    {
+        List<RobotProgrammElement> programm = new();
         var itemsDict = _sceneObjectManager.Items;
-        if (itemsDict == null) yield break;
+        if (itemsDict == null) return null;
 
-        // Ñíà÷àëà ñîáèðàåì âñåõ äåòåé â ïðàâèëüíîì ïîðÿäêå
-        var childrenInOrder = new List<SceneObject>();
+        // Сначала собираем всех детей в правильном порядке
+        List<SceneObject> childrenInOrder = new();
 
         foreach (DictionaryEntry entry in itemsDict)
         {
@@ -146,140 +220,41 @@ public class RobotPropertyProvider : BasePropertyProvider
             }
         }
 
-        // Òåïåðü îáðàáàòûâàåì â ïðàâèëüíîì ïîðÿäêå
+        // Теперь обрабатываем в правильном порядке
         foreach (var child in childrenInOrder)
         {
-            var node = ConvertToRobotProgrammElement(child);
-            yield return node;
-
-            if (node is SubProgramm subProgramm)
-            {
-                // Ðåêóðñèâíî ïîëó÷àåì ýëåìåíòû ïîäïðîãðàììû
-                var subChildren = BuildTreeInternal(child.Id).ToList();
-                foreach (var subChild in subChildren)
-                {
-                    yield return subChild;
-                }
-            }
+            ConvertToRobotProgrammElement(child, programm);
         }
+        return programm;
     }
-    private RobotProgrammElement ConvertToRobotProgrammElement(SceneObject obj)
+
+    private void ConvertToRobotProgrammElement(SceneObject obj, List<RobotProgrammElement> programm)
     {
         if (obj.Type == ObjectType.LinearMoveCommand)
         {
             var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
-            return command;
+            programm.Add(command);
         }
-        else if(obj.Type == ObjectType.StateEndEffectorCommand)
+        else if (obj.Type == ObjectType.StateEndEffectorCommand)
         {
             var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
-            return command;
+            programm.Add(command);
         }
         else if (obj.Type == ObjectType.WaitCommand)
         {
-
             var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
-            return command;
+            programm.Add(command);
         }
         else if (obj.Type == ObjectType.Program)
         {
-            // Ïîëó÷àåì äî÷åðíèå ýëåìåíòû â ïðàâèëüíîì ïîðÿäêå
-            var subItems = new List<RobotProgrammElement>();
+            // Рекурсивно получаем дочерние элементы для подпрограммы
+            List<RobotProgrammElement> subItems = BuildTreeInternal(obj.Id);
 
-            var itemsDict = _sceneObjectManager.Items;
-            if (itemsDict != null)
-            {
-                foreach (DictionaryEntry entry in itemsDict)
-                {
-                    var sceneObj = entry.Value as SceneObject;
-                    if (sceneObj != null &&
-                        sceneObj.ParentId == obj.Id &&
-                        (sceneObj.Type == ObjectType.LinearMoveCommand ||
-                         sceneObj.Type == ObjectType.StateEndEffectorCommand ||
-                         sceneObj.Type == ObjectType.WaitCommand))
-                    {
-                        subItems.Add(ConvertToRobotProgrammElement(sceneObj));
-                    }
-                }
-            }
-
-            var subProgram = new SubProgramm(subItems, ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
-            return subProgram;
+            var subProgram = new SubProgramm(subItems ?? new List<RobotProgrammElement>(), ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
+            programm.Add(subProgram);
         }
-        return null;
     }
 
-    /// <summary>
-    /// Êëàññ äëÿ ìíîãîóðîâíåâîé ñòðóêòóðû
-    /// </summary>
-
-
-    //public void AddProgram(SubProgramm prog)
-    //{
-    //    robotProgramms.Add(prog);
-    //    _eventBus.Invoke(new AddProgram());
-    //}
-    //public void AddProgram(string parentId, SubProgramm progChild)
-    //{
-    //    var realParent = FindProgramRecursive(parentId);
-    //    if (realParent == null)
-    //    {
-    //        Debug.LogError("Parent program not found");
-    //        return;
-    //    }
-
-    //    realParent.AddSubProgramm(progChild);
-    //    _eventBus.Invoke(new AddProgram());
-    //}
-    //public void AddCommand(string progId, RobotCommand comm)
-    //{
-    //    var parent = FindProgramRecursive(progId);
-    //    if (parent == null)
-    //    {
-    //        Debug.LogWarning($"Program {progId} not found");
-    //        return;
-    //    }
-
-    //    parent.ADDcomand(comm);
-    //    _eventBus.Invoke(new AddCommand());
-    //}
-
-    //public SubProgramm FindProgramRecursive(string id)
-    //{
-    //    foreach (var elem in robotProgramms)
-    //    {
-    //        if (elem is SubProgramm prog)
-    //        {
-    //            var found = FindInProgram(prog, id);
-    //            if (found != null)
-    //                return found;
-    //        }
-    //    }
-    //    return null;
-    //}
-
-    //private SubProgramm FindInProgram(SubProgramm prog, string id)
-    //{
-    //    if (prog.ID == id)
-    //        return prog;
-
-    //    foreach (var child in prog.Get())
-    //    {
-    //        if (child is SubProgramm childProg)
-    //        {
-    //            var found = FindInProgram(childProg, id);
-    //            if (found != null)
-    //                return found;
-    //        }
-    //    }
-    //    return null;
-    //}
-
-    //public void AddCommand(RobotCommand comm)
-    //{
-    //    robotProgramms.Add(comm);
-    //    _eventBus.Invoke(new AddCommand());
-    //}
     public override ProviderSaveData CaptureCustomState()
     {
         return new ProviderSaveData
