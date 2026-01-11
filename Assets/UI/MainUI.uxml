@@ -5,7 +5,6 @@
     <ui:Template name="PerspectivePanel" src="project://database/Assets/UI/PerspectivePanel.uxml?fileID=9197481963319205126&amp;guid=3dcf6a741e03ff74d91be22a653b8269&amp;type=3#PerspectivePanel" />
     <ui:Template name="PropertiesPanel" src="project://database/Assets/UI/PropertiesPanel.uxml?fileID=9197481963319205126&amp;guid=416893be10dc99b4299a0c31b187dffe&amp;type=3#PropertiesPanel" />
     <ui:Template name="TopMenuOverlayPanel" src="project://database/Assets/UI/TopMenuOverlayPanel.uxml?fileID=9197481963319205126&amp;guid=2a86a53230e8b334db20c410ac21d798&amp;type=3#TopMenuOverlayPanel" />
-    <ui:Template name="Tablet" src="project://database/Assets/UI/Tablet.uxml?fileID=9197481963319205126&amp;guid=5f393c6a935de3c4eb61a806f33cd7c2&amp;type=3#Tablet" />
     <Style src="project://database/Assets/UI/MainStyles.uss?fileID=7433441132597879392&amp;guid=3d6f6d684f82a994f9e3898f6acfb01b&amp;type=3#MainStyles" />
     <ui:VisualElement name="main-container" class="main-container" style="align-items: stretch; justify-content: flex-start; align-self: auto; align-content: auto; flex-direction: column;">
         <ui:VisualElement name="menu-bar-container" class="menu-bar-container" style="height: 3%;">
@@ -23,7 +22,6 @@
             <ui:VisualElement name="hierarchy-resizer" class="resizer-vertical" />
             <ui:VisualElement name="content-container" style="flex-grow: 1; align-items: flex-start; align-self: auto; align-content: auto; justify-content: flex-start; position: relative; flex-wrap: nowrap; flex-direction: column-reverse; margin-left: 10px; margin-bottom: 10px;">
                 <ui:Instance template="PerspectivePanel" />
-                <ui:Instance template="Tablet" />
             </ui:VisualElement>
             <ui:VisualElement name="viewport-container" picking-mode="Ignore" enabled="true" focusable="false" class="center-panel" style="-unity-slice-type: sliced; -unity-background-scale-mode: stretch-to-fill; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
             <ui:VisualElement name="properties-container" class="right-panel" style="width: auto; max-width: 17%; min-width: 17%;">
