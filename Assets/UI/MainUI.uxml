@@ -8,11 +8,6 @@
     <Style src="project://database/Assets/UI/MainStyles.uss?fileID=7433441132597879392&amp;guid=3d6f6d684f82a994f9e3898f6acfb01b&amp;type=3#MainStyles" />
     <Style src="project://database/Assets/Resources/Styles/Default.uss?fileID=7433441132597879392&amp;guid=be02736ea5541bd428ad7e897bd93a90&amp;type=3#Default" />
     <Style src="project://database/Assets/Resources/Styles/SliderStyleSheet.uss?fileID=7433441132597879392&amp;guid=8a041d41b2a65dd46a5a88b635d2e72a&amp;type=3#SliderStyleSheet" />
-    <Style src="project://database/Assets/Resources/Styles/PopupTextFieldStyleSheet.uss?fileID=7433441132597879392&amp;guid=25fd1b1769e287b4aba6ea1a67350139&amp;type=3#PopupTextFieldStyleSheet" />
-    <Style src="project://database/Assets/Resources/Styles/PopupStyleSheet.uss?fileID=7433441132597879392&amp;guid=e909fb77a125b304ea73b98227cc401e&amp;type=3#PopupStyleSheet" />
-    <Style src="project://database/Assets/Resources/Styles/PopupMessageStyleSheet.uss?fileID=7433441132597879392&amp;guid=fb9187e92a120ff419304ee545ade540&amp;type=3#PopupMessageStyleSheet" />
-    <Style src="project://database/Assets/Resources/Styles/PanelsStyleSheet.uss?fileID=7433441132597879392&amp;guid=e874fb4bfe7821944b9c90cf31b7d5ca&amp;type=3#PanelsStyleSheet" />
-    <Style src="project://database/Assets/Resources/Styles/ListViewStyleSheet.uss?fileID=7433441132597879392&amp;guid=1e410708e0cf04d4fbe646c441e86199&amp;type=3#ListViewStyleSheet" />
     <ui:VisualElement name="main-container" class="main-container" style="align-items: stretch; justify-content: flex-start; align-self: auto; align-content: auto; flex-direction: column;">
         <ui:VisualElement name="menu-bar-container" class="menu-bar-container" style="height: 3%;">
             <ui:Instance template="TopMenuPanel" />

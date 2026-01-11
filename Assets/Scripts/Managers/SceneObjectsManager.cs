@@ -27,12 +27,12 @@ namespace Assets.Scripts.Managers
 
         public OrderedDictionary Items { get; private set; } = new OrderedDictionary();
 
-        public SceneObject Create(GameObject prefab, Vector3 position, ObjectType type, string id = null, string parentId = null)
+        public SceneObject Create(GameObject prefab, Vector3 position, Quaternion rotation, ObjectType type, string id = null, string parentId = null)
         {
             SceneObject sceneObj = null;
             if (prefab != null)
             {
-                var obj = Instantiate(prefab, position, Quaternion.identity);
+                var obj = Instantiate(prefab, position, rotation);
                 obj.name = prefab.name;
                 var objectMaker = obj.GetComponent<SceneObjectMarker>();
                 if (objectMaker != null)
@@ -58,49 +58,6 @@ namespace Assets.Scripts.Managers
             }
             return sceneObj;
         }
-
-        //public SceneObject CreateProgram(GameObject prefab, Vector3 position, string robotId, string parentProgramId = null)
-        //{
-        //    // Создаём объект
-        //    var obj = Instantiate(prefab, position, Quaternion.identity);
-        //    obj.name = prefab.name;
-
-        //    var marker = obj.GetComponent<SceneObjectMarker>();
-        //    if (marker == null) return null;
-
-        //    var id = Guid.NewGuid().ToString();
-        //    string parentId = null;
-        //    if (parentProgramId != null)
-        //        parentId = parentProgramId;
-        //    else
-        //        parentId = robotId;
-        //    var sceneObj = new SceneObject(id, marker.type, obj, id);
-        //    Items[id] = sceneObj;
-
-        //    // Если есть родитель (подпрограмма), сохраняем связь в сцене
-
-
-        //    _eventBus.Invoke(new AddSceneObjectSignal(sceneObj));
-        //    return sceneObj;
-        //}
-
-        //public SceneObject CreateCommand(GameObject prefab, Vector3 position, string robotId, string parentProgramId = null)
-        //{
-        //    var obj = Instantiate(prefab, position, Quaternion.identity);
-        //    obj.name = prefab.name;
-
-        //    var marker = obj.GetComponent<SceneObjectMarker>();
-        //    if (marker == null) return null;
-
-        //    var id = Guid.NewGuid().ToString();
-        //    var sceneObj = new SceneObject(id, marker.type, obj);
-        //    Items[id] = sceneObj;
-
-        //    sceneObj.ParentId = parentProgramId ?? robotId;
-
-        //    _eventBus.Invoke(new AddSceneObjectSignal(sceneObj));
-        //    return sceneObj;
-        //}
 
         public void Remove(string id)
         {
@@ -152,18 +109,29 @@ namespace Assets.Scripts.Managers
             {
                 return Items.Values.Cast<SceneObject>().ToList();
             }
-            
+
         }
 
-        
 
-        public void ClearScene()
+
+        public void ClearScene(bool spawnFloor = true)
         {
             foreach (var gameObject in GetGameObjectsList(false))
             {
                 Remove(gameObject.Id);
             }
+            if (spawnFloor)
+            {
+                var prefab = Resources.Load<GameObject>("Prefabs/Primitive/Куб");
+                var type = prefab.GetComponent<SceneObjectMarker>().type;
+                var pos = Vector3.zero;
+                var rot = Quaternion.identity;
+                var obj = Create(prefab, pos, rot, type);
+                obj.Reference.name = "Поверхность";
+                obj.Reference.transform.localScale = new Vector3(25, 0.2f, 25);
+            }
             _eventBus.Invoke(new ClearSceneSignal());
+            _eventBus.Invoke(new LoadObjectsSignal(Items.Values.Cast<SceneObject>().ToList()));
         }
 
         public void SpawnRestoredObjects(List<ObjectInfo> data)
@@ -171,17 +139,9 @@ namespace Assets.Scripts.Managers
             foreach (var item in data)
             {
                 var prefab = Resources.Load<GameObject>(item.SourcePath);
-                var instance = Create(prefab, Vector3.zero, item.ObjectType, item.Id, item.ParentId);
+                var instance = Create(prefab, Vector3.zero, Quaternion.identity, item.ObjectType, item.Id, item.ParentId);
                 var provider = instance.Reference.GetComponent<IPropertyProvider>();// GetProvider(instance.Reference, item.ProviderData.ProviderType);
-                if (provider is WaitPropertyProvider a)
-                {
-
-                }
                 provider?.RestoreCustomState(item.ProviderData);
-                if (provider is WaitPropertyProvider b)
-                {
-
-                }
                 instance.Reference.name = item.Name;
                 instance.Reference.tag = "SceneObject";
                 instance.Reference.transform.position = item.Position.ToVector3();
@@ -210,6 +170,7 @@ namespace Assets.Scripts.Managers
         //}
         private void InitExistedObjects()
         {
+
             foreach (var obj in GetGameObjectsList2())
             {
                 var objectMaker = obj.GetComponent<SceneObjectMarker>();
@@ -225,6 +186,14 @@ namespace Assets.Scripts.Managers
                     }
                 }
             }
+            var prefab = Resources.Load<GameObject>("Prefabs/Primitive/Куб");
+            var type = prefab.GetComponent<SceneObjectMarker>().type;
+            var pos = Vector3.zero;
+            var rot = Quaternion.identity;
+            var objd = Create(prefab, pos, rot, type);
+            objd.Reference.name = "Поверхность";
+            objd.Reference.transform.localScale = new Vector3(25, 0.2f, 25);
+
             _eventBus.Invoke(new LoadObjectsSignal(Items.Values.Cast<SceneObject>().ToList()));
         }
         public bool ChangeObjectOrder(string objectId, string newParentId, int? insertIndex)

@@ -6,10 +6,12 @@ using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomEventBus.Signals.ObjectsLibrary;
 using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
 using Assets.Scripts.CustomEventBus.Signals.Robot;
+using Assets.Scripts.CustomEventBus.Signals.RobotPanel;
 using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
+using Assets.Scripts.Providers;
 using Assets.UI.CustomElements;
 using System;
 using System.Collections.Generic;
@@ -39,6 +41,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     private Dictionary<string, bool> expandedFoldouts = new Dictionary<string, bool>();
     private UndoRedoManager _undoRedoManager;
     private UIStatusManager _uIStatusManager;
+    private SimulationManager _simulationManager;
 
     private DragDropData currentDragData;
     private VisualElement dragPreviewElement;
@@ -69,6 +72,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         _lineManager = ServiceManager.Current.Get<LineManager>();
         _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
         _uIStatusManager = ServiceManager.Current.Get<UIStatusManager>();
+        _simulationManager = ServiceManager.Current.Get<SimulationManager>();
         root = GetComponent<UIDocument>().rootVisualElement;
         hierarchyPanel = root.Q("hierarchy-container");
         //propertiesPanelEvents.OnTargetNameChanged += PropertiesPanelEvents_OnTargetNameChanged;
@@ -307,13 +311,16 @@ public class HierarchyPanelEvents : MonoBehaviour
             case ObjectType.Node:
                 texture = Resources.Load<Texture2D>("Icons/icon_node");
                 break;
+            case ObjectType.Workpiece:
+                texture = Resources.Load<Texture2D>("Icons/icon_workpiece");
+                break;
             default:
                 break;
         }
         switch (item.Type)
         {
             case ObjectType.Robot:
-                element = new CustomFoldout { Text = item.Reference.name } as CustomFoldout;
+                element = new CustomFoldout { Text = item.Reference.name };
                 ((CustomFoldout)element).SetHeaderImage(texture);
                 element.name = "hierarchy-item-robot";
                 element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
@@ -587,7 +594,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         {
             evt.StopPropagation();
 
-            if (element.name  == "" || element.name == "label-hierarchy" || element.name == "foldout-header")
+            if (element.name == "" || element.name == "label-hierarchy" || element.name == "foldout-header")
             {
                 element = GetParentElement(element);
             }
@@ -752,7 +759,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         //contextMenu.style.paddingRight = 4;
         if (clickedElement != null && clickedElement.name.Contains("hierarchy-item"))
         {
-            
+
         }
 
         if (clickedElement.name == "" || clickedElement.name == "foldout-header" || clickedElement.name == "label-hierarchy")
@@ -767,6 +774,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                     contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(robot)));
                     contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(robot)));
                     contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(robot)));
+                    contextMenu.Add(CreateMenuButton("Открыть планшет робота", () => OpenRobotPanel()));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
                 else if (foldout.name == "hierarchy-item-program")
@@ -783,6 +791,10 @@ public class HierarchyPanelEvents : MonoBehaviour
                     var parentId = foldout.userData.ToString();
                     contextMenu.Add(CreateMenuButton("Добавить объект", () => CreateObject(parentId)));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+                }
+                else if (foldout.name == "main-item")
+                {
+                    contextMenu.Add(CreateMenuButton("Добавить объект", () => CreateObject()));
                 }
                 else
                 {
@@ -803,6 +815,11 @@ public class HierarchyPanelEvents : MonoBehaviour
 
         root.Add(contextMenu);
         iBlocker.AddNewContextMenu(contextMenu);
+    }
+
+    private void OpenRobotPanel()
+    {
+        _eventBus.Invoke(new OpenRobotPanelSignal());
     }
 
     private void CreateWaitCommand(SceneObject robot)
@@ -924,8 +941,45 @@ public class HierarchyPanelEvents : MonoBehaviour
         //objectPicker.UnpickObject();
         _eventBus.Invoke(new UnpickObjectSignal());
         var type = prefab.GetComponent<SceneObjectMarker>().type;
-        var command = new AddObjectCommand(prefab, type, Vector3.zero, parentId);
+        var pos = Vector3.zero;
+        var rot = Quaternion.identity;
+        if (_simulationManager.GetModeSim() == MODE.JOG_MODE)
+        {
+            if (type == ObjectType.LinearMoveCommand)
+            {
+                var robot = FindParentRobot(parentId);
+                var manipulator = FindChildByName(robot.Reference.transform, "JOG_Manipulator");
+                var provider = manipulator.gameObject.GetComponent<JOGPropertyProvider>();
+                pos = new Vector3(provider.Position.x / 1000, provider.Position.y / 1000, provider.Position.z / 1000);
+                rot = provider.RotationQ;
+            }
+        }
+        var command = new AddObjectCommand(prefab, type, pos, rot, parentId);
         _undoRedoManager.Execute(command);
+    }
+    public Transform FindChildByName(Transform root, string name)
+    {
+        foreach (Transform child in root)
+        {
+            if (child.name == name)
+                return child;
+
+            var found = FindChildByName(child, name);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+    private SceneObject FindParentRobot(string parentId)
+    {
+        SceneObject obj = null;
+        while (obj?.Type != ObjectType.Robot)
+        {
+            obj = _sceneObjectManager.GetById(parentId);
+            parentId = obj.ParentId;
+        }
+        return obj;
     }
 
     /// <summary>
@@ -1420,6 +1474,13 @@ public class HierarchyPanelEvents : MonoBehaviour
             return string.IsNullOrEmpty(target.ParentId);
         }
 
+        // ===== WORKPIECE =====
+        if (dragged.Type == ObjectType.Workpiece)
+        {
+            // роботы перемещаются только в корень
+            return string.IsNullOrEmpty(target.ParentId);
+        }
+
         // ===== PRIMITIVE =====
         if (dragged.Type == ObjectType.Primitive)
         {
@@ -1651,7 +1712,6 @@ public class HierarchyPanelEvents : MonoBehaviour
             .Where(o => o.ParentId == parentId)
             .ToList();
 
-        // Если нет сортировки, используем порядок по Id или CreationTime
         for (int i = 0; i < siblings.Count; i++)
         {
             if (siblings[i].Id == objectId)

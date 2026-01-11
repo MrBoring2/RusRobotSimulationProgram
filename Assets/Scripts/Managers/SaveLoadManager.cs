@@ -68,7 +68,7 @@ namespace Assets.Scripts.Managers
 
             try
             {
-                ClearScene();
+                ClearScene(false);
 
                 var loaded = saveLoadProvider.Load(paths[0]);
                 if (loaded == null)
@@ -91,10 +91,10 @@ namespace Assets.Scripts.Managers
                 _undoRedoManager.EndExternalOperation();
             }
         }
-        public void ClearScene()
+        public void ClearScene(bool spawnFloor = true)
         {
             //var itemsToDelete = new List<GameObject>(hierarchyPanelEvents.Items.Select(item => item.Reference));
-            _sceneObjectManager.ClearScene();
+            _sceneObjectManager.ClearScene(spawnFloor);
             //foreach (var gameObject in _sceneObjectManager.GetGameObjectsList())
             //{
             //    _sceneObjectManager.Remove(gameObject.Id);
