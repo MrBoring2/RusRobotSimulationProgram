@@ -81,6 +81,7 @@ namespace Assets.Scripts.Models
         public SubProgramm(List<RobotProgrammElement> p, ENUM_COMMANDS tc, string id) : base(id)
         {
             ProgrammElement = p;
+            TypeComand = tc;
         }
 
         public List<RobotProgrammElement> Get()

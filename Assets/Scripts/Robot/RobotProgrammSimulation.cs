@@ -12,11 +12,13 @@ using System.Linq;
 using UnityEngine;
 using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
 using Assets.Scripts.Providers;
+using Assets.Scripts.Managers;
 
 public class RobotProgrammSimulation : MonoBehaviour
 {
     private EventBus _eventBus;
     private SimulationManager _simManager;
+    private SceneObjectsManager _sceneObjectsManager;
     private SIM_STAT LocalSimStat;
     private RobotController RC;
     private RobotPropertyProvider _propertyProvider => gameObject.GetComponent<RobotPropertyProvider>();
@@ -30,6 +32,7 @@ public class RobotProgrammSimulation : MonoBehaviour
     private void Start()
     {
         _simManager = ServiceManager.Current.Get<SimulationManager>();
+        _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
         RC = gameObject.GetComponent<RobotController>();
         //Ñèãíàëû ñèìóëÿöèè//
@@ -43,13 +46,30 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
     private void TeleportToPoint(PickCommandSignal s)
     {
-        if(_simManager.GetStatusSim() == SIM_STAT.STOP && s.Point.ParentId == _propertyProvider.Id)
+        if(_simManager.GetStatusSim() == SIM_STAT.STOP)
         {
-            if(s.Point.Type == ObjectType.LinearMoveCommand)
+            SceneObject obj = s.Point;
+            for(int i = 0; i < 20; i++)
             {
-                RC.TeleportToPoint((LinearPointPropertyProvider)s.Point.PropertyProvider);
+                if( obj.Type == ObjectType.Robot && obj.Id == _propertyProvider.Id)
+                {
+                    if (s.Point.Type == ObjectType.LinearMoveCommand)
+                    {
+                        RC.TeleportToPoint((LinearPointPropertyProvider)s.Point.PropertyProvider);
+                        break;
+                    }
+                }
+                else
+                {
+                    if(obj.ParentId != null)
+                    {
+                        obj = _sceneObjectsManager.GetById(obj.ParentId);
+                    }
+                    
+                }
                 
             }
+            
         }
     }
 
@@ -97,7 +117,7 @@ public class RobotProgrammSimulation : MonoBehaviour
             
             yield return new WaitUntil(() => allowNextCommand);
         }
-        else if (EP is SubProgramm)
+        else if (EP.TypeComand == ENUM_COMMANDS.SUBPROGRAMM)
         {
             SubProgramm subProgramm = (SubProgramm)EP;
 
