@@ -8,5 +8,11 @@ namespace Assets.Scripts.CustomEventBus.Signals.ObjectsLibrary
 {
     public class ShowObjectsLibrarySignal
     {
+        public readonly string ParentId;
+
+        public ShowObjectsLibrarySignal(string parentId)
+        {
+            ParentId = parentId;
+        }
     }
 }

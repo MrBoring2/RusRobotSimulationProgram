@@ -182,6 +182,7 @@ public class RobotProgrammSimulation : MonoBehaviour
         _eventBus?.Unsubcribe<PauseProgramm>(PauseSim);
         _eventBus?.Unsubcribe<StopProgramm>(StopSim);
         _eventBus?.Unsubcribe<RobotEndMove>(EndCurrentMove);
+        _eventBus?.Unsubcribe<PickCommandSignal>(MoveToPoint);
     }
 }
 

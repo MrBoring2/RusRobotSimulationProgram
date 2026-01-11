@@ -2,11 +2,13 @@
 using Assets.Scripts.CustomEventBus.Signals.HierarhyPanel;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
+using Assets.Scripts.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Assets.Scripts.Models
 {
@@ -15,111 +17,103 @@ namespace Assets.Scripts.Models
         private readonly SceneObjectsManager _sceneObjectsManager;
         private string _objectId;
         private string _newParentId;
-        private string _oldParentId;
-        private int? _insertAtIndex;
-        private int _oldIndex;
+        private int? _insertIndex;
 
-        public ChangeParentCommand(string objectId, string newParentId, int? insertAtIndex = null)
+        // Для Undo
+        private string _oldParentId;
+        private int _oldIndexInParent;
+        private int _oldIndexInDictionary;
+
+        public ChangeParentCommand(string objectId, string newParentId, int? insertIndex)
         {
             _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _objectId = objectId;
             _newParentId = newParentId;
-
-            var obj = _sceneObjectsManager.GetById(objectId);
-            _oldParentId = obj?.ParentId;
-            _oldIndex = GetObjectIndex(objectId);
-            _insertAtIndex = insertAtIndex;
+            _insertIndex = insertIndex;
         }
 
         public void Execute()
         {
-            var obj = _sceneObjectsManager.GetById(_objectId);
-            if (obj == null) return;
+            var sceneObject = _sceneObjectsManager.GetById(_objectId);
+            if (sceneObject == null) return;
 
-            // Сохраняем старые данные для Undo
-            var oldParentId = obj.ParentId;
-            var oldIndex = _oldIndex;
+            _oldParentId = sceneObject.ParentId;
+            _oldIndexInParent = _sceneObjectsManager.GetSiblingIndex(_objectId, _oldParentId);
+            _oldIndexInDictionary = OrderedDictionaryExtensions.IndexOf(_sceneObjectsManager.Items, _objectId);
 
-            // Меняем parentId
-            obj.SetParent(_newParentId);
+            _sceneObjectsManager.ChangeObjectOrder(_objectId, _newParentId, _insertIndex);
+            UpdateSceneHierarchy(sceneObject, _insertIndex);
 
-            // Получаем OrderedDictionary для манипуляций
-            var items = _sceneObjectsManager.Items;
-
-            // Удаляем объект из текущей позиции
-            items.Remove(_objectId);
-
-            // Вставляем на новую позицию
-            if (_insertAtIndex.HasValue && _insertAtIndex.Value < items.Count)
-            {
-                // Вставляем по индексу
-                items.Insert(_insertAtIndex.Value, _objectId, obj);
-            }
-            else
-            {
-                // Добавляем в конец
-                items.Add(_objectId, obj);
-            }
-
-            // Обновляем иерархию в сцене
-            UpdateSceneHierarchy(obj);
-
-            // Сохраняем новые данные для Redo
-            _oldParentId = oldParentId;
-            _oldIndex = oldIndex;
-
-            // Обновляем UI
             var eventBus = ServiceManager.Current.Get<EventBus>();
             eventBus.Invoke(new UpdateHierarchySignal());
         }
 
         public void Undo()
         {
-            var obj = _sceneObjectsManager.GetById(_objectId);
-            if (obj == null) return;
 
-            // Восстанавливаем старый parentId
-            obj.SetParent(_oldParentId);
+            _sceneObjectsManager.ChangeObjectOrder(_objectId, _oldParentId, _oldIndexInParent);
+            UpdateSceneHierarchy(_sceneObjectsManager.GetById(_objectId), _insertIndex);
 
-            // Получаем OrderedDictionary
-            var items = _sceneObjectsManager.Items;
-
-            // Удаляем объект из текущей позиции
-            items.Remove(_objectId);
-
-            // Вставляем на старую позицию
-            if (_oldIndex < items.Count)
-            {
-                items.Insert(_oldIndex, _objectId, obj);
-            }
-            else
-            {
-                items.Add(_objectId, obj);
-            }
-
-            // Восстанавливаем иерархию в сцене
-            UpdateSceneHierarchy(obj);
-
-            // Обновляем UI
             var eventBus = ServiceManager.Current.Get<EventBus>();
             eventBus.Invoke(new UpdateHierarchySignal());
         }
 
-        private void UpdateSceneHierarchy(SceneObject obj)
+        private void UpdateSceneHierarchy(SceneObject obj, int? insertIndex)
         {
+            GameObject parentObj = null;
+
+            // Находим родительский объект
             if (!string.IsNullOrEmpty(obj.ParentId))
             {
                 var parent = _sceneObjectsManager.GetById(obj.ParentId);
-                if (parent != null)
+                parentObj = parent?.Reference;
+            }
+
+            // Устанавливаем родителя
+            obj.Reference.transform.SetParent(parentObj?.transform, false);
+
+            // Устанавливаем правильную позицию среди детей
+            if (parentObj != null && insertIndex.HasValue)
+            {
+                // Получаем текущих детей (уже с учетом добавленного объекта)
+                int childCount = parentObj.transform.childCount;
+
+                // Корректируем индекс: если перемещаем объект вниз по списку, нужно учесть,
+                // что он временно удален из списка детей
+                int oldSiblingIndex = GetCurrentSiblingIndex(obj.Reference.transform);
+                int newSiblingIndex = insertIndex.Value;
+
+                // Если перемещаем вниз по списку, уменьшаем целевой индекс на 1
+                if (newSiblingIndex > oldSiblingIndex && oldSiblingIndex != -1)
                 {
-                    obj.Reference.transform.SetParent(parent.Reference.transform, false);
-                    obj.Reference.transform.SetAsLastSibling(); // Помещаем в конец детей
+                    newSiblingIndex--;
+                }
+
+                // Ограничиваем индекс допустимыми значениями
+                newSiblingIndex = Mathf.Clamp(newSiblingIndex, 0, Mathf.Max(0, childCount - 1));
+
+                // Устанавливаем позицию
+                obj.Reference.transform.SetSiblingIndex(newSiblingIndex);
+            }
+            else if (parentObj != null)
+            {
+                // Если индекс не указан - ставим в конец
+                obj.Reference.transform.SetAsLastSibling();
+            }
+        }
+
+        private int GetCurrentSiblingIndex(Transform transform)
+        {
+            if (transform.parent == null) return -1;
+
+            for (int i = 0; i < transform.parent.childCount; i++)
+            {
+                if (transform.parent.GetChild(i) == transform)
+                {
+                    return i;
                 }
             }
-            else
-            {
-                obj.Reference.transform.SetParent(null, false);
-            }
+            return -1;
         }
 
         private int GetObjectIndex(string objectId)

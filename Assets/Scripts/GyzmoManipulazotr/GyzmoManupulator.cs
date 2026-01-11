@@ -96,11 +96,27 @@ public class GyzmoManupulator : MonoBehaviour
 
         //CurrentManipulatorMode = ;
     }
+    private bool IsNode(Transform t)
+    {
+        if (t.TryGetComponent<IPropertyProvider>(out var provider))
+        {
+            var obj = ServiceManager.Current
+                .Get<SceneObjectsManager>()
+                .GetById(provider.Id);
 
+            return obj != null && obj.Type == ObjectType.Node;
+        }
+        return false;
+    }
     private void Update()
     {
         if (Target != null)
-            gizmoRoot.position = Target.position;
+        {
+            if (IsNode(Target))
+                gizmoRoot.position = CalculateGeometricCenter(Target);
+            else
+                gizmoRoot.position = Target.position;
+        }
 
         float dist = Vector3.Distance(cam.transform.position, gizmoRoot.position);
         if (dist > 3)
@@ -122,6 +138,31 @@ public class GyzmoManupulator : MonoBehaviour
         gizmoRoot.position = t.position;
 
         CurrentManipulatorMode?.OnObjectSelected(Target, this);
+    }
+    public void AttachNode(Transform nodeRoot)
+    {
+        Target = nodeRoot;
+
+        Vector3 center = CalculateGeometricCenter(nodeRoot);
+        gizmoRoot.position = center;
+
+        CurrentManipulatorMode?.OnObjectSelected(Target, this);
+    }
+    public Vector3 CalculateGeometricCenter(Transform root)
+    {
+        Renderer[] renderers = root.GetComponentsInChildren<Renderer>();
+
+        if (renderers.Length == 0)
+            return root.position;
+
+        Bounds bounds = renderers[0].bounds;
+
+        for (int i = 1; i < renderers.Length; i++)
+        {
+            bounds.Encapsulate(renderers[i].bounds);
+        }
+
+        return bounds.center;
     }
 
     public void Detach()

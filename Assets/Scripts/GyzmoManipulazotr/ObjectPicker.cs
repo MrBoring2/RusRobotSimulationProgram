@@ -210,7 +210,14 @@ public class ObjectPicker : MonoBehaviour
             }
         }
         currentProvider = provider;
-        manipulator.Attach(gameObject.transform);
+        if (obj.Type == ObjectType.Node)
+        {
+            manipulator.AttachNode(gameObject.transform);
+        }
+        else
+        {
+            manipulator.Attach(gameObject.transform);
+        }
        
         
     }

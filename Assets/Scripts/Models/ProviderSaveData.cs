@@ -13,6 +13,6 @@ namespace Assets.Scripts.Models
         public string ProviderType;
         public Dictionary<string, float> FloatValues = new();
         public Dictionary<string, bool> BoolValues = new();
-        public Color Color;
+        public ColorObj Color;
     }
 }

@@ -26,6 +26,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
     private bool isDragging = false;
     private Vector2 dragOffset;
     private EventBus _eventBus;
+    private string currentParentObjectId = null;
 
     void Start()
     {
@@ -55,6 +56,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
 
     private void OnShowLibrary(ShowObjectsLibrarySignal signal)
     {
+        currentParentObjectId = signal.ParentId;
         Show();
     }
 
@@ -154,7 +156,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
                 {
                     if (evt.clickCount == 2)
                     {
-                        _eventBus.Invoke(new SelectObjectinLibrary(prefab));
+                        _eventBus.Invoke(new SelectObjectinLibrary(prefab, currentParentObjectId));
                         //OnObjectSelected?.Invoke(prefab);
                         windowRoot.style.display = DisplayStyle.None;
                     }

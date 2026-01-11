@@ -12,7 +12,7 @@ public class PrimitivePropertyProvider : BasePropertyProvider
         return new ProviderSaveData
         {
             ProviderType = nameof(PrimitivePropertyProvider),
-            Color = this.Color
+            Color = new ColorObj(Color.r, Color.g, Color.b, Color.a)
         };
     }
 
@@ -29,6 +29,6 @@ public class PrimitivePropertyProvider : BasePropertyProvider
 
     public override void RestoreCustomState(ProviderSaveData data)
     {
-        Color = data.Color;
+        Color = new Color(data.Color.R, data.Color.G, data.Color.B, data.Color.A);
     }
 }
