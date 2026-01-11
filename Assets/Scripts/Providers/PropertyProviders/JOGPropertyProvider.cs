@@ -35,7 +35,8 @@ namespace Assets.Scripts.Providers
                     Mathf.Repeat(value.y, 361f),
                     Mathf.Repeat(value.z, 361f)
                 );
-                transform.rotation = Quaternion.Euler(rotationEuler);
+
+                transform.rotation = Quaternion.Inverse(Quaternion.Euler(rotationEuler));
             }
         }
 
@@ -53,7 +54,7 @@ namespace Assets.Scripts.Providers
          }
 
 
-
+        public Vector3 GlobalPostiion => transform.position;
 
         public bool ShowVisual = true;
         public Material material;
