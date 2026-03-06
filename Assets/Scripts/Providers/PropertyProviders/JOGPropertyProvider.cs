@@ -27,7 +27,9 @@ namespace Assets.Scripts.Providers
         protected bool displayScale = true;
         public Vector3 Rotation
         {
-            get => transform.rotation.eulerAngles;
+            get => new Vector3((float)Math.Round(transform.rotation.eulerAngles.x, 2),
+              (float)Math.Round(transform.rotation.eulerAngles.y, 2),
+              (float)Math.Round(transform.rotation.eulerAngles.z, 2));
             set
             {
                 rotationEuler = new Vector3(
@@ -36,7 +38,7 @@ namespace Assets.Scripts.Providers
                     Mathf.Repeat(value.z, 361f)
                 );
 
-                transform.rotation = Quaternion.Inverse(Quaternion.Euler(rotationEuler));
+                transform.rotation = Quaternion.Euler(rotationEuler);
             }
         }
 
