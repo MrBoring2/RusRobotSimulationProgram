@@ -10,5 +10,12 @@
             <ui:Toggle name="PropertiesToggle" text="Панель свойств" />
             <ui:Toggle name="HierarchyToggle" text="Панель объектов" />
         </ui:VisualElement>
+         <ui:VisualElement name="TestMenu" class="dropdown hidden">
+            <ui:Button name="mes1" text="Информация" />
+            <ui:Button name="mes2" text="Предупреждение" />
+            <ui:Button name="mes3" text="Ошибка" />
+            <ui:Button name="mes4" text="Успех" />
+            <ui:Button name="mes5" text="10 сообщений" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

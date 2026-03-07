@@ -1,4 +1,4 @@
-.popup-panel {
+/* .popup-panel {
     width: 550px;
     height: 250px;
     border-width: 1px;
@@ -15,4 +15,14 @@
     justify-content: center;
     align-content: center;
     background-color: var(--color-screenfill-translucent);
+} */
+.notification-popup {
+    min-width: 250px;
+    max-width: 350px;
+    border-width: 1px;
+    border-radius: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 12px;
+    padding-bottom: 12px;
 }
