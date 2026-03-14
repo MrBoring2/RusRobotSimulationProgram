@@ -1375,30 +1375,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81646d70d50914d49831cee77676935e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OpwKinematics
-  X: 0
-  Y: 0
-  Z: 0
-  UX: 0
-  UY: 0
-  UZ: 0
-  RotateQ: {x: 0, y: 0, z: 0, w: 1}
-  RotateMatrix:
-    e00: 0
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 0
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 0
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 0
+  thetha1: 0
+  thetha2: 0
+  thetha3: 0
+  thetha4: 0
+  thetha5: 0
+  thetha6: 0
 --- !u!4 &1046687316
 Transform:
   m_ObjectHideFlags: 0
@@ -1596,10 +1578,6 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3784784265109912282, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: J2Angle
-      value: 90
-      objectReference: {fileID: 0}
-    - target: {fileID: 3784784265109912282, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: JOG_IK_Configuration
       value: 0
       objectReference: {fileID: 0}
@@ -1612,10 +1590,6 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1046687315}
     - target: {fileID: 4249141246246613869, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: InvKin
-      value: 
-      objectReference: {fileID: 1779262145}
-    - target: {fileID: 4249141246246613869, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: SpeedCurve.m_Curve.Array.size
       value: 2
       objectReference: {fileID: 0}
@@ -1626,46 +1600,6 @@ PrefabInstance:
     - target: {fileID: 4249141246246613869, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: SpeedCurve.m_Curve.Array.data[1].value
       value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5891610491103318822, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 5891610491103318822, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 5891610491103318822, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5891610491103318822, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5891610491103318822, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 90
-      objectReference: {fileID: 0}
-    - target: {fileID: 6036321671259928659, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 6036321671259928659, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 6036321671259928659, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6036321671259928659, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6036321671259928659, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: -90
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2334,17 +2268,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 32a622fe02fdc5b479478063e185f814, type: 3}
---- !u!114 &1779262145 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8734229360267228368, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-  m_PrefabInstance: {fileID: 1159832440}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 81646d70d50914d49831cee77676935e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InverseK_new
 --- !u!1 &1827411683
 GameObject:
   m_ObjectHideFlags: 0

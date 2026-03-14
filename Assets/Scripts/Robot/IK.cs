@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class IK
 {
-
+    private IK_config Calc_IK_conf = IK_config.conf_1;
 
     RobotPropertyProvider _propertyProvider;
     public float L1;
@@ -27,6 +27,7 @@ public class IK
         thetha = RPP.thetha;
         old_thetha = RPP.old_thetha;
         step_thetha = RPP.step_thetha;
+        
     }
 
     Matrix4x4 CreateTransform()
@@ -40,11 +41,23 @@ public class IK
         rotation.z = _propertyProvider.XYZRot.y;
         rotation.w = _propertyProvider.XYZRot.w;
         rotation = rotation * Quaternion.Euler(180, 0, _propertyProvider.Rotation.y - 180);
+        _propertyProvider.XYZ_robot_Rotate = rotation;
         // rotation = rotation * Quaternion.Euler(RTx, RTy, RTz);
-        return Matrix4x4.Rotate(rotation);
+        switch (Calc_IK_conf)
+        {
+            case IK_config.conf_1:
+                return Matrix4x4.Rotate(rotation);
+            case IK_config.conf_2:
+                return Matrix4x4.Transpose(Matrix4x4.Rotate(rotation));//
+            default:
+                return Matrix4x4.Rotate(rotation);
+
+        }
+        
     }
     public void CalculateInverseKinematics()
     {
+        Calc_IK_conf = _propertyProvider.JOG_IK_Configuration;
         try
         {
             // Transformation matrix of the ik point
@@ -65,12 +78,33 @@ public class IK
             Matrix4x4 R = new Matrix4x4(new Vector4(T[0, 0], T[1, 0], T[2, 0], 0),
                                         new Vector4(T[0, 1], T[1, 1], T[2, 1], 0),
                                         new Vector4(T[0, 2], T[1, 2], T[2, 2], 0),
-                                        new Vector4(0, 0, 0, 1));
+                                       new Vector4(0, 0, 0, 1));
 
-            Vector3 o = new Vector3(_propertyProvider.XYZ.x, _propertyProvider.XYZ.y, _propertyProvider.XYZ.z); // center point calculation
-            float xc = o.x - L6 * R[2, 0];
-            float yc = o.y - L6 * R[2, 1];
-            float zc = o.z - L6 * R[2, 2];
+            Vector3 o = new Vector3(_propertyProvider.XYZ.x, _propertyProvider.XYZ.y, _propertyProvider.XYZ.z); // точка расчета ИК
+
+            float xc;
+            float yc;
+            float zc;
+            switch (Calc_IK_conf)
+            {
+                case IK_config.conf_1:
+                    xc = o.x - L6 * R[2, 0];
+                    yc = o.y - L6 * R[2, 1];
+                    zc = o.z - L6 * R[2, 2];
+                    break;
+                case IK_config.conf_2:
+                     xc = o.x + L6 * R[2, 0];
+                     yc = o.y + L6 * R[2, 1];
+                     zc = o.z + L6 * R[2, 2];
+                    break;
+                default:
+                    xc = o.x - L6 *R[2, 0];
+                    yc = o.y - L6 * R[2, 1];
+                    zc = o.z - L6 * R[2, 2];
+                    break;
+            }
+            
+            
             // calculate thetha1
             thetha[0] = Mathf.Atan2(yc, xc) * Mathf.Rad2Deg;
 
@@ -123,17 +157,37 @@ public class IK
             Matrix4x4 R03T = R03.transpose;
 
             // matrix R36
-            Matrix4x4 R36 = R03T * R.transpose;
+            Matrix4x4 R36 = R03T * T.transpose;
 
             // calculate thetha4
-            thetha[3] = Mathf.Atan2(-R36[1, 2], -R36[0, 2]) * Mathf.Rad2Deg;
+            
 
             // calculate thetha5
-            thetha[4] = Mathf.Acos(-R36[2, 2]) * Mathf.Rad2Deg - 180;
+            switch (Calc_IK_conf)
+            {
+                case IK_config.conf_1:
+                    thetha[3] = Mathf.Atan2(-R36[1, 2], -R36[0, 2]) * Mathf.Rad2Deg;
+                    thetha[4] = Mathf.Acos(-R36[2, 2]) * Mathf.Rad2Deg - 180;
+                    thetha[5] = Mathf.Atan2(-R36[2, 1], R36[2, 0]) * Mathf.Rad2Deg;
+                    break;
+                case IK_config.conf_2:
+                    thetha[3] = 0;
+                    thetha[4] = 0;
+                    thetha[5] = 0;
+                    /* thetha[3] = Mathf.Atan2(-R36[1, 2], -R36[0, 2]) * Mathf.Rad2Deg-180;
+                     thetha[4] = Mathf.Acos(-R36[2, 2]) * Mathf.Rad2Deg;
+                     thetha[5] = Mathf.Atan2(-R36[2, 1], R36[2, 0]) * Mathf.Rad2Deg;*/
+                    break;
+                default:
+                    thetha[3] = Mathf.Atan2(-R36[1, 2], -R36[0, 2]) * Mathf.Rad2Deg;
+                    thetha[4] = Mathf.Acos(-R36[2, 2]) * Mathf.Rad2Deg - 180;
+                    thetha[5] = Mathf.Atan2(-R36[2, 1], R36[2, 0]) * Mathf.Rad2Deg;
+                    break;
+            }
 
             // calculate thetha6
             //thetha[5] = !nonCalcThetha5 ? Mathf.Atan2(-R36[2, 1], R36[2, 0]) * Mathf.Rad2Deg : thetha[5];
-            thetha[5] = Mathf.Atan2(-R36[2, 1], R36[2, 0]) * Mathf.Rad2Deg;
+            
             thetha[2] = -thetha[2] + 90;
 
         }

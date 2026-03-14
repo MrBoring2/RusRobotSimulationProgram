@@ -51,6 +51,11 @@ public class RobotPropertyProvider : BasePropertyProvider
     public Vector3 oldXYZ = Vector3.zero;
     public Quaternion XYZRot;
     public Quaternion oldXYZRot = Quaternion.identity;
+
+    /// <summary>
+    public Quaternion XYZ_robot_Rotate;
+    /// </summary>
+
     public Vector3 absoluteXYZ => GetAbsolutePosition(XYZ);
     public Vector3 absoluteOldXYZ => GetAbsolutePosition(oldXYZ);
     //IK
@@ -63,8 +68,10 @@ public class RobotPropertyProvider : BasePropertyProvider
     public void SyncJOGPosition()
     {
         JOGpoint.GlobalPosition = absoluteXYZ;
-        JOGpoint.RotationQ = XYZRot;
+        JOGpoint.GlobalRotationQ = XYZRot;
     }
+
+    public IK_config JOG_IK_Configuration = IK_config.conf_1;
 
     private float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 }; 
 
@@ -284,4 +291,10 @@ public class RobotPropertyProvider : BasePropertyProvider
 
         return transform.TransformPoint(point); ;
     }
+}
+
+public enum IK_config
+{
+    conf_1,
+    conf_2
 }

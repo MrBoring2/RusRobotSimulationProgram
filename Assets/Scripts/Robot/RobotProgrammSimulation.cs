@@ -103,6 +103,10 @@ public class RobotProgrammSimulation : MonoBehaviour
 
                 currentCommandIndex++;
             }
+            else if(_simManager.GetStatusSim() == SIM_STAT.PLAY)
+            {
+                currentCommandIndex = 0;
+            }
             else
             {
                 yield break;

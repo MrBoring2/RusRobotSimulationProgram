@@ -24,14 +24,14 @@ public class ZajimZZ: MonoBehaviour
             if (numZ == 1)
             {
                 parent.z1Col = true;
-                parent.z1Collision = collision;
+                parent.z1Collision = collision.transform.gameObject;
                 /*ZCollisionEnter.Invoke(collision);*/
                 //UnityEngine.Debug.LogWarning("Коллизия!!!!!!!!!!" + gameObject.name);
             }
             else
             {
                 parent.z2Col = true;
-                parent.z2Collision = collision;
+                parent.z2Collision = collision.transform.gameObject;
                 /*ZCollisionEnter.Invoke(collision);*/
                 //UnityEngine.Debug.LogWarning("Коллизия!!!!!!!!!!" + gameObject.name);
             }
