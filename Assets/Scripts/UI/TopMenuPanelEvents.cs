@@ -20,6 +20,7 @@ namespace Assets.Scripts.UI
         private SaveLoadManager _saveLoadManager;
         private Toggle propertiesToggle;
         private Toggle objectsListToggle;
+        private Toggle commandsListToggle;
         private Button newFile;
         private Button loadFile;
         private Button saveFile;
@@ -29,6 +30,8 @@ namespace Assets.Scripts.UI
         private Button mes3;
         private Button mes4;
         private Button mes5;
+
+        private VisualElement leftColumn;
         
         private EventBus _eventBus;
 
@@ -38,17 +41,20 @@ namespace Assets.Scripts.UI
             _eventBus = ServiceManager.Current.Get<EventBus>();
             _eventBus.Subscribe<TogglePropertiesSignal>(OnToggleProperties);
             _eventBus.Subscribe<ToggleObjectsListSignal>(OnToggleObjectsList);
+            _eventBus.Subscribe<ToggleCommandsListSignal>(OnToggleCommandsList);
             _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _saveLoadManager = ServiceManager.Current.Get<SaveLoadManager>();
             _uIStatusManager = ServiceManager.Current.Get<UIStatusManager>();
             _notificationSystem = ServiceManager.Current.Get<NotificationSystemManager>();
             root = GetComponent<UIDocument>().rootVisualElement;
             var overlay = root.Q<VisualElement>("overlay");
+            leftColumn = root.Q<VisualElement>("left-column");
             fileMenu = overlay.Q<VisualElement>("FileMenu");
             viewMenu = overlay.Q<VisualElement>("ViewMenu");
             testMenu = overlay.Q<VisualElement>("TestMenu");
             propertiesToggle = overlay.Q<Toggle>("PropertiesToggle");
             objectsListToggle = overlay.Q<Toggle>("HierarchyToggle");
+            commandsListToggle = overlay.Q<Toggle>("HierarchyCommandsToggle");
             newFile = overlay.Q<Button>("NewBtn");
             loadFile = overlay.Q<Button>("OpenBtn");
             saveFile = overlay.Q<Button>("SaveBtn");
@@ -91,6 +97,13 @@ namespace Assets.Scripts.UI
                 _uIStatusManager.SetObjectsListPanelVisibility(evt.newValue);
             });
 
+
+            commandsListToggle.RegisterCallback<ChangeEvent<bool>>(evt =>
+            {
+                commandsListToggle.value = evt.newValue;
+                _uIStatusManager.SetCommandsListPanelVisibility(evt.newValue);
+            });
+
             newFile.RegisterCallback<ClickEvent>(OnNewFileClicked);
             loadFile.RegisterCallback<ClickEvent>(OnFileLoadClicked);
             saveFile.RegisterCallback<ClickEvent>(OnFileSaveClicked);
@@ -121,6 +134,17 @@ namespace Assets.Scripts.UI
             _notificationSystem.ShowInfo("ВВВВВВВВВ", "Сообщение");
         }
 
+        private void CheckHierachyVisible()
+        {
+            if (_uIStatusManager.IsObjectsListVisible == false && _uIStatusManager.IsCommandsListVisible == false)
+            {
+                leftColumn.style.display = DisplayStyle.None;
+            }
+            else
+            {
+                leftColumn.style.display = DisplayStyle.Flex;
+            }
+        }
         private void test4(ClickEvent evt)
         {
             _notificationSystem.ShowSuccess("Ебать всё норм", "Успех");
@@ -159,8 +183,13 @@ namespace Assets.Scripts.UI
         private void OnToggleObjectsList(ToggleObjectsListSignal signal)
         {
             objectsListToggle.SetValueWithoutNotify(_uIStatusManager.IsObjectsListVisible);
+            CheckHierachyVisible();
         }
-
+        private void OnToggleCommandsList(ToggleCommandsListSignal signal)
+        {
+            commandsListToggle.SetValueWithoutNotify(_uIStatusManager.IsCommandsListVisible);
+            CheckHierachyVisible();
+        }
         private void OnToggleProperties(TogglePropertiesSignal signal)
         {
             propertiesToggle.SetValueWithoutNotify(_uIStatusManager.IsPropertiesPanelVisible);
@@ -181,6 +210,7 @@ namespace Assets.Scripts.UI
         {
             fileMenu.AddToClassList("hidden");
             viewMenu.AddToClassList("hidden");
+            testMenu.AddToClassList("hidden");
         }
     }
 }

@@ -1,38 +1,45 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <ui:Template name="TopMenuPanel" src="project://database/Assets/UI/TopMenuPanel.uxml?fileID=9197481963319205126&amp;guid=da8599a1da93c99459bca9cd67c9b6ac&amp;type=3#TopMenuPanel" />
-    <ui:Template name="MainMenuPanel" src="project://database/Assets/UI/MainMenuPanel.uxml?fileID=9197481963319205126&amp;guid=86c6b1c19c59bcd4cb6a6e52f8003d1a&amp;type=3#MainMenuPanel" />
-    <ui:Template name="HierarchyPAnel" src="project://database/Assets/UI/HierarchyPAnel.uxml?fileID=9197481963319205126&amp;guid=fa3e986a65ded21469fc5ee30b5178d1&amp;type=3#HierarchyPAnel" />
-    <ui:Template name="PerspectivePanel" src="project://database/Assets/UI/PerspectivePanel.uxml?fileID=9197481963319205126&amp;guid=3dcf6a741e03ff74d91be22a653b8269&amp;type=3#PerspectivePanel" />
-    <ui:Template name="PropertiesPanel" src="project://database/Assets/UI/PropertiesPanel.uxml?fileID=9197481963319205126&amp;guid=416893be10dc99b4299a0c31b187dffe&amp;type=3#PropertiesPanel" />
-    <ui:Template name="TopMenuOverlayPanel" src="project://database/Assets/UI/TopMenuOverlayPanel.uxml?fileID=9197481963319205126&amp;guid=2a86a53230e8b334db20c410ac21d798&amp;type=3#TopMenuOverlayPanel" />
-    <Style src="project://database/Assets/UI/MainStyles.uss?fileID=7433441132597879392&amp;guid=3d6f6d684f82a994f9e3898f6acfb01b&amp;type=3#MainStyles" />
-    <Style src="project://database/Assets/Resources/Styles/Default.uss?fileID=7433441132597879392&amp;guid=be02736ea5541bd428ad7e897bd93a90&amp;type=3#Default" />
-    <Style src="project://database/Assets/Resources/Styles/SliderStyleSheet.uss?fileID=7433441132597879392&amp;guid=8a041d41b2a65dd46a5a88b635d2e72a&amp;type=3#SliderStyleSheet" />
+    <ui:Template name="HierarchyCommandsPanel" src="project://database/Assets/UI/HierarchyCommandsPanel.uxml?fileID=9197481963319205126&amp;guid=806b95ad84ccabe48960fdad9f67c19b&amp;type=3#HierarchyCommandsPanel"/>
+    <ui:Template name="HierarchyPAnel" src="project://database/Assets/UI/HierarchyPAnel.uxml?fileID=9197481963319205126&amp;guid=fa3e986a65ded21469fc5ee30b5178d1&amp;type=3#HierarchyPAnel"/>
+    <ui:Template name="MainMenuPanel" src="project://database/Assets/UI/MainMenuPanel.uxml?fileID=9197481963319205126&amp;guid=86c6b1c19c59bcd4cb6a6e52f8003d1a&amp;type=3#MainMenuPanel"/>
+    <ui:Template name="PerspectivePanel" src="project://database/Assets/UI/PerspectivePanel.uxml?fileID=9197481963319205126&amp;guid=3dcf6a741e03ff74d91be22a653b8269&amp;type=3#PerspectivePanel"/>
+    <ui:Template name="PropertiesPanel" src="project://database/Assets/UI/PropertiesPanel.uxml?fileID=9197481963319205126&amp;guid=416893be10dc99b4299a0c31b187dffe&amp;type=3#PropertiesPanel"/>
+    <ui:Template name="TopMenuOverlayPanel" src="project://database/Assets/UI/TopMenuOverlayPanel.uxml?fileID=9197481963319205126&amp;guid=2a86a53230e8b334db20c410ac21d798&amp;type=3#TopMenuOverlayPanel"/>
+    <ui:Template name="TopMenuPanel" src="project://database/Assets/UI/TopMenuPanel.uxml?fileID=9197481963319205126&amp;guid=da8599a1da93c99459bca9cd67c9b6ac&amp;type=3#TopMenuPanel"/>
+    <Style src="project://database/Assets/UI/MainStyles.uss?fileID=7433441132597879392&amp;guid=3d6f6d684f82a994f9e3898f6acfb01b&amp;type=3#MainStyles"/>
+    <Style src="project://database/Assets/Resources/Styles/Default.uss?fileID=7433441132597879392&amp;guid=be02736ea5541bd428ad7e897bd93a90&amp;type=3#Default"/>
+    <Style src="project://database/Assets/Resources/Styles/SliderStyleSheet.uss?fileID=7433441132597879392&amp;guid=8a041d41b2a65dd46a5a88b635d2e72a&amp;type=3#SliderStyleSheet"/>
     <ui:VisualElement name="main-container" class="main-container" style="align-items: stretch; justify-content: flex-start; align-self: auto; align-content: auto; flex-direction: column;">
         <ui:VisualElement name="menu-bar-container" class="menu-bar-container" style="height: 3%;">
-            <ui:Instance template="TopMenuPanel" />
+            <ui:Instance template="TopMenuPanel"/>
         </ui:VisualElement>
-        <ui:VisualElement name="divider" style="flex-grow: 0; height: 1px; background-color: rgb(14, 19, 43);" />
+        <ui:VisualElement name="divider" style="flex-grow: 0; height: 1px; background-color: rgb(14, 19, 43);"/>
         <ui:VisualElement name="main-menu-container" style="flex-grow: 0; align-items: flex-start; justify-content: flex-start; align-self: auto; align-content: auto; flex-direction: row; flex-wrap: nowrap; height: auto; flex-shrink: 0; background-color: rgb(52, 73, 94);">
-            <ui:Instance template="MainMenuPanel" />
+            <ui:Instance template="MainMenuPanel"/>
         </ui:VisualElement>
-        <ui:VisualElement name="divider" style="flex-grow: 0; height: 1px; background-color: rgb(14, 19, 43);" />
+        <ui:VisualElement name="divider" style="flex-grow: 0; height: 1px; background-color: rgb(14, 19, 43);"/>
         <ui:VisualElement name="content-container" class="content-container">
-            <ui:VisualElement name="hierarchy-container" enabled="true" class="left-panel">
-                <ui:Instance template="HierarchyPAnel" />
+            <ui:VisualElement name="left-column" class="left-column">
+                <ui:VisualElement name="hierarchy-container" class="left-panel-item">
+                    <ui:Instance template="HierarchyPAnel"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="panel-divider" class="panel-divider"/>
+                <ui:VisualElement name="hierarchy-commands-container" class="left-panel-item" style="visibility: visible; display: flex;">
+                    <ui:Instance template="HierarchyCommandsPanel"/>
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="hierarchy-resizer" class="resizer-vertical" />
+            <ui:VisualElement name="hierarchy-resizer" class="resizer-vertical" style="margin-left: 0; padding-left: 0;"/>
             <ui:VisualElement name="content-container" style="flex-grow: 1; align-items: flex-start; align-self: auto; align-content: auto; justify-content: flex-start; position: relative; flex-wrap: nowrap; flex-direction: column-reverse; margin-left: 10px; margin-bottom: 10px;">
-                <ui:Instance template="PerspectivePanel" />
+                <ui:Instance template="PerspectivePanel"/>
             </ui:VisualElement>
-            <ui:VisualElement name="viewport-container" picking-mode="Ignore" enabled="true" focusable="false" class="center-panel" style="-unity-slice-type: sliced; -unity-background-scale-mode: stretch-to-fill; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+            <ui:VisualElement name="viewport-container" picking-mode="Ignore" enabled="true" focusable="false" class="center-panel" style="-unity-slice-type: sliced; -unity-background-scale-mode: stretch-to-fill; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;"/>
             <ui:VisualElement name="properties-container" class="right-panel" style="width: auto; max-width: 17%; min-width: 17%;">
-                <ui:Instance template="PropertiesPanel" />
+                <ui:Instance template="PropertiesPanel"/>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="notification-container" style="flex-grow: 1;"/>
     </ui:VisualElement>
     <ui:VisualElement name="overlay" picking-mode="Ignore" style="flex-grow: 1; position: absolute; top: 0; left: 1px; bottom: 0; right: 0; width: 100%; height: 100%; border-bottom-color: rgb(0, 0, 0);">
-        <ui:Instance template="TopMenuOverlayPanel" />
+        <ui:Instance template="TopMenuOverlayPanel"/>
     </ui:VisualElement>
-<!--     <Assets.UI.CustomElements.ColorPicker.ColorPopup name="color-popup" start-visible="false" /> -->
 </ui:UXML>

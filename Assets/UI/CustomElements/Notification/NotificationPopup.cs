@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -96,7 +95,16 @@ namespace Assets.UI.CustomElements.Notification
 
             SetStartVisibility(false);
             // Show();
+            RegisterCallback<ClickEvent>(OnClickNotification);
 
+        }
+
+        private void OnClickNotification(ClickEvent e)
+        {
+            if (e.button == 0)
+            {
+                HideImmediate();
+            }
         }
         public void SetNotificationData(string title, string message, NotificationLevel level)
         {
@@ -183,11 +191,8 @@ namespace Assets.UI.CustomElements.Notification
             }).Every(10); // Каждые 10мс для максимальной плавности
             //if (progressFill == null) return;
 
-
-            //// Ставим 100% в начале
             //progressFill.style.width = new Length(100, LengthUnit.Percent);
 
-            //// Используем встроенную анимацию UI Toolkit
             //progressFill.experimental.animation.Start(100f, 0f, (int)durationMs, (element, value) =>
             //{
             //    if (element != null)
@@ -237,7 +242,6 @@ namespace Assets.UI.CustomElements.Notification
         private void OnCompleteHide()
         {
             OnHide?.Invoke(this);
-            // Опционально: удаляем элемент из родителя
             // RemoveFromHierarchy();
         }
 
@@ -278,11 +282,6 @@ namespace Assets.UI.CustomElements.Notification
                 default: return infoColor;
             }
         }
-
-        // Структура данных для уведомления
-
-
-
     }
     public enum NotificationLevel
     {

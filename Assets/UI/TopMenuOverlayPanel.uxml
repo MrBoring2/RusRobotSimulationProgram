@@ -1,21 +1,22 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/UI/TopMenuPanelStyles.uss?fileID=7433441132597879392&amp;guid=44c1be02d56eb084a8b3cc4f29393ff1&amp;type=3#TopMenuPanelStyles" />
+    <Style src="project://database/Assets/UI/TopMenuPanelStyles.uss?fileID=7433441132597879392&amp;guid=44c1be02d56eb084a8b3cc4f29393ff1&amp;type=3#TopMenuPanelStyles"/>
     <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
         <ui:VisualElement name="FileMenu" class="dropdown hidden">
-            <ui:Button name="NewBtn" text="Создать новый" />
-            <ui:Button name="OpenBtn" text="Открыть" />
-            <ui:Button name="SaveBtn" text="Сохранить" />
+            <ui:Button name="NewBtn" text="Создать новый"/>
+            <ui:Button name="OpenBtn" text="Открыть"/>
+            <ui:Button name="SaveBtn" text="Сохранить"/>
         </ui:VisualElement>
         <ui:VisualElement name="ViewMenu" class="dropdown hidden">
-            <ui:Toggle name="PropertiesToggle" text="Панель свойств" />
-            <ui:Toggle name="HierarchyToggle" text="Панель объектов" />
+            <ui:Toggle name="PropertiesToggle" text="Панель свойств"/>
+            <ui:Toggle name="HierarchyToggle" text="Панель объектов"/>
+            <ui:Toggle name="HierarchyCommandsToggle" text="Панель команд"/>
         </ui:VisualElement>
-         <ui:VisualElement name="TestMenu" class="dropdown hidden">
-            <ui:Button name="mes1" text="Информация" />
-            <ui:Button name="mes2" text="Предупреждение" />
-            <ui:Button name="mes3" text="Ошибка" />
-            <ui:Button name="mes4" text="Успех" />
-            <ui:Button name="mes5" text="10 сообщений" />
+        <ui:VisualElement name="TestMenu" class="dropdown hidden">
+            <ui:Button name="mes1" text="Информация"/>
+            <ui:Button name="mes2" text="Предупреждение"/>
+            <ui:Button name="mes3" text="Ошибка"/>
+            <ui:Button name="mes4" text="Успех"/>
+            <ui:Button name="mes5" text="10 сообщений"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

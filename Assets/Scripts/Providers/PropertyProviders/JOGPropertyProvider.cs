@@ -21,10 +21,10 @@ namespace Assets.Scripts.Providers
         public string Name { get => gameObject.name; set { gameObject.name = value; } }
         protected Vector3 rotationEuler;
         protected string id;
-        protected bool displayName = true;
+        protected bool displayName = false;
         protected bool displayPosition = true;
         protected bool displayRotation = true;
-        protected bool displayScale = true;
+        protected bool displayScale = false;
         public Vector3 Rotation
         {
             get => new Vector3((float)Math.Round(transform.rotation.eulerAngles.x, 2),
@@ -53,7 +53,7 @@ namespace Assets.Scripts.Providers
         {
             get => _robotPropertyProvider.EndEffectorOn;
             set => _robotPropertyProvider.EndEffectorOn = value;
-         }
+        }
 
 
         public Vector3 GlobalPostiion => transform.position;
@@ -64,12 +64,42 @@ namespace Assets.Scripts.Providers
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private Mesh sphereMesh;
-        public Vector3 Position { get => transform.localPosition*1000; set => transform.localPosition = value/1000; }
+        public Vector3 Position { get => transform.localPosition * 1000; set => transform.localPosition = value / 1000; }
         public Vector3 GlobalPosition { get => transform.position; set => transform.position = value; }
         public Quaternion RotationQ
         {
             get => transform.rotation;
             set => transform.rotation = value;
+        }
+        public float A1
+        {
+            get => _robotPropertyProvider.L1;
+            set => _robotPropertyProvider.L1 = value;
+        }
+        public float A2
+        {
+            get => _robotPropertyProvider.L2;
+            set => _robotPropertyProvider.L2 = value;
+        }
+        public float A3
+        {
+            get => _robotPropertyProvider.L3;
+            set => _robotPropertyProvider.L3 = value;
+        }
+        public float A4
+        {
+            get => _robotPropertyProvider.L4;
+            set => _robotPropertyProvider.L5 = value;
+        }
+        public float A5
+        {
+            get => _robotPropertyProvider.L5;
+            set => _robotPropertyProvider.L5 = value;
+        }
+        public float A6
+        {
+            get => _robotPropertyProvider.L6;
+            set => _robotPropertyProvider.L6 = value;
         }
 
         private void Awake()
@@ -88,26 +118,79 @@ namespace Assets.Scripts.Providers
             {
                 ProviderType = nameof(RobotPropertyProvider),
                 BoolValues = {
-                ["EndEffectorOn"] = EndEffectorOn  //Изм. на буферизацию компонента!
-            }
+                    ["EndEffectorOn"] = EndEffectorOn
+                }
             };
         }
 
-        public  IEnumerable<CustomProperty> GetCustomProperties()
+        public IEnumerable<CustomProperty> GetCustomProperties()
         {
-            yield return new CustomProperty(
-            "EndEffectorOn",
-            "Состояние захвата",
-            typeof(bool),
-            () => EndEffectorOn,
-            val => EndEffectorOn = (bool)val //Изм. на буферизацию компонента!
-        );
+            var list = new List<CustomProperty>();
+            var endEffect = new CustomProperty(
+                "EndEffectorOn",
+                "Состояние захвата",
+                typeof(bool),
+                () => EndEffectorOn,
+                val => EndEffectorOn = (bool)val
+            );
+
+            //var a1 = new CustomProperty(
+            //    "A1",
+            //    "Ось A1",
+            //    typeof(float),
+            //    () => A1,
+            //    val => A1 = (float)val
+            //);
+            //var a2 = new CustomProperty(
+            //     "A2",
+            //     "Ось A2",
+            //     typeof(float),
+            //     () => A2,
+            //     val => A2 = (float)val
+            // );
+            //var a3 = new CustomProperty(
+            //     "A3",
+            //     "Ось A3",
+            //     typeof(float),
+            //     () => A3,
+            //     val => A3 = (float)val
+            // );
+            //var a4 = new CustomProperty(
+            //     "A4",
+            //     "Ось A4",
+            //     typeof(float),
+            //     () => A4,
+            //     val => A4 = (float)val
+            // );
+            //var a5 = new CustomProperty(
+            //     "A5",
+            //     "Ось A5",
+            //     typeof(float),
+            //     () => A5,
+            //     val => A5 = (float)val
+            // );
+            //var a6 = new CustomProperty(
+            //     "A6",
+            //     "Ось A6",
+            //     typeof(float),
+            //     () => A6,
+            //     val => A6 = (float)val
+            // );
+          
+            //list.Add(a1);
+            //list.Add(a2);
+            //list.Add(a3);
+            //list.Add(a4);
+            //list.Add(a5);
+            //list.Add(a6);
+            list.Add(endEffect);
+            return list;
         }
 
-        public  void RestoreCustomState(ProviderSaveData data)
+        public void RestoreCustomState(ProviderSaveData data)
         {
             if (data.BoolValues.TryGetValue("EndEffectorOn", out var v))
-                EndEffectorOn = v;  //Изм. на буферизацию компонента!
+                EndEffectorOn = v;
         }
 
         private void CreateMeshVisual()

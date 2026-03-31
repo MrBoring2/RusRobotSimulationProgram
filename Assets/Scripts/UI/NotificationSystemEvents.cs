@@ -51,7 +51,6 @@ namespace Assets.Scripts.UI
             notification.DisplayDuration = signal.NotificationData.customDuration ?? 3000;
             notification.SetNotificationData(signal.NotificationData.Title, signal.NotificationData.Message, signal.NotificationData.Level);
             notification.style.marginBottom = spacing;
-
             notification.OnHide += (n) =>
             {
                 _eventBus.Invoke(new NotificationHiddenSignal { NotificationId = signal.NotificationData.Id });
@@ -64,22 +63,10 @@ namespace Assets.Scripts.UI
             notification.Show();
         }
 
+
         private void CreateNotificationContainer()
         {
-            root.style.position = Position.Absolute;
-            root.style.left = 0;
-            root.style.right = 0;
-            root.style.top = 0;
-            root.style.bottom = 0;
-
-            notificationsContainer = new VisualElement();
-            notificationsContainer.style.position = Position.Absolute;
-            notificationsContainer.style.bottom = 20;
-            notificationsContainer.style.right = 20;
-            notificationsContainer.style.flexDirection = FlexDirection.ColumnReverse;
-            notificationsContainer.style.alignItems = Align.FlexEnd;
-
-            root.Add(notificationsContainer);
+            notificationsContainer = root.Q<VisualElement>("notification-container");
         }
         private void OnDestroy()
         {

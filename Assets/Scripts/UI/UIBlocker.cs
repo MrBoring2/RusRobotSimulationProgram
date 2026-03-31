@@ -23,9 +23,10 @@ public class UIBlocker : MonoBehaviour
         {
             root.Q("menu-bar-container"),
             root.Q("main-menu-container"),
-            root.Q("hierarchy-container"),
+            root.Q("left-column"),
             root.Q("properties-container"),
             root.Q("perspective-panel-container"),
+            root.Q("notification-container")
         };
         // Debug.Log(root);
         // Регистрируем события для каждой панели

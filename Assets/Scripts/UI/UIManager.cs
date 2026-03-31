@@ -16,7 +16,7 @@ public class UIManager : MonoBehaviour
 
         // Находим контейнеры
         var perspectiveContainer = root.Q<VisualElement>("perspective-container");
-        var hierarchyContainer = root.Q<VisualElement>("hierarchy-container");
+        var hierarchyContainer = root.Q<VisualElement>("left-column");
         var propertiesContainer = root.Q<VisualElement>("properties-container");
         var menuBarContainer = root.Q<VisualElement>("menu-bar-container");
 
