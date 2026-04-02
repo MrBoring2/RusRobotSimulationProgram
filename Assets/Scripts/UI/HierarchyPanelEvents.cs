@@ -120,7 +120,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
     private void OnCommandUndoned(UndoneCommandSignal signal)
     {
-        if (signal.Command is IDestructiveCommand)
+        if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand)
         {
             UpdateHierarchy();
             _eventBus.Invoke(new UpdateLineDrawer());
@@ -130,7 +130,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
     private void OnCommandExecuted(ExecuteCommandSignal signal)
     {
-        if (signal.Command is IDestructiveCommand)
+        if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand)
         {
             UpdateHierarchy();
             _eventBus.Invoke(new UpdateLineDrawer());
@@ -186,7 +186,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
     private void RegisterButtons()
     {
-        var closeBtn = root.Q<Button>("close-hierarhy-button");
+        var closeBtn = hierarchyPanel.Q<Button>("close-hierarhy-button");
         closeBtn.clicked += () =>
         {
             _uIStatusManager.ToggleObjectsListPanel();
@@ -358,6 +358,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             //    break;
             default:
                 element = CreateHierarchyElement("hierarchy-item", item.Reference.name, item.Id, texture);
+                element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
                 break;
         }
 
@@ -569,7 +570,6 @@ public class HierarchyPanelEvents : MonoBehaviour
             if (IsInsideHierarchyPanel(evt.target as VisualElement))
             {
                 ShowContextMenu(evt.mousePosition, evt.target as VisualElement);
-                evt.StopPropagation();
             }
             else
             {
@@ -580,7 +580,6 @@ public class HierarchyPanelEvents : MonoBehaviour
         {
             HideContextMenu();
         }
-        evt.StopPropagation();
     }
     /// <summary>
     /// Нажатие на элемент иерархии
@@ -590,9 +589,10 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
         if (evt.button != 0) return;
 
+
         if (evt.target is VisualElement element)
         {
-            evt.StopPropagation();
+            //evt.StopPropagation();
 
             if (element.name == "" || element.name == "label-hierarchy" || element.name == "foldout-header")
             {
@@ -1030,6 +1030,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         //objectPicker.UnpickObject();
         _eventBus.Invoke(new UnpickObjectSignal());
         _eventBus.Invoke(new ChangePropertiesProviderSignal(null));
+        _eventBus.Invoke(new RemoveSceneObjectSignal(obj));
         //propertiesPanelEvents.HidePanel();
         var command = new RemoveObjectCommand(obj);
         _undoRedoManager.Execute(command);
@@ -1079,7 +1080,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 currentDragData.SourceElement.AddToClassList(DRAGGING_CLASS);
                 UpdateDragPreview(evt.mousePosition);
                 hierarchyPanel.CaptureMouse();
-                evt.StopPropagation();
+                //evt.StopPropagation();
             }
         }
         else if (isDragging && currentDragData != null)
@@ -1087,7 +1088,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             UpdateDragPreview(evt.mousePosition);
             var dropTarget = FindDropTarget(evt.mousePosition);
             UpdateDropIndicators(dropTarget);
-            evt.StopPropagation();
+            //evt.StopPropagation();
         }
     }
 
@@ -1106,7 +1107,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             {
                 hierarchyPanel.ReleaseMouse();
             }
-            evt.StopPropagation();
+            //evt.StopPropagation();
         }
         else
         {
@@ -1896,8 +1897,8 @@ public class HierarchyPanelEvents : MonoBehaviour
     /// </summary>
     private void RegisterElements()
     {
-        customScrollView = root.Q<CustomScrollView>("custom-scroll-view");
-        MainHierarchyItem = root.Q<CustomFoldout>("main-item");
+        customScrollView = hierarchyPanel.Q<CustomScrollView>("custom-scroll-view");
+        MainHierarchyItem = hierarchyPanel.Q<CustomFoldout>("main-item");
         root.RegisterCallback<MouseDownEvent>(OnMouseDownInsidePanel);
         MainHierarchyItem.userData = Guid.NewGuid().ToString();
         MainHierarchyItem.SetExpanded(true);

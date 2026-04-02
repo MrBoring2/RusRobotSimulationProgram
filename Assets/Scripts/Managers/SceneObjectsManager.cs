@@ -26,6 +26,8 @@ namespace Assets.Scripts.Managers
         }
 
         public OrderedDictionary Items { get; private set; } = new OrderedDictionary();
+        public CommandsContainer Commands { get; private set; } = new CommandsContainer();
+
 
         public SceneObject Create(GameObject prefab, Vector3 position, Quaternion rotation, ObjectType type, string id = null, string parentId = null)
         {
@@ -45,7 +47,38 @@ namespace Assets.Scripts.Managers
                 {
                     if (id == null)
                         id = Guid.NewGuid().ToString();
-                    sceneObj = new SceneObject(id, objectMaker.type, obj, parentId);
+
+                    switch (type)
+                    {
+                        case ObjectType.Unknown:
+                            sceneObj = new SceneObject(id, objectMaker.type, obj, parentId);
+                            break;
+                        //case ObjectType.LinearMoveCommand:
+                        //case ObjectType.StateEndEffectorCommand:
+                        //case ObjectType.WaitCommand:
+                        //    sceneObj = new CommandObject(id, objectMaker.type, obj, parentId);
+                        //    break;
+                        case ObjectType.Node:
+                        case ObjectType.Primitive:
+                        case ObjectType.Static:
+                            sceneObj = new StaticObject(id, objectMaker.type, obj, parentId);
+                            break;
+                        case ObjectType.Dynamic:
+                        case ObjectType.Workpiece:
+                            sceneObj = new DynamicObject(id, objectMaker.type, obj, parentId);
+                            break;
+                        //case ObjectType.Program:
+                        //    sceneObj = new RobotProgramObject(id, objectMaker.type, obj, parentId);
+                        //    break;
+                        case ObjectType.Robot:
+                            sceneObj = new RobotObject(id, objectMaker.type, obj, parentId);
+                            break;
+                        default:
+                            sceneObj = new SceneObject(id, objectMaker.type, obj, parentId);
+                            break;
+                    }
+
+
                     if (!Items.Contains(id))
                     {
                         Items[id] = sceneObj;
@@ -53,6 +86,63 @@ namespace Assets.Scripts.Managers
                         _eventBus.Invoke<AddSceneObjectSignal>(new AddSceneObjectSignal(sceneObj));
                         _eventBus.Invoke(new UpdateLineDrawer());
                     }
+                }
+            }
+            return sceneObj;
+        }
+
+        public SceneObject CreateCommand(GameObject prefab, Vector3 position, Quaternion rotation, ObjectType type, string id = null, string parentId = null)
+        {
+            SceneObject sceneObj = null;
+            if (prefab != null)
+            {
+                GameObject parent = null;
+                if (!string.IsNullOrEmpty(parentId))
+                {
+                    if (type == ObjectType.Program)
+                    {
+                        parent = ((SceneObject)Items[parentId])?.Reference;
+                    }
+                    else parent = Commands.GetSubProgram(parentId)?.Reference;
+                    if (parent == null) return null;
+                }
+                var obj = Instantiate(prefab, position, rotation, parent?.transform);
+                obj.name = prefab.name;
+                var objectMaker = obj.GetComponent<SceneObjectMarker>();
+                if (objectMaker != null)
+                {
+                    if (id == null)
+                        id = Guid.NewGuid().ToString();
+                    switch (type)
+                    {
+                        case ObjectType.LinearMoveCommand:
+                        case ObjectType.StateEndEffectorCommand:
+                        case ObjectType.WaitCommand:
+                            sceneObj = new CommandObject(id, objectMaker.type, obj, parentId);
+                            break;
+                        case ObjectType.Program:
+                            sceneObj = new RobotProgramObject(id, objectMaker.type, obj, parentId);
+                            break;
+                        default:
+                            sceneObj = new CommandObject(id, objectMaker.type, obj, parentId);
+                            break;
+                    }
+                    sceneObj.Reference.GetComponent<IPropertyProvider>().Id = id;
+
+
+                    if (sceneObj.Type == ObjectType.Program)
+                    {
+                        Commands.AddSubProgram(parentId, sceneObj as RobotProgramObject);
+                    }
+                    else if (sceneObj.Type == ObjectType.WaitCommand ||
+                        sceneObj.Type == ObjectType.LinearMoveCommand ||
+                        sceneObj.Type == ObjectType.StateEndEffectorCommand)
+                    {
+                        var robot = GetById(Commands.GetSubProgram(parentId).ParentId);
+                        Commands.AddCommand(robot.Id, parentId, sceneObj as CommandObject);
+                    }
+                    _eventBus.Invoke<AddSceneObjectSignal>(new AddSceneObjectSignal(sceneObj));
+                    _eventBus.Invoke(new UpdateLineDrawer());
                 }
             }
             return sceneObj;
@@ -77,7 +167,31 @@ namespace Assets.Scripts.Managers
         //{
         //    return Items;
         //}
+        private RobotProgrammElement ConvertToRobotProgrammElement(SceneObject obj)
+        {
+            RobotProgrammElement elem = null;
+            if (obj.Type == ObjectType.LinearMoveCommand)
+            {
+                elem = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
+            }
+            else if (obj.Type == ObjectType.StateEndEffectorCommand)
+            {
+                elem = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
+            }
+            else if (obj.Type == ObjectType.WaitCommand)
+            {
+                elem = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+            }
+            else if (obj.Type == ObjectType.Program)
+            {
+                // Рекурсивно получаем дочерние элементы для подпрограммы
+                //List<RobotProgrammElement> subItems = BuildTreeInternal(obj.Id);
 
+                //var subProgram = new SubProgramm(subItems ?? new List<RobotProgrammElement>(), ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
+                //programm.Add(subProgram);
+            }
+            return elem;
+        }
         public SceneObject GetById(string id)
         {
             // Добавьте проверку на null и пустую строку

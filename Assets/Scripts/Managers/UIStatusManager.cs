@@ -31,7 +31,7 @@ namespace Assets.Scripts.Managers
         {
             this.isInputMode = isInputMode;
         }
-        public void SetPointerOberUI(bool isPointerOverUI)
+        public void SetPointerOverUI(bool isPointerOverUI)
         {
             if (isPointerOverUI == false)
             {
@@ -74,7 +74,7 @@ namespace Assets.Scripts.Managers
 
         public void ToggleCommandsListPanel()
         {
-            IsObjectsListVisible = !IsObjectsListVisible;
+            IsCommandsListVisible = !IsCommandsListVisible;
             _eventBus.Invoke(new ToggleCommandsListSignal());
         }
     }

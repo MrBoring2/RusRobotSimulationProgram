@@ -17,11 +17,11 @@ namespace Assets.Scripts.Models
                 return () => { };
 
             object oldValue = null;
-
+            bool isFocused = false;
             PropertyInfo propertyInfo = null;
 
             // Находим свойство один раз
-            propertyInfo = target.GetType() .GetProperty(propertyName,
+            propertyInfo = target.GetType().GetProperty(propertyName,
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (propertyInfo == null)
@@ -32,6 +32,7 @@ namespace Assets.Scripts.Models
             field.focusable = false;
             EventCallback<FocusEvent> focusHandler = _ =>
             {
+                isFocused = true;
                 oldValue = propertyInfo.GetValue(target);
                 uIStatusManager.SetInputMode(true);
             };
@@ -39,6 +40,16 @@ namespace Assets.Scripts.Models
             EventCallback<ChangeEvent<T>> changeHandler = evt =>
             {
                 applyImmediately?.Invoke();
+                if (isFocused)
+                {
+                    var currentValue = propertyInfo.GetValue(target);
+                    if (!Equals(oldValue, currentValue))
+                    {
+                        var command = new PropertyChangeCommand(target, propertyName, oldValue, currentValue);
+                        undoRedoManager.Execute(command);
+                        oldValue = currentValue; // Обновляем oldValue для следующих изменений
+                    }
+                }
             };
 
             EventCallback<MouseEnterEvent> mouseEnterHandler = evt =>
@@ -49,22 +60,16 @@ namespace Assets.Scripts.Models
             {
                 field.focusable = false;
             };
-            EventCallback<DetachFromPanelEvent> onDestroy = evt =>
-            {
-                field.focusable = false;
-                uIStatusManager.SetInputMode(false);
-                //uIStatusManager.SetPointerOberUI(false);
-            };
+            //EventCallback<DetachFromPanelEvent> onDestroy = evt =>
+            //{
+            //    field.focusable = false;
+            //    uIStatusManager.SetInputMode(false);
+            //    //uIStatusManager.SetPointerOberUI(false);
+            //};
 
 
             EventCallback<BlurEvent> blurHandler = _ =>
             {
-                var currentValue = propertyInfo.GetValue(target);
-                if (!Equals(oldValue, currentValue))
-                {
-                    var command = new PropertyChangeCommand(target, propertyName, oldValue, currentValue);
-                    undoRedoManager.Execute(command);
-                }
                 field.focusable = false;
                 uIStatusManager.SetInputMode(false);
             };
@@ -74,7 +79,7 @@ namespace Assets.Scripts.Models
             field.RegisterCallback(blurHandler);
             field.RegisterCallback(mouseEnterHandler);
             field.RegisterCallback(mouseLeaveHandler);
-            field.RegisterCallback(onDestroy);
+            //field.RegisterCallback(onDestroy);
 
             // Возвращаем функцию для отписки
             return () =>

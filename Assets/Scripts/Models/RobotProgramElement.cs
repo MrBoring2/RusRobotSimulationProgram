@@ -73,7 +73,7 @@ namespace Assets.Scripts.Models
 
         public class SubProgramm : RobotProgrammElement
     {
-        private List<RobotProgrammElement> ProgrammElement { get; set; } = new List<RobotProgrammElement>();
+        public List<RobotProgrammElement> ProgrammElement { get; set; } = new List<RobotProgrammElement>();
         //public SubProgramm(ENUM_COMANDS tc)
         //{
         //    TypeComand = tc;

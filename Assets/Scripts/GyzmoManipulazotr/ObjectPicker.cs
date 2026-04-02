@@ -3,6 +3,7 @@ using Assets.Scripts.CustomEventBus.Signals.Manipulator;
 using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
+using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
@@ -32,6 +33,8 @@ public class ObjectPicker : MonoBehaviour
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<PickObjectSignal>(OnPickObject);
         _eventBus.Subscribe<UnpickObjectSignal>(OnUnpickObject);
+        _eventBus.Subscribe<ExecuteCommandSignal>(OnExecuteCommand);
+        _eventBus.Subscribe<UndoneCommandSignal>(OnUndoneCommand);
         _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
         _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
         _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
@@ -42,6 +45,22 @@ public class ObjectPicker : MonoBehaviour
             manipulator.OnTargetTransformChanged += HandleTransformChanged;
             manipulator.OnDragEnd += Manipulator_OnDragEnd;
             manipulator.OnDragStart += Manipulator_OnDragStart;
+        }
+    }
+
+    private void OnExecuteCommand(ExecuteCommandSignal signal)
+    {
+        if (signal.Command is IDestructiveCommand)
+        {
+            UnpickObject();
+        }
+    }
+
+    private void OnUndoneCommand(UndoneCommandSignal signal)
+    {
+        if (signal.Command is IDestructiveCommand)
+        {
+            UnpickObject();
         }
     }
 
@@ -201,7 +220,16 @@ public class ObjectPicker : MonoBehaviour
             Debug.LogWarning($"На объекте {target.name} нет IPropertyProvider");
             return;
         }
-        var obj = _sceneObjectsManager.GetById(provider.Id);
+        SceneObject obj;
+        var marker = gameObject.GetComponent<SceneObjectMarker>();
+        if(marker.type == ObjectType.LinearMoveCommand)
+        {
+            obj = _sceneObjectsManager.Commands.FindElementById(provider.Id);
+        }
+        else
+        {
+            obj = _sceneObjectsManager.GetById(provider.Id);
+        }
         if (obj != null)
         {
             if (obj.Type == ObjectType.LinearMoveCommand)

@@ -51,7 +51,7 @@ public class RobotProgrammSimulation : MonoBehaviour
             SceneObject obj = s.Point;
             for(int i = 0; i < 20; i++)
             {
-                if( obj.Type == ObjectType.Robot && obj.Id == _propertyProvider.Id)
+                if(obj.Type == ObjectType.Robot && obj.Id == _propertyProvider.Id)
                 {
                     if (s.Point.Type == ObjectType.LinearMoveCommand)
                     {
@@ -63,7 +63,9 @@ public class RobotProgrammSimulation : MonoBehaviour
                 {
                     if(obj.ParentId != null)
                     {
-                        obj = _sceneObjectsManager.GetById(obj.ParentId);
+                        if(obj.Type == ObjectType.LinearMoveCommand)
+                            obj = _sceneObjectsManager.Commands.GetSubProgram(obj.ParentId);
+                        else obj = _sceneObjectsManager.GetById(obj.ParentId);
                     }
                     
                 }
