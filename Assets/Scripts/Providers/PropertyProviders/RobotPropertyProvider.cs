@@ -65,11 +65,6 @@ public class RobotPropertyProvider : BasePropertyProvider
 
     //JOG
     public JOGPropertyProvider JOGpoint;
-    public void SyncJOGPosition()
-    {
-        JOGpoint.GlobalPosition = absoluteXYZ;
-        JOGpoint.GlobalRotationQ = XYZRot;
-    }
 
     public IK_config JOG_IK_Configuration = IK_config.conf_1;
 
@@ -91,109 +86,9 @@ public class RobotPropertyProvider : BasePropertyProvider
     {
         Id = id;
     }
-
-    //public List<RobotProgrammElement> Programm
-    //{
-    //    get
-    //    {
-    //        var a = BuildTreeInternal(Id);
-    //        return a;
-    //    }
-
-    //}
-
-    //private List<RobotProgrammElement> BuildTreeInternal(string parentId)
-    //{
-    //    List<RobotProgrammElement> Programm = new();
-    //    var itemsDict = _sceneObjectManager.Items;
-    //    if (itemsDict == null) return null;
-
-    //    // Ñíà÷àëà ñîáèðàåì âñåõ äåòåé â ïðàâèëüíîì ïîðÿäêå
-    //    List<SceneObject> childrenInOrder = new();
-
-    //    foreach (DictionaryEntry entry in itemsDict)
-    //    {
-    //        var sceneObj = entry.Value as SceneObject;
-    //        if (sceneObj != null &&
-    //            sceneObj.Reference.activeSelf == true &&
-    //            sceneObj.ParentId == parentId &&
-    //            (sceneObj.Type == ObjectType.LinearMoveCommand ||
-    //             sceneObj.Type == ObjectType.StateEndEffectorCommand ||
-    //             sceneObj.Type == ObjectType.WaitCommand ||
-    //             sceneObj.Type == ObjectType.Program))
-    //        {
-    //            childrenInOrder.Add(sceneObj);
-    //        }
-    //    }
-
-    //    // Òåïåðü îáðàáàòûâàåì â ïðàâèëüíîì ïîðÿäêå
-    //    foreach (var child in childrenInOrder)
-    //    {
-    //        ConvertToRobotProgrammElement(child, Programm);
-    //    }
-    //    return Programm;
-    //}
-    //private void ConvertToRobotProgrammElement(SceneObject obj, List<RobotProgrammElement> Programm)
-    //{
-    //    if (obj.Type == ObjectType.LinearMoveCommand)
-    //    {
-    //        var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
-    //        Programm.Add(command);
-    //    }
-    //    else if(obj.Type == ObjectType.StateEndEffectorCommand)
-    //    {
-    //        var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
-    //        Programm.Add(command);
-    //    }
-    //    else if (obj.Type == ObjectType.WaitCommand)
-    //    {
-
-    //        var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
-    //        Programm.Add(command);
-    //    }
-    //    else if (obj.Type == ObjectType.Program)
-    //    {
-    //        // Ïîëó÷àåì äî÷åðíèå ýëåìåíòû â ïðàâèëüíîì ïîðÿäêå
-    //        List<RobotProgrammElement> subItems = new();
-
-    //        //var itemsDict = _sceneObjectManager.Items;
-    //        if (_sceneObjectManager.Items != null)
-    //        {
-    //            foreach (DictionaryEntry entry in _sceneObjectManager.Items)
-    //            {
-    //                var sceneObj = entry.Value as SceneObject;
-    //                if (sceneObj != null &&
-    //                    sceneObj.ParentId == obj.Id &&
-    //                    (sceneObj.Type == ObjectType.LinearMoveCommand ||
-    //                     sceneObj.Type == ObjectType.StateEndEffectorCommand ||
-    //                     sceneObj.Type == ObjectType.WaitCommand))
-    //                {
-    //                    if (sceneObj.Type == ObjectType.LinearMoveCommand)
-    //                    {
-    //                        var command = new CommandMove(sceneObj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
-    //                        subItems.Add(command);
-    //                    }
-    //                    else if (sceneObj.Type == ObjectType.StateEndEffectorCommand)
-    //                    {
-    //                        var command = new ComandSetStateEndEffector(sceneObj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
-    //                        subItems.Add(command);
-    //                    }
-    //                    else if (sceneObj.Type == ObjectType.WaitCommand)
-    //                    {
-
-    //                        var command = new CommandWait(sceneObj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
-    //                        subItems.Add(command);
-    //                    }
-
-
-    //                }
-    //            }
-    //        }
-
-    //        var subProgram = new SubProgramm(subItems, ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
-    //        Programm.Add(subProgram);
-    //    }
-    //}
+    /// <summary>
+    /// получения дерево программы
+    /// </summary>
     public List<RobotProgrammElement> Programm
     {
         get
@@ -226,7 +121,6 @@ public class RobotPropertyProvider : BasePropertyProvider
                 childrenInOrder.Add(sceneObj);
             }
         }
-
         // Теперь обрабатываем в правильном порядке
         foreach (var child in childrenInOrder)
         {
@@ -262,6 +156,13 @@ public class RobotPropertyProvider : BasePropertyProvider
         }
     }
 
+
+
+
+
+
+
+
     public override ProviderSaveData CaptureCustomState()
     {
         return new ProviderSaveData
@@ -285,9 +186,9 @@ public class RobotPropertyProvider : BasePropertyProvider
  
         Vector3 point = new Vector3();
 
-        point.x = pos.y / 1000;
-        point.z = pos.x / 1000;
-        point.y = pos.z / 1000;
+        //point.x = pos.y / 1000;
+        //point.z = pos.x / 1000;
+        //point.y = pos.z / 1000;
 
         return transform.TransformPoint(point); ;
     }

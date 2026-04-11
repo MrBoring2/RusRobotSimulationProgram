@@ -11,6 +11,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 public class RobotController : MonoBehaviour
 {
     private RobotPropertyProvider _propertyProvider;
@@ -20,8 +21,12 @@ public class RobotController : MonoBehaviour
     private Vector3 point;
     private IK ik;
     private Vector3 oldJOGposition = Vector3.zero;
-    public AnimationCurve SpeedCurve;
+    private Quaternion oldJOGrotation = Quaternion.identity;
+    private Point EffectorPosition;
+    private Angles[] angles;
+    private JOGPropertyProvider _JOGProvider;
 
+    public AnimationCurve SpeedCurve;
     public InverseK_new InvKin;
     
     void Start()
@@ -29,12 +34,12 @@ public class RobotController : MonoBehaviour
         InvKin = gameObject.GetComponent<InverseK_new>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _propertyProvider = GetComponent<RobotPropertyProvider>();
+        _JOGProvider = _propertyProvider.JOGpoint;
         ik = new IK(_propertyProvider);
         //_propertyProvider.XYZ = new Vector3(1,1,1);
         //_propertyProvider.oldXYZ = _propertyProvider.XYZ;
-        _propertyProvider.JOGpoint.LocalPosition = new Vector3(1000, 1000, 1000);
-        SetJogMove(_propertyProvider.JOGpoint);
-        
+        _propertyProvider.JOGpoint.LocalPosition = new Vector3(1, 1, 1);
+        SetJogMove();  
     }
     /// <summary>
     /// Вып. команды ожидания
@@ -61,117 +66,91 @@ public class RobotController : MonoBehaviour
     /// </summary>
     public void RobotSetLinMove(LinearPointPropertyProvider point)
     {
-        GetPositionInfo(point);
-        StartCoroutine(LinMove());
+        StartCoroutine(LinMove(point));
     }
     /// <summary>
-    /// Ручное управление
+    /// Движение в режиме JOG
     /// </summary>
-    /// 
-    
-    public void ModifyRobot(RobotPropertyProvider _propertyProvider, Angles ang)
+    /// <param name="point"></param>
+    public void SetJogMove()
     {
-        _propertyProvider.J1Angle = ang.thetha1;
-        _propertyProvider.J2Angle = ang.thetha2;
-        _propertyProvider.J3Angle = ang.thetha3;
-        _propertyProvider.J4Angle = ang.thetha4;
-        _propertyProvider.J5Angle = ang.thetha5;
-        _propertyProvider.J6Angle = ang.thetha6;
-    }
-    public void SetJogMove(JOGPropertyProvider point)
-    {
-        if (1==1/*oldJOGposition != point.Position || _propertyProvider.XYZRot != point.RotationQ*/)
+        if (oldJOGposition != _JOGProvider.LocalPosition || oldJOGrotation != _JOGProvider.LocalRotationQ)
         {
-            InvKin.Translate(_propertyProvider);
-            ModifyRobot(_propertyProvider, InvKin.IKCalc()[0]);
-
-            oldJOGposition = point.LocalPosition;
-            _propertyProvider.oldXYZ = _propertyProvider.XYZ;
-            /*ik.CalculateInverseKinematics();
-            kin.CalcIK(_propertyProvider);
-            /////////////////
-            ///
-            Matrix4x4 matr = new Matrix4x4();
-            
-            
-            if (ik.CheckAngle())
+            EffectorPosition =  InvKin.Translate(_JOGProvider.LocalPosition, _JOGProvider.LocalRotationQ);
+            angles = InvKin.IKCalc();
+            //добавить автовыбор конфигурации или ручной ввод
+            InvKin.CheckLimit(angles[0]);
+            if (InvKin.checkIsNaN(angles[0]))
             {
-                ik.CheckLimit();
-                oldJOGposition = point.Position;
-                _propertyProvider.oldXYZ = _propertyProvider.XYZ;
-                //_propertyProvider.absoluteOldXYZ = _propertyProvider.absoluteXYZ;
+                ModifyRobot(_propertyProvider, angles[0]);
+                _propertyProvider.XYZ = _propertyProvider.oldXYZ = EffectorPosition.Position;
+                _propertyProvider.XYZRot = _propertyProvider.oldXYZRot = EffectorPosition.Rotation;
             }
-            else
-            {
-                //_propertyProvider.XYZ = _propertyProvider.oldXYZ;
-                ik.thetha = ik.old_thetha.ToArray();
-                point.GlobalPosition = _propertyProvider.absoluteOldXYZ;
-            }*/
+            oldJOGposition = _JOGProvider.LocalPosition;
+            oldJOGrotation = _JOGProvider.LocalRotationQ;
 
         }
 
     }
+
+    /// <summary>
+    /// Мгновенное перемещение к позиции точки
+    /// </summary>
+    /// <param name="p"></param>
     public void TeleportToPoint(LinearPointPropertyProvider p)
     {
-        GetPositionInfo(p);
-        ik.CalculateInverseKinematics();
-        ik.CheckAngle();
+        EffectorPosition = InvKin.Translate(GetPositionInfo(p));
+        angles = InvKin.IKCalc();
+        //Выбор конфигурации точки
+        InvKin.CheckLimit(angles[0]);
+        if (InvKin.checkIsNaN(angles[0]))
+        {
+            ModifyRobot(_propertyProvider, angles[0]);
+            _propertyProvider.XYZ = EffectorPosition.Position;
+            _propertyProvider.XYZRot = EffectorPosition.Rotation;
+
+        }
         _propertyProvider.oldXYZ = _propertyProvider.XYZ;
-        _propertyProvider.SyncJOGPosition();
+        _propertyProvider.oldXYZRot = _propertyProvider.XYZRot;
+        SyncJogPos();
     }
-    public void GetPositionInfo(LinearPointPropertyProvider p)
+    public Point GetPositionInfo(LinearPointPropertyProvider p)
     {
-        var a = gameObject;
-        point = _propertyProvider.transform.InverseTransformPoint(p.LocalPosition);////!!!
-        _propertyProvider.XYZ.y = point.x * 1000;
-        _propertyProvider.XYZ.z = point.y * 1000;
-        _propertyProvider.XYZ.x = point.z * 1000;
-        _propertyProvider.XYZRot = p.transform.rotation;
+        //point = _propertyProvider.transform.InverseTransformPoint(p.LocalPosition);////!!!
+
         Speed = p.Speed;
+        return new Point { Position = p.Position, Rotation = p.transform.rotation, Speed = Speed };
 
         //_propertyProvider.absoluteXYZ = p.Position;
         //PointType = p.pointType;
     }
-    private void GetPositionJOG(JOGPropertyProvider p)
-    {
-        point = _propertyProvider.transform.InverseTransformPoint(p.GlobalPosition);////!!!
-        _propertyProvider.XYZ.y = point.x * 1000;
-        _propertyProvider.XYZ.z = point.y * 1000;
-        _propertyProvider.XYZ.x = point.z * 1000;
-        _propertyProvider.XYZRot.y = p.transform.rotation.x;
-        _propertyProvider.XYZRot.z = p.transform.rotation.y;
-        _propertyProvider.XYZRot.x = p.transform.rotation.z;
-
-        //_propertyProvider.absoluteXYZ = p.Position;
-    }
-   
 
 
-
-    IEnumerator LinMove()
+    /// <summary>
+    /// Линейное движение к точке
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator LinMove(LinearPointPropertyProvider point)
     {
         Vector3 start = _propertyProvider.oldXYZ;
         Vector3 currentXYZ = start;
-        Vector3 end = _propertyProvider.XYZ;
+        Vector3 end = InvKin.Translate(GetPositionInfo(point)).Position;
         Vector3 direction = (end - start).normalized;
-
+        Quaternion currentRot = Quaternion.identity;
         float distance = Vector3.Distance(start, end);
         float traveled = 0f;
 
         ///time
-        float timeInWay = distance / (Speed*1000);
+        float timeInWay = distance / Speed;
         float timeCurrent = 0;
         float timeCurrenScale = 0;
-        if (!ik.checkIsNaN())
-        {
-            yield break;
-        }
+        //Сделать проверку точки на доступность, если точка недоступна, то не выполнять движение и выдавать ошибку
 
-        Quaternion XYZBuf = _propertyProvider.XYZRot;
+        Quaternion XYZBuf = GetPositionInfo(point).Rotation;
         while (traveled < distance)
         {
 
-            yield return new WaitUntil(()=>allowNextMove);
+            //yield return new WaitUntil(()=>allowNextMove);
             /*float t0 = MathF.Floor((traveled / distance) * 100f) / 100f;
 
             float s = ik.Curva(t0);
@@ -182,28 +161,43 @@ public class RobotController : MonoBehaviour
             float positionInLine = SpeedCurve.Evaluate(timeCurrenScale) * distance;
             float step = positionInLine - traveled;
             currentXYZ += direction * step;
-            _propertyProvider.XYZ = currentXYZ;
-            _propertyProvider.oldXYZ = currentXYZ;
 
-           // _propertyProvider.XYZRot = Quaternion.identity;
-            _propertyProvider.XYZRot = Quaternion.Lerp(_propertyProvider.oldXYZRot, XYZBuf, SpeedCurve.Evaluate(timeCurrenScale));
+            // _propertyProvider.XYZRot = Quaternion.identity;
+            currentRot = Quaternion.Lerp(_propertyProvider.oldXYZRot, XYZBuf, SpeedCurve.Evaluate(timeCurrenScale));
             //UnityEngine.Debug.LogWarning("XYZ " + _propertyProvider.XYZRot.eulerAngles.y);
 
-            ik.CalculateInverseKinematics();
+            InvKin.Translate(currentXYZ, currentRot);
+            angles = InvKin.IKCalc();
+
+            //ik.CalculateInverseKinematics();
             //CheckAngle();
 
             traveled = positionInLine;
-            ik.CheckAngle();
+            //
+            //Выбор конфигурации точки
+            InvKin.CheckLimit(angles[0]);
+            if (InvKin.checkIsNaN(angles[0]))
+            {
+                ModifyRobot(_propertyProvider, angles[0]);
 
-            timeCurrent += Time.fixedDeltaTime;
+            }
+            //_propertyProvider.oldXYZ = _propertyProvider.XYZ;
+            // _propertyProvider.oldXYZRot = _propertyProvider.XYZRot;
+            //
 
+            //timeCurrent += Time.fixedDeltaTime;
+            timeCurrent += Time.deltaTime;
             //yield return new WaitForSeconds((1f/Speed*s)/1000f);
-            //yield return new WaitForSeconds(Time.fixedDeltaTime);
+            yield return new WaitForSeconds(Time.fixedDeltaTime);
         }
         //XYZRot = XYZBuf;
-        _propertyProvider.oldXYZ = _propertyProvider.XYZ;
-        _propertyProvider.oldXYZRot = _propertyProvider.XYZRot;
-        _propertyProvider.SyncJOGPosition();
+        _propertyProvider.oldXYZ = end;
+        _propertyProvider.oldXYZRot = XYZBuf;//изм название
+
+        _propertyProvider.XYZ = end;
+        _propertyProvider.XYZRot = XYZBuf;//изм название
+
+        SyncJogPos();
         _eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
     }
     public void SetAllowNextMove(bool allow)
@@ -214,7 +208,30 @@ public class RobotController : MonoBehaviour
     {
         allowNextMove = false;
         StopAllCoroutines();
-        _propertyProvider.SyncJOGPosition();
+        SyncJogPos();
+    }
+    /// <summary>
+    /// перемещает точку JOG в позицию эффектора, используется для синхронизации позиции точки JOG при выполнении других типов движения
+    /// </summary>
+    public void SyncJogPos()
+    {
+        //_propertyProvider.JOGpoint.GlobalPosition = _propertyProvider.absoluteXYZ;
+        //_propertyProvider.JOGpoint.GlobalRotationQ = _propertyProvider.XYZRot;
+        _propertyProvider.JOGpoint.LocalPosition = _propertyProvider.XYZ;
+        _propertyProvider.JOGpoint.LocalRotationQ = _propertyProvider.XYZRot;
+    }
+    /// <summary>
+    /// Ручное управление
+    /// </summary>
+    /// 
+    public void ModifyRobot(RobotPropertyProvider _propertyProvider, Angles ang)
+    {
+        _propertyProvider.J1Angle = ang.thetha1;
+        _propertyProvider.J2Angle = ang.thetha2;
+        _propertyProvider.J3Angle = ang.thetha3;
+        _propertyProvider.J4Angle = ang.thetha4;
+        _propertyProvider.J5Angle = ang.thetha5;
+        _propertyProvider.J6Angle = ang.thetha6;
     }
 }
 

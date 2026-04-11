@@ -1,8 +1,10 @@
 ﻿using Assets.Scripts.Providers;
 using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEditor.Rendering.Universal;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 
 
@@ -26,21 +28,79 @@ public class InverseK_new : MonoBehaviour
             Angles[i] = new Angles();
         }
     }
-    public void Translate( RobotPropertyProvider _propertyProvider)
+    /// <summary>
+    /// Перевод из системы координат Юнити в Координатную систему робота и подготовка данных для расчета ИК, передавать локальные координаты относительно основания робота
+    /// </summary>
+    /// <param name="_propertyProvider"></param>
+    /// <returns></returns>
+    public Point Translate(Point point) //метод не нужен
     {
-        X = _propertyProvider.JOGpoint.LocalPosition.z;
-        Y = _propertyProvider.JOGpoint.LocalPosition.x;
-        Z = _propertyProvider.JOGpoint.LocalPosition.y;
+        //X = _propertyProvider.JOGpoint.LocalPosition.z;
+        //Y = _propertyProvider.JOGpoint.LocalPosition.x;
+        //Z = _propertyProvider.JOGpoint.LocalPosition.y;
 
-        UX = _propertyProvider.JOGpoint.Rotation.z;
-        UY = _propertyProvider.JOGpoint.Rotation.x;
-        UZ = _propertyProvider.JOGpoint.Rotation.y;
+        //UX = _propertyProvider.JOGpoint.Rotation.z;
+        //UY = _propertyProvider.JOGpoint.Rotation.x;
+        //UZ = _propertyProvider.JOGpoint.Rotation.y;
 
-        RotateQ.x = _propertyProvider.JOGpoint.LocalRotationQ.z;
-        RotateQ.y = _propertyProvider.JOGpoint.LocalRotationQ.x;
-        RotateQ.z = _propertyProvider.JOGpoint.LocalRotationQ.y;
-        RotateQ.w = _propertyProvider.JOGpoint.LocalRotationQ.w;
-        RotateMatrix = Matrix4x4.Rotate(RotateQ);
+        //RotateQ.x = _propertyProvider.JOGpoint.LocalRotationQ.z;
+        //RotateQ.y = _propertyProvider.JOGpoint.LocalRotationQ.x;
+        //RotateQ.z = _propertyProvider.JOGpoint.LocalRotationQ.y;
+        //RotateQ.w = _propertyProvider.JOGpoint.LocalRotationQ.w;
+        //RotateMatrix = Matrix4x4.Rotate(RotateQ);
+        //return new IK_Effector(new Vector3(X, Y, Z), RotateQ);
+        X = point.Position.x;
+        Y = point.Position.y;
+        Z = point.Position.z;
+
+        //UX = point.Rotation.z;
+        //UY = point.Rotation.x;
+        //UZ = point.Rotation.y;
+
+        RotateQ.x = point.Rotation.x;
+        RotateQ.y = point.Rotation.y;
+        RotateQ.z = point.Rotation.z;
+        RotateQ.w = point.Rotation.w;
+        return new Point(new Vector3(X, Y, Z), RotateQ);
+
+    }
+    public Point Translate(Vector3 position, Quaternion  rotation)
+    {
+        //X = _propertyProvider.JOGpoint.LocalPosition.z;
+        //Y = _propertyProvider.JOGpoint.LocalPosition.x;
+        //Z = _propertyProvider.JOGpoint.LocalPosition.y;
+
+        //UX = _propertyProvider.JOGpoint.Rotation.z;
+        //UY = _propertyProvider.JOGpoint.Rotation.x;
+        //UZ = _propertyProvider.JOGpoint.Rotation.y;
+
+        //RotateQ.x = _propertyProvider.JOGpoint.LocalRotationQ.z;
+        //RotateQ.y = _propertyProvider.JOGpoint.LocalRotationQ.x;
+        //RotateQ.z = _propertyProvider.JOGpoint.LocalRotationQ.y;
+        //RotateQ.w = _propertyProvider.JOGpoint.LocalRotationQ.w;
+        //RotateMatrix = Matrix4x4.Rotate(RotateQ);
+        //return new IK_Effector(new Vector3(X, Y, Z), RotateQ);
+        //X = position.z;
+        //Y = position.x;
+        //Z = position.y;
+
+        Quaternion correct = Quaternion.Euler(0, 0, 0);
+
+        X = position.x;
+        Y = position.y;
+        Z = position.z;
+
+        //UX = rotation.z;
+        //UY = rotation.x;
+        //UZ = rotation.y;
+
+        //RotateQ.x = rotation.x;
+        //RotateQ.y = rotation.y;
+        //RotateQ.z = rotation.z;
+        //RotateQ.w = rotation.w;
+        RotateQ = correct * rotation;
+        return new Point(new Vector3(X, Y, Z), RotateQ);
+
     }
 
     /// <summary>
@@ -52,9 +112,14 @@ public class InverseK_new : MonoBehaviour
     {
         //рачсет точки расположения основания сферического запястья
         Vector3 C0 = new Vector3();
-        C0.x = X - RP.c4 * RotateMatrix[0, 2];
-        C0.y = Y - RP.c4 * RotateMatrix[1, 2];
-        C0.z = Z - RP.c4 * RotateMatrix[2, 2];
+        RotateMatrix = Matrix4x4.Rotate(new Quaternion(x:RotateQ.z, y:RotateQ.x, z:RotateQ.y, w:RotateQ.w));
+        //C0.x = X - RP.c4 * RotateMatrix[0, 2];
+        //C0.y = Y - RP.c4 * RotateMatrix[1, 2];
+        //C0.z = Z - RP.c4 * RotateMatrix[2, 2];
+        C0.x = Z * 1000 - RP.c4 * RotateMatrix[0, 2];
+        C0.y = X * 1000 - RP.c4 * RotateMatrix[1, 2];
+        C0.z = Y * 1000 - RP.c4 * RotateMatrix[2, 2];
+
 
         float r = Mathf.Sqrt(C0.x * C0.x + C0.y * C0.y);
         float rr = r * r;
@@ -112,5 +177,90 @@ public class InverseK_new : MonoBehaviour
         Angles[0].thetha5 = (Angles[0].thetha5 * 180 / Mathf.PI);
         Angles[0].thetha6 = (Angles[0].thetha6 * 180 / Mathf.PI);
         return Angles;
+    }
+    /// <summary>
+    /// ограничение углов в соответствии с техническими характеристиками робота
+    /// </summary>
+    /// <param name="ang"></param>
+    public void CheckLimit(Angles ang)
+    {
+        if (ang.thetha1 < -175)
+        {
+            ang.thetha1 = -175;
+            UnityEngine.Debug.LogWarning("ОГР А1");
+        }
+        if (ang.thetha1 > 175)
+        {
+            ang.thetha1 = 175;
+            UnityEngine.Debug.LogWarning("ОГР А1");
+        }
+        if (ang.thetha2 > -20)
+        {
+            ang.thetha2 = -20;
+            UnityEngine.Debug.LogWarning("ОГР А2");
+        }
+        if (ang.thetha2 < -140)
+        {
+            ang.thetha2 = -140;
+            UnityEngine.Debug.LogWarning("ОГР А2");
+        }
+        if (ang.thetha3 > 170)
+        {
+            ang.thetha3 = 170;
+            UnityEngine.Debug.LogWarning("ОГР А3");
+        }
+        if (ang.thetha3 < -60)
+        {
+            ang.thetha3 = -60;
+            UnityEngine.Debug.LogWarning("ОГР А3");
+        }
+        if (ang.thetha4 < -180)
+        {
+            ang.thetha4 = -180;
+            UnityEngine.Debug.LogWarning("ОГР А4");
+        }
+        if (ang.thetha4 > 180)
+        {
+            ang.thetha4 = 180;
+            UnityEngine.Debug.LogWarning("ОГР А4");
+        }
+        if (ang.thetha5 < -105)
+        {
+            ang.thetha5 = -105;
+            UnityEngine.Debug.LogWarning("ОГР А5");
+        }
+        if (ang.thetha5 > 105)
+        {
+            ang.thetha5 = 105;
+            UnityEngine.Debug.LogWarning("ОГР А6");
+        }
+        if (ang.thetha6 < -180)
+        {
+            ang.thetha6 = -180;
+            UnityEngine.Debug.LogWarning("ОГР А6");
+        }
+        if (ang.thetha6 > 180)
+        {
+            ang.thetha6 = 180;
+            UnityEngine.Debug.LogWarning("ОГР А6");
+        }
+    }
+    /// <summary>
+    /// проверка на выход за пределы расчетов (NaN) при невозможности достижения заданной позиции эффектора
+    /// </summary>
+    /// <param name="ang"></param>
+    /// <returns></returns>
+    public bool checkIsNaN(Angles ang)
+    {
+        if (float.IsNaN(ang.thetha1) || float.IsNaN(ang.thetha2) || float.IsNaN(ang.thetha3) ||
+            float.IsNaN(ang.thetha4) || float.IsNaN(ang.thetha5) || float.IsNaN(ang.thetha6))
+        {
+            UnityEngine.Debug.LogError("Выход за пределы расчетов!");
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
 }

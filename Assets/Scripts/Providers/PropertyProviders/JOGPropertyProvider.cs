@@ -37,8 +37,7 @@ namespace Assets.Scripts.Providers
             }
         }
 
-
-        public Vector3 LocalPosition { get => transform.localPosition * 1000; set => transform.localPosition = value / 1000; }
+        public Vector3 LocalPosition { get => transform.localPosition; set => transform.localPosition = value; }
         public Quaternion LocalRotationQ { get => transform.localRotation; set => transform.localRotation = value; }
         public Vector3 GlobalPosition { get => transform.position; set => transform.position = value; }
         public Quaternion GlobalRotationQ{ get => transform.rotation; set => transform.rotation = value; }
