@@ -950,8 +950,8 @@ public class HierarchyPanelEvents : MonoBehaviour
                 var robot = FindParentRobot(parentId);
                 var manipulator = FindChildByName(robot.Reference.transform, "JOG_Manipulator");
                 var provider = manipulator.gameObject.GetComponent<JOGPropertyProvider>();
-                pos = new Vector3(provider.GlobalPostiion.x, provider.GlobalPostiion.y, provider.GlobalPostiion.z);
-                var a = provider.RotationQ;
+                pos = new Vector3(provider.GlobalPosition.x, provider.GlobalPosition.y, provider.GlobalPosition.z);
+                var a = provider.GlobalRotationQ;
                 rot = Quaternion.Euler(provider.Rotation);
                 var b = rot.eulerAngles;
             }

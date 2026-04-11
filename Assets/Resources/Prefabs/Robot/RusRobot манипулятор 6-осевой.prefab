@@ -666,6 +666,7 @@ GameObject:
   - component: {fileID: 647134665470056457}
   - component: {fileID: 3784784265109912282}
   - component: {fileID: 7573109030372696143}
+  - component: {fileID: 8734229360267228368}
   m_Layer: 0
   m_Name: "RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
     6-\u043E\u0441\u0435\u0432\u043E\u0439"
@@ -717,6 +718,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0154e894b15591428e7e2650e6564bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RobotController
+  SpeedCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  InvKin: {fileID: 0}
 --- !u!114 &647134665470056457
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -765,6 +773,7 @@ MonoBehaviour:
   oldXYZ: {x: 0, y: 0, z: 0}
   XYZRot: {x: 0, y: 0, z: 0, w: 0}
   oldXYZRot: {x: 0, y: 0, z: 0, w: 1}
+  XYZ_robot_Rotate: {x: 0, y: 0, z: 0, w: 0}
   thetha:
   - 0
   - 0
@@ -787,6 +796,7 @@ MonoBehaviour:
   - 0
   - 0
   JOGpoint: {fileID: 8847216311470501691}
+  JOG_IK_Configuration: 0
 --- !u!114 &7573109030372696143
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -802,6 +812,42 @@ MonoBehaviour:
   type: 7
   sourcePath: "Prefabs/Robot/RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
     6-\u043E\u0441\u0435\u0432\u043E\u0439"
+--- !u!114 &8734229360267228368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3126245551890948002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81646d70d50914d49831cee77676935e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InverseK_new
+  X: 0
+  Y: 0
+  Z: 0
+  UX: 0
+  UY: 0
+  UZ: 0
+  RotateQ: {x: 0, y: 0, z: 0, w: 1}
+  RotateMatrix:
+    e00: 0
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 0
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 0
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 0
 --- !u!1 &3137455119182969186
 GameObject:
   m_ObjectHideFlags: 0
@@ -1165,12 +1211,12 @@ MonoBehaviour:
   z1: {fileID: 7817584039701820378}
   z2: {fileID: 3429348313907132287}
   Base: {fileID: 805792089729871822}
-  Limiter: {fileID: 0}
-  Robot: {fileID: 3126245551890948002}
   zajat: 0
   z1Col: 0
   z2Col: 0
-  _propertyProvider: {fileID: 0}
+  z1Collision: {fileID: 0}
+  z2Collision: {fileID: 0}
+  _propertyProvider: {fileID: 3784784265109912282}
 --- !u!64 &844208916532001711
 MeshCollider:
   m_ObjectHideFlags: 0
