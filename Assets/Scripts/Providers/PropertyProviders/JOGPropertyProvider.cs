@@ -13,7 +13,12 @@ namespace Assets.Scripts.Providers
 {
     public class JOGPropertyProvider : MonoBehaviour, IPropertyProvider
     {
-
+            
+        public string Id
+        {
+            get => _robotPropertyProvider.Id;
+            set => _robotPropertyProvider.Id = value;
+        }
         private RobotPropertyProvider _robotPropertyProvider;
 
         /// <summary>
@@ -42,14 +47,12 @@ namespace Assets.Scripts.Providers
         public Vector3 GlobalPosition { get => transform.position; set => transform.position = value; }
         public Quaternion GlobalRotationQ{ get => transform.rotation; set => transform.rotation = value; }
         
-
+        public RobotPropertyProvider RobotPropertyProvider => _robotPropertyProvider;
         private bool EndEffectorOn
         {
             get => _robotPropertyProvider.EndEffectorOn;
             set => _robotPropertyProvider.EndEffectorOn = value;
         }
-
-        public string Id { get => id; set => id = value; }
         public bool IsReadondly { get; set; }
         public string Name { get => gameObject.name; set { gameObject.name = value; } }
         public Vector3 Scale { get => transform.localScale; set => transform.localScale = value; }

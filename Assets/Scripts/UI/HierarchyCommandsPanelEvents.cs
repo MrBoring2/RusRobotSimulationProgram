@@ -103,7 +103,7 @@ namespace Assets.Scripts.UI
         {
             if (signal.PropertyProvider != null)
             {
-                ObjectType type;
+                ObjectType type = ObjectType.Unknown;
                 if (signal.PropertyProvider is LinearPointPropertyProvider ||
                     signal.PropertyProvider is WaitPropertyProvider ||
                     signal.PropertyProvider is StateEndEffectorPropertyProvider ||
@@ -111,11 +111,17 @@ namespace Assets.Scripts.UI
                 {
                     type = ObjectType.LinearMoveCommand;
                 }
+                else if(signal.PropertyProvider is JOGPropertyProvider s)
+                {
+                    type = _sceneObjectManager.GetById(s.RobotPropertyProvider.Id).Type;
+                }
                 else type = _sceneObjectManager.GetById(signal.PropertyProvider.Id).Type;
 
                 if (type == ObjectType.Robot)
                 {
-                    current = signal.PropertyProvider;
+                    if (signal.PropertyProvider is JOGPropertyProvider s)
+                        current = s.RobotPropertyProvider;
+                    else current = signal.PropertyProvider;
                     MainHierarchyItem.userData = current.Id;
                     UpdateHierarchy();
                 }
@@ -819,7 +825,7 @@ namespace Assets.Scripts.UI
                     //    contextMenu.Add(CreateMenuButton("Добавить объект", () => CreateObject(parentId)));
                     //    contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                     //}
-                    if (foldout.name == "main-item")
+                    else if (foldout.name == "main-item")
                     {
                         if (current == null) return;
                         var robot = _sceneObjectManager.GetById(MainHierarchyItem.userData.ToString());
@@ -1025,6 +1031,8 @@ namespace Assets.Scripts.UI
             while (obj?.Type != ObjectType.Robot)
             {
                 obj = _sceneObjectManager.GetById(parentId);
+                if(obj == null)
+                    obj = _sceneObjectManager.Commands.FindElementById(parentId);
                 parentId = obj.ParentId;
             }
             return obj;
@@ -1079,7 +1087,7 @@ namespace Assets.Scripts.UI
                 }
             }
             string id = (string)clickedElement.userData;
-            var obj = _sceneObjectManager.GetById(clickedElement.userData.ToString()); //objectManager.GetObjectByUniqueID(id);
+            var obj = _sceneObjectManager.Commands.FindElementById(clickedElement.userData.ToString()); //objectManager.GetObjectByUniqueID(id);
 
             if (obj == null)
                 return;
