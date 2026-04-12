@@ -16,6 +16,7 @@ namespace Assets.Scripts.Managers
     {
         public bool IsPropertiesPanelVisible { get; private set; } = false;
         public bool IsObjectsListVisible { get; private set; } = true;
+        public bool IsCommandsListVisible { get; private set; } = false;
         public bool isPointerOverUI { get; private set; }
         public bool isInputMode { get; private set; }
         private EventBus _eventBus;
@@ -30,9 +31,9 @@ namespace Assets.Scripts.Managers
         {
             this.isInputMode = isInputMode;
         }
-        public void SetPointerOberUI(bool isPointerOverUI)
+        public void SetPointerOverUI(bool isPointerOverUI)
         {
-            if(isPointerOverUI == false)
+            if (isPointerOverUI == false)
             {
 
             }
@@ -43,11 +44,20 @@ namespace Assets.Scripts.Managers
         {
             IsPropertiesPanelVisible = visible;
             _eventBus.Invoke(new TogglePropertiesSignal());
+
         }
+
+
         public void SetObjectsListPanelVisibility(bool visible)
         {
             IsObjectsListVisible = visible;
             _eventBus.Invoke(new ToggleObjectsListSignal());
+        }
+
+        public void SetCommandsListPanelVisibility(bool visible)
+        {
+            IsCommandsListVisible = visible;
+            _eventBus.Invoke(new ToggleCommandsListSignal());
         }
 
         public void TogglePropertiesPanel()
@@ -60,6 +70,12 @@ namespace Assets.Scripts.Managers
         {
             IsObjectsListVisible = !IsObjectsListVisible;
             _eventBus.Invoke(new ToggleObjectsListSignal());
+        }
+
+        public void ToggleCommandsListPanel()
+        {
+            IsCommandsListVisible = !IsCommandsListVisible;
+            _eventBus.Invoke(new ToggleCommandsListSignal());
         }
     }
 }

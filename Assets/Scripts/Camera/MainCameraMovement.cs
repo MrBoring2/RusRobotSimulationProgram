@@ -58,7 +58,7 @@ public class MainCameraMovement : MonoBehaviour
         RotateToView(singal.Rotation);
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if(!_uiStatusManager.isInputMode)
             HandleMovement();

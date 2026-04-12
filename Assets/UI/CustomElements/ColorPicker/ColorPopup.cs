@@ -294,7 +294,5 @@ namespace Assets.UI.CustomElements.ColorPicker
             float mult = Mathf.Pow(10.0f, digits);
             return Mathf.Round(value * mult) / mult;
         }
-
-        // ============================================================================================================
     }
 }

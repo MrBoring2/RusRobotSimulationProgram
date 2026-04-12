@@ -19,6 +19,7 @@ namespace Assets.Scripts.CustomServiceManager
         [SerializeField] private AxisModeManager _axisModeManager;
         [SerializeField] private UndoRedoManager _undoRedoManager;
         [SerializeField] private SaveLoadManager _saveLoadManager;
+        [SerializeField] private NotificationSystemManager _notificationSystemManager;
         private CustomEventBus.EventBus _eventBus;
         [SerializeField] private SimulationManager _simulationManager;
 
@@ -42,6 +43,7 @@ namespace Assets.Scripts.CustomServiceManager
             ServiceManager.Current.Register(_undoRedoManager);
             ServiceManager.Current.Register(_saveLoadManager);
             ServiceManager.Current.Register(_simulationManager);
+            ServiceManager.Current.Register(_notificationSystemManager);
         }
 
         private void Init()
@@ -53,6 +55,7 @@ namespace Assets.Scripts.CustomServiceManager
             _axisModeManager.Init();
             _undoRedoManager.Init();
             _saveLoadManager.Init();
+            _notificationSystemManager.Init();
         }
 
     }

@@ -24,7 +24,7 @@ namespace Assets.Scripts.Models
         public void Execute()
         {
             if (instance == null)
-                throw new Exception("Обхекта не существует");
+                throw new Exception("Объекта не существует");
             else
                 instance.Reference.SetActive(false);
         }

@@ -4,7 +4,7 @@
 
 /* === Верхнее меню с кнопкой закрытия === */
 #menu {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 
 }
 
@@ -32,7 +32,7 @@
 #position-property-container,
 #rotation-property-container,
 #scale-property-container {
-    margin-bottom: 10px;
+    margin-bottom: 2px;
 }
 
 .base-bool-property {

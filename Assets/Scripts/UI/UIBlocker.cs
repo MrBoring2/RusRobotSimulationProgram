@@ -19,13 +19,18 @@ public class UIBlocker : MonoBehaviour
         _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
         root = GetComponent<UIDocument>().rootVisualElement;
         // Определяем список панелей, по которым нужно отслеживать курсор
+        var a = root.Q("left-column");
         uiElements = new List<VisualElement>
         {
             root.Q("menu-bar-container"),
             root.Q("main-menu-container"),
-            root.Q("hierarchy-container"),
+            root.Q("left-column"),
             root.Q("properties-container"),
+            //root.Q("hierarchy-container"),
+            //root.Q("panel-divider"),
+            //root.Q("hierarchy-commands-container"),
             root.Q("perspective-panel-container"),
+            root.Q("notification-container")
         };
         // Debug.Log(root);
         // Регистрируем события для каждой панели
@@ -59,40 +64,41 @@ public class UIBlocker : MonoBehaviour
         uiElements.Remove(contextMenu);
         contextMenu.UnregisterCallback<MouseEnterEvent>(OnContextMenuMouseEnter);
         contextMenu.UnregisterCallback<MouseLeaveEvent>(OnContextMenuMouseLeave);
-        ResolveUI();
+        //!!!!если чо вернуть///
+        //ResolveUI();
     }
 
     public void ResolveUI()
     {
-        _uiStatusManager.SetPointerOberUI(false);
+        _uiStatusManager.SetPointerOverUI(false);
     }
 
     private void OnMouseEnter(MouseEnterEvent evt)
     {
-        _uiStatusManager.SetPointerOberUI(true);  // Когда курсор заходит на панель 
+        _uiStatusManager.SetPointerOverUI(true);  // Когда курсор заходит на панель 
     }
 
     private void OnMouseLeave(MouseLeaveEvent evt)
     {
-        _uiStatusManager.SetPointerOberUI(false); // Когда курсор покидает панель
+        _uiStatusManager.SetPointerOverUI(false); // Когда курсор покидает панель
     }
 
     private void OnModalWindowMouseEnter(MouseEnterEvent evt)
     {
-        _uiStatusManager.SetPointerOberUI(true);
+        _uiStatusManager.SetPointerOverUI(true);
     }
     private void OnModalWindowMouseLeaveLeave(MouseLeaveEvent evt)
     {
-        _uiStatusManager.SetPointerOberUI(false);
+        _uiStatusManager.SetPointerOverUI(false);
     }
     private void OnContextMenuMouseEnter(MouseEnterEvent evt)
     {
-        _uiStatusManager.SetPointerOberUI(true);
+        _uiStatusManager.SetPointerOverUI(true);
     }
 
     private void OnContextMenuMouseLeave(MouseLeaveEvent evt)
     {
-        _uiStatusManager.SetPointerOberUI(false);
+        _uiStatusManager.SetPointerOverUI(false);
     }
     private void UnregisterUIElements()
     {

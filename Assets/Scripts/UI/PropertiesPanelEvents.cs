@@ -542,6 +542,6 @@ public class PropertiesPanelEvents : MonoBehaviour
     {
         ClearBindings();
         _UIStatusManager.SetInputMode(false);
-        _UIStatusManager.SetPointerOberUI(false);
+        _UIStatusManager.SetPointerOverUI(false);
     }
 }

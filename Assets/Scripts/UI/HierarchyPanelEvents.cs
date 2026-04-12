@@ -120,7 +120,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
     private void OnCommandUndoned(UndoneCommandSignal signal)
     {
-        if (signal.Command is IDestructiveCommand)
+        if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand)
         {
             UpdateHierarchy();
             _eventBus.Invoke(new UpdateLineDrawer());
@@ -130,7 +130,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
     private void OnCommandExecuted(ExecuteCommandSignal signal)
     {
-        if (signal.Command is IDestructiveCommand)
+        if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand)
         {
             UpdateHierarchy();
             _eventBus.Invoke(new UpdateLineDrawer());
@@ -186,7 +186,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
     private void RegisterButtons()
     {
-        var closeBtn = root.Q<Button>("close-hierarhy-button");
+        var closeBtn = hierarchyPanel.Q<Button>("close-hierarhy-button");
         closeBtn.clicked += () =>
         {
             _uIStatusManager.ToggleObjectsListPanel();
@@ -286,15 +286,15 @@ public class HierarchyPanelEvents : MonoBehaviour
         {
             case ObjectType.Unknown:
                 break;
-            case ObjectType.LinearMoveCommand:
-                texture = Resources.Load<Texture2D>("Icons/icon_line_mode");
-                break;
-            case ObjectType.StateEndEffectorCommand:
-                texture = Resources.Load<Texture2D>("Icons/icon_grip");
-                break;
-            case ObjectType.WaitCommand:
-                texture = Resources.Load<Texture2D>("Icons/icon_wait");
-                break;
+            //case ObjectType.LinearMoveCommand:
+            //    texture = Resources.Load<Texture2D>("Icons/icon_line_mode");
+            //    break;
+            //case ObjectType.StateEndEffectorCommand:
+            //    texture = Resources.Load<Texture2D>("Icons/icon_grip");
+            //    break;
+            //case ObjectType.WaitCommand:
+            //    texture = Resources.Load<Texture2D>("Icons/icon_wait");
+            //    break;
             case ObjectType.Primitive:
                 texture = Resources.Load<Texture2D>("Icons/icon_primitive");
                 break;
@@ -302,9 +302,9 @@ public class HierarchyPanelEvents : MonoBehaviour
                 break;
             case ObjectType.Dynamic:
                 break;
-            case ObjectType.Program:
-                texture = Resources.Load<Texture2D>("Icons/icon_program");
-                break;
+            //case ObjectType.Program:
+            //    texture = Resources.Load<Texture2D>("Icons/icon_program");
+            //    break;
             case ObjectType.Robot:
                 texture = Resources.Load<Texture2D>("Icons/icon_robot");
                 break;
@@ -319,45 +319,46 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
         switch (item.Type)
         {
-            case ObjectType.Robot:
-                element = new CustomFoldout { Text = item.Reference.name };
-                ((CustomFoldout)element).SetHeaderImage(texture);
-                element.name = "hierarchy-item-robot";
-                element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
-                var robotFoldout = (CustomFoldout)element;
-                robotFoldout.OnExpandedChanged += (isExpanded) =>
-                {
-                    if (robotFoldout.userData != null)
-                    {
-                        expandedFoldouts[robotFoldout.userData.ToString()] = isExpanded;
-                    }
-                };
-                break;
-            case ObjectType.Program:
-                element = new CustomFoldout { Text = item.Reference.name };
-                ((CustomFoldout)element).SetHeaderImage(texture);
-                element.name = "hierarchy-item-program";
-                element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
-                var programFoldout = (CustomFoldout)element;
-                programFoldout.OnExpandedChanged += (isExpanded) =>
-                {
-                    if (programFoldout.userData != null)
-                    {
-                        expandedFoldouts[programFoldout.userData.ToString()] = isExpanded;
-                    }
-                };
-                break;
+            //case ObjectType.Robot:
+            //    element = new CustomFoldout { Text = item.Reference.name };
+            //    ((CustomFoldout)element).SetHeaderImage(texture);
+            //    element.name = "hierarchy-item-robot";
+            //    element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
+            //    var robotFoldout = (CustomFoldout)element;
+            //    robotFoldout.OnExpandedChanged += (isExpanded) =>
+            //    {
+            //        if (robotFoldout.userData != null)
+            //        {
+            //            expandedFoldouts[robotFoldout.userData.ToString()] = isExpanded;
+            //        }
+            //    };
+            //    break;
+            //case ObjectType.Program:
+            //    element = new CustomFoldout { Text = item.Reference.name };
+            //    ((CustomFoldout)element).SetHeaderImage(texture);
+            //    element.name = "hierarchy-item-program";
+            //    element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
+            //    var programFoldout = (CustomFoldout)element;
+            //    programFoldout.OnExpandedChanged += (isExpanded) =>
+            //    {
+            //        if (programFoldout.userData != null)
+            //        {
+            //            expandedFoldouts[programFoldout.userData.ToString()] = isExpanded;
+            //        }
+            //    };
+            //    break;
             case ObjectType.Node:
                 element = new CustomFoldout { Text = item.Reference.name };
                 ((CustomFoldout)element).SetHeaderImage(texture);
                 element.name = "hierarchy-item-node";
                 element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
                 break;
-            case ObjectType.LinearMoveCommand or ObjectType.StateEndEffectorCommand or ObjectType.WaitCommand:
-                element = CreateHierarchyElement("hierarchy-item-command", item.Reference.name, item.Id, texture);
-                break;
+            //case ObjectType.LinearMoveCommand or ObjectType.StateEndEffectorCommand or ObjectType.WaitCommand:
+            //    element = CreateHierarchyElement("hierarchy-item-command", item.Reference.name, item.Id, texture);
+            //    break;
             default:
                 element = CreateHierarchyElement("hierarchy-item", item.Reference.name, item.Id, texture);
+                element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
                 break;
         }
 
@@ -569,7 +570,6 @@ public class HierarchyPanelEvents : MonoBehaviour
             if (IsInsideHierarchyPanel(evt.target as VisualElement))
             {
                 ShowContextMenu(evt.mousePosition, evt.target as VisualElement);
-                evt.StopPropagation();
             }
             else
             {
@@ -580,7 +580,6 @@ public class HierarchyPanelEvents : MonoBehaviour
         {
             HideContextMenu();
         }
-        evt.StopPropagation();
     }
     /// <summary>
     /// Нажатие на элемент иерархии
@@ -590,9 +589,10 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
         if (evt.button != 0) return;
 
+
         if (evt.target is VisualElement element)
         {
-            evt.StopPropagation();
+            //evt.StopPropagation();
 
             if (element.name == "" || element.name == "label-hierarchy" || element.name == "foldout-header")
             {
@@ -770,22 +770,22 @@ public class HierarchyPanelEvents : MonoBehaviour
                 if (foldout.name == "hierarchy-item-robot")
                 {
                     var robot = _sceneObjectManager.GetById(foldout.userData.ToString());
-                    contextMenu.Add(CreateMenuButton("Добавить линейное движение", () => CreatePoint(robot)));
-                    contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(robot)));
-                    contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(robot)));
-                    contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(robot)));
-                    contextMenu.Add(CreateMenuButton("Открыть планшет робота", () => OpenRobotPanel()));
+                    //contextMenu.Add(CreateMenuButton("Добавить линейное движение", () => CreatePoint(robot)));
+                    //contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(robot)));
+                    //contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(robot)));
+                    //contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(robot)));
+                    contextMenu.Add(CreateMenuButton("Открыть таблицу входов-выходов робота", () => OpenRobotPanel()));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
-                else if (foldout.name == "hierarchy-item-program")
-                {
-                    var parentId = foldout.userData.ToString();
-                    contextMenu.Add(CreateMenuButton("Добавить команду", () => CreatePoint(parentId)));
-                    contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(parentId)));
-                    contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(parentId)));
-                    contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(parentId)));
-                    contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
-                }
+                //else if (foldout.name == "hierarchy-item-program")
+                //{
+                //    var parentId = foldout.userData.ToString();
+                //    contextMenu.Add(CreateMenuButton("Добавить команду", () => CreatePoint(parentId)));
+                //    contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(parentId)));
+                //    contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(parentId)));
+                //    contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(parentId)));
+                //    contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+                //}
                 else if (foldout.name == "hierarchy-item-node")
                 {
                     var parentId = foldout.userData.ToString();
@@ -804,10 +804,10 @@ public class HierarchyPanelEvents : MonoBehaviour
             }
 
         }
-        else if (clickedElement.name == "hierarchy-item-command")
-        {
+        //else if (clickedElement.name == "hierarchy-item-command")
+        //{
 
-        }
+        //}
         else
         {
             contextMenu.Add(CreateMenuButton("Добавить объект", () => CreateObject()));
@@ -822,71 +822,71 @@ public class HierarchyPanelEvents : MonoBehaviour
         _eventBus.Invoke(new OpenRobotPanelSignal());
     }
 
-    private void CreateWaitCommand(SceneObject robot)
-    {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Ожидание");
-        AddObject(prefab, robot.Id);
-    }
-    private void CreateWaitCommand(string programId)
-    {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Ожидание");
-        AddObject(prefab, programId);
-    }
+    //private void CreateWaitCommand(SceneObject robot)
+    //{
+    //    var prefab = Resources.Load<GameObject>("Prefabs/Program/Ожидание");
+    //    AddObject(prefab, robot.Id);
+    //}
+    //private void CreateWaitCommand(string programId)
+    //{
+    //    var prefab = Resources.Load<GameObject>("Prefabs/Program/Ожидание");
+    //    AddObject(prefab, programId);
+    //}
 
     /// <summary>
     /// Создать точку по ссылке на робота
     /// </summary>
     /// <param name="robot">Ссылка на робота</param>
-    private void CreateStateEndEffector(SceneObject robot)
-    {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Задать состояние захвата");
-        AddObject(prefab, robot.Id);
-    }
+    //private void CreateStateEndEffector(SceneObject robot)
+    //{
+    //    var prefab = Resources.Load<GameObject>("Prefabs/Program/Задать состояние захвата");
+    //    AddObject(prefab, robot.Id);
+    //}
     /// <summary>
     /// Создать программу по ID программы
     /// </summary>
     /// <param name="programId">ID программы</param>
-    private void CreateStateEndEffector(string programId)
-    {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Задать состояние захвата");
-        AddObject(prefab, programId);
-    }
+    //private void CreateStateEndEffector(string programId)
+    //{
+    //    var prefab = Resources.Load<GameObject>("Prefabs/Program/Задать состояние захвата");
+    //    AddObject(prefab, programId);
+    //}
     /// <summary>
     /// Создать точку по ID программы
     /// </summary>
     /// <param name="programId">ID программы</param>
-    private void CreatePoint(string programId)
-    {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Линейная точка");
-        AddObject(prefab, programId);
-    }
+    //private void CreatePoint(string programId)
+    //{
+    //    var prefab = Resources.Load<GameObject>("Prefabs/Program/Линейная точка");
+    //    AddObject(prefab, programId);
+    //}
     /// <summary>
     /// Создать точку по ссылке на робота
     /// </summary>
     /// <param name="robot">Ссылка на робота</param>
-    private void CreatePoint(SceneObject robot)
-    {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Линейная точка");
-        AddObject(prefab, robot.Id);
-    }
+    //private void CreatePoint(SceneObject robot)
+    //{
+    //    var prefab = Resources.Load<GameObject>("Prefabs/Program/Линейная точка");
+    //    AddObject(prefab, robot.Id);
+    //}
     /// <summary>
     /// Создать программу по ID программы
     /// </summary>
     /// <param name="programId">ID программы</param>
-    private void CreateProgram(string programId)
-    {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
-        AddObject(prefab, programId);
-    }
+    //private void CreateProgram(string programId)
+    //{
+    //    var prefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
+    //    AddObject(prefab, programId);
+    //}
     /// <summary>
     /// Создать программу по ссылке на робота
     /// </summary>
     /// <param name="robot">Ссылка на робота</param>
-    private void CreateProgram(SceneObject robot)
-    {
-        var prefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
-        AddObject(prefab, robot.Id);
-    }
+    //private void CreateProgram(SceneObject robot)
+    //{
+    //    var prefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
+    //    AddObject(prefab, robot.Id);
+    //}
     /// <summary>
     /// Создать кнопку в контестноем меню
     /// </summary>
@@ -1030,6 +1030,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         //objectPicker.UnpickObject();
         _eventBus.Invoke(new UnpickObjectSignal());
         _eventBus.Invoke(new ChangePropertiesProviderSignal(null));
+        _eventBus.Invoke(new RemoveSceneObjectSignal(obj));
         //propertiesPanelEvents.HidePanel();
         var command = new RemoveObjectCommand(obj);
         _undoRedoManager.Execute(command);
@@ -1079,7 +1080,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 currentDragData.SourceElement.AddToClassList(DRAGGING_CLASS);
                 UpdateDragPreview(evt.mousePosition);
                 hierarchyPanel.CaptureMouse();
-                evt.StopPropagation();
+                //evt.StopPropagation();
             }
         }
         else if (isDragging && currentDragData != null)
@@ -1087,7 +1088,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             UpdateDragPreview(evt.mousePosition);
             var dropTarget = FindDropTarget(evt.mousePosition);
             UpdateDropIndicators(dropTarget);
-            evt.StopPropagation();
+            //evt.StopPropagation();
         }
     }
 
@@ -1106,7 +1107,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             {
                 hierarchyPanel.ReleaseMouse();
             }
-            evt.StopPropagation();
+            //evt.StopPropagation();
         }
         else
         {
@@ -1134,7 +1135,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         dragPreviewElement.style.height = elementHeight;
         dragPreviewElement.Clear();
         string text = "";
-        if (element.name == "hierarchy-item-command" || element.name == "hierarchy-item")
+        if (/*element.name == "hierarchy-item-command" || */element.name == "hierarchy-item")
         {
             text = element.Q<Label>("label-hierarchy").text;
         }
@@ -1296,8 +1297,8 @@ public class HierarchyPanelEvents : MonoBehaviour
         if (IsRootOnlyType(sceneObject))
             return true;
 
-        if (IsProgramOrCommand(sceneObject))
-            return GetRobotParent(sceneObject) != null;
+        //if (IsProgramOrCommand(sceneObject))
+        //    return GetRobotParent(sceneObject) != null;
 
         return false;
     }
@@ -1324,13 +1325,13 @@ public class HierarchyPanelEvents : MonoBehaviour
         return obj.Type == ObjectType.Robot;
     }
 
-    private bool IsProgramOrCommand(SceneObject obj)
-    {
-        return obj.Type == ObjectType.Program
-            || obj.Type == ObjectType.LinearMoveCommand
-            || obj.Type == ObjectType.StateEndEffectorCommand
-            || obj.Type == ObjectType.WaitCommand;
-    }
+    //private bool IsProgramOrCommand(SceneObject obj)
+    //{
+    //    return obj.Type == ObjectType.Program
+    //        || obj.Type == ObjectType.LinearMoveCommand
+    //        || obj.Type == ObjectType.StateEndEffectorCommand
+    //        || obj.Type == ObjectType.WaitCommand;
+    //}
 
     private List<VisualElement> GetHierarchyElementsInOrder()
     {
@@ -1429,16 +1430,16 @@ public class HierarchyPanelEvents : MonoBehaviour
             }
 
             // Команды/программы могут быть внутри робота
-            else if (target.Type == ObjectType.Robot &&
-                (IsProgramOrCommand(dragged)))
-            {
-                return new DropTargetInfo
-                {
-                    TargetElement = element,
-                    Position = DropPosition.Inside,
-                    Distance = 0
-                };
-            }
+            //else if (target.Type == ObjectType.Robot &&
+            //    (IsProgramOrCommand(dragged)))
+            //{
+            //    return new DropTargetInfo
+            //    {
+            //        TargetElement = element,
+            //        Position = DropPosition.Inside,
+            //        Distance = 0
+            //    };
+            //}
 
             else if (target.Type == ObjectType.Program &&
                 (dragged.Type == ObjectType.LinearMoveCommand
@@ -1536,16 +1537,16 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
 
         // ===== PROGRAM / COMMAND =====
-        if (IsProgramOrCommand(dragged))
-        {
-            // только внутри своего робота
-            var draggedRobot = GetRobotParent(dragged);
-            var targetRobot = GetRobotParent(target);
-            if (draggedRobot == null || targetRobot == null)
-                return false;
+        //if (IsProgramOrCommand(dragged))
+        //{
+        //    // только внутри своего робота
+        //    var draggedRobot = GetRobotParent(dragged);
+        //    var targetRobot = GetRobotParent(target);
+        //    if (draggedRobot == null || targetRobot == null)
+        //        return false;
 
-            return draggedRobot.Id == targetRobot.Id;
-        }
+        //    return draggedRobot.Id == targetRobot.Id;
+        //}
 
         return false;
     }
@@ -1653,11 +1654,11 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
 
         // Специальные проверки
-        if (IsProgramOrCommand(draggedObject) && string.IsNullOrEmpty(newParentId))
-        {
-            CleanupDrag();
-            return;
-        }
+        //if (IsProgramOrCommand(draggedObject) && string.IsNullOrEmpty(newParentId))
+        //{
+        //    CleanupDrag();
+        //    return;
+        //}
 
         // Проверяем, не пытаемся ли переместить объект в его собственного потомка
         if (IsChildOf(newParentId, draggedObject.Id))
@@ -1667,18 +1668,18 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
 
         // Для команд/программ проверяем, что остаемся в том же роботе
-        if (IsProgramOrCommand(draggedObject))
-        {
-            var newParent = _sceneObjectManager.GetById(newParentId);
-            var newRobot = GetRobotParent(newParent ?? targetObject);
-            var oldRobot = GetRobotParent(draggedObject);
+        //if (IsProgramOrCommand(draggedObject))
+        //{
+        //    var newParent = _sceneObjectManager.GetById(newParentId);
+        //    var newRobot = GetRobotParent(newParent ?? targetObject);
+        //    var oldRobot = GetRobotParent(draggedObject);
 
-            if (newRobot == null || newRobot.Id != oldRobot.Id)
-            {
-                CleanupDrag();
-                return;
-            }
-        }
+        //    if (newRobot == null || newRobot.Id != oldRobot.Id)
+        //    {
+        //        CleanupDrag();
+        //        return;
+        //    }
+        //}
 
         // Выполняем команду перемещения
         var command = new ChangeParentCommand(draggedObject.Id, newParentId, insertAtIndex);
@@ -1896,8 +1897,8 @@ public class HierarchyPanelEvents : MonoBehaviour
     /// </summary>
     private void RegisterElements()
     {
-        customScrollView = root.Q<CustomScrollView>("custom-scroll-view");
-        MainHierarchyItem = root.Q<CustomFoldout>("main-item");
+        customScrollView = hierarchyPanel.Q<CustomScrollView>("custom-scroll-view");
+        MainHierarchyItem = hierarchyPanel.Q<CustomFoldout>("main-item");
         root.RegisterCallback<MouseDownEvent>(OnMouseDownInsidePanel);
         MainHierarchyItem.userData = Guid.NewGuid().ToString();
         MainHierarchyItem.SetExpanded(true);
