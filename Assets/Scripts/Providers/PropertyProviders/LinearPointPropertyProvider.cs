@@ -7,11 +7,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Assets.Scripts.Providers
 {
     public class LinearPointPropertyProvider : BasePropertyProvider
-    {  
+    {
         public bool ShowVisual = true;
         public Material material;
         public float PointSize = 0.3f;
@@ -23,9 +24,13 @@ namespace Assets.Scripts.Providers
             get => transform.rotation;
             set => transform.rotation = value;
         }
-
+        public Vector3 Position
+        {
+            get => transform.localPosition;
+            set=> transform.localPosition = value;
+        }
         //public float PersentSpeed { get; set; } = 100f;
-        public float Speed { get; set;} = 50;
+        public float Speed { get; set;} = 0.1f;
        // public TypePoint pointType = TypePoint.LIN;
         //магнит
        // public MagnitS magnitStatus = MagnitS.NotControl;

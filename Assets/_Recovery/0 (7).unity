@@ -473,14 +473,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 410087039}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 11
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 2
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize2D: {x: 10, y: 10}
+  m_CookieSize: 10
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
@@ -716,7 +716,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 732570052}
   - {fileID: 544480373}
   - {fileID: 969185049}
   - {fileID: 1468343623}
@@ -947,52 +946,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb098a1122864fa4f9cbf08717699ef4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimulationManager
---- !u!1 &732570051
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 732570052}
-  - component: {fileID: 732570053}
-  m_Layer: 0
-  m_Name: NotificationSystemManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &732570052
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 732570051}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5.5957603, y: 0, z: 20.47804}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 469165501}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &732570053
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 732570051}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 60d911695682cbf4095757c574632cff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Managers.NotificationSystemManager
-  maxVisibleNotifications: 5
-  defaultDisplayDuration: 3000
 --- !u!1001 &756670532
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1214,6 +1167,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e452485058d0a60419c3c8cf88ef62e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Managers.AxisModeManager
+--- !u!1 &1028328949 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3126245551890948002, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+  m_PrefabInstance: {fileID: 1159832440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1028328956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1028328949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81646d70d50914d49831cee77676935e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Angles
+  thetha1: 0
+  thetha2: -90
+  thetha3: 90
+  thetha4: 0
+  thetha5: 0
+  thetha6: 0
 --- !u!1 &1032703445
 GameObject:
   m_ObjectHideFlags: 0
@@ -1290,7 +1266,6 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
-  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1374,7 +1349,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!224 &1032703448
 RectTransform:
@@ -1424,30 +1398,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81646d70d50914d49831cee77676935e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OpwKinematics
-  X: 0
-  Y: 0
-  Z: 0
-  UX: 0
-  UY: 0
-  UZ: 0
-  RotateQ: {x: 0, y: 0, z: 0, w: 1}
-  RotateMatrix:
-    e00: 0
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 0
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 0
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 0
+  thetha1: 0
+  thetha2: 0
+  thetha3: 0
+  thetha4: 0
+  thetha5: 0
+  thetha6: 0
 --- !u!4 &1046687316
 Transform:
   m_ObjectHideFlags: 0
@@ -1661,10 +1617,6 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1046687315}
     - target: {fileID: 4249141246246613869, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-      propertyPath: InvKin
-      value: 
-      objectReference: {fileID: 1779262145}
-    - target: {fileID: 4249141246246613869, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: SpeedCurve.m_Curve.Array.size
       value: 2
       objectReference: {fileID: 0}
@@ -1720,6 +1672,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3126245551890948002, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1028328956}
     - targetCorrespondingSourceObject: {fileID: 2662440733235826368, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       insertIndex: -1
       addedObject: {fileID: 0}
@@ -1750,9 +1705,6 @@ GameObject:
   - component: {fileID: 1239946570}
   - component: {fileID: 1239946571}
   - component: {fileID: 1239946572}
-  - component: {fileID: 1239946574}
-  - component: {fileID: 1239946573}
-  - component: {fileID: 1239946575}
   m_Layer: 0
   m_Name: MainUI
   m_TagString: Untagged
@@ -2006,44 +1958,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RobotPanelEvents
   treeAsset: {fileID: 9197481963319205126, guid: 5f393c6a935de3c4eb61a806f33cd7c2, type: 3}
   UIBlocker: {fileID: 1239946562}
---- !u!114 &1239946573
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1239946554}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee442d52ed613bb43a6e9b63972ebaf3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.NotificationSystemEvents
-  spacing: 10
---- !u!114 &1239946574
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1239946554}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1cbee81645d5020458bc551eb82b7db1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.test
---- !u!114 &1239946575
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1239946554}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1f2669b25ac8404cbf2321ef03b85ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.HierarchyCommandsPanelEvents
-  iBlocker: {fileID: 1239946562}
 --- !u!1 &1289876334
 GameObject:
   m_ObjectHideFlags: 0
@@ -2424,17 +2338,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 32a622fe02fdc5b479478063e185f814, type: 3}
---- !u!114 &1779262145 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8734229360267228368, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
-  m_PrefabInstance: {fileID: 1159832440}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 81646d70d50914d49831cee77676935e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InverseK_new
 --- !u!1 &1827411683
 GameObject:
   m_ObjectHideFlags: 0
@@ -2872,7 +2775,6 @@ MonoBehaviour:
   _axisModeManager: {fileID: 969185050}
   _undoRedoManager: {fileID: 544480374}
   _saveLoadManager: {fileID: 1827411685}
-  _notificationSystemManager: {fileID: 732570053}
   _simulationManager: {fileID: 645784142}
 --- !u!1 &6728728365230234436
 GameObject:

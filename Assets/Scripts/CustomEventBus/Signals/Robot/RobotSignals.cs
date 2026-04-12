@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Assets.Scripts.CustomEventBus.Signals.Robot
 {
     //Команды
-    public class AddProgram{ }
+    public class AddProgram { }
     public class AddCommand { }
 
 
@@ -15,7 +15,7 @@ namespace Assets.Scripts.CustomEventBus.Signals.Robot
     public class StartProgramm { }
     public class PauseProgramm { }
     public class StopProgramm { }
-    
+
 
     public class RobotEndMove
     {

@@ -18,7 +18,7 @@ public class BinarySaveLoadProvider : ISaveLoadProvider
             ObjectInfo objectInfo = new ObjectInfo(obj.Id, provider.Name, 
                                                     marker.sourcePath,
                                                     marker.type, 
-                                                    provider.Position,
+                                                    provider.LocalPosition,
                                                     Quaternion.Euler(provider.Rotation), 
                                                     provider.Scale, 
                                                     obj.ParentId,

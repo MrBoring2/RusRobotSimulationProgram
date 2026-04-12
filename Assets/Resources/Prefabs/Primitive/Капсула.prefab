@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 1863692122840981197}
   - component: {fileID: 3871220598498927006}
   - component: {fileID: 6649973723696466348}
-  - component: {fileID: 2409040209969404972}
   - component: {fileID: 5855954387017141189}
   - component: {fileID: 4380994549661805668}
+  - component: {fileID: 2741403427894245193}
   m_Layer: 0
   m_Name: "\u041A\u0430\u043F\u0441\u0443\u043B\u0430"
   m_TagString: SceneObject
@@ -116,33 +116,6 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!54 &2409040209969404972
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8178635925542800096}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!114 &5855954387017141189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -169,3 +142,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 410c4df3565f1b3479f9364aa74c829b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PrimitivePropertyProvider
+--- !u!54 &2741403427894245193
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8178635925542800096}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0

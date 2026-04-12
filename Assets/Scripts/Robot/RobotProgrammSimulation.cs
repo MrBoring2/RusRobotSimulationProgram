@@ -35,7 +35,7 @@ public class RobotProgrammSimulation : MonoBehaviour
         _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
         RC = gameObject.GetComponent<RobotController>();
-        //Ñèãíàëû ñèìóëÿöèè//
+        //Статусы симуляции//
         _eventBus.Subscribe<StartProgramm>(StartSim);
         _eventBus.Subscribe<PauseProgramm>(PauseSim);
         _eventBus.Subscribe<StopProgramm>(StopSim);
@@ -79,7 +79,7 @@ public class RobotProgrammSimulation : MonoBehaviour
     {
         if(_simManager.GetModeSim() == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
         {
-            RC.SetJogMove(_propertyProvider.JOGpoint);
+            RC.SetJogMove();
         }
     }
 
@@ -104,6 +104,10 @@ public class RobotProgrammSimulation : MonoBehaviour
                 yield return ExecuteElementProgramm(element);
 
                 currentCommandIndex++;
+            }
+            else if(_simManager.GetStatusSim() == SIM_STAT.PLAY)
+            {
+                currentCommandIndex = 0;
             }
             else
             {

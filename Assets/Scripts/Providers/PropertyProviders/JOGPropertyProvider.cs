@@ -14,22 +14,17 @@ namespace Assets.Scripts.Providers
     public class JOGPropertyProvider : MonoBehaviour, IPropertyProvider
     {
 
+        private RobotPropertyProvider _robotPropertyProvider;
 
-
-        public string Id { get => id; set => id = value; }
-        public bool IsReadondly { get; set; }
-        public string Name { get => gameObject.name; set { gameObject.name = value; } }
-        protected Vector3 rotationEuler;
-        protected string id;
-        protected bool displayName = false;
-        protected bool displayPosition = true;
-        protected bool displayRotation = true;
-        protected bool displayScale = false;
+        /// <summary>
+        /// Ã“Ã£Ã« Ã¯Ã®Ã¢Ã®Ã°Ã®Ã²Ã  Ã£Ã¥Ã² Ã±Ã¥Ã² Ã¨Ã§ Ã¬Ã¥Ã­Ã¾
+        /// </summary>
+        private Vector3 rotationEuler;
         public Vector3 Rotation
         {
             get => new Vector3((float)Math.Round(transform.rotation.eulerAngles.x, 2),
-              (float)Math.Round(transform.rotation.eulerAngles.y, 2),
-              (float)Math.Round(transform.rotation.eulerAngles.z, 2));
+                               (float)Math.Round(transform.rotation.eulerAngles.y, 2),
+                               (float)Math.Round(transform.rotation.eulerAngles.z, 2));
             set
             {
                 rotationEuler = new Vector3(
@@ -42,21 +37,28 @@ namespace Assets.Scripts.Providers
             }
         }
 
-        public Vector3 Scale { get => transform.localScale; set => transform.localScale = value; }
-        public bool DisplayName { get => displayName; set => displayName = value; }
-        public bool DisplayPosition { get => displayPosition; set => displayPosition = value; }
-        public bool DisplayRotation { get => displayRotation; set => displayRotation = value; }
-        public bool DisplayScale { get => displayScale; set => displayScale = value; }
+        public Vector3 LocalPosition { get => transform.localPosition; set => transform.localPosition = value; }
+        public Quaternion LocalRotationQ { get => transform.localRotation; set => transform.localRotation = value; }
+        public Vector3 GlobalPosition { get => transform.position; set => transform.position = value; }
+        public Quaternion GlobalRotationQ{ get => transform.rotation; set => transform.rotation = value; }
+        
 
-        private RobotPropertyProvider _robotPropertyProvider;
         private bool EndEffectorOn
         {
             get => _robotPropertyProvider.EndEffectorOn;
             set => _robotPropertyProvider.EndEffectorOn = value;
         }
 
+        public string Id { get => id; set => id = value; }
+        public bool IsReadondly { get; set; }
+        public string Name { get => gameObject.name; set { gameObject.name = value; } }
+        public Vector3 Scale { get => transform.localScale; set => transform.localScale = value; }
+        public bool DisplayName { get => displayName; set => displayName = value; }
+        public bool DisplayPosition { get => displayPosition; set => displayPosition = value; }
+        public bool DisplayRotation { get => displayRotation; set => displayRotation = value; }
+        public bool DisplayScale { get => displayScale; set => displayScale = value; }
 
-        public Vector3 GlobalPostiion => transform.position;
+        
 
         public bool ShowVisual = true;
         public Material material;
@@ -106,10 +108,6 @@ namespace Assets.Scripts.Providers
         {
             _robotPropertyProvider = transform.parent.GetComponent<RobotPropertyProvider>();
             displayScale = false;
-            if (ShowVisual)
-            {
-                //CreateMeshVisual();
-            }
         }
 
         public ProviderSaveData CaptureCustomState()
@@ -128,7 +126,7 @@ namespace Assets.Scripts.Providers
             var list = new List<CustomProperty>();
             var endEffect = new CustomProperty(
                 "EndEffectorOn",
-                "Ñîñòîÿíèå çàõâàòà",
+                "Ã‘Ã®Ã±Ã²Ã®Ã¿Ã­Ã¨Ã¥ Ã§Ã ÃµÃ¢Ã Ã²Ã ",
                 typeof(bool),
                 () => EndEffectorOn,
                 val => EndEffectorOn = (bool)val
@@ -136,42 +134,42 @@ namespace Assets.Scripts.Providers
 
             //var a1 = new CustomProperty(
             //    "A1",
-            //    "Îñü A1",
+            //    "ÃŽÃ±Ã¼ A1",
             //    typeof(float),
             //    () => A1,
             //    val => A1 = (float)val
             //);
             //var a2 = new CustomProperty(
             //     "A2",
-            //     "Îñü A2",
+            //     "ÃŽÃ±Ã¼ A2",
             //     typeof(float),
             //     () => A2,
             //     val => A2 = (float)val
             // );
             //var a3 = new CustomProperty(
             //     "A3",
-            //     "Îñü A3",
+            //     "ÃŽÃ±Ã¼ A3",
             //     typeof(float),
             //     () => A3,
             //     val => A3 = (float)val
             // );
             //var a4 = new CustomProperty(
             //     "A4",
-            //     "Îñü A4",
+            //     "ÃŽÃ±Ã¼ A4",
             //     typeof(float),
             //     () => A4,
             //     val => A4 = (float)val
             // );
             //var a5 = new CustomProperty(
             //     "A5",
-            //     "Îñü A5",
+            //     "ÃŽÃ±Ã¼ A5",
             //     typeof(float),
             //     () => A5,
             //     val => A5 = (float)val
             // );
             //var a6 = new CustomProperty(
             //     "A6",
-            //     "Îñü A6",
+            //     "ÃŽÃ±Ã¼ A6",
             //     typeof(float),
             //     () => A6,
             //     val => A6 = (float)val
@@ -266,23 +264,14 @@ namespace Assets.Scripts.Providers
 
             return mesh;
         }
-        //public void UpdateVisual(Color newColor, float newSize)
-        //{
-        //    if (meshRenderer != null && meshRenderer.material != null)
-        //    {
-        //        meshRenderer.material.color = newColor;
-        //    }
 
-        //    if (sphereMesh != null && meshFilter != null)
-        //    {
-        //        var vertices = sphereMesh.vertices;
-        //        for (int i = 0; i < vertices.Length; i++)
-        //        {
-        //            vertices[i] = vertices[i].normalized * newSize;
-        //        }
-        //        sphereMesh.vertices = vertices;
-        //        sphereMesh.RecalculateBounds();
-        //    }
-        //}
+        protected string id;
+        protected bool displayName = true;
+        protected bool displayPosition = true;
+        protected bool displayRotation = true;
+        protected bool displayScale = true;
     }
+
+
+
 }

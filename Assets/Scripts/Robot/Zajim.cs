@@ -7,15 +7,13 @@ public class Zajim : MonoBehaviour
     public GameObject z1;
     public GameObject z2;
     public GameObject Base;
-    public GameObject Limiter;
-    public GameObject Robot;
     private Rigidbody z1R;
     private Rigidbody z2R;
     public bool zajat = false;
     public bool z1Col = false;
     public bool z2Col = false;
-    public Collision z1Collision;
-    public Collision z2Collision;
+    public GameObject z1Collision;
+    public GameObject z2Collision;
     private GameObject ZObj = null;
     private Vector3 z1Pos;
     private Vector3 z2Pos;
@@ -29,7 +27,6 @@ public class Zajim : MonoBehaviour
         z2R = z2.GetComponent<Rigidbody>();
         z1Pos = z1.transform.localPosition;
         z2Pos = z2.transform.localPosition;
-        _propertyProvider = Robot.GetComponentInParent<RobotPropertyProvider>();
     }
 
     void FixedUpdate()
@@ -41,10 +38,9 @@ public class Zajim : MonoBehaviour
                 //if ((z1Collision == z2Collision) && (z1Collision.transform.tag == "Деталь"))
                 if ((z1Collision == z2Collision) && (z1Collision.gameObject.GetComponent<IPropertyProvider>() is WorkpiecePropertyProvider))
                 {
-                    ZObj = z1Collision.gameObject;
-                    z1Collision.transform.parent = Base.transform;
-                    z1Collision.rigidbody.isKinematic = true;
-                    
+                    ZObj = z1Collision;
+                    z1Collision.transform.parent = Base.gameObject.transform;
+                    z1Collision.GetComponent<Rigidbody>().isKinematic = true;
                     zajat = true;
                 }
             }
@@ -59,14 +55,19 @@ public class Zajim : MonoBehaviour
         
         else if (!_propertyProvider.EndEffectorOn)
         {
+            z1Col = false;
+            z2Col = false;
+            z1Collision = null;
+            z2Collision = null;
             if ((ZObj != null) && zajat)
             {
                 zajat = false;
                 ZObj.transform.parent = null;
                 ZObj.GetComponent<Rigidbody>().isKinematic = false;
-                //ZObj = null;
+                ZObj = null;
                 z1Collision = null;
                 z2Collision = null;
+                
             }
             if (z1Pos.x < z1.transform.localPosition.x)
             {
@@ -92,8 +93,7 @@ public class Zajim : MonoBehaviour
                 }
                 
             }
-            z1Col = false;
-            z2Col = false;
+            
             
             
         }
