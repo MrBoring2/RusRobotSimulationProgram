@@ -996,7 +996,7 @@ namespace Assets.Scripts.UI
                     var robot = FindParentRobot(parentId);
                     var manipulator = FindChildByName(robot.Reference.transform, "JOG_Manipulator");
                     var provider = manipulator.gameObject.GetComponent<JOGPropertyProvider>();
-                    pos = new Vector3(provider.GlobalPostiion.x, provider.GlobalPostiion.y, provider.GlobalPostiion.z);
+                    pos = new Vector3(provider.GlobalPosition.x, provider.GlobalPosition.y, provider.GlobalPosition.z);
                     var a = provider.RotationQ;
                     rot = Quaternion.Euler(provider.Rotation);
                     var b = rot.eulerAngles;

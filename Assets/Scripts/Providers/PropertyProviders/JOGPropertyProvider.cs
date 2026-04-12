@@ -67,7 +67,7 @@ namespace Assets.Scripts.Providers
         private MeshRenderer meshRenderer;
         private Mesh sphereMesh;
         public Vector3 Position { get => transform.localPosition * 1000; set => transform.localPosition = value / 1000; }
-        public Vector3 GlobalPosition { get => transform.position; set => transform.position = value; }
+       
         public Quaternion RotationQ
         {
             get => transform.rotation;
