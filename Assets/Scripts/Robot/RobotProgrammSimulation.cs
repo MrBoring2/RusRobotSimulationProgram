@@ -144,16 +144,21 @@ public class RobotProgrammSimulation : MonoBehaviour
         PLCCommandBlockRobotsTask block = new PLCCommandBlockRobotsTask("1",RobotsPrograms.Keys.First());
         PLCConditionBlock condition = new PLCConditionBlock("10");
         PLCConditionBranch branch = new PLCConditionBranch("21");
-        branch.Condition = new PLCCondition("key == true && counter == 98");
-
-        block.ProgrammElements.Add(condition);
+        PLCConditionBranch branch2 = new PLCConditionBranch("22");
         condition.Branches.Add(branch);
-
-        foreach (var sub in RobotsPrograms[RobotsPrograms.Keys.First()])
-        {
-            branch.Commands.Add(new PLCCommandTask(sub.ID));
-        }
+        condition.Branches.Add(branch2);
+        block.ProgrammElements.Add(condition);
         PLCProgramm.Add(block);
+
+        branch.Condition = new PLCCondition("key == true && counter == 98");
+        branch2.Condition = new PLCCondition("key == false || counter != 99");
+        SubProgramm subProgramm1 = RobotsPrograms.Values.First().First() as SubProgramm;
+        SubProgramm subProgramm2 = RobotsPrograms.Values.First().Skip(1).First() as SubProgramm;
+        branch.Commands.Add(new PLCCommandTask("31", subProgramm1.ID));
+        branch2.Commands.Add(new PLCCommandTask("32", subProgramm2.ID));
+        
+
+
         StartPLC();
         //StartCoroutine(ExecuteProgramm());
     }

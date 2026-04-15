@@ -182,9 +182,11 @@ namespace Assets.Scripts.PLC
     // ==================== КОМАНДА ЗАПУСКА ЗАДАЧИ ====================
     public class PLCCommandTask : PLCProgrammElement
     {
-        public PLCCommandTask(string id) : base(id)
+        public string IDCommandToRun { get; set; } // ID задачи которую нужно запустить
+        public PLCCommandTask(string id, string iDCommandToRun) : base(id)
         {
             TypeComand = ENUM_PLC_COMMANDS.BLOCK_ROBOT_TASK;
+            IDCommandToRun = iDCommandToRun;
         }
 
         public override bool Execute(RobotController RC,
@@ -194,7 +196,7 @@ namespace Assets.Scripts.PLC
             RC.RunTask = true;
 
             var subProgram = RobotsProgramm[currentRobotID]
-                .FirstOrDefault(x => x.ID == ID);
+                .FirstOrDefault(x => x.ID == IDCommandToRun);
 
             if (subProgram != null)
                 RC.RunSubProgramm(subProgram);
