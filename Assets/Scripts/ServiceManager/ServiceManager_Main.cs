@@ -22,7 +22,7 @@ namespace Assets.Scripts.CustomServiceManager
         [SerializeField] private NotificationSystemManager _notificationSystemManager;
         private CustomEventBus.EventBus _eventBus;
         [SerializeField] private SimulationManager _simulationManager;
-
+        [SerializeField] private LogicSignalBus _logicSignalBus;
         private void Awake()
         {
             _eventBus = new CustomEventBus.EventBus();
@@ -44,6 +44,7 @@ namespace Assets.Scripts.CustomServiceManager
             ServiceManager.Current.Register(_saveLoadManager);
             ServiceManager.Current.Register(_simulationManager);
             ServiceManager.Current.Register(_notificationSystemManager);
+            ServiceManager.Current.Register(_logicSignalBus);
         }
 
         private void Init()
@@ -56,6 +57,7 @@ namespace Assets.Scripts.CustomServiceManager
             _undoRedoManager.Init();
             _saveLoadManager.Init();
             _notificationSystemManager.Init();
+            _logicSignalBus.Init();
         }
 
     }

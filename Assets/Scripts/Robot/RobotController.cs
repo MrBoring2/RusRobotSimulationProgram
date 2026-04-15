@@ -16,30 +16,41 @@ public class RobotController : MonoBehaviour
 {
     private RobotPropertyProvider _propertyProvider;
     private EventBus _eventBus;
-    private bool allowNextMove;
     private float Speed;//м/с
     private Vector3 point;
-    private IK ik;
     private Vector3 oldJOGposition = Vector3.zero;
     private Quaternion oldJOGrotation = Quaternion.identity;
     private Point EffectorPosition;
     private Angles[] angles;
     private JOGPropertyProvider _JOGProvider;
+    private SimulationManager _simManager;
+
+    public bool RunTask { get; set; }
+    private bool CommandComplete = true;
 
     public AnimationCurve SpeedCurve;
     public InverseK_new InvKin;
     
     void Start()
     {
+        _simManager = ServiceManager.Current.Get<SimulationManager>();
         InvKin = gameObject.GetComponent<InverseK_new>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
+        _eventBus.Subscribe<StopProgramm>(StopSim);
         _propertyProvider = GetComponent<RobotPropertyProvider>();
         _JOGProvider = _propertyProvider.JOGpoint;
-        ik = new IK(_propertyProvider);
+        //ik = new IK(_propertyProvider);
         //_propertyProvider.XYZ = new Vector3(1,1,1);
         //_propertyProvider.oldXYZ = _propertyProvider.XYZ;
         _propertyProvider.JOGpoint.LocalPosition = new Vector3(1, 1, 1);
         SetJogMove();  
+    }
+    private void FixedUpdate()
+    {
+        if (_simManager.GetModeSim() == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
+        {
+            SetJogMove();
+        }
     }
     /// <summary>
     /// Вып. команды ожидания
@@ -59,7 +70,8 @@ public class RobotController : MonoBehaviour
     public void RobotSetStateEndEffector(StateEndEffectorPropertyProvider cmd)
     {
         _propertyProvider.EndEffectorOn = cmd.Get();
-        _eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
+        //_eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
+        CommandComplete = true;
     }
     /// <summary>
     /// Вып. команды линейного движения
@@ -119,7 +131,7 @@ public class RobotController : MonoBehaviour
         //point = _propertyProvider.transform.InverseTransformPoint(p.LocalPosition);////!!!
 
         Speed = p.Speed;
-        return new Point { Position = p.Position, Rotation = p.transform.rotation, Speed = Speed };
+        return new Point { Position = _propertyProvider.transform.InverseTransformPoint(p.Position), Rotation = p.transform.rotation, Speed = Speed };
 
         //_propertyProvider.absoluteXYZ = p.Position;
         //PointType = p.pointType;
@@ -132,7 +144,9 @@ public class RobotController : MonoBehaviour
     /// <returns></returns>
     IEnumerator LinMove(LinearPointPropertyProvider point)
     {
-        Vector3 start = _propertyProvider.oldXYZ;
+        Vector3 start = _propertyProvider.XYZ;
+        Quaternion startRot = _propertyProvider.XYZRot;
+        Quaternion endRot = GetPositionInfo(point).Rotation;
         Vector3 currentXYZ = start;
         Vector3 end = InvKin.Translate(GetPositionInfo(point)).Position;
         Vector3 direction = (end - start).normalized;
@@ -146,7 +160,7 @@ public class RobotController : MonoBehaviour
         float timeCurrenScale = 0;
         //Сделать проверку точки на доступность, если точка недоступна, то не выполнять движение и выдавать ошибку
 
-        Quaternion XYZBuf = GetPositionInfo(point).Rotation;
+        
         while (traveled < distance)
         {
 
@@ -161,9 +175,9 @@ public class RobotController : MonoBehaviour
             float positionInLine = SpeedCurve.Evaluate(timeCurrenScale) * distance;
             float step = positionInLine - traveled;
             currentXYZ += direction * step;
-
+            
             // _propertyProvider.XYZRot = Quaternion.identity;
-            currentRot = Quaternion.Lerp(_propertyProvider.oldXYZRot, XYZBuf, SpeedCurve.Evaluate(timeCurrenScale));
+            currentRot = Quaternion.Lerp(startRot, endRot, SpeedCurve.Evaluate(timeCurrenScale));
             //UnityEngine.Debug.LogWarning("XYZ " + _propertyProvider.XYZRot.eulerAngles.y);
 
             InvKin.Translate(currentXYZ, currentRot);
@@ -181,6 +195,8 @@ public class RobotController : MonoBehaviour
                 ModifyRobot(_propertyProvider, angles[0]);
 
             }
+            _propertyProvider.XYZ = currentXYZ;
+            _propertyProvider.XYZRot = currentRot;
             //_propertyProvider.oldXYZ = _propertyProvider.XYZ;
             // _propertyProvider.oldXYZRot = _propertyProvider.XYZRot;
             //
@@ -191,24 +207,22 @@ public class RobotController : MonoBehaviour
             yield return new WaitForSeconds(Time.fixedDeltaTime);
         }
         //XYZRot = XYZBuf;
-        _propertyProvider.oldXYZ = end;
-        _propertyProvider.oldXYZRot = XYZBuf;//изм название
+       /* _propertyProvider.oldXYZ = end;
+        _propertyProvider.oldXYZRot = currentXYZRot;//изм название
 
         _propertyProvider.XYZ = end;
-        _propertyProvider.XYZRot = XYZBuf;//изм название
+        _propertyProvider.XYZRot = currentXYZRot;//изм название*/
 
         SyncJogPos();
-        _eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
+        //_eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
+        CommandComplete = true;
     }
-    public void SetAllowNextMove(bool allow)
+    public void StopSim(StopProgramm s)
     {
-        allowNextMove = allow;
-    }
-    public void StopSim()
-    {
-        allowNextMove = false;
         StopAllCoroutines();
         SyncJogPos();
+        RunTask = false;
+        CommandComplete = true;
     }
     /// <summary>
     /// перемещает точку JOG в позицию эффектора, используется для синхронизации позиции точки JOG при выполнении других типов движения
@@ -232,6 +246,31 @@ public class RobotController : MonoBehaviour
         _propertyProvider.J4Angle = ang.thetha4;
         _propertyProvider.J5Angle = ang.thetha5;
         _propertyProvider.J6Angle = ang.thetha6;
+    }
+
+    public void RunSubProgramm(RobotProgrammElement RPE)
+    {
+      StartCoroutine(Run(RPE));
+    }
+    public IEnumerator Run(RobotProgrammElement RPE)
+    {
+        SubProgramm sub;
+        if (RPE != null && RPE.TypeComand == ENUM_COMMANDS.SUBPROGRAMM)
+        {
+            sub = RPE as SubProgramm;
+            foreach (var element in sub.CommandsElements)
+            {
+                yield return new WaitUntil(() => CommandComplete && _simManager.GetStatusSim() == SIM_STAT.PLAY);
+                CommandComplete = false;
+                element.Execute(this);
+                
+            }
+            _propertyProvider.RobotController.RunTask = false;
+        }
+        else
+        {
+            UnityEngine.Debug.LogError("Ошибка: переданный элемент не является подпрограммой.");
+        }
     }
 }
 

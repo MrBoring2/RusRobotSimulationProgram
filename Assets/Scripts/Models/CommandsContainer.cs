@@ -84,23 +84,23 @@ namespace Assets.Scripts.Models
             return null;
         }
 
-        public IEnumerable<CommandObject> GetAllCommands(string sourceId, bool getOnlyActive = true)
-        {
-            var subPrograms = GetSubPrograms(sourceId, getOnlyActive);
-            foreach (var subProgram in subPrograms)
-            {
-                List<CommandObject> commands;
-                if (getOnlyActive)
-                {
-                    commands = subProgram.Items.Where(p => p.Reference.activeInHierarchy).ToList();
-                }
-                else commands = subProgram.Items;
-                foreach (var command in commands)
-                {
-                    yield return command;
-                }
-            }
-        }
+         public IEnumerable<CommandObject> GetAllCommands(string sourceId, bool getOnlyActive = true)
+         {
+             var subPrograms = GetSubPrograms(sourceId, getOnlyActive);
+             foreach (var subProgram in subPrograms)
+             {
+                 List<CommandObject> commands;
+                 if (getOnlyActive)
+                 {
+                     commands = subProgram.Items.Where(p => p.Reference.activeInHierarchy).ToList();
+                 }
+                 else commands = subProgram.Items;
+                 foreach (var command in commands)
+                 {
+                     yield return command;
+                 }
+             }
+         }
         // Перемещение подпрограммы внутри списка устройства
         public void MoveSubProgram(string sourceId, string subProgramId, int newIndex)
         {

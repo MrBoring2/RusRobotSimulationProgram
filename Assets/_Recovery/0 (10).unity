@@ -727,7 +727,6 @@ Transform:
   - {fileID: 645784141}
   - {fileID: 1827411684}
   - {fileID: 905198414}
-  - {fileID: 1256777683}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &544480372
@@ -2091,56 +2090,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.HierarchyCommandsPanelEvents
   iBlocker: {fileID: 1239946562}
---- !u!1 &1256777682
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1256777683}
-  - component: {fileID: 1256777684}
-  m_Layer: 0
-  m_Name: LogicSignalBus
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1256777683
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1256777682}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.03155, y: 0.08866, z: 7.54815}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 469165501}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1256777684
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1256777682}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68b463416d29c5d41aad2080a6901c85, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LogicSignalBus
-  boolSignals:
-  - key: key
-    value: 1
-  intDataList:
-  - key: counter
-    value: 98
 --- !u!1 &1289876334
 GameObject:
   m_ObjectHideFlags: 0
@@ -2971,7 +2920,6 @@ MonoBehaviour:
   _saveLoadManager: {fileID: 1827411685}
   _notificationSystemManager: {fileID: 732570053}
   _simulationManager: {fileID: 645784142}
-  _logicSignalBus: {fileID: 1256777684}
 --- !u!1 &6728728365230234436
 GameObject:
   m_ObjectHideFlags: 0

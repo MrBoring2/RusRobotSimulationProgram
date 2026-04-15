@@ -9,13 +9,11 @@ using UnityEngine;
 
 public class SimulationManager : MonoBehaviour,IService
 {
-    public LogisSignalBus LogisSignalBus;
     private EventBus _eventBus;
     private SIM_STAT SimulationStat = SIM_STAT.STOP; //статус симул€ции в наст. врем€
     private MODE SimulationMode = MODE.NONE; // режим симул€ции, пока так.
     void Start()
     {
-        LogisSignalBus = new LogisSignalBus();
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<StartSimulationSignal>(StartSim);
         _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);

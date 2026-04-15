@@ -73,20 +73,20 @@ namespace Assets.Scripts.Models
 
         public class SubProgramm : RobotProgrammElement
     {
-        public List<RobotProgrammElement> ProgrammElement { get; set; } = new List<RobotProgrammElement>();
+        public List<RobotProgrammElement> CommandsElements { get; set; } = new List<RobotProgrammElement>();
         //public SubProgramm(ENUM_COMANDS tc)
         //{
         //    TypeComand = tc;
         //}
         public SubProgramm(List<RobotProgrammElement> p, ENUM_COMMANDS tc, string id) : base(id)
         {
-            ProgrammElement = p;
+            CommandsElements = p;
             TypeComand = tc;
         }
 
         public List<RobotProgrammElement> Get()
         {
-            return ProgrammElement;
+            return CommandsElements;
         }
         public override void Execute(RobotController rc)
         {

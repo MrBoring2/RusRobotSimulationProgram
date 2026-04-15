@@ -16,6 +16,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using static UnityEngine.EventSystems.EventTrigger;
 public class RobotElement
 {
+    [SerializeField]
     public string Id;
     public ObjectType Type;
     public GameObject Reference;
@@ -23,12 +24,12 @@ public class RobotElement
 }
 public class RobotPropertyProvider : BasePropertyProvider
 {
-    private EventBus _eventBus;
     private SceneObjectsManager _sceneObjectManager;
     
+    public RobotController RobotController { get; set; }
     public float RotSpeedPercent { get; set; } = 100f;
 
-    //Óãëû ïðèìåíÿåìûå êàæäûé FixedUpdate
+    //ugli obnovlaemie in FixedUpdate
     public float J1Angle = 0;
     public float J2Angle = 90;
     public float J3Angle = 90;
@@ -37,40 +38,42 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J6Angle = 0;
     public bool EndEffectorOn { get; set; }
     public float SpeedEffector = 0.5f;
-    //äëèíû çâåíüåâ
+    //parameters zveniev
     public float L1 = 450;
     public float L2 = 447;
     public float L3 = 1150;
     public float L4 = 350;
     public float L5 = 1350;
     public float L6 = 550;
-    public float SpeedPercent = 100f;
 
     //IK
     public Vector3 XYZ = Vector3.zero;
     public Vector3 oldXYZ = Vector3.zero;
     public Quaternion XYZRot;
     public Quaternion oldXYZRot = Quaternion.identity;
-
-    /// <summary>
-    public Quaternion XYZ_robot_Rotate;
-    /// </summary>
-
     public Vector3 absoluteXYZ => GetAbsolutePosition(XYZ);
     public Vector3 absoluteOldXYZ => GetAbsolutePosition(oldXYZ);
-    //IK
+
     public float[] thetha = { 0, 0, 0, 0, 0, 0 };
     public float[] old_thetha = { 0, 90, 90, 0, -90, 0 };
     public float[] step_thetha = { 0, 0, 0, 0, 0, 0 };
+    /// <summary>
+    //public Quaternion XYZ_robot_Rotate;
+    /// </summary>
 
     //JOG
     public JOGPropertyProvider JOGpoint;
 
-    public IK_config JOG_IK_Configuration = IK_config.conf_1;
+    //public IK_config JOG_IK_Configuration = IK_config.conf_1;
 
-    private float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 }; 
+    //ogranicheniya anglesSpeed
+    private float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 };
 
-
+    //Статус робота при выполнении программы
+    
+    /// <summary>
+    /// reset position end Effector
+    /// </summary>
     public void ResetPositionEffector()
     {
         XYZ = Vector3.zero;
@@ -78,7 +81,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     }
     private void Start()
     {
-        _eventBus = ServiceManager.Current.Get<EventBus>();
+        RobotController = GetComponent<RobotController>();
         _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
         displayScale = false;
     }
@@ -87,7 +90,7 @@ public class RobotPropertyProvider : BasePropertyProvider
         Id = id;
     }
     /// <summary>
-    /// получения дерево программы
+    /// получение дерева программы
     /// </summary>
     public List<RobotProgrammElement> Programm
     {
@@ -101,15 +104,15 @@ public class RobotPropertyProvider : BasePropertyProvider
     private List<RobotProgrammElement> BuildTreeInternal(string parentId)
     {
         List<RobotProgrammElement> programm = new();
-        var itemsDict = _sceneObjectManager.Items;
+        List<RobotProgramObject> itemsDict = _sceneObjectManager.Commands.GetSubPrograms(parentId);
         if (itemsDict == null) return null;
 
         // Сначала собираем всех детей в правильном порядке
-        List<SceneObject> childrenInOrder = new();
+        /*List<SceneObject> childrenInOrder = new();
 
-        foreach (DictionaryEntry entry in itemsDict)
+        foreach (CommandObject entry in itemsDict)
         {
-            var sceneObj = entry.Value as SceneObject;
+            var sceneObj = entry as SceneObject;
             if (sceneObj != null &&
                 sceneObj.Reference.activeSelf == true &&
                 sceneObj.ParentId == parentId &&
@@ -125,11 +128,20 @@ public class RobotPropertyProvider : BasePropertyProvider
         foreach (var child in childrenInOrder)
         {
             ConvertToRobotProgrammElement(child, programm);
+        }*/
+        foreach (var item in itemsDict) 
+        {
+            var subProgram = new SubProgramm(new List<RobotProgrammElement>(), ENUM_COMMANDS.SUBPROGRAMM, item.Id);
+            foreach (var item2 in item.Items)
+            {
+                ConvertToRobotProgrammElement(item2, subProgram.CommandsElements);
+            }
+            programm.Add(subProgram);
         }
         return programm;
     }
 
-    private void ConvertToRobotProgrammElement(SceneObject obj, List<RobotProgrammElement> programm)
+    private void ConvertToRobotProgrammElement(CommandObject obj, List<RobotProgrammElement> programm)
     {
         if (obj.Type == ObjectType.LinearMoveCommand)
         {
@@ -146,14 +158,6 @@ public class RobotPropertyProvider : BasePropertyProvider
             var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
             programm.Add(command);
         }
-        else if (obj.Type == ObjectType.Program)
-        {
-            // Рекурсивно получаем дочерние элементы для подпрограммы
-            List<RobotProgrammElement> subItems = BuildTreeInternal(obj.Id);
-
-            var subProgram = new SubProgramm(subItems ?? new List<RobotProgrammElement>(), ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
-            programm.Add(subProgram);
-        }
     }
 
 
@@ -161,7 +165,7 @@ public class RobotPropertyProvider : BasePropertyProvider
 
 
 
-
+    //------------------------------------------------------------------------------------------------------------------------//
 
     public override ProviderSaveData CaptureCustomState()
     {
