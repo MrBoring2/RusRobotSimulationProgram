@@ -14,7 +14,6 @@ namespace Assets.Scripts.Providers
         {
             displayPosition = false;
             displayRotation = false;
-            displayScale = false;
         }                                   
         public override ProviderSaveData CaptureCustomState()
         {

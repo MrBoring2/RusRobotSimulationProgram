@@ -125,6 +125,12 @@ namespace Assets.Scripts.UI
                     MainHierarchyItem.userData = current.Id;
                     UpdateHierarchy();
                 }
+                else if (type == ObjectType.PLC)
+                {
+                    current = signal.PropertyProvider;
+                    MainHierarchyItem.userData = current.Id;
+                    UpdateHierarchy();
+                }
                 else if (type == ObjectType.LinearMoveCommand) { }
                 else
                 {
@@ -827,9 +833,32 @@ namespace Assets.Scripts.UI
                     //}
                     else if (foldout.name == "main-item")
                     {
-                        if (current == null) return;
+                        if (current == null)
+                        {
+                            contextMenu = null;
+                            return;
+                        }
+
+                        if (!(current is RobotPropertyProvider))
+                        {
+                            contextMenu = null;
+                            return;
+                        }
+
                         var robot = _sceneObjectManager.GetById(MainHierarchyItem.userData.ToString());
                         contextMenu.Add(CreateMenuButton("Добавить задачу", () => CreateProgram(robot.Id)));
+                    }
+                    else if (foldout.name == "plc-init-block")
+                    {
+                        contextMenu.Add(CreateMenuButton("Добавить переменную", () => Debug.Log("Добавить переменную в инициализацию")));
+                    }
+                    else if (foldout.name == "plc-logic-block")
+                    {
+                        contextMenu.Add(CreateMenuButton("Добавить условие", () => Debug.Log("Добавить условие в логику")));
+                    }
+                    else if (foldout.name == "plc-robot-block")
+                    {
+                        contextMenu.Add(CreateMenuButton("Добавить условие", () => Debug.Log("Добавить условие в логику")));
                     }
                     else
                     {
@@ -1049,27 +1078,55 @@ namespace Assets.Scripts.UI
             elementCache.Clear();
 
             ObjectType parentType = _sceneObjectManager.GetById(current.Id).Type;
-            List<SceneObject> rootObjects = new List<SceneObject>();
+
             if (parentType == ObjectType.Robot)
             {
                 var programs = _sceneObjectManager.Commands.GetSubPrograms(current.Id);
                 foreach (var item in programs)
                 {
-                    rootObjects.Add(item);
                     if (item.Reference.activeSelf == false) continue;
-
                     DrawSingleItem(item, MainHierarchyItem, savedStates, true);
-                    //DrawItemRecursive(item, MainHierarchyItem);
-                }
-                if (customScrollView != null)
-                {
-                    customScrollView.schedule.Execute(() => customScrollView.Refresh()).ExecuteLater(100);
                 }
             }
+            else if (parentType == ObjectType.PLC)
+            {
+                DrawPLCBlocks();
+            }
 
+            if (customScrollView != null)
+            {
+                customScrollView.schedule.Execute(() => customScrollView.Refresh()).ExecuteLater(100);
+            }
 
+        }
 
+        private void DrawPLCBlocks()
+        {
+            var initBlock = new CustomFoldout { Text = "Инициализация" };
+            initBlock.name = "plc-init-block";
+            MainHierarchyItem.AddChild(initBlock);
 
+            var robotsBlock = new CustomFoldout { Text = "Блоки роботов" };
+            robotsBlock.name = "plc-robots-block";
+
+            var allRobots = _sceneObjectManager.GetGameObjectsList()
+                .Where(obj => obj.Type == ObjectType.Robot)
+                .ToList();
+
+            foreach (var robot in allRobots)
+            {
+                var robotBlock = new CustomFoldout { Text = robot.Reference.name };
+                robotBlock.name = "plc-robot-block";
+                robotBlock.userData = robot.Id;
+                robotsBlock.AddChild(robotBlock);
+                CacheElement(robotBlock, robot.Id);
+            }
+
+            MainHierarchyItem.AddChild(robotsBlock);
+
+            var logicBlock = new CustomFoldout { Text = "Логика" };
+            logicBlock.name = "plc-logic-block";
+            MainHierarchyItem.AddChild(logicBlock);
         }
 
         /// <summary>
@@ -1121,6 +1178,11 @@ namespace Assets.Scripts.UI
             }
         }
         #endregion
+
+        #region PLC Отрисовка
+
+        #endregion
+
         #region Drag & Drop
         private void InitializeDragAndDrop()
         {

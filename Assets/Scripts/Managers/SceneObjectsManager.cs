@@ -27,6 +27,7 @@ namespace Assets.Scripts.Managers
 
         public OrderedDictionary Items { get; private set; } = new OrderedDictionary();
         public CommandsContainer Commands { get; private set; } = new CommandsContainer();
+        public PLCData PLCData { get; private set; } = new PLCData();
 
 
         public SceneObject Create(GameObject prefab, Vector3 position, Quaternion rotation, ObjectType type, string id = null, string parentId = null)
@@ -72,6 +73,9 @@ namespace Assets.Scripts.Managers
                         //    break;
                         case ObjectType.Robot:
                             sceneObj = new RobotObject(id, objectMaker.type, obj, parentId);
+                            break;
+                        case ObjectType.PLC:
+                            sceneObj = new PLCObject(id, objectMaker.type, obj, parentId);
                             break;
                         default:
                             sceneObj = new SceneObject(id, objectMaker.type, obj, parentId);

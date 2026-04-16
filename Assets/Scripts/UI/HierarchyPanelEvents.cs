@@ -1166,7 +1166,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     private DropTargetInfo FindDropTarget(Vector2 position)
     {
         var allElements = GetHierarchyElementsInOrder();
-        var draggedRobot = GetRobotParent(currentDragData.SceneObject);
+        //var draggedRobot = GetRobotParent(currentDragData.SceneObject);
 
         allElements = allElements
          .Where(e => GetSceneObjectFromElement(e) != null)

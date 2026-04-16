@@ -15,7 +15,8 @@ public enum ObjectType
     Robot,
     WaitCommand,
     Node,
-    Workpiece
+    Workpiece,
+    PLC
 }
 
 [System.Serializable]
