@@ -136,6 +136,7 @@
 //    }
 //}
 using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using System;
 using System.Collections.Generic;
@@ -154,13 +155,29 @@ namespace Assets.Scripts.PLC
             ID = id;
         }
 
-        public abstract bool Execute(RobotController RC,
-                                     Dictionary<string, List<RobotProgrammElement>> RobotsProgramm,
-                                     string RobotID);
+        public abstract bool Execute(RobotController RC = null, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm = null);
+    }
+    // ==================== БЛОК ИНИЦИАЛИЗАЦИИ (верхний уровень) ====================
+    public class PLCCommandInit : PLCProgrammElement
+    {
+        public List<PLCProgrammElement> ProgrammElements { get; set; } = new List<PLCProgrammElement>();
+        public PLCCommandInit(string id) : base(id)
+        {
+            TypeComand = ENUM_PLC_COMMANDS.BLOCK_ROBOTS;
+
+        }
+        public override bool Execute(RobotController RC, Dictionary<string,List<RobotProgrammElement>> RobotsProgramm)
+        { 
+            foreach(var pe in ProgrammElements)
+            {
+                pe.Execute(RC, RobotsProgramm);
+            }
+            return true; 
+        }
     }
 
-    // ==================== БЛОК РОБОТА (верхний уровень) ====================
-    public class PLCCommandBlockRobotsTask : PLCProgrammElement
+        // ==================== БЛОК РОБОТА (верхний уровень) ====================
+        public class PLCCommandBlockRobotsTask : PLCProgrammElement
     {
         public string RobotID { get; set; }
         public List<PLCProgrammElement> ProgrammElements { get; set; } = new List<PLCProgrammElement>();
@@ -171,12 +188,9 @@ namespace Assets.Scripts.PLC
             TypeComand = ENUM_PLC_COMMANDS.BLOCK_ROBOTS;
         }
 
-        public override bool Execute(RobotController RC,
-                                     Dictionary<string, List<RobotProgrammElement>> RobotsProgramm,
-                                     string RobotID)
-        {
-            return false; // Этот класс не должен вызываться напрямую
-        }
+        public override bool Execute(RobotController RC, Dictionary<string,
+            List<RobotProgrammElement>> RobotsProgramm)
+        { return false; }
     }
 
     // ==================== КОМАНДА ЗАПУСКА ЗАДАЧИ ====================
@@ -189,19 +203,17 @@ namespace Assets.Scripts.PLC
             IDCommandToRun = iDCommandToRun;
         }
 
-        public override bool Execute(RobotController RC,
-                                     Dictionary<string, List<RobotProgrammElement>> RobotsProgramm,
-                                     string currentRobotID)
+        public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)
         {
             RC.RunTask = true;
 
-            var subProgram = RobotsProgramm[currentRobotID]
+            var subProgram = RobotsProgramm[RC.ID]
                 .FirstOrDefault(x => x.ID == IDCommandToRun);
 
             if (subProgram != null)
                 RC.RunSubProgramm(subProgram);
             else
-                Debug.LogWarning($"Подпрограмма с ID '{ID}' не найдена для робота {currentRobotID}");
+                Debug.LogWarning($"Подпрограмма с ID '{ID}' не найдена для робота {RC.ID}");
 
             return true;
         }
@@ -217,24 +229,23 @@ namespace Assets.Scripts.PLC
             TypeComand = ENUM_PLC_COMMANDS.BLOCK_CONDITION;
         }
 
-        public override bool Execute(RobotController RC,
-                                     Dictionary<string, List<RobotProgrammElement>> RobotsProgramm,
-                                     string currentRobotID)
+        public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)
         {
             foreach (var branch in Branches)
             {
-                if (branch.CheckCondition(RC, currentRobotID))
+                if (branch.CheckCondition(RC))
                 {
                     // Выполняем все команды внутри выбранной ветки
-                    foreach (var command in branch.Commands)
+                    foreach (var command in branch.ProgrammElements)
                     {
-                        command.Execute(RC, RobotsProgramm, currentRobotID);
+                        if (RC.RunTask) break;
+                        command.Execute(RC, RobotsProgramm);
                     }
-                    return true; // Условие сработало → больше не проверяем следующие ветки и блоки
+                    return true; // Условие сработало - больше не проверяем следующие ветки и блоки
                 }
             }
 
-            return false; // Ни одно условие не подошло → продолжаем проверять следующие элементы на этом уровне
+            return false; 
         }
     }
 
@@ -243,13 +254,13 @@ namespace Assets.Scripts.PLC
     {
         public string ID { get; set; }
         public PLCCondition Condition { get; set; }
-        public List<PLCProgrammElement> Commands { get; set; } = new List<PLCProgrammElement>();
+        public List<PLCProgrammElement> ProgrammElements { get; set; } = new List<PLCProgrammElement>();
         public ENUM_PLC_COMMANDS BranchType { get; set; }   // IF_CONDITION, ELIF_CONDITION, ELSE_CONDITION
         public PLCConditionBranch(string id)
         {
             ID = id;
         }
-        public bool CheckCondition(RobotController RC, string robotID)
+        public bool CheckCondition(RobotController RC)
         {
             if (BranchType == ENUM_PLC_COMMANDS.ELSE_CONDITION)
                 return true;
@@ -257,7 +268,7 @@ namespace Assets.Scripts.PLC
             if (Condition == null)
                 return false;
 
-            return Condition.Evaluate(RC, robotID);
+            return Condition.Evaluate();
         }
     }
 
@@ -270,7 +281,7 @@ namespace Assets.Scripts.PLC
         {
             ConditionString = conditionString;
         }
-        public bool Evaluate(RobotController RC, string robotID)
+        public bool Evaluate()
         {
             if (string.IsNullOrWhiteSpace(ConditionString))
                 return false;
@@ -290,7 +301,47 @@ namespace Assets.Scripts.PLC
         }
     }
 
-    // ==================== ENUM ====================
+    // ==================== КОМАНДА УСТАНОВИТЬ ЗНАЧЕНИЕ (bool) ====================
+    public class PLCCommandSetBool : PLCProgrammElement
+    {
+        public string SignalName { get; set; }
+        public bool ValueToSet { get; set; }
+        public PLCCommandSetBool(string id, string Name, bool Value) : base(id)
+        {
+            SignalName = Name;
+            ValueToSet = Value;
+            TypeComand = ENUM_PLC_COMMANDS.SET_INT_SIGNAL;
+        }
+        public PLCCommandSetBool(string id) : base(id)
+        {
+            TypeComand = ENUM_PLC_COMMANDS.SET_BOOL_SIGNAL;
+        }
+        public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)
+        {
+            ServiceManager.Current.Get<LogicSignalBus>().SetSignal(SignalName, ValueToSet);
+            return true;
+        }
+    }
+
+    // ==================== КОМАНДА УСТАНОВИТЬ ЗНАЧЕНИЕ (int) ====================
+    public class PLCCommandSetInt : PLCProgrammElement
+    {
+        public string DataName { get; set; }
+        public int ValueToSet { get; set; }
+        public PLCCommandSetInt(string id, string Name, int Value ) : base(id)
+        {
+            DataName = Name;
+            ValueToSet = Value;
+            TypeComand = ENUM_PLC_COMMANDS.SET_INT_SIGNAL;
+        }
+        public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)
+        {
+            ServiceManager.Current.Get<LogicSignalBus>().SetIntData(DataName, ValueToSet);
+            return true;
+        }
+    }
+
+    // ==================== ПЕРЕЧИСЛЕНИЕ ТИПОВ КОМАНД ====================
     public enum ENUM_PLC_COMMANDS
     {
         BLOCK_ROBOTS,
@@ -298,6 +349,8 @@ namespace Assets.Scripts.PLC
         BLOCK_CONDITION,
         IF_CONDITION,
         ELIF_CONDITION,
-        ELSE_CONDITION
+        ELSE_CONDITION,
+        SET_BOOL_SIGNAL,
+        SET_INT_SIGNAL
     }
 }

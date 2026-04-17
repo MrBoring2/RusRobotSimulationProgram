@@ -1,12 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 public static class BooleanExpressionParser
 {
-    /// <summary>
-    /// Главный метод: вычисляет строковое булево выражение
-    /// </summary>
+    //--Вычисление строкового булево выражения--
     public static bool Evaluate(string expression,
                                 Dictionary<string, bool> boolVars,
                                 Dictionary<string, int> intVars)
@@ -14,7 +11,7 @@ public static class BooleanExpressionParser
         if (string.IsNullOrWhiteSpace(expression))
             return false;
 
-        // Убираем пробелы и приводим к нижнему регистру для удобства
+        // Убираем пробелы и приводим к нижнему регистру
         string expr = expression.Replace(" ", "").ToLowerInvariant();
 
         // Заменяем true и false
@@ -33,7 +30,6 @@ public static class BooleanExpressionParser
             expr = Regex.Replace(expr, $@"\b{kvp.Key}\b", kvp.Value.ToString(), RegexOptions.IgnoreCase);
         }
 
-        // Теперь у нас должно остаться только математическое/логическое выражение
         return EvaluateExpression(expr);
     }
 
@@ -63,7 +59,7 @@ public static class BooleanExpressionParser
                 return EvaluateExpression(expr.Substring(1, expr.Length - 2));
         }
 
-        // Разделяем по || (самый низкий приоритет)
+        // Разделяем по || 
         int orIndex = FindOperatorOutsideBrackets(expr, "||");
         if (orIndex != -1)
         {
@@ -81,13 +77,11 @@ public static class BooleanExpressionParser
             return EvaluateExpression(left) && EvaluateExpression(right);
         }
 
-        // Отрицание !
         if (expr.StartsWith("!"))
         {
             return !EvaluateExpression(expr.Substring(1));
         }
 
-        // Сравнения: == != > < >= <=
         return EvaluateComparison(expr);
     }
 
@@ -107,7 +101,6 @@ public static class BooleanExpressionParser
 
     private static bool EvaluateComparison(string expr)
     {
-        // Поддерживаемые операторы сравнения
         string[] operators = { ">=", "<=", "==", "!=", ">", "<" };
 
         foreach (var op in operators)

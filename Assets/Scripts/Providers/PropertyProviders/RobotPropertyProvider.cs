@@ -134,7 +134,7 @@ public class RobotPropertyProvider : BasePropertyProvider
             var subProgram = new SubProgramm(new List<RobotProgrammElement>(), ENUM_COMMANDS.SUBPROGRAMM, item.Id);
             foreach (var item2 in item.Items)
             {
-                ConvertToRobotProgrammElement(item2, subProgram.CommandsElements);
+                ConvertToRobotProgrammElement(item2, subProgram.ProgrammElement);
             }
             programm.Add(subProgram);
         }

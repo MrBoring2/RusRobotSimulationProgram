@@ -15,43 +15,28 @@ using Assets.Scripts.Providers;
 using Assets.Scripts.Managers;
 using Assets.Scripts.PLC;
 
-public class RobotProgrammSimulation : MonoBehaviour
+public class PLCSimulation : MonoBehaviour
 {
     private EventBus _eventBus;
     private SimulationManager _simManager;
     private SceneObjectsManager _sceneObjectsManager;
-    //private RobotController RC;
-    private RobotPropertyProvider _propertyProvider => gameObject.GetComponent<RobotPropertyProvider>();
     public Dictionary<string, List<RobotProgrammElement>> RobotsPrograms;
     public List<PLCProgrammElement> PLCProgramm = new List<PLCProgrammElement>();
-    //---//
-
-    public bool allowNextCommand = true;//ðàçðåø. íà ñëåä. êîìàíäó
-
-    // Словарь контроллеров роботов (ключ — Id робота)
-    //private static readonly Dictionary<string, RobotPropertyProvider> Robots = new();
 
     private void Start()
     {
-        //RC = _propertyProvider.RobotController;
         _simManager = ServiceManager.Current.Get<SimulationManager>();
         _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
-
-
-        
-
         //Статусы симуляции//
         _eventBus.Subscribe<StartProgramm>(StartSim);
         _eventBus.Subscribe<PauseProgramm>(PauseSim);
         _eventBus.Subscribe<StopProgramm>(StopSim);
-        _eventBus.Subscribe<RobotEndMove>(EndCurrentMove);
         //--//
-        _eventBus.Subscribe<PickCommandSignal>(TeleportToPoint);
+        _eventBus.Subscribe<PickCommandSignal>(TeleportToPoint);//перенести
     }
-    /// <summary>
-    /// программы всех роботов
-    /// </summary>
+    
+    //--Получение программы всех роботов--
     private void GetAllRobotsProg()
     {
         RobotsPrograms = new Dictionary<string, List<RobotProgrammElement>>();
@@ -69,42 +54,21 @@ public class RobotProgrammSimulation : MonoBehaviour
                 }
             }
         }
-
-        
     }
-    /// <summary>
-    /// получение провайдера робота по id
-    /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
+    //--Получение провайдера робота по ID--
     private RobotPropertyProvider GetRobotById(string id)
     {
-        if (_sceneObjectsManager == null || id == null)
-            return null;
+        var obj = _sceneObjectsManager.GetById(id);
 
-
-        var list = _sceneObjectsManager.GetGameObjectsList();
-        if (list == null)
-            return null;
-
-        foreach (var so in list)
-        {
-            if (so == null)
-                continue;
-
-            if (so.Type == ObjectType.Robot && so.Id == id)
+            if (obj.Type == ObjectType.Robot && obj.Id == id)
             {
-                return so.PropertyProvider as RobotPropertyProvider;
+                //возврат провайдера робота
+                return obj.PropertyProvider as RobotPropertyProvider;
             }
-        }
-
         // Ничего не найдено
         return null;
     }
-    /// <summary>
-    /// teleport k vibranni tochke, esli sim stop, i tochka yavlyaetsya komandoy peremeshcheniya, kotoraya prinadlezhit robotu
-    /// </summary>
-    /// <param name="s"></param>
+    //убрать
     private void TeleportToPoint(PickCommandSignal s)
     {
         if(_simManager.GetStatusSim() == SIM_STAT.STOP)
@@ -134,7 +98,7 @@ public class RobotProgrammSimulation : MonoBehaviour
     }
 
    
-
+    //--Запуск симуляции--
     void StartSim(StartProgramm s)
     {
         GetAllRobotsProg();
@@ -142,51 +106,71 @@ public class RobotProgrammSimulation : MonoBehaviour
 
         //////////тестовое условие для блока робота//////////
         PLCCommandBlockRobotsTask block = new PLCCommandBlockRobotsTask("1",RobotsPrograms.Keys.First());
+        PLCCommandInit init = new PLCCommandInit("911");
         PLCConditionBlock condition = new PLCConditionBlock("10");
         PLCConditionBranch branch = new PLCConditionBranch("21");
         PLCConditionBranch branch2 = new PLCConditionBranch("22");
+        PLCConditionBranch branch3 = new PLCConditionBranch("22");
+        PLCConditionBlock condition2 = new PLCConditionBlock("23");
         condition.Branches.Add(branch);
+        condition2.Branches.Add(branch3);
         condition.Branches.Add(branch2);
         block.ProgrammElements.Add(condition);
+
+        PLCProgramm.Add(init);
         PLCProgramm.Add(block);
 
         branch.Condition = new PLCCondition("key == true && counter == 98");
-        branch2.Condition = new PLCCondition("key == false || counter != 99");
+        branch3.Condition = new PLCCondition("key2");
+        branch2.Condition = new PLCCondition("key == true && counter == 99");
         SubProgramm subProgramm1 = RobotsPrograms.Values.First().First() as SubProgramm;
         SubProgramm subProgramm2 = RobotsPrograms.Values.First().Skip(1).First() as SubProgramm;
-        branch.Commands.Add(new PLCCommandTask("31", subProgramm1.ID));
-        branch2.Commands.Add(new PLCCommandTask("32", subProgramm2.ID));
-        
-
-
+        SubProgramm subProgramm3 = RobotsPrograms.Values.First().Skip(2).First() as SubProgramm;
+        //branch.Commands.Add(new PLCCommandTask("31", subProgramm1.ID));
+        branch2.ProgrammElements.Add(new PLCCommandTask("32", subProgramm2.ID));
+        branch3.ProgrammElements.Add(new PLCCommandTask("33", subProgramm3.ID));
+        branch3.ProgrammElements.Add(new PLCCommandSetBool("993", "key2", false));
+        branch.ProgrammElements.Add(condition2);
+        init.ProgrammElements.Add(new PLCCommandSetInt("992", "counter", 1000));
         StartPLC();
         //StartCoroutine(ExecuteProgramm());
     }
+    //--"Асинхронный" старт блоков работы с роботом--
     public void StartPLC()
     {
         foreach(var programmElement in PLCProgramm)
         {
-            if(programmElement.TypeComand == ENUM_PLC_COMMANDS.BLOCK_ROBOTS)
+
+            /*if(programmElement.TypeComand == ENUM_PLC_COMMANDS.BLOCK_ROBOTS)
             {
                 PLCCommandBlockRobotsTask block = (PLCCommandBlockRobotsTask)programmElement;
                 StartCoroutine(ExecuteRobotBlock(block));
-            }
-            else
+            }*/
+            try
             {
-                Debug.LogError("ПЛК комманда не является командой (блок управления роботом)");
+                if(programmElement.GetType() == typeof(PLCCommandInit))
+                {
+                    programmElement.Execute();
+                }
+                if(programmElement.GetType() == typeof(PLCCommandBlockRobotsTask))
+                {
+                    PLCCommandBlockRobotsTask block = (PLCCommandBlockRobotsTask)programmElement;
+                    StartCoroutine(ExecuteRobotBlock(block));
+                }
+                
+            }
+            
+            catch (Exception ex)
+            {
+                Debug.LogError($"Не удалсь запустить ПЛК {ex}");
             }
         }
     }
-
-    /// <summary>
-    /// исполнение блока обработки робота
-    /// </summary>
-    /// <param name="BlockRobotTasks"></param>
-    /// <returns></returns>
+    //--Выполнение блока работы с роботом--
     public IEnumerator ExecuteRobotBlock(PLCCommandBlockRobotsTask BlockRobotTasks)
     {
         string robotID = BlockRobotTasks.RobotID;
-        var RC = GetRobotById(robotID)?.RobotController;
+        var RC = GetRobotById(robotID).RobotController;
 
         if (RC == null)
         {
@@ -203,12 +187,9 @@ public class RobotProgrammSimulation : MonoBehaviour
 
             foreach (var element in BlockRobotTasks.ProgrammElements)
             {
-                bool success = element.Execute(RC, RobotsPrograms, robotID);
-
-                if (success)
-                {
-                    break;                    // Выполнили одну ветку/команду → выходим
-                }
+                //если робот занят выходим
+                if (GetRobotById(robotID).RobotController.RunTask) break;
+                bool success = element.Execute(RC, RobotsPrograms);
             }
 
             // Если ничего не выполнилось — можно добавить логику "по умолчанию"
@@ -294,10 +275,7 @@ public class RobotProgrammSimulation : MonoBehaviour
     //    }
     //}
 
-    public void InProgress()
-    {
-        allowNextCommand = false;
-    }
+
     /*private void StartSim(StartProgramm s)
     {
         if(LocalSimStat == SIM_STAT.PAUSE)
@@ -330,37 +308,35 @@ public class RobotProgrammSimulation : MonoBehaviour
         //LocalSimStat = SIM_STAT.PLAY;
         
     }
-    private void EndCurrentMove(RobotEndMove s)
-    {
-        if(s.RoboID == _propertyProvider.Id)
-        {
-            allowNextCommand = true;
-        }
-    }
+    //private void EndCurrentMove(RobotEndMove s)
+    //{
+    //    if(s.RoboID == _propertyProvider.Id)
+    //    {
+    //        allowNextCommand = true;
+    //    }
+    //}
 
-    public bool CheckComand(RobotProgrammElement c)
-    {
-        switch (c.TypeComand)
-        {
-            case ENUM_COMMANDS.MOVE_PTP: return true;
-            case ENUM_COMMANDS.MOVE_LIN: return true;
-            case ENUM_COMMANDS.WAIT: return true;
-            case ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR: return true;
-            default: return false;
-        }
-    }
-    public void HandlerCommand(RobotProgrammElement c)
-    {
-        InProgress();
-        //c.Execute(RC);  
-    }
+    //public bool CheckComand(RobotProgrammElement c)
+    //{
+    //    switch (c.TypeComand)
+    //    {
+    //        case ENUM_COMMANDS.MOVE_PTP: return true;
+    //        case ENUM_COMMANDS.MOVE_LIN: return true;
+    //        case ENUM_COMMANDS.WAIT: return true;
+    //        case ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR: return true;
+    //        default: return false;
+    //    }
+    //}
+    //public void HandlerCommand(RobotProgrammElement c)
+    //{
+    //    //InProgress();
+    //    //c.Execute(RC);  
+    //}
 
     private void OnDestroy()
     {
         _eventBus?.Unsubcribe<StartProgramm>(StartSim);
         _eventBus?.Unsubcribe<PauseProgramm>(PauseSim);
-        _eventBus?.Unsubcribe<StopProgramm>(StopSim);
-        _eventBus?.Unsubcribe<RobotEndMove>(EndCurrentMove);
 
         _eventBus?.Unsubcribe<PickCommandSignal>(TeleportToPoint);
     }

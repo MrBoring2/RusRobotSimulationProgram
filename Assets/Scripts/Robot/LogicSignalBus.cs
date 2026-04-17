@@ -87,7 +87,23 @@ public class LogicSignalBus : MonoBehaviour, IService
     }
 
   
-
+    public void SetSignal(string signalName, bool value)
+    {
+        var entry = boolSignals.Find(e => e.key == signalName);
+        if (entry != null)
+            entry.value = value;
+        else
+            boolSignals.Add(new SignalEntry { key = signalName, value = value });
+        Debug.Log($"[SIGNAL] {signalName} = {value}");
+    }
+    public void SetIntData(string DataName, int ValueToSet)
+    {
+        var entry = intDataList.Find(e => e.key == DataName);
+        if(entry != null)
+            entry.value = ValueToSet;
+        else
+            intDataList.Add(new IntDataEntry { key = DataName, value = ValueToSet });   
+    }
     public Dictionary<string, bool> GetSignals()
     {
         ConvertListsToDictionaries();

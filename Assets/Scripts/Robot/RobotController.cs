@@ -15,19 +15,21 @@ using UnityEngine.Rendering;
 public class RobotController : MonoBehaviour
 {
     private RobotPropertyProvider _propertyProvider;
-    private EventBus _eventBus;
-    private float Speed;//м/с
-    private Vector3 point;
-    private Vector3 oldJOGposition = Vector3.zero;
-    private Quaternion oldJOGrotation = Quaternion.identity;
-    private Point EffectorPosition;
-    private Angles[] angles;
     private JOGPropertyProvider _JOGProvider;
     private SimulationManager _simManager;
 
+    private float Speed;//м/с
+    
+    private Point EffectorPosition;
+    private Angles[] angles;
+
+    private Vector3 oldJOGposition = Vector3.zero;
+    private Quaternion oldJOGrotation = Quaternion.identity;
+
+    public string ID => _propertyProvider.Id;
     public bool RunTask { get; set; }
     private bool CommandComplete = true;
-
+    
     public AnimationCurve SpeedCurve;
     public InverseK_new InvKin;
     
@@ -35,13 +37,9 @@ public class RobotController : MonoBehaviour
     {
         _simManager = ServiceManager.Current.Get<SimulationManager>();
         InvKin = gameObject.GetComponent<InverseK_new>();
-        _eventBus = ServiceManager.Current.Get<EventBus>();
-        _eventBus.Subscribe<StopProgramm>(StopSim);
+        ServiceManager.Current.Get<EventBus>().Subscribe<StopProgramm>(StopSim);
         _propertyProvider = GetComponent<RobotPropertyProvider>();
         _JOGProvider = _propertyProvider.JOGpoint;
-        //ik = new IK(_propertyProvider);
-        //_propertyProvider.XYZ = new Vector3(1,1,1);
-        //_propertyProvider.oldXYZ = _propertyProvider.XYZ;
         _propertyProvider.JOGpoint.LocalPosition = new Vector3(1, 1, 1);
         SetJogMove();  
     }
@@ -52,38 +50,30 @@ public class RobotController : MonoBehaviour
             SetJogMove();
         }
     }
-    /// <summary>
-    /// Вып. команды ожидания
-    /// </summary>
+    //--Команда ожидания--
     public void RobotSetWait(WaitPropertyProvider cmd)
     {
         StartCoroutine(SetWait(cmd.Get()));
     }
     private IEnumerator SetWait(float time)
     {
-        yield return new WaitForSeconds(time*Time.fixedDeltaTime);
-        _eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
+        yield return new WaitForSeconds(time);
+        //_eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
+        CommandComplete = true;
     }
-    /// <summary>
-    /// Вып. команды изменения состояния эффектора
-    /// </summary>
+    //--Команда изменения состояния эффектора
     public void RobotSetStateEndEffector(StateEndEffectorPropertyProvider cmd)
     {
         _propertyProvider.EndEffectorOn = cmd.Get();
         //_eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
         CommandComplete = true;
     }
-    /// <summary>
-    /// Вып. команды линейного движения
-    /// </summary>
+    //--Команда линейное движение
     public void RobotSetLinMove(LinearPointPropertyProvider point)
     {
         StartCoroutine(LinMove(point));
     }
-    /// <summary>
-    /// Движение в режиме JOG
-    /// </summary>
-    /// <param name="point"></param>
+    //--Задать позицию ДЖОГа
     public void SetJogMove()
     {
         if (oldJOGposition != _JOGProvider.LocalPosition || oldJOGrotation != _JOGProvider.LocalRotationQ)
@@ -104,11 +94,7 @@ public class RobotController : MonoBehaviour
         }
 
     }
-
-    /// <summary>
-    /// Мгновенное перемещение к позиции точки
-    /// </summary>
-    /// <param name="p"></param>
+    //--Мгновенное перемещение к переданной точке
     public void TeleportToPoint(LinearPointPropertyProvider p)
     {
         EffectorPosition = InvKin.Translate(GetPositionInfo(p));
@@ -126,6 +112,7 @@ public class RobotController : MonoBehaviour
         _propertyProvider.oldXYZRot = _propertyProvider.XYZRot;
         SyncJogPos();
     }
+    //--Получить позицию точки--
     public Point GetPositionInfo(LinearPointPropertyProvider p)
     {
         //point = _propertyProvider.transform.InverseTransformPoint(p.LocalPosition);////!!!
@@ -136,12 +123,7 @@ public class RobotController : MonoBehaviour
         //_propertyProvider.absoluteXYZ = p.Position;
         //PointType = p.pointType;
     }
-
-
-    /// <summary>
-    /// Линейное движение к точке
-    /// </summary>
-    /// <returns></returns>
+    //--Корутина линейного движения--
     IEnumerator LinMove(LinearPointPropertyProvider point)
     {
         Vector3 start = _propertyProvider.XYZ;
@@ -158,7 +140,7 @@ public class RobotController : MonoBehaviour
         float timeInWay = distance / Speed;
         float timeCurrent = 0;
         float timeCurrenScale = 0;
-        //Сделать проверку точки на доступность, если точка недоступна, то не выполнять движение и выдавать ошибку
+        //Сделать проверку точки на достежимость, если точка недоступна, то не выполнять движение и выдавать ошибку
 
         
         while (traveled < distance)
@@ -217,16 +199,7 @@ public class RobotController : MonoBehaviour
         //_eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
         CommandComplete = true;
     }
-    public void StopSim(StopProgramm s)
-    {
-        StopAllCoroutines();
-        SyncJogPos();
-        RunTask = false;
-        CommandComplete = true;
-    }
-    /// <summary>
-    /// перемещает точку JOG в позицию эффектора, используется для синхронизации позиции точки JOG при выполнении других типов движения
-    /// </summary>
+    //--Перемещает точку JOG в позицию эффектора, используется для синхронизации позиции точки JOG--
     public void SyncJogPos()
     {
         //_propertyProvider.JOGpoint.GlobalPosition = _propertyProvider.absoluteXYZ;
@@ -234,10 +207,7 @@ public class RobotController : MonoBehaviour
         _propertyProvider.JOGpoint.LocalPosition = _propertyProvider.XYZ;
         _propertyProvider.JOGpoint.LocalRotationQ = _propertyProvider.XYZRot;
     }
-    /// <summary>
-    /// Ручное управление
-    /// </summary>
-    /// 
+    //--Изменить позицию модели робота--
     public void ModifyRobot(RobotPropertyProvider _propertyProvider, Angles ang)
     {
         _propertyProvider.J1Angle = ang.thetha1;
@@ -247,30 +217,38 @@ public class RobotController : MonoBehaviour
         _propertyProvider.J5Angle = ang.thetha5;
         _propertyProvider.J6Angle = ang.thetha6;
     }
-
+    //--Выполнить подпрограмму (задачу)--
     public void RunSubProgramm(RobotProgrammElement RPE)
     {
       StartCoroutine(Run(RPE));
     }
+    //--Корутина выполнение подпрограммы (задачи)--
     public IEnumerator Run(RobotProgrammElement RPE)
     {
         SubProgramm sub;
         if (RPE != null && RPE.TypeComand == ENUM_COMMANDS.SUBPROGRAMM)
         {
             sub = RPE as SubProgramm;
-            foreach (var element in sub.CommandsElements)
+            foreach (var element in sub.ProgrammElement)
             {
                 yield return new WaitUntil(() => CommandComplete && _simManager.GetStatusSim() == SIM_STAT.PLAY);
                 CommandComplete = false;
                 element.Execute(this);
-                
+
             }
             _propertyProvider.RobotController.RunTask = false;
         }
         else
         {
-            UnityEngine.Debug.LogError("Ошибка: переданный элемент не является подпрограммой.");
+            Debug.LogError("Ошибка: переданный элемент не является подпрограммой.");
         }
+    }
+    public void StopSim(StopProgramm s)
+    {
+        StopAllCoroutines();
+        SyncJogPos();
+        RunTask = false;
+        CommandComplete = true;
     }
 }
 
