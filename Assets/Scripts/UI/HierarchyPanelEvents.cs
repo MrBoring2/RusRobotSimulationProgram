@@ -42,7 +42,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     private UndoRedoManager _undoRedoManager;
     private UIStatusManager _uIStatusManager;
     private SimulationManager _simulationManager;
-
+    private NotificationSystemManager _notificationSystemManager;
     private DragDropData currentDragData;
     private VisualElement dragPreviewElement;
     private DropTargetInfo currentDropTarget;
@@ -57,6 +57,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
 
         _eventBus = ServiceManager.Current.Get<EventBus>();
+        _notificationSystemManager = ServiceManager.Current.Get<NotificationSystemManager>();
         _eventBus.Subscribe<AddSceneObjectSignal>(OnObjectAdded);
         _eventBus.Subscribe<RemoveSceneObjectSignal>(OnObjectRemoved);
         _eventBus.Subscribe<ChangeObjectNameSignal>(OnObjectNameChanged);
@@ -319,20 +320,11 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
         switch (item.Type)
         {
-            //case ObjectType.Robot:
-            //    element = new CustomFoldout { Text = item.Reference.name };
-            //    ((CustomFoldout)element).SetHeaderImage(texture);
-            //    element.name = "hierarchy-item-robot";
-            //    element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
-            //    var robotFoldout = (CustomFoldout)element;
-            //    robotFoldout.OnExpandedChanged += (isExpanded) =>
-            //    {
-            //        if (robotFoldout.userData != null)
-            //        {
-            //            expandedFoldouts[robotFoldout.userData.ToString()] = isExpanded;
-            //        }
-            //    };
-            //    break;
+            case ObjectType.Robot:
+                element = CreateHierarchyElement("hierarchy-item-robot", item.Reference.name, item.Id, texture);
+                element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
+
+                break;
             //case ObjectType.Program:
             //    element = new CustomFoldout { Text = item.Reference.name };
             //    ((CustomFoldout)element).SetHeaderImage(texture);
@@ -941,6 +933,13 @@ public class HierarchyPanelEvents : MonoBehaviour
         //objectPicker.UnpickObject();
         _eventBus.Invoke(new UnpickObjectSignal());
         var type = prefab.GetComponent<SceneObjectMarker>().type;
+
+        if (_sceneObjectManager.GetGameObjectsList().FirstOrDefault(p => p.Type == ObjectType.PLC) != null)
+        {
+            _notificationSystemManager.ShowWarning("ПЛК ячейки может быть только один");
+            return;
+        }
+
         var pos = Vector3.zero;
         var rot = Quaternion.identity;
         if (_simulationManager.GetModeSim() == MODE.JOG_MODE)
@@ -1806,7 +1805,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 return element;
             }
 
-            else if (element.name == "hierarchy-item-command" || element.name == "hierarchy-item")
+            else if (element.name == "hierarchy-item-command" || element.name == "hierarchy-item" || element.name == "hierarchy-item-robot")
             {
                 return element;
             }

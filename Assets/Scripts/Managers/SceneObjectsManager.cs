@@ -19,9 +19,11 @@ namespace Assets.Scripts.Managers
     public class SceneObjectsManager : MonoBehaviour, IService
     {
         private EventBus _eventBus;
+        private NotificationSystemManager _notificationSystemManager;
         public void Init()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
+            _notificationSystemManager = ServiceManager.Current.Get<NotificationSystemManager>();
             InitExistedObjects();
         }
 
@@ -41,6 +43,9 @@ namespace Assets.Scripts.Managers
                     parent = ((SceneObject)Items[parentId])?.Reference;
                     if (parent == null) return null;
                 }
+
+
+
                 var obj = Instantiate(prefab, position, rotation, parent?.transform);
                 obj.name = prefab.name;
                 var objectMaker = obj.GetComponent<SceneObjectMarker>();
@@ -73,9 +78,17 @@ namespace Assets.Scripts.Managers
                         //    break;
                         case ObjectType.Robot:
                             sceneObj = new RobotObject(id, objectMaker.type, obj, parentId);
+                            PLCData.RobotCommandsBlockItems.Add(new PLCRobotBlock(id));
                             break;
                         case ObjectType.PLC:
                             sceneObj = new PLCObject(id, objectMaker.type, obj, parentId);
+                            var allRobots = GetGameObjectsList()
+                                .Where(obj => obj.Type == ObjectType.Robot)
+                                .ToList();
+                            foreach (var item in allRobots)
+                            {
+                                PLCData.RobotCommandsBlockItems.Add(new PLCRobotBlock(item.Id));
+                            }
                             break;
                         default:
                             sceneObj = new SceneObject(id, objectMaker.type, obj, parentId);

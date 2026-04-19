@@ -1,0 +1,10 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="programs-set-container" style="flex-grow: 1; background-color: rgb(52, 73, 94); padding: 10px; position: absolute; top: 0; left: 0; width: 468px; height: 131px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); min-width: auto; min-height: auto; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 1px; border-right-width: 1px; border-left-color: rgb(19, 32, 46); border-right-color: rgb(19, 32, 46); border-top-color: rgb(19, 32, 46); border-bottom-color: rgb(19, 32, 46);">
+        <ui:Label text="Введите задачу" style="unity-font-style: bold; font-size: 16px; margin-bottom: 8px; color: rgb(255, 255, 255); -unity-font-style: bold;"/>
+        <Assets.UI.CustomElements.ProgramsPopupField name="programs-list"/>
+        <ui:VisualElement style="flex-direction: row; justify-content: space-between; margin-top: 8px; align-content: stretch; align-self: center;">
+            <ui:Button name="confirmBtn" text="Принять" style="background-color: rgb(30, 147, 53); color: white;"/>
+            <ui:Button name="cancelBtn" text="Отмена" style="background-color: rgb(204, 51, 51); color: white;"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

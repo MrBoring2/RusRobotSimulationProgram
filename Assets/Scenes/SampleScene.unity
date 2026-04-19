@@ -574,63 +574,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1001 &416975391
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1988174411526814801, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_Name
-      value: "\u0428\u043A\u0430\u0444 \u0420\u0422\u041A"
-      objectReference: {fileID: 0}
-    - target: {fileID: 3439623115723053422, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.334
-      objectReference: {fileID: 0}
-    - target: {fileID: 3439623115723053422, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.695
-      objectReference: {fileID: 0}
-    - target: {fileID: 3439623115723053422, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 2.74013
-      objectReference: {fileID: 0}
-    - target: {fileID: 3439623115723053422, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3439623115723053422, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3439623115723053422, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3439623115723053422, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3439623115723053422, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3439623115723053422, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3439623115723053422, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 32e6cb036f9c9d4478984d748dd58653, type: 3}
 --- !u!1 &444706268 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: ce5c527638d0e5540bb0ae68f2fbf477, type: 3}
@@ -1810,6 +1753,8 @@ GameObject:
   - component: {fileID: 1239946574}
   - component: {fileID: 1239946573}
   - component: {fileID: 1239946575}
+  - component: {fileID: 1239946576}
+  - component: {fileID: 1239946577}
   m_Layer: 0
   m_Name: MainUI
   m_TagString: Untagged
@@ -2101,6 +2046,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.HierarchyCommandsPanelEvents
   iBlocker: {fileID: 1239946562}
+--- !u!114 &1239946576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239946554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93fb39039bd80354b9449a2ddaf5fc5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.ExpressionGenerationPanelEvents
+  windowUXML: {fileID: 9197481963319205126, guid: e75ab388eacf8034db1ca3ec5f830b15, type: 3}
+  UIBlocker: {fileID: 1239946562}
+--- !u!114 &1239946577
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239946554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d18a2aa39581e4e9a08113533eae71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.ProgramsSetPanelEvents
+  windowUXML: {fileID: 9197481963319205126, guid: 20e16d918a5589b45af8617b0d2ed43b, type: 3}
+  UIBlocker: {fileID: 1239946562}
 --- !u!1 &1289876334
 GameObject:
   m_ObjectHideFlags: 0
@@ -2983,4 +2956,3 @@ SceneRoots:
   - {fileID: 1159832440}
   - {fileID: 171045247}
   - {fileID: 1046687316}
-  - {fileID: 416975391}

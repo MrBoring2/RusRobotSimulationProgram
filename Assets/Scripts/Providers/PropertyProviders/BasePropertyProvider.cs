@@ -20,6 +20,7 @@ namespace Assets.Scripts.Providers
         protected bool displayPosition = true;
         protected bool displayRotation = true;
         protected bool displayScale = true;
+        protected bool nameReadOnly = false;
         public bool IsReadondly { get; set; }
    
         public Vector3 Rotation
@@ -41,6 +42,7 @@ namespace Assets.Scripts.Providers
         public bool DisplayPosition { get => displayPosition; set => displayPosition = value; }
         public bool DisplayRotation { get => displayRotation; set => displayRotation = value; }
         public bool DisplayScale { get => displayScale; set => displayScale = value; }
+        public bool NameReadOnly { get => nameReadOnly; set => nameReadOnly = value;  }
 
         private void Awake()
         {

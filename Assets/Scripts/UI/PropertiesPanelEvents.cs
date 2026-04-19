@@ -130,6 +130,22 @@ public class PropertiesPanelEvents : MonoBehaviour
         }
         else ShowElement(scalePropertyContainer);
 
+        if(propertyProvider == null || current.NameReadOnly)
+        {
+            var name = namePropertyContainer.Q<TextField>("name");
+            if(name != null)
+            {
+                name.isReadOnly = true;
+            }
+        }
+        else
+        {
+            var name = namePropertyContainer.Q<TextField>("name");
+            if (name != null)
+            {
+                name.isReadOnly = false;
+            }
+        }
 
         customContainer.Clear();
 

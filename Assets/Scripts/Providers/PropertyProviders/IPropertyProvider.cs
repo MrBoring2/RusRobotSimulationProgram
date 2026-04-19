@@ -15,6 +15,7 @@ public interface IPropertyProvider
     bool DisplayPosition { get; set; }
     bool DisplayRotation { get; set; }
     bool DisplayScale { get; set; }
+    bool NameReadOnly { get; set; }
 
     IEnumerable<CustomProperty> GetCustomProperties();
     ProviderSaveData CaptureCustomState();

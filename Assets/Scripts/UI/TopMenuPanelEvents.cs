@@ -71,7 +71,7 @@ namespace Assets.Scripts.UI
 
             fileBtn.clicked += () => ToggleMenu(fileMenu, fileBtn);
             viewBtn.clicked += () => ToggleMenu(viewMenu, viewBtn);
-            testBtn.clicked += () => ToggleMenu(testMenu, testBtn);
+            //testBtn.clicked += () => ToggleMenu(testMenu, testBtn);
 
             // Закрытие при клике вне меню
             root.RegisterCallback<MouseDownEvent>(evt =>

@@ -42,6 +42,7 @@ namespace Assets.Scripts.Providers
             }
         }
 
+
         public Vector3 LocalPosition { get => transform.localPosition; set => transform.localPosition = value; }
         public Quaternion LocalRotationQ { get => transform.localRotation; set => transform.localRotation = value; }
         public Vector3 GlobalPosition { get => transform.position; set => transform.position = value; }
@@ -60,8 +61,8 @@ namespace Assets.Scripts.Providers
         public bool DisplayPosition { get => displayPosition; set => displayPosition = value; }
         public bool DisplayRotation { get => displayRotation; set => displayRotation = value; }
         public bool DisplayScale { get => displayScale; set => displayScale = value; }
+        public bool NameReadOnly { get => nameReadOnly; set => nameReadOnly = value; }
 
-        
 
         public bool ShowVisual = true;
         public Material material;
@@ -111,6 +112,8 @@ namespace Assets.Scripts.Providers
         {
             _robotPropertyProvider = transform.parent.GetComponent<RobotPropertyProvider>();
             displayScale = false;
+            nameReadOnly = true;
+            
         }
 
         public ProviderSaveData CaptureCustomState()
@@ -129,7 +132,7 @@ namespace Assets.Scripts.Providers
             var list = new List<CustomProperty>();
             var endEffect = new CustomProperty(
                 "EndEffectorOn",
-                "Ñîñòîÿíèå çàõâàòà",
+                "Статус захвата",
                 typeof(bool),
                 () => EndEffectorOn,
                 val => EndEffectorOn = (bool)val
@@ -273,6 +276,7 @@ namespace Assets.Scripts.Providers
         protected bool displayPosition = true;
         protected bool displayRotation = true;
         protected bool displayScale = true;
+        protected bool nameReadOnly = false;
     }
 
 

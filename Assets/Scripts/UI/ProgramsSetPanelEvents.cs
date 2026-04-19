@@ -1,19 +1,22 @@
 ﻿using Assets.Scripts.CustomEventBus;
-using Assets.Scripts.CustomEventBus.Signals.ObjectsLibrary;
 using Assets.Scripts.CustomEventBus.Signals.PLC;
 using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using Assets.Scripts.Models;
+using Assets.UI.CustomElements;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static Unity.Collections.AllocatorManager;
 
 namespace Assets.Scripts.UI
 {
-    public class ExpressionGenerationPanelEvents : MonoBehaviour
+    internal class ProgramsSetPanelEvents : MonoBehaviour
     {
-        public VisualTreeAsset windowUXML;  // Основное окно
-        public VisualTreeAsset itemUXML;    // Элемент списка
+        public VisualTreeAsset windowUXML;
 
         public event Action<GameObject> OnObjectSelected;
 
@@ -24,32 +27,57 @@ namespace Assets.Scripts.UI
         private bool isDragging = false;
         private Vector2 dragOffset;
         private EventBus _eventBus;
-        private string expression = "";
+        private SceneObjectsManager _sceneObjectsManager;
+        private RobotProgramObject selectedProgram;
+        private string blockId = "";
+        private string currentRobotId = null;
+        private ProgramsPopupField programsListPopupField;
+        private List<RobotProgramObject> programs = new List<RobotProgramObject>();
 
         void Start()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
-            _eventBus.Subscribe<PLCShowExpressionPanelSignal>(OnShowExpression);
+            _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
+            _eventBus.Subscribe<PLCShowSetProgramPanelSignal>(OnShowPanel);
 
             root = GetComponent<UIDocument>().rootVisualElement;
             windowRoot = windowUXML.CloneTree();
 
             list = windowRoot.Q<ScrollView>("list");
-
+            programsListPopupField = windowRoot.Q<ProgramsPopupField>("programs-list");
+            programsListPopupField.choices = programs;
+            programsListPopupField.RegisterCallback<ChangeEvent<RobotProgramObject>>(p =>
+            {
+                selectedProgram = p.newValue;
+            });
             var button = windowRoot.Q<Button>("cancelBtn");
             button.clicked += () => { windowRoot.style.display = DisplayStyle.None; UIBlocker.RemoveModalWindow(windowRoot); };
+            var confirmBurron = windowRoot.Q<Button>("confirmBtn");
+            confirmBurron.clicked += () => { ConfirmCondition(); };
 
             EnableDrag();
         }
 
-        private void OnShowExpression(PLCShowExpressionPanelSignal signal)
+        private void ConfirmCondition()
         {
+            _eventBus.Invoke(new PLCSelectProgramPanelSignal(blockId, selectedProgram));
+            selectedProgram = null;
+            windowRoot.style.display = DisplayStyle.None;
+            UIBlocker.RemoveModalWindow(windowRoot);
+        }
+
+        private void OnShowPanel(PLCShowSetProgramPanelSignal signal)
+        {
+            blockId = signal.BlockId;
+            currentRobotId = signal.RobotId;
+            programs = _sceneObjectsManager.Commands.GetSubPrograms(currentRobotId);
+            programsListPopupField.choices = programs;
             Show();
         }
 
         private void EnableDrag()
         {
-            var rootElement = windowRoot.Q("objects-library-container");
+            var rootElement = windowRoot.Q("programs-set-container");
 
             rootElement.RegisterCallback<MouseDownEvent>(evt =>
             {
@@ -84,7 +112,7 @@ namespace Assets.Scripts.UI
 
         private void OnWindowSizeChanged(GeometryChangedEvent evt)
         {
-            var rootElement = windowRoot.Q("objects-library-container");
+            var rootElement = windowRoot.Q("programs-set-container");
             float windowWidth = rootElement.resolvedStyle.width;
             float windowHeight = rootElement.resolvedStyle.height;
             float screenWidth = root.resolvedStyle.width;
@@ -95,6 +123,5 @@ namespace Assets.Scripts.UI
             windowRoot.style.top = (screenHeight - windowHeight) / 2;
             windowRoot.UnregisterCallback<GeometryChangedEvent>(OnWindowSizeChanged);
         }
-
     }
 }

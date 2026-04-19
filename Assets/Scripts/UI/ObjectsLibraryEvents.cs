@@ -34,6 +34,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
         categories.Add("Primitive", "Примитивы");
         categories.Add("Workpieces", "Детали");
         categories.Add("Robot", "Манипуляторы");
+        categories.Add("PLC", "ПЛК");
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<ShowObjectsLibrarySignal>(OnShowLibrary);
         foreach (var category in categories.Keys)

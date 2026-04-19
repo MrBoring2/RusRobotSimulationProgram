@@ -3,6 +3,6 @@
     <ui:VisualElement name="TopMenu" class="top-menu">
         <ui:Button name="FileButton" text="Файл" class="menu-button" />
         <ui:Button name="ViewButton" text="Вид" class="menu-button" />
-        <ui:Button name="Test" text="Тест сообщений" class="menu-button" />
+<!--         <ui:Button name="Test" text="Тест сообщений" class="menu-button" /> -->
     </ui:VisualElement>
 </ui:UXML>
