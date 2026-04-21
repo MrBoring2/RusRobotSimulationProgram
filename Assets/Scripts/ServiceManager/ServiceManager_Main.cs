@@ -20,6 +20,7 @@ namespace Assets.Scripts.CustomServiceManager
         [SerializeField] private UndoRedoManager _undoRedoManager;
         [SerializeField] private SaveLoadManager _saveLoadManager;
         [SerializeField] private NotificationSystemManager _notificationSystemManager;
+        [SerializeField] private ModalWindowServiceManager _modalWindowServiceManager;
         private CustomEventBus.EventBus _eventBus;
         [SerializeField] private SimulationManager _simulationManager;
 
@@ -44,6 +45,7 @@ namespace Assets.Scripts.CustomServiceManager
             ServiceManager.Current.Register(_saveLoadManager);
             ServiceManager.Current.Register(_simulationManager);
             ServiceManager.Current.Register(_notificationSystemManager);
+            ServiceManager.Current.Register(_modalWindowServiceManager);
         }
 
         private void Init()
@@ -56,6 +58,7 @@ namespace Assets.Scripts.CustomServiceManager
             _undoRedoManager.Init();
             _saveLoadManager.Init();
             _notificationSystemManager.Init();
+            _modalWindowServiceManager.Init();
         }
 
     }

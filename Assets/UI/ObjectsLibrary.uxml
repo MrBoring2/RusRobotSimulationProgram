@@ -1,10 +1,10 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/UI/ObjectsLibraryStyles.uss?fileID=7433441132597879392&amp;guid=631eaaec761bb54488e6722ac2bcaf17&amp;type=3#ObjectsLibraryStyles" />
-    <ui:VisualElement name="objects-library-container" style="flex-grow: 1; background-color: rgb(52, 73, 94); padding: 10px; position: absolute; top: 0; left: 0; width: 400px; height: 500px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); min-width: 400px; min-height: 300px; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 1px; border-right-width: 1px; border-left-color: rgb(19, 32, 46); border-right-color: rgb(19, 32, 46); border-top-color: rgb(19, 32, 46); border-bottom-color: rgb(19, 32, 46);">
-        <ui:Label text="Добавить объект" style="unity-font-style: bold; font-size: 16px; margin-bottom: 8px; color: rgb(255, 255, 255); -unity-font-style: bold;" />
-        <ui:ScrollView name="list" style="flex-grow: 1; margin-bottom: 10px; overflow-y: auto;" />
+    <Style src="project://database/Assets/UI/ObjectsLibraryStyles.uss?fileID=7433441132597879392&amp;guid=631eaaec761bb54488e6722ac2bcaf17&amp;type=3#ObjectsLibraryStyles"/>
+    <ui:VisualElement name="modal-window-container" style="flex-grow: 1; background-color: rgb(52, 73, 94); padding: 10px; position: absolute; top: 0; left: 0; width: 400px; height: 500px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); min-width: 400px; min-height: 300px; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 1px; border-right-width: 1px; border-left-color: rgb(19, 32, 46); border-right-color: rgb(19, 32, 46); border-top-color: rgb(19, 32, 46); border-bottom-color: rgb(19, 32, 46);">
+        <ui:Label text="Добавить объект" style="unity-font-style: bold; font-size: 16px; margin-bottom: 8px; color: rgb(255, 255, 255); -unity-font-style: bold;"/>
+        <ui:ScrollView name="list" style="flex-grow: 1; margin-bottom: 10px; overflow-y: auto;"/>
         <ui:VisualElement style="flex-direction: row; justify-content: flex-end; margin-top: 8px;">
-            <ui:Button name="cancelBtn" text="Отмена" style="background-color: rgb(204, 51, 51); color: white;" />
+            <ui:Button name="close-button" text="Отмена" style="background-color: rgb(204, 51, 51); color: white;"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

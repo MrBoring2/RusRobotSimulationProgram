@@ -119,6 +119,89 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &21706617
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 21706621}
+  - component: {fileID: 21706620}
+  - component: {fileID: 21706619}
+  - component: {fileID: 21706618}
+  m_Layer: 0
+  m_Name: ModalWindows
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &21706618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 21706617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d18a2aa39581e4e9a08113533eae71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.ProgramsSetPanelEvents
+  windowId: program-set-window
+  windowUXML: {fileID: 9197481963319205126, guid: 20e16d918a5589b45af8617b0d2ed43b, type: 3}
+  UIBlocker: {fileID: 1239946562}
+  UIDocument: {fileID: 1239946556}
+--- !u!114 &21706619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 21706617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93fb39039bd80354b9449a2ddaf5fc5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.ExpressionGenerationPanelEvents
+  windowId: condition-window
+  windowUXML: {fileID: 9197481963319205126, guid: e75ab388eacf8034db1ca3ec5f830b15, type: 3}
+  UIBlocker: {fileID: 1239946562}
+  UIDocument: {fileID: 1239946556}
+--- !u!114 &21706620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 21706617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4795f7f6f5b269e458a603070c87e975, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ObjectsLibraryEvents
+  windowId: objects-library-window
+  windowUXML: {fileID: 9197481963319205126, guid: 72e246392876be64680fb9258e254367, type: 3}
+  UIBlocker: {fileID: 1239946562}
+  UIDocument: {fileID: 1239946556}
+  itemUXML: {fileID: 9197481963319205126, guid: 0648e9eeb06347b4eb8353353364563f, type: 3}
+--- !u!4 &21706621
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 21706617}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1417352188}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &152640449
 GameObject:
   m_ObjectHideFlags: 0
@@ -447,6 +530,51 @@ Transform:
   - {fileID: 323597819}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &365700416
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 365700417}
+  - component: {fileID: 365700418}
+  m_Layer: 0
+  m_Name: ModalWindowServiceManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &365700417
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 365700416}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1.6400701, y: 2.45486, z: 9.52928}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 469165501}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &365700418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 365700416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b831608d22dd9c41b720f314e2627f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Managers.ModalWindowServiceManager
+  windowContainer: {fileID: 21706617}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -726,6 +854,7 @@ Transform:
   - {fileID: 2020512687}
   - {fileID: 645784141}
   - {fileID: 1827411684}
+  - {fileID: 365700417}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &544480372
@@ -1742,7 +1871,6 @@ GameObject:
   - component: {fileID: 1239946562}
   - component: {fileID: 1239946563}
   - component: {fileID: 1239946564}
-  - component: {fileID: 1239946565}
   - component: {fileID: 1239946566}
   - component: {fileID: 1239946567}
   - component: {fileID: 1239946568}
@@ -1753,8 +1881,6 @@ GameObject:
   - component: {fileID: 1239946574}
   - component: {fileID: 1239946573}
   - component: {fileID: 1239946575}
-  - component: {fileID: 1239946576}
-  - component: {fileID: 1239946577}
   m_Layer: 0
   m_Name: MainUI
   m_TagString: Untagged
@@ -1905,21 +2031,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TopMenuEvents
   tooltipEvents: {fileID: 1239946568}
---- !u!114 &1239946565
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1239946554}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4795f7f6f5b269e458a603070c87e975, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ObjectsLibraryEvents
-  windowUXML: {fileID: 9197481963319205126, guid: 72e246392876be64680fb9258e254367, type: 3}
-  itemUXML: {fileID: 9197481963319205126, guid: 0648e9eeb06347b4eb8353353364563f, type: 3}
-  UIBlocker: {fileID: 1239946562}
 --- !u!114 &1239946566
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2046,34 +2157,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.HierarchyCommandsPanelEvents
   iBlocker: {fileID: 1239946562}
---- !u!114 &1239946576
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1239946554}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 93fb39039bd80354b9449a2ddaf5fc5b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.ExpressionGenerationPanelEvents
-  windowUXML: {fileID: 9197481963319205126, guid: e75ab388eacf8034db1ca3ec5f830b15, type: 3}
-  UIBlocker: {fileID: 1239946562}
---- !u!114 &1239946577
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1239946554}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4d18a2aa39581e4e9a08113533eae71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.ProgramsSetPanelEvents
-  windowUXML: {fileID: 9197481963319205126, guid: 20e16d918a5589b45af8617b0d2ed43b, type: 3}
-  UIBlocker: {fileID: 1239946562}
 --- !u!1 &1289876334
 GameObject:
   m_ObjectHideFlags: 0
@@ -2152,6 +2235,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1239946555}
+  - {fileID: 21706621}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1468343622
@@ -2903,6 +2987,7 @@ MonoBehaviour:
   _undoRedoManager: {fileID: 544480374}
   _saveLoadManager: {fileID: 1827411685}
   _notificationSystemManager: {fileID: 732570053}
+  _modalWindowServiceManager: {fileID: 365700418}
   _simulationManager: {fileID: 645784142}
 --- !u!1 &6728728365230234436
 GameObject:

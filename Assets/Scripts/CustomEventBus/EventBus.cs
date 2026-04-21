@@ -49,5 +49,10 @@ namespace Assets.Scripts.CustomEventBus
                 }
             }
         }
+
+        public void Init()
+        {
+            
+        }
     }
 }

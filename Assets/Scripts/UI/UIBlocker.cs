@@ -12,9 +12,9 @@ public class UIBlocker : MonoBehaviour
     //public bool isPointerOverUI { get; private set; }
     //public bool isInputMode { get; private set; }
     private UIStatusManager _uiStatusManager;
-    private List<VisualElement> uiElements;
+    private List<VisualElement> uiElements = new List<VisualElement>();
 
-    void Start()
+    public void Start()
     {
         _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
         root = GetComponent<UIDocument>().rootVisualElement;

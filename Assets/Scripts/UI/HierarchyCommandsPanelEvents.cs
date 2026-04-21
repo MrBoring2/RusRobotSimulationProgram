@@ -28,6 +28,7 @@ namespace Assets.Scripts.UI
     {
         private EventBus _eventBus;
         private SceneObjectsManager _sceneObjectManager;
+        private ModalWindowServiceManager _modalWindowServiceManager;
         private LineManager _lineManager;
         private VisualElement root;
         [SerializeField]
@@ -65,14 +66,14 @@ namespace Assets.Scripts.UI
         {
 
             _eventBus = ServiceManager.Current.Get<EventBus>();
-
+            _modalWindowServiceManager = ServiceManager.Current.Get<ModalWindowServiceManager>();
             //_eventBus.Subscribe<AddSceneObjectSignal>(OnObjectAdded);
             _eventBus.Subscribe<RemoveSceneObjectSignal>(OnObjectRemoved);
             //_eventBus.Subscribe<ChangeObjectNameSignal>(OnObjectNameChanged);
             //_eventBus.Subscribe<LoadObjectsSignal>(OnLoadObjects);
             _eventBus.Subscribe<ChangePropertiesProviderSignal>(OnChangePropertiesProvider);
-            _eventBus.Subscribe<PLCChangeExpressionSignal>(OnChangeExpression);
-            _eventBus.Subscribe<PLCSelectProgramPanelSignal>(OnSelectProgram);
+            //_eventBus.Subscribe<PLCChangeExpressionSignal>(OnChangeExpression);
+            //_eventBus.Subscribe<PLCSelectProgramPanelSignal>(OnSelectProgram);
             //_eventBus.Subscribe<SelectObjectinLibrary>(OnObjectSelectedInLibrary);
             _eventBus.Subscribe<SelectObjectInScene>(OnObjectSelectedInScene);
             _eventBus.Subscribe<ChangeNamePropertySignal>(OnChangeNameProperty);
@@ -656,7 +657,7 @@ namespace Assets.Scripts.UI
                 }
 
                 var gameObject = _sceneObjectManager.Commands.FindElementById(element.userData.ToString());
-               
+
                 if (gameObject != null)
                 {
                     var objectId = element.userData?.ToString();
@@ -784,6 +785,28 @@ namespace Assets.Scripts.UI
                 selected.RemoveFromClassList("selected");
             }
         }
+
+        private void ShowProgramSetWindow(string programBlock, string robotId)
+        {
+            ModalParameters parameters = new ModalParameters();
+            parameters.Set("robotId", robotId);
+            _modalWindowServiceManager.ShowWindow<RobotProgramObject>("program-set-window", "Выбор программы робота", parameters, (program) =>
+            {
+                if (program != null)
+                    AddProgramInPLC(programBlock, program);
+            });
+        }
+        private void ShowExpressionWindow(string parentId)
+        {
+            ModalParameters parameters = new ModalParameters();
+            parameters.Set("currentParentObjectId", parentId);
+            _modalWindowServiceManager.ShowWindow<string>("condition-window", "Добавление условия", parameters, (expression) =>
+            {
+                if (expression != null)
+                    AddOrChangeExpression(parentId, expression);
+            });
+        }
+
         /// <summary>
         /// Показать контестное меню
         /// </summary>
@@ -872,39 +895,39 @@ namespace Assets.Scripts.UI
                     else if (foldout.name == "plc-logic-block")
                     {
                         var parentId = foldout.userData.ToString();
-                        contextMenu.Add(CreateMenuButton("Добавить условие", () => _eventBus.Invoke(new PLCShowExpressionPanelSignal(parentId))));
+                        contextMenu.Add(CreateMenuButton("Добавить условие", () => ShowExpressionWindow(parentId)));
                     }
                     else if (foldout.name == "plc-robot-block")
                     {
                         var parentId = foldout.userData.ToString();
-                        contextMenu.Add(CreateMenuButton("Добавить условие", () => _eventBus.Invoke(new PLCShowExpressionPanelSignal(parentId))));
+                        contextMenu.Add(CreateMenuButton("Добавить условие", () => ShowExpressionWindow(parentId)));
                     }
                     else if (foldout.name == "plc-condition-block")
                     {
                         var parentId = foldout.userData.ToString();
-                        contextMenu.Add(CreateMenuButton("Добавить иначе если", () => _eventBus.Invoke(new PLCShowExpressionPanelSignal(parentId))));
+                        contextMenu.Add(CreateMenuButton("Добавить иначе если", () => ShowExpressionWindow(parentId)));
                         contextMenu.Add(CreateMenuButton("Удалить условие", () => DeletePLCBlockCondition(parentId)));
                     }
                     else if (foldout.name == "plc-if-block")
                     {
                         var parentId = foldout.userData.ToString();
                         string robotId = GetRobotIdFromPLCBlock(foldout);
-                        contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => _eventBus.Invoke(new PLCShowExpressionPanelSignal(parentId))));
-                        contextMenu.Add(CreateMenuButton("Добавить задачу роботу", () => _eventBus.Invoke(new PLCShowSetProgramPanelSignal(parentId, robotId))));
+                        contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
+                        contextMenu.Add(CreateMenuButton("Добавить задачу роботу", () => ShowProgramSetWindow(parentId, robotId)));
                     }
                     else if (foldout.name == "plc-elif-block")
                     {
                         var parentId = foldout.userData.ToString();
                         string robotId = GetRobotIdFromPLCBlock(foldout);
-                        contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => _eventBus.Invoke(new PLCShowExpressionPanelSignal(parentId))));
-                        contextMenu.Add(CreateMenuButton("Добавить задачу роботу", () => _eventBus.Invoke(new PLCShowSetProgramPanelSignal(parentId, robotId))));
+                        contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
+                        contextMenu.Add(CreateMenuButton("Добавить задачу роботу", () => ShowProgramSetWindow(parentId, robotId)));
                     }
                     else if (foldout.name == "plc-else-block")
                     {
                         var parentId = foldout.userData.ToString();
                         string robotId = GetRobotIdFromPLCBlock(foldout);
-                        contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => _eventBus.Invoke(new PLCShowExpressionPanelSignal(parentId))));
-                        contextMenu.Add(CreateMenuButton("Добавить задачу роботу", () => _eventBus.Invoke(new PLCShowSetProgramPanelSignal(parentId, robotId))));
+                        contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
+                        contextMenu.Add(CreateMenuButton("Добавить задачу роботу", () => ShowProgramSetWindow(parentId, robotId)));
                     }
                     else if (foldout.name == "plc-command")
                     {
@@ -1171,7 +1194,7 @@ namespace Assets.Scripts.UI
         // Добавить команду (программу)
         private void AddProgramInPLC(string blockId, RobotProgramObject program)
         {
-            var startProgram = new PLCStartProgram { ProgramName = program.PropertyProvider.Name,  ProgramId = program.Id };
+            var startProgram = new PLCStartProgram { ProgramName = program.PropertyProvider.Name, ProgramId = program.Id };
             AddToPLCContent(blockId, startProgram);
         }
 

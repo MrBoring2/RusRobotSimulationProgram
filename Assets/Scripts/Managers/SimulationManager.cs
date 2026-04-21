@@ -7,7 +7,7 @@ using Assets.Scripts.CustomServiceManager;
 using System;
 using UnityEngine;
 
-public class SimulationManager : MonoBehaviour,IService
+public class SimulationManager : MonoBehaviour, IService
 {
     public LogisSignalBus LogisSignalBus;
     private EventBus _eventBus;
@@ -74,6 +74,10 @@ public class SimulationManager : MonoBehaviour,IService
         return SimulationMode;
     }
 
+    public void Init()
+    {
+        
+    }
 }
 
 public enum SIM_STAT

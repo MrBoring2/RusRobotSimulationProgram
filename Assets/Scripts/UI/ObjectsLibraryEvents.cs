@@ -9,107 +9,56 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
-public class ObjectsLibraryEvents : MonoBehaviour
+public class ObjectsLibraryEvents : BaseModalWindow
 {
-    public VisualTreeAsset windowUXML;  // Основное окно
-    public VisualTreeAsset itemUXML;    // Элемент списка
-
+    public VisualTreeAsset itemUXML;
     private Dictionary<string, string> categories = new Dictionary<string, string>();
-
     public event Action<GameObject> OnObjectSelected;
-
-    private VisualElement root;
-    private VisualElement windowRoot;
     private VisualElement list;
     private Dictionary<string, GameObject[]> loadedPrefabs = new Dictionary<string, GameObject[]>();
-    public UIBlocker UIBlocker;
-    private bool isDragging = false;
-    private Vector2 dragOffset;
-    private EventBus _eventBus;
     private string currentParentObjectId = null;
+    private GameObject selectedObject;
 
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         categories.Add("General", "Общее");
         categories.Add("Primitive", "Примитивы");
         categories.Add("Workpieces", "Детали");
         categories.Add("Robot", "Манипуляторы");
         categories.Add("PLC", "ПЛК");
-        _eventBus = ServiceManager.Current.Get<EventBus>();
-        _eventBus.Subscribe<ShowObjectsLibrarySignal>(OnShowLibrary);
         foreach (var category in categories.Keys)
         {
             GameObject[] prefabs = Resources.LoadAll<GameObject>($"Prefabs/{category}");
             loadedPrefabs[category] = prefabs;
         }
+    }
 
-        root = GetComponent<UIDocument>().rootVisualElement;
-        windowRoot = windowUXML.CloneTree();
-
+    protected override void InitializeElements(VisualElement root)
+    {
+        base.InitializeElements(root);
+        
+        messageLabel = root.Q<Label>("message-label");
+        closeButton = root.Q<Button>("close-button");
         list = windowRoot.Q<ScrollView>("list");
+    }
+    protected override void RegisterEvents()
+    {
+        base.RegisterEvents();
+    }
+    protected override void OnBeforeShow(ModalParameters parameters)
+    {
+        currentParentObjectId = parameters.Get("currentParentObjectId", "");
+        if (messageLabel != null)
+        {
+            string message = parameters.Get("message", "Библиотека объектов");
+            messageLabel.text = message;
+        }
 
-        var button = windowRoot.Q<Button>("cancelBtn");
-        button.clicked += () => { windowRoot.style.display = DisplayStyle.None; UIBlocker.RemoveModalWindow(windowRoot); };
-
-        EnableDrag();
-
+        
         BuildList();
     }
 
-    private void OnShowLibrary(ShowObjectsLibrarySignal signal)
-    {
-        currentParentObjectId = signal.ParentId;
-        Show();
-    }
-
-    private void EnableDrag()
-    {
-        var rootElement = windowRoot.Q("objects-library-container");
-
-        rootElement.RegisterCallback<MouseDownEvent>(evt =>
-        {
-            if (evt.button == (int)MouseButton.LeftMouse)
-            {
-                isDragging = true;
-                dragOffset = evt.mousePosition - rootElement.layout.position;
-            }
-        });
-
-        rootElement.RegisterCallback<MouseMoveEvent>(evt =>
-        {
-            if (isDragging)
-            {
-                rootElement.style.left = evt.mousePosition.x - dragOffset.x;
-                rootElement.style.top = evt.mousePosition.y - dragOffset.y;
-            }
-        });
-
-        rootElement.RegisterCallback<MouseUpEvent>(evt => isDragging = false);
-    }
-
-    public void Show()
-    {
-        if (windowRoot.parent == null)
-            root.Q("overlay").Add(windowRoot);
-        windowRoot.style.display = DisplayStyle.Flex;
-
-        windowRoot.RegisterCallback<GeometryChangedEvent>(OnWindowSizeChanged);
-        UIBlocker.AddNewModalWindow(windowRoot);
-    }
-
-    private void OnWindowSizeChanged(GeometryChangedEvent evt)
-    {
-        var rootElement = windowRoot.Q("objects-library-container");
-        float windowWidth = rootElement.resolvedStyle.width;
-        float windowHeight = rootElement.resolvedStyle.height;
-        float screenWidth = root.resolvedStyle.width;
-        float screenHeight = root.resolvedStyle.height;
-
-        // Центрируем окно
-        windowRoot.style.left = (screenWidth - windowWidth) / 2;
-        windowRoot.style.top = (screenHeight - windowHeight) / 2;
-        windowRoot.UnregisterCallback<GeometryChangedEvent>(OnWindowSizeChanged);
-    }
     void BuildList()
     {
         list.Clear();
@@ -130,7 +79,6 @@ public class ObjectsLibraryEvents : MonoBehaviour
             {
                 var prefabItem = itemUXML.CloneTree();
                 var previewImage = prefabItem.Q<Image>("preview");
-                //previewImage.scaleMode = ScaleMode.StretchToFill;
                 var titleLabel = prefabItem.Q<Label>("title");
                 if (prefab.GetComponent<SceneObjectMarker>()?.type == ObjectType.Node)
                 {
@@ -146,11 +94,9 @@ public class ObjectsLibraryEvents : MonoBehaviour
                     previewImage.style.height = new Length(80, LengthUnit.Pixel);
                     previewImage.scaleMode = ScaleMode.ScaleAndCrop;
                 }
-               
-
+              
                 // Если нужно растянуть на всю площадь
                 //previewImage.style.flexGrow = 1;
-             
 
                 titleLabel.text = prefab.name;
 
@@ -158,7 +104,7 @@ public class ObjectsLibraryEvents : MonoBehaviour
                 {
                     if (evt.clickCount == 2)
                     {
-                        _eventBus.Invoke(new SelectObjectinLibrary(prefab, currentParentObjectId));
+                        CloseWithValue(prefab);
                         //OnObjectSelected?.Invoke(prefab);
                         windowRoot.style.display = DisplayStyle.None;
                     }

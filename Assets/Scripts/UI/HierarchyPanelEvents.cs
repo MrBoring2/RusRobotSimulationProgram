@@ -23,6 +23,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 {
     private EventBus _eventBus;
     private SceneObjectsManager _sceneObjectManager;
+    private ModalWindowServiceManager _modalWindowServiceManager;
     private LineManager _lineManager;
     private VisualElement root;
     [SerializeField]
@@ -58,11 +59,12 @@ public class HierarchyPanelEvents : MonoBehaviour
 
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _notificationSystemManager = ServiceManager.Current.Get<NotificationSystemManager>();
+        _modalWindowServiceManager = ServiceManager.Current.Get<ModalWindowServiceManager>();
         _eventBus.Subscribe<AddSceneObjectSignal>(OnObjectAdded);
         _eventBus.Subscribe<RemoveSceneObjectSignal>(OnObjectRemoved);
         _eventBus.Subscribe<ChangeObjectNameSignal>(OnObjectNameChanged);
         _eventBus.Subscribe<LoadObjectsSignal>(OnLoadObjects);
-        _eventBus.Subscribe<SelectObjectinLibrary>(OnObjectSelectedInLibrary);
+        // _eventBus.Subscribe<SelectObjectinLibrary>(OnObjectSelectedInLibrary);
         _eventBus.Subscribe<SelectObjectInScene>(OnObjectSelectedInScene);
         _eventBus.Subscribe<ChangeNamePropertySignal>(OnChangeNameProperty);
         _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
@@ -917,7 +919,15 @@ public class HierarchyPanelEvents : MonoBehaviour
     /// </summary>
     private void CreateObject(string parentId = null)
     {
-        _eventBus.Invoke(new ShowObjectsLibrarySignal(parentId));
+        //AddObject(evt.Prefab, evt.ParentId);
+        ModalParameters parameters = new ModalParameters();
+        parameters.Set("currentParentObjectId", parentId);
+        _modalWindowServiceManager.ShowWindow<GameObject>("objects-library-window", "Библиотека объектов", parameters, (prefab) =>
+        {
+            if (prefab != null)
+                AddObject(prefab, parentId);
+        });
+        // _eventBus.Invoke(new ShowObjectsLibrarySignal(parentId));
         //objectsLibraryEvents.Show();
     }
     /// <summary>
