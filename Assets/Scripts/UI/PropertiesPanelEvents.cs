@@ -153,6 +153,7 @@ public class PropertiesPanelEvents : MonoBehaviour
         {
             UpdateUI();
             RegisterBaseFieldsBindings();
+            BuildCustomProperties(current);
         }
     }
 
@@ -192,7 +193,7 @@ public class PropertiesPanelEvents : MonoBehaviour
     {
         name.SetValueWithoutNotify(current.Name);
         UpdateTransform();
-        BuildCustomProperties(current);
+        //BuildCustomProperties(current);
     }
 
     private void ClearBindings()
@@ -455,12 +456,12 @@ public class PropertiesPanelEvents : MonoBehaviour
                 field.value = (float)prop.Getter();
                 container.Add(field);
                 customContainer.Add(container);
-                RegisterEventsforInput(field);
+                //RegisterEventsforInput(field);
                 cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
                 {
                     prop.Setter(field.value);
                 }));
-                RegisterEventsforInput(field);
+                //RegisterEventsforInput(field);
 
             }
             else if (prop.PropertyType == typeof(bool))

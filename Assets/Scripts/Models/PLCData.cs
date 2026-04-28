@@ -42,7 +42,7 @@ namespace Assets.Scripts.Models
         public string Id { get; private set; }
         public PLCCondition IfCondition { get; set; }
         public List<PLCCondition> ElifConditions { get; set; } = new List<PLCCondition>();
-        public PLCCondition ElseConndition { get; set; } = new PLCCondition();
+        public PLCCondition ElseConndition { get; set; } = new PLCCondition(ConditionType.Else);
 
 
     }
@@ -50,11 +50,13 @@ namespace Assets.Scripts.Models
     [Serializable]
     public class PLCCondition : PLCBase
     {
-        public PLCCondition(string expression = "")
+        public PLCCondition(ConditionType conditionType, string expression = "")
         {
+            ConditionType = conditionType;
             Expression = expression;
             Id = Guid.NewGuid().ToString();
         }
+        public ConditionType ConditionType { get; set; }
         public string Id { get; private set; }
         public string Expression = "";
         public List<PLCBase> Content = new List<PLCBase>();

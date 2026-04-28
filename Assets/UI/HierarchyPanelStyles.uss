@@ -329,3 +329,104 @@
     margin-top: 2px;
     margin-bottom: 2px;
 }
+
+    /* Базовый стиль для всех PLC блоков */
+.plc-condition-block {
+    background-color: rgba(40, 40, 55, 0.8);
+    border-radius: 4px;
+    margin-bottom: 5px;
+    border-left: 3px solid #ffaa44;
+}
+
+/* IF блок */
+.plc-if-block {
+    background-color: rgba(50, 70, 50, 0.6);
+    border-radius: 3px;
+    margin: 2px 0;
+    border-left: 3px solid #44ff44;
+}
+
+/* ELSE IF блок */
+.plc-elif-block {
+    background-color: rgba(70, 70, 40, 0.6);
+    border-radius: 3px;
+    margin: 2px 0;
+    border-left: 3px solid #ffaa44;
+}
+
+/* ELSE блок */
+.plc-else-block {
+    background-color: rgba(70, 50, 50, 0.6);
+    border-radius: 3px;
+    margin: 2px 0;
+    border-left: 3px solid #ff4444;
+}
+
+/* Команды */
+.plc-command {
+    background-color: rgba(60, 60, 75, 0.5);
+    border-radius: 3px;
+    margin: 2px 0;
+    border-left: 2px solid #8888ff;
+}
+
+/* Блок робота */
+.plc-robot-block {
+    background-color: rgba(40, 40, 60, 0.7);
+    border-radius: 4px;
+    margin-bottom: 5px;
+    border: 1px solid #6688aa;
+}
+
+/* Блок инициализации */
+.plc-init-block {
+    background-color: rgba(40, 55, 40, 0.7);
+    border-radius: 4px;
+    border: 1px solid #88aa88;
+}
+
+/* Блок логики */
+.plc-logic-block {
+    background-color: rgba(55, 45, 55, 0.7);
+    border-radius: 4px;
+    margin-bottom: 5px;
+    border: 1px solid #aa88aa;
+}
+
+.plc-condition-block > .header {
+    background-color: #8B5E3C !important;
+    border-left: 3px solid #ffaa44;
+}
+
+/* Заголовок IF блока */
+.plc-if-block > .header {
+    background-color: #2E7D32 !important;
+    border-left: 3px solid #44ff44;
+}
+
+/* Заголовок ELSE IF блока */
+.plc-elif-block > .header {
+    background-color: #F57F17 !important;
+    border-left: 3px solid #ffaa44;
+}
+
+/* Заголовок ELSE блока */
+.plc-else-block > .header {
+    background-color: #C62828 !important;
+    border-left: 3px solid #ff4444;
+}
+
+/* Заголовок блока робота */
+.plc-robot-block > .header {
+    background-color: #1565C0 !important;
+}
+
+/* Заголовок блока инициализации */
+.plc-init-block > .header {
+    background-color: #2E7D32 !important;
+}
+
+/* Заголовок блока логики */
+.plc-logic-block > .header {
+    background-color: #6A1B9A !important;
+}

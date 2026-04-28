@@ -52,9 +52,9 @@ namespace Assets.Scripts.Providers
             {
                 ProviderType = nameof(LinearPointPropertyProvider),
                 FloatValues =
-            {
-                ["Speed"] = Speed
-            }
+                {
+                    ["Speed"] = Speed
+                }
             };
         }
 

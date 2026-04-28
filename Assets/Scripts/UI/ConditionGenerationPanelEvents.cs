@@ -29,6 +29,8 @@ namespace Assets.Scripts.UI
         protected override void OnBeforeShow(ModalParameters parameters)
         {
             currentParentObjectId = parameters.Get("currentParentObjectId", "");
+            expression = parameters.Get("expression", "");
+            textBox.SetValueWithoutNotify(expression);
             if (messageLabel != null)
             {
                 string message = parameters.Get("message", "Библиотека объектов");

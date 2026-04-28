@@ -113,7 +113,7 @@ namespace Assets.Scripts.UI
 
         private void OnChangeExpression(PLCChangeExpressionSignal signal)
         {
-            AddOrChangeExpression(signal.ParentId, signal.Expression);
+            AddExpression(signal.ParentId, signal.Expression);
         }
 
 
@@ -796,16 +796,33 @@ namespace Assets.Scripts.UI
                     AddProgramInPLC(programBlock, program);
             });
         }
-        private void ShowExpressionWindow(string parentId)
+        private void ShowExpressionWindow(string parentId, bool isElseIf = false, string startExpression = "")
         {
             ModalParameters parameters = new ModalParameters();
+            parameters.Set("expression", startExpression);
             parameters.Set("currentParentObjectId", parentId);
             _modalWindowServiceManager.ShowWindow<string>("condition-window", "Добавление условия", parameters, (expression) =>
             {
                 if (expression != null)
-                    AddOrChangeExpression(parentId, expression);
+                {
+                    if (!isElseIf)
+                    {
+                        if (startExpression != "")
+                            UpdateConditionExpression(parentId, expression);
+                        else AddExpression(parentId, expression);
+                    }
+
+                    else
+                    {
+                        if (startExpression != "")
+                            UpdateElseIfExpression(parentId, expression);
+                        else AddElseIfExpression(parentId, expression);
+                    }
+                }
             });
         }
+
+
 
         /// <summary>
         /// Показать контестное меню
@@ -905,39 +922,62 @@ namespace Assets.Scripts.UI
                     else if (foldout.name == "plc-condition-block")
                     {
                         var parentId = foldout.userData.ToString();
-                        contextMenu.Add(CreateMenuButton("Добавить иначе если", () => ShowExpressionWindow(parentId)));
+                        contextMenu.Add(CreateMenuButton("Добавить иначе если", () => ShowExpressionWindow(parentId, true)));
                         contextMenu.Add(CreateMenuButton("Удалить условие", () => DeletePLCBlockCondition(parentId)));
                     }
                     else if (foldout.name == "plc-if-block")
                     {
                         var parentId = foldout.userData.ToString();
+                        var condition = GetConditionById(parentId);
                         string robotId = GetRobotIdFromPLCBlock(foldout);
+                        contextMenu.Add(CreateMenuButton("Изменить условие", () => ShowExpressionWindow(parentId, false, condition.Expression)));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
-                        contextMenu.Add(CreateMenuButton("Добавить задачу роботу", () => ShowProgramSetWindow(parentId, robotId)));
+                        contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
+                        {
+                            if (!HasProgramCallInCondition(parentId))
+                            {
+                                ShowProgramSetWindow(parentId, robotId);
+                            }
+                        }));
                     }
                     else if (foldout.name == "plc-elif-block")
                     {
                         var parentId = foldout.userData.ToString();
+                        var condition = GetConditionById(parentId);
                         string robotId = GetRobotIdFromPLCBlock(foldout);
+                        contextMenu.Add(CreateMenuButton("Изменить условие", () => ShowExpressionWindow(parentId, true, condition.Expression)));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
-                        contextMenu.Add(CreateMenuButton("Добавить задачу роботу", () => ShowProgramSetWindow(parentId, robotId)));
+                        contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
+                        {
+                            if (!HasProgramCallInCondition(parentId))
+                            {
+                                ShowProgramSetWindow(parentId, robotId);
+                            }
+                        }));
+                        contextMenu.Add(CreateMenuButton("Удалить блок иначе если", () => DeleteELIFCondition(parentId)));
                     }
                     else if (foldout.name == "plc-else-block")
                     {
                         var parentId = foldout.userData.ToString();
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
-                        contextMenu.Add(CreateMenuButton("Добавить задачу роботу", () => ShowProgramSetWindow(parentId, robotId)));
+                        contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
+                        {
+                            if (!HasProgramCallInCondition(parentId))
+                            {
+                                ShowProgramSetWindow(parentId, robotId);
+                            }
+                        }));
                     }
                     else if (foldout.name == "plc-command")
                     {
                         var parentId = foldout.userData.ToString();
-                        contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+                        contextMenu.Add(CreateMenuButton("Удалить команду", () => DeletePLCCommand(parentId)));
                     }
-                    else
-                    {
-                        contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
-                    }
+                    //else
+                    //{
+                    //    contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+                    //}
 
                 }
                 lastSelectedElement = foldout;
@@ -958,6 +998,91 @@ namespace Assets.Scripts.UI
             iBlocker.AddNewContextMenu(contextMenu);
         }
 
+        private void UpdateConditionExpression(string conditionId, string newExpression)
+        {
+            var condition = GetConditionById(conditionId);
+            if (condition != null)
+            {
+                condition.Expression = newExpression;
+                UpdateHierarchy();
+            }
+        }
+
+        private void UpdateElseIfExpression(string conditionId, string newExpression)
+        {
+            var condition = GetConditionById(conditionId);
+            if (condition != null)
+            {
+                condition.Expression = newExpression;
+                UpdateHierarchy();
+            }
+        }
+
+        private PLCCondition GetConditionById(string id)
+        {
+            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+            {
+                var found = FindConditionInList(rb.ConditionsList, id);
+                if (found != null) return found;
+            }
+            return FindConditionInList(_sceneObjectManager.PLCData.LogicBlockItems, id);
+        }
+
+        private bool HasProgramCallInCondition(string conditionId)
+        {
+            PLCCondition targetCondition = null;
+
+            // Поиск в роботах
+            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+            {
+                targetCondition = FindConditionInList(rb.ConditionsList, conditionId);
+                if (targetCondition != null) break;
+            }
+
+            // Поиск в логике
+            if (targetCondition == null)
+                targetCondition = FindConditionInList(_sceneObjectManager.PLCData.LogicBlockItems, conditionId);
+
+            if (targetCondition == null) return false;
+
+            // Проверяем наличие PLCStartProgram
+            foreach (var item in targetCondition.Content)
+            {
+                if (item is PLCStartProgram)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private PLCCondition FindConditionInList(List<PLCBase> items, string id)
+        {
+            foreach (var item in items)
+            {
+                if (item is PLCBlockCondition block)
+                {
+                    if (block.IfCondition.Id == id) return block.IfCondition;
+                    foreach (var elif in block.ElifConditions)
+                        if (elif.Id == id) return elif;
+                    if (block.ElseConndition != null && block.ElseConndition.Id == id)
+                        return block.ElseConndition;
+
+                    var found = FindConditionInList(block.IfCondition.Content, id);
+                    if (found != null) return found;
+                    foreach (var elif in block.ElifConditions)
+                    {
+                        found = FindConditionInList(elif.Content, id);
+                        if (found != null) return found;
+                    }
+                    if (block.ElseConndition != null)
+                    {
+                        found = FindConditionInList(block.ElseConndition.Content, id);
+                        if (found != null) return found;
+                    }
+                }
+            }
+            return null;
+        }
         private void OpenRobotPanel()
         {
             _eventBus.Invoke(new OpenRobotPanelSignal());
@@ -1199,13 +1324,60 @@ namespace Assets.Scripts.UI
         }
 
         // Добавить условие
-        private void AddOrChangeExpression(string parentId, string expression)
+        private void AddExpression(string parentId, string expression)
         {
-            var newCondition = new PLCCondition(expression);
+            var newCondition = new PLCCondition(ConditionType.If, expression);
             var newBlockCondition = new PLCBlockCondition(newCondition);
             AddToPLCContent(parentId, newBlockCondition);
         }
+        private void AddElseIfExpression(string parentId, string expression)
+        {
+            var newElseIf = new PLCCondition(ConditionType.ElseIf, expression);
 
+            PLCBlockCondition targetBlock = null;
+
+            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+            {
+                targetBlock = FindBlockConditionById(rb.ConditionsList, parentId);
+                if (targetBlock != null) break;
+            }
+
+            if (targetBlock == null)
+                targetBlock = FindBlockConditionById(_sceneObjectManager.PLCData.LogicBlockItems, parentId);
+
+            if (targetBlock != null)
+            {
+                targetBlock.ElifConditions.Add(newElseIf);
+                UpdateHierarchy();
+            }
+        }
+
+        private PLCBlockCondition FindBlockConditionById(List<PLCBase> items, string id)
+        {
+            foreach (var item in items)
+            {
+                if (item is PLCBlockCondition block)
+                {
+                    if (block.Id == id) return block;
+
+                    var found = FindBlockConditionById(block.IfCondition.Content, id);
+                    if (found != null) return found;
+
+                    foreach (var elif in block.ElifConditions)
+                    {
+                        found = FindBlockConditionById(elif.Content, id);
+                        if (found != null) return found;
+                    }
+
+                    if (block.ElseConndition != null)
+                    {
+                        found = FindBlockConditionById(block.ElseConndition.Content, id);
+                        if (found != null) return found;
+                    }
+                }
+            }
+            return null;
+        }
 
         /// <summary>
         /// Добавить элемент (условие или команду) в Content блока
@@ -1345,6 +1517,50 @@ namespace Assets.Scripts.UI
             return false;
         }
 
+        private void DeletePLCCommand(string commandId)
+        {
+            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+            {
+                if (RemoveCommandFromList(rb.ConditionsList, commandId))
+                {
+                    UpdateHierarchy();
+                    return;
+                }
+            }
+
+            if (RemoveCommandFromList(_sceneObjectManager.PLCData.LogicBlockItems, commandId))
+            {
+                UpdateHierarchy();
+                return;
+            }
+        }
+
+        private bool RemoveCommandFromList(List<PLCBase> items, string commandId)
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] is PLCCommand cmd && cmd.Id == commandId)
+                {
+                    items.RemoveAt(i);
+                    return true;
+                }
+            }
+
+            foreach (var item in items)
+            {
+                if (item is PLCBlockCondition block)
+                {
+                    if (RemoveCommandFromList(block.IfCondition.Content, commandId)) return true;
+                    foreach (var elif in block.ElifConditions)
+                    {
+                        if (RemoveCommandFromList(elif.Content, commandId)) return true;
+                    }
+                    if (block.ElseConndition != null && RemoveCommandFromList(block.ElseConndition.Content, commandId)) return true;
+                }
+            }
+            return false;
+        }
+
         private void DeleteELIFCondition(string elifId)
         {
             // Ищем и удаляем ELIF
@@ -1396,7 +1612,11 @@ namespace Assets.Scripts.UI
         private void DrawPLCBlocks()
         {
             var initBlock = new CustomFoldout { Text = "Инициализация" };
+            initBlock.userData = "init_block";
             initBlock.name = "plc-init-block";
+            initBlock.AddToClassList("plc-init-block");
+            RegisterExpanedFoldout(initBlock);
+
             foreach (var variable in _sceneObjectManager.PLCData.InitBlockItems)
             {
                 var varElement = new VisualElement();
@@ -1408,7 +1628,10 @@ namespace Assets.Scripts.UI
             MainHierarchyItem.AddChild(initBlock);
 
             var robotsBlock = new CustomFoldout { Text = "Блоки роботов" };
+            robotsBlock.userData = "robot_blocks";
             robotsBlock.name = "plc-robots-block";
+            robotsBlock.AddToClassList("plc-robots-block");
+            RegisterExpanedFoldout(robotsBlock);
 
             var allRobots = _sceneObjectManager.GetGameObjectsList()
                 .Where(obj => obj.Type == ObjectType.Robot)
@@ -1419,6 +1642,8 @@ namespace Assets.Scripts.UI
                 var robotBlock = new CustomFoldout { Text = robot.Reference.name };
                 robotBlock.name = "plc-robot-block";
                 robotBlock.userData = robot.Id;
+                robotBlock.AddToClassList("plc-robot-block");
+                RegisterExpanedFoldout(robotBlock);
 
                 var robotData = _sceneObjectManager.PLCData.RobotCommandsBlockItems
                     .FirstOrDefault(r => r.RobotId == robot.Id);
@@ -1438,7 +1663,10 @@ namespace Assets.Scripts.UI
             MainHierarchyItem.AddChild(robotsBlock);
 
             var logicBlock = new CustomFoldout { Text = "Логика" };
+            logicBlock.userData = "logic_block";
             logicBlock.name = "plc-logic-block";
+            logicBlock.AddToClassList("plc-logic-block");
+            RegisterExpanedFoldout(logicBlock);
             foreach (var item in _sceneObjectManager.PLCData.LogicBlockItems)
             {
                 DrawPLCItemRecursive(item, logicBlock);
@@ -1467,12 +1695,15 @@ namespace Assets.Scripts.UI
         {
             var conditionFoldout = new CustomFoldout { Text = $"Блок условия" };
             conditionFoldout.name = "plc-condition-block";
+            conditionFoldout.AddToClassList("plc-condition-block");
             conditionFoldout.userData = block.Id;
-
+            RegisterExpanedFoldout(conditionFoldout); 
             // Отрисовка IF блока
             var ifFoldout = new CustomFoldout { Text = $"Если: {block.IfCondition.Expression}" };
             ifFoldout.name = "plc-if-block";
             ifFoldout.userData = block.IfCondition.Id;
+            ifFoldout.AddToClassList("plc-if-block");
+            RegisterExpanedFoldout(ifFoldout);
 
             foreach (var content in block.IfCondition.Content)
             {
@@ -1486,7 +1717,8 @@ namespace Assets.Scripts.UI
                 var elifFoldout = new CustomFoldout { Text = $"Иначе если: {elif.Expression}" };
                 elifFoldout.name = "plc-elif-block";
                 elifFoldout.userData = elif.Id;
-
+                elifFoldout.AddToClassList("plc-elif-block");
+                RegisterExpanedFoldout(elifFoldout);
                 foreach (var content in elif.Content)
                 {
                     DrawPLCItemRecursive(content, elifFoldout);
@@ -1500,7 +1732,8 @@ namespace Assets.Scripts.UI
                 var elseFoldout = new CustomFoldout { Text = $"Иначе: {block.ElseConndition.Expression}" };
                 elseFoldout.name = "plc-else-block";
                 elseFoldout.userData = block.ElseConndition.Id;
-
+                elseFoldout.AddToClassList("plc-else-block");
+                RegisterExpanedFoldout(elseFoldout);
                 foreach (var content in block.ElseConndition.Content)
                 {
                     DrawPLCItemRecursive(content, elseFoldout);
@@ -1509,6 +1742,19 @@ namespace Assets.Scripts.UI
             }
 
             parent.AddChild(conditionFoldout);
+        }
+
+
+        private void RegisterExpanedFoldout(CustomFoldout foldout)
+        {
+            foldout.OnExpandedChanged += (isExpanded) =>
+            {
+                if (foldout.userData != null)
+                {
+                    expandedFoldouts[foldout.userData.ToString()] = isExpanded;
+                }
+            };
+            foldout.SetExpanded(expandedFoldouts.TryGetValue(foldout.userData.ToString(), out bool d));
         }
 
         /// <summary>
@@ -1520,6 +1766,7 @@ namespace Assets.Scripts.UI
             container.AddToClassList("hierarchy-item-container-base");
             container.style.flexDirection = FlexDirection.Row;
             container.style.alignItems = Align.Center;
+            container.AddToClassList("plc-command");
             container.name = "plc-command";
             container.userData = command.Id;
             //commandElement.AddToClassList("plc-command-item");
