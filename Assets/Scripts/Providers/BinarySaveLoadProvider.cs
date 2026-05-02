@@ -1,14 +1,16 @@
 using Assets.Scripts.Models;
 using NUnit.Framework;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 public class BinarySaveLoadProvider : ISaveLoadProvider
 {
     
-    public void Save(string path, System.Collections.Generic.List<SceneObject> objects)
+    public void Save(string path, List<SceneObject> objects, CommandsContainer commands, PLCData plcData)
     {
         SceneData sceneData = new SceneData();
         foreach (var obj in objects)
@@ -25,6 +27,43 @@ public class BinarySaveLoadProvider : ISaveLoadProvider
                                                     provider?.CaptureCustomState());
             sceneData.objectsData.Add(objectInfo);
         }
+
+        sceneData.CommandsData = new CommandsContainerData();
+
+        // Получаем всех роботов
+        var robots = objects.Where(o => o.Type == ObjectType.Robot).ToList();
+        foreach (var robot in robots)
+        {
+            var robotData = new RobotCommandsData();
+            robotData.RobotId = robot.Id;
+
+            var programs = commands.GetSubPrograms(robot.Id);
+            foreach (var program in programs)
+            {
+                var programData = new ProgramData();
+                programData.ProgramId = program.Id;
+
+                foreach (var cmd in program.Items)
+                {
+                    var cmdProvider = cmd.Reference.GetComponent<IPropertyProvider>();
+                    var cmdMarker = cmd.Reference.GetComponent<SceneObjectMarker>();
+
+                    var cmdSaveData = new CommandSaveData
+                    {
+                        Id = cmd.Id,
+                        Name = cmdProvider.Name,
+                        CommandType = cmd.Type,
+                        SourcePath = cmdMarker.sourcePath,
+                        ProviderData = cmdProvider.CaptureCustomState()
+                    };
+                    programData.Commands.Add(cmdSaveData);
+                }
+                robotData.Programs.Add(programData);
+            }
+            sceneData.CommandsData.RobotsCommands.Add(robotData);
+        }
+
+        sceneData.PLCData = plcData;
 
         BinaryFormatter formatter = new BinaryFormatter();
 

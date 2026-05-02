@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static Unity.Burst.Intrinsics.X86.Avx;
+using static Unity.Collections.AllocatorManager;
 
 namespace Assets.Scripts.UI
 {
@@ -75,6 +77,7 @@ namespace Assets.Scripts.UI
             //_eventBus.Subscribe<PLCChangeExpressionSignal>(OnChangeExpression);
             //_eventBus.Subscribe<PLCSelectProgramPanelSignal>(OnSelectProgram);
             //_eventBus.Subscribe<SelectObjectinLibrary>(OnObjectSelectedInLibrary);
+            _eventBus.Subscribe<ClearSceneSignal>(OnClearSceneSignal);
             _eventBus.Subscribe<SelectObjectInScene>(OnObjectSelectedInScene);
             _eventBus.Subscribe<ChangeNamePropertySignal>(OnChangeNameProperty);
             _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
@@ -174,6 +177,7 @@ namespace Assets.Scripts.UI
 
 
         #region Обработчики событий
+        private void OnClearSceneSignal(ClearSceneSignal signal) => UpdateHierarchy();
         private void OnObjectSelectedInScene(SelectObjectInScene scene) => SelectHierarchyItem(scene.Id);
 
         private void OnRobotCommandAdd(AddCommand command) => UpdateHierarchy();
@@ -649,60 +653,56 @@ namespace Assets.Scripts.UI
 
             if (evt.target is VisualElement element)
             {
-                //evt.StopPropagation();
 
                 if (element.name == "" || element.name == "label-hierarchy" || element.name == "foldout-header")
                 {
                     element = GetParentElement(element);
                 }
-
-                var gameObject = _sceneObjectManager.Commands.FindElementById(element.userData.ToString());
-
-                if (gameObject != null)
+                if (element.name == "plc-command")
                 {
-                    var objectId = element.userData?.ToString();
-
-                    // Сохраняем информацию о потенциальном drag
-                    // Drag начнется только при движении мыши с зажатой кнопкой
-                    currentDragData = new DragDropData
+                    var commandId = element.userData.ToString();
+                    var command = GetCommandById(commandId);
+                    if (command != null)
                     {
-                        SourceId = gameObject.Id,
-                        SourceElement = element,
-                        SceneObject = gameObject,
-                        StartPosition = evt.mousePosition
-                    };
-
-                    // Обрабатываем клик (выделение, свойства и т.д.)
-                    switch (gameObject.Type)
-                    {
-                        case ObjectType.Program:
-                            _eventBus.Invoke(new StartLineDrawer(objectId));
-                            break;
-
-                        case ObjectType.LinearMoveCommand:
-                            if (!string.IsNullOrEmpty(element.userData.ToString()) &&
-                                    _lineManager.IsCommandInCurrentProgram(objectId))
-                            {
-                                _eventBus.Invoke(new PickObjectSignal(gameObject));
-                            }
-                            else
-                            {
-                                _eventBus.Invoke(new PickObjectSignal(gameObject));
-                                _eventBus.Invoke(new StopLineDrawer());
-                            }
-                            break;
-                        case ObjectType.StateEndEffectorCommand or ObjectType.WaitCommand:
-                            break;
-                        default:
-                            _eventBus.Invoke(new PickObjectSignal(gameObject));
-                            _eventBus.Invoke(new StopLineDrawer());
-                            break;
+                        currentDragData = new DragDropData
+                        {
+                            SourceId = commandId,
+                            SourceElement = element,
+                            SceneObject = null,
+                            StartPosition = evt.mousePosition,
+                            UserData = command
+                        };
+                        ShowProperties(element);
+                        SelectHierarchyItem(element);
                     }
-                    ShowProperties(element);
-                    SelectHierarchyItem(element);
+                    return;
                 }
+                else if (element.name == "hierarchy-item-command")
+                {
+                    var commandId = element.userData.ToString();
+                    var command = _sceneObjectManager.Commands.FindElementById(commandId) as CommandObject;
+                    if (command != null)
+                    {
+                        currentDragData = new DragDropData
+                        {
+                            SourceId = commandId,
+                            SourceElement = element,
+                            SceneObject = command,
+                            StartPosition = evt.mousePosition,
+                            UserData = command
+                        };
+                        ShowProperties(element);
+                        SelectHierarchyItem(element);
+                    }
+                    return;
+                }
+
+                ShowProperties(element);
+                SelectHierarchyItem(element);
             }
         }
+
+
         /// <summary>
         /// Проверка находится ли мы сейчас внутри панели
         /// </summary>
@@ -1257,14 +1257,20 @@ namespace Assets.Scripts.UI
         private SceneObject FindParentRobot(string parentId)
         {
             SceneObject obj = null;
-            while (obj?.Type != ObjectType.Robot)
+
+            while (true)
             {
-                obj = _sceneObjectManager.GetById(parentId);
+                obj = _sceneObjectManager.GetById(parentId)
+                      ?? _sceneObjectManager.Commands.FindElementById(parentId);
+
                 if (obj == null)
-                    obj = _sceneObjectManager.Commands.FindElementById(parentId);
+                    return null;
+
+                if (obj.Type == ObjectType.Robot)
+                    return obj;
+
                 parentId = obj.ParentId;
             }
-            return obj;
         }
 
         /// <summary>
@@ -1316,6 +1322,43 @@ namespace Assets.Scripts.UI
             }
             return null;
         }
+
+        private PLCCommand GetCommandById(string commandId)
+        {
+            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+            {
+                var found = FindCommandInList(rb.ConditionsList, commandId);
+                if (found != null) return found;
+            }
+            return FindCommandInList(_sceneObjectManager.PLCData.LogicBlockItems, commandId);
+        }
+
+        private PLCCommand FindCommandInList(List<PLCBase> items, string commandId)
+        {
+            foreach (var item in items)
+            {
+                if (item is PLCCommand cmd && cmd.Id == commandId)
+                    return cmd;
+
+                if (item is PLCBlockCondition block)
+                {
+                    var found = FindCommandInList(block.IfCondition.Content, commandId);
+                    if (found != null) return found;
+                    foreach (var elif in block.ElifConditions)
+                    {
+                        found = FindCommandInList(elif.Content, commandId);
+                        if (found != null) return found;
+                    }
+                    if (block.ElseConndition != null)
+                    {
+                        found = FindCommandInList(block.ElseConndition.Content, commandId);
+                        if (found != null) return found;
+                    }
+                }
+            }
+            return null;
+        }
+
         // Добавить команду (программу)
         private void AddProgramInPLC(string blockId, RobotProgramObject program)
         {
@@ -1403,9 +1446,9 @@ namespace Assets.Scripts.UI
             // 2. Проверяем в блоке логики
             var logicParent = _sceneObjectManager.PLCData.LogicBlockItems
                 .FirstOrDefault(x => x is PLCBlockCondition && ((PLCBlockCondition)x).Id == parentId);
-            if (logicParent != null)
+            if (logicParent is PLCBlockCondition block)
             {
-                _sceneObjectManager.PLCData.LogicBlockItems.Add(itemToAdd);
+                block.IfCondition.Content.Add(itemToAdd);
                 UpdateHierarchy();
                 return;
             }
@@ -1508,10 +1551,26 @@ namespace Assets.Scripts.UI
         {
             for (int i = 0; i < items.Count; i++)
             {
-                if (items[i] is PLCBlockCondition block && block.Id == conditionId)
+                if (items[i] is PLCBlockCondition block)
                 {
-                    items.RemoveAt(i);
-                    return true;
+                    if (block.Id == conditionId)
+                    {
+                        items.RemoveAt(i);
+                        return true;
+                    }
+
+                    if (RemoveConditionFromList(block.IfCondition.Content, conditionId))
+                        return true;
+
+                    foreach (var elif in block.ElifConditions)
+                    {
+                        if (RemoveConditionFromList(elif.Content, conditionId))
+                            return true;
+                    }
+
+                    if (block.ElseConndition != null &&
+                        RemoveConditionFromList(block.ElseConndition.Content, conditionId))
+                        return true;
                 }
             }
             return false;
@@ -1697,7 +1756,7 @@ namespace Assets.Scripts.UI
             conditionFoldout.name = "plc-condition-block";
             conditionFoldout.AddToClassList("plc-condition-block");
             conditionFoldout.userData = block.Id;
-            RegisterExpanedFoldout(conditionFoldout); 
+            RegisterExpanedFoldout(conditionFoldout);
             // Отрисовка IF блока
             var ifFoldout = new CustomFoldout { Text = $"Если: {block.IfCondition.Expression}" };
             ifFoldout.name = "plc-if-block";
@@ -1863,6 +1922,7 @@ namespace Assets.Scripts.UI
         #endregion
 
         #region Drag & Drop
+
         private void InitializeDragAndDrop()
         {
             hierarchyPanel.RegisterCallback<MouseMoveEvent>(OnMouseMoveForDrag);
@@ -1876,6 +1936,37 @@ namespace Assets.Scripts.UI
             root.Add(dragPreviewElement);
             dragPreviewElement.style.position = Position.Absolute;
         }
+        private List<VisualElement> GetAllDropTargets()
+        {
+            var result = new List<VisualElement>();
+            CollectDropTargets(MainHierarchyItem, result);
+            return result;
+        }
+
+        private void CollectDropTargets(VisualElement parent, List<VisualElement> result)
+        {
+            foreach (var child in parent.Children())
+            {
+                // PLC условия - цели для PLC команд
+                if (child.name == "plc-if-block" || child.name == "plc-elif-block" || child.name == "plc-else-block")
+                    result.Add(child);
+
+                // Программы - цели для команд (внутрь программы)
+                if (child.name == "hierarchy-item-program")
+                    result.Add(child);
+
+                // Команды - цели для вставки выше/ниже
+                if (child.name == "hierarchy-item-command")
+                    result.Add(child);
+                // ===============================================
+
+                // SceneObject цели
+                if (child is CustomFoldout && GetSceneObjectFromElement(child) != null)
+                    result.Add(child);
+
+                CollectDropTargets(child, result);
+            }
+        }
 
         private void OnMouseMoveForDrag(MouseMoveEvent evt)
         {
@@ -1888,7 +1979,6 @@ namespace Assets.Scripts.UI
                     currentDragData.SourceElement.AddToClassList(DRAGGING_CLASS);
                     UpdateDragPreview(evt.mousePosition);
                     hierarchyPanel.CaptureMouse();
-                    //evt.StopPropagation();
                 }
             }
             else if (isDragging && currentDragData != null)
@@ -1896,7 +1986,6 @@ namespace Assets.Scripts.UI
                 UpdateDragPreview(evt.mousePosition);
                 var dropTarget = FindDropTarget(evt.mousePosition);
                 UpdateDropIndicators(dropTarget);
-                //evt.StopPropagation();
             }
         }
 
@@ -1915,7 +2004,6 @@ namespace Assets.Scripts.UI
                 {
                     hierarchyPanel.ReleaseMouse();
                 }
-                //evt.StopPropagation();
             }
             else
             {
@@ -1947,6 +2035,10 @@ namespace Assets.Scripts.UI
             {
                 text = element.Q<Label>("label-hierarchy").text;
             }
+            else if (element.name == "plc-command")
+            {
+                text = element.Q<Label>("label-hierarchy").text;
+            }
             else
                 text = element is CustomFoldout foldout ? foldout.Text :
                               (element is Label label ? label.text : element.name);
@@ -1971,14 +2063,61 @@ namespace Assets.Scripts.UI
             dragPreviewElement.style.display = DisplayStyle.Flex;
         }
 
+        private List<VisualElement> GetPLCBlocksInOrder()
+        {
+            var result = new List<VisualElement>();
+            CollectPLCBlocks(MainHierarchyItem, result);
+            return result;
+        }
+
+        private void CollectPLCBlocks(VisualElement parent, List<VisualElement> result)
+        {
+            foreach (var child in parent.Children())
+            {
+                if (child.name == "plc-if-block" || child.name == "plc-elif-block" || child.name == "plc-else-block")
+                {
+                    result.Add(child);
+                }
+                CollectPLCBlocks(child, result);
+            }
+        }
+
+        private Rect GetElementBounds(VisualElement element, Rect panelWorldBounds)
+        {
+            Rect bounds;
+            if (element is CustomFoldout foldout && foldout.Header != null)
+            {
+                var headerBounds = foldout.Header.worldBound;
+                bounds = new Rect(
+                    headerBounds.x - panelWorldBounds.x,
+                    headerBounds.y - panelWorldBounds.y,
+                    headerBounds.width,
+                    headerBounds.height
+                );
+            }
+            else
+            {
+                var wb = element.worldBound;
+                bounds = new Rect(
+                    wb.x - panelWorldBounds.x,
+                    wb.y - panelWorldBounds.y,
+                    wb.width,
+                    wb.height
+                );
+            }
+            return bounds;
+        }
+
         private DropTargetInfo FindDropTarget(Vector2 position)
         {
-            var allElements = GetHierarchyElementsInOrder();
-            var draggedRobot = GetRobotParent(currentDragData.SceneObject);
+            Debug.Log($"=== FindDropTarget === UserData type: {currentDragData?.UserData?.GetType()}");
 
-            allElements = allElements
-             .Where(e => GetSceneObjectFromElement(e) != null)
-             .ToList();
+            var allElementsList = new List<VisualElement>();
+            allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("hierarchy-item-program").ToList());
+            allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("hierarchy-item-command").ToList());
+            allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-if-block").ToList());
+            allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-elif-block").ToList());
+            allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-else-block").ToList());
             DropTargetInfo bestTarget = null;
             float minDistance = float.MaxValue;
 
@@ -1987,64 +2126,91 @@ namespace Assets.Scripts.UI
             float localPosY = position.y - panelWorldBounds.y;
             var localPos = new Vector2(localPosX, localPosY);
 
-            // Проверяем возможность дропа в начало
-            if (allElements.Count > 0 && CanDropInRoot(currentDragData.SceneObject))
+            foreach (var element in allElementsList)
             {
-                var firstElement = allElements[0];
-                var firstBounds = firstElement.worldBound;
-                var firstLocalY = firstBounds.y - panelWorldBounds.y;
+                Debug.Log($"Checking element: {element.name}, userData: {element.userData}");
+                if (element == currentDragData?.SourceElement) continue;
 
-                if (localPos.y < firstLocalY - 10)
+                if (currentDragData?.UserData is CommandObject)
                 {
-                    var distance = Mathf.Abs(localPos.y - firstLocalY);
-                    bestTarget = new DropTargetInfo
+                    Debug.Log($"Is CommandObject, element.name: {element.name}");
+                    // Для программы - дроп внутрь (в конец)
+                    if (element.name == "hierarchy-item-program")
                     {
-                        TargetElement = firstElement,
-                        Position = DropPosition.Above,
-                        Distance = distance,
-                        IsBeforeFirst = true
-                    };
-                    minDistance = distance;
-                }
-            }
+                        Debug.Log($"Found program: {element.userData}");
+                        if (!CanDropOnTarget(element)) continue;
 
-            foreach (var element in allElements)
-            {
-                if (element == currentDragData.SourceElement) continue;
+                        var bounds = GetElementBounds(element, panelWorldBounds);
+                        if (!bounds.Contains(localPos)) continue;
+
+                        float dist = Vector2.Distance(localPos, bounds.center);
+                        if (dist < minDistance)
+                        {
+                            minDistance = dist;
+                            bestTarget = new DropTargetInfo
+                            {
+                                TargetElement = element,
+                                Position = DropPosition.Inside,
+                                Distance = dist
+                            };
+                        }
+                    }
+
+                    // Для команды - дроп выше/ниже
+                    if (element.name == "hierarchy-item-command")
+                    {
+                        Debug.Log($"Found command: {element.userData}");
+                        if (!CanDropOnTarget(element)) continue;
+
+                        var bounds = GetElementBounds(element, panelWorldBounds);
+                        if (!bounds.Contains(localPos)) continue;
+
+                        var dropInfoRobot = CalculateCommandDropPosition(element, bounds, localPos);
+                        if (dropInfoRobot != null && dropInfoRobot.Distance < minDistance)
+                        {
+                            minDistance = dropInfoRobot.Distance;
+                            bestTarget = dropInfoRobot;
+                        }
+                    }
+                    continue;
+                }
+
+                if (currentDragData?.UserData is PLCCommand)
+                {
+                    var condition = GetConditionFromElement(element);
+                    if (condition != null)
+                    {
+                        if (!CanDropOnTarget(element)) continue;
+
+                        var plcBounds = GetElementBounds(element, panelWorldBounds);
+
+                        // ========== КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ==========
+                        // Проверяем, что мышь ДЕЙСТВИТЕЛЬНО НАД этим элементом
+                        if (!plcBounds.Contains(localPos)) continue;
+                        // =========================================
+
+                        float dist = Vector2.Distance(localPos, plcBounds.center);
+                        if (dist < minDistance)
+                        {
+                            minDistance = dist;
+                            bestTarget = new DropTargetInfo
+                            {
+                                TargetElement = element,
+                                Position = DropPosition.Inside,
+                                Distance = dist
+                            };
+                        }
+                    }
+                    continue;
+                }
 
                 var sceneObject = GetSceneObjectFromElement(element);
                 if (sceneObject == null) continue;
 
-                if (!CanDropOnTarget(currentDragData.SceneObject, sceneObject))
-                    continue;
+                if (!CanDropOnTarget(element)) continue;
 
-                Rect elementLocalBounds;
-
-                if (element is CustomFoldout foldout && foldout.Header != null)
-                {
-                    var headerBounds = foldout.Header.worldBound;
-
-                    elementLocalBounds = new Rect(
-                        headerBounds.x - panelWorldBounds.x,
-                        headerBounds.y - panelWorldBounds.y,
-                        headerBounds.width,
-                        headerBounds.height
-                    );
-                }
-                else
-                {
-                    // обычные элементы (примитивы и т.п.)
-                    var wb = element.worldBound;
-
-                    elementLocalBounds = new Rect(
-                        wb.x - panelWorldBounds.x,
-                        wb.y - panelWorldBounds.y,
-                        wb.width,
-                        wb.height
-                    );
-                }
-
-                var dropInfo = CalculateDropPosition(element, elementLocalBounds, localPos);
+                var elementBounds = GetElementBounds(element, panelWorldBounds);
+                var dropInfo = CalculateDropPosition(element, elementBounds, localPos);
                 if (dropInfo != null && dropInfo.Distance < minDistance)
                 {
                     minDistance = dropInfo.Distance;
@@ -2052,145 +2218,30 @@ namespace Assets.Scripts.UI
                 }
             }
 
-            // Проверяем возможность дропа в конец
-            if (allElements.Count > 0 && CanDropInRoot(currentDragData.SceneObject) && bestTarget == null)
-            {
-                var lastElement = allElements[allElements.Count - 1];
-                var lastBounds = lastElement.worldBound;
-                var lastLocalY = lastBounds.y - panelWorldBounds.y + lastBounds.height;
-
-                if (localPos.y > lastLocalY + 10)
-                {
-                    bestTarget = new DropTargetInfo
-                    {
-                        TargetElement = lastElement,
-                        Position = DropPosition.Below,
-                        Distance = Mathf.Abs(localPos.y - lastLocalY)
-                    };
-                }
-            }
+            //if (allElementsList.Count > 0 && CanDropInRoot(currentDragData.SceneObject) && bestTarget == null)
+            //{
+            //    var lastElement = allElementsList[allElementsList.Count - 1];
+            //    var lastBounds = lastElement.worldBound;
+            //    float lastLocalY = lastBounds.y - panelWorldBounds.y + lastBounds.height;
+            //    if (localPos.y > lastLocalY + 10)
+            //    {
+            //        bestTarget = new DropTargetInfo
+            //        {
+            //            TargetElement = lastElement,
+            //            Position = DropPosition.Below,
+            //            Distance = Mathf.Abs(localPos.y - lastLocalY)
+            //        };
+            //    }
+            //}
 
             return bestTarget;
         }
-        private VisualElement FindDraggableElement(VisualElement element)
-        {
-            while (element != null && element != hierarchyPanel)
-            {
-                if (element.name.Contains("hierarchy-item"))
-                {
-                    return element;
-                }
-                element = element.parent;
-            }
-            return null;
-        }
-
-        private SceneObject GetSceneObjectFromElement(VisualElement element)
-        {
-            // Добавьте проверку на null для userData
-            if (element?.userData == null)
-                return null;
-
-            string id = element.userData.ToString();
-
-            // Дополнительная проверка на пустую строку
-            if (string.IsNullOrEmpty(id))
-                return null;
-
-            return _sceneObjectManager.GetById(id);
-        }
-
-        private bool CanBeDragged(SceneObject sceneObject)
-        {
-            if (IsRootOnlyType(sceneObject))
-                return true;
-
-            if (IsProgramOrCommand(sceneObject))
-                return GetRobotParent(sceneObject) != null;
-
-            return false;
-        }
-
-        private SceneObject GetRobotParent(SceneObject sceneObject)
-        {
-            var current = sceneObject;
-            while (current != null)
-            {
-                if (current.Type == ObjectType.Robot)
-                    return current;
-
-                if (string.IsNullOrEmpty(current.ParentId))
-                    return null;
-
-                current = _sceneObjectManager.GetById(current.ParentId);
-            }
-            return null;
-        }
-
-
-        private bool IsRootOnlyType(SceneObject obj)
-        {
-            return obj.Type == ObjectType.Robot;
-        }
-
-        private bool IsProgramOrCommand(SceneObject obj)
-        {
-            return obj.Type == ObjectType.Program
-                || obj.Type == ObjectType.LinearMoveCommand
-                || obj.Type == ObjectType.StateEndEffectorCommand
-                || obj.Type == ObjectType.WaitCommand;
-        }
-
-        private List<VisualElement> GetHierarchyElementsInOrder()
-        {
-            var result = new List<VisualElement>();
-
-            var roots = _sceneObjectManager.GetGameObjectsList()
-                .Where(o => string.IsNullOrEmpty(o.ParentId))
-                .OrderBy(o => GetObjectIndex(o.Id))
-                .ToList();
-
-            foreach (var root in roots)
-            {
-                var rootElement = FindElementByUserIdCached(root.Id);
-                if (rootElement == null) continue;
-
-                result.Add(rootElement);
-
-                AddChildrenRecursive(root.Id, result);
-            }
-
-            return result;
-        }
-
-        private void AddChildrenRecursive(string parentId, List<VisualElement> elements)
-        {
-            var children = _sceneObjectManager.GetGameObjectsList()
-           .Where(o => o.ParentId == parentId)
-           .OrderBy(o => GetSiblingIndex(o.Id, parentId))  // ← Используем новый метод
-           .ToList();
-
-            foreach (var child in children)
-            {
-                var element = FindElementByUserIdCached(child.Id);
-                if (element != null)
-                {
-                    elements.Add(element);
-                    AddChildrenRecursive(child.Id, elements);
-                }
-            }
-        }
-
-        private DropTargetInfo CalculateDropPosition(VisualElement element, Rect bounds, Vector2 localPos)
+        private DropTargetInfo CalculateCommandDropPosition(VisualElement element, Rect bounds, Vector2 localPos)
         {
             float h = bounds.height;
             float top = bounds.y + h * 0.25f;
             float bottom = bounds.y + h * 0.75f;
 
-            var target = GetSceneObjectFromElement(element);
-            var dragged = currentDragData.SceneObject;
-
-            // ABOVE
             if (localPos.y < top)
             {
                 return new DropTargetInfo
@@ -2200,7 +2251,6 @@ namespace Assets.Scripts.UI
                     Distance = Mathf.Abs(localPos.y - bounds.y)
                 };
             }
-            // BELOW
             else if (localPos.y > bottom)
             {
                 return new DropTargetInfo
@@ -2210,11 +2260,39 @@ namespace Assets.Scripts.UI
                     Distance = Mathf.Abs(localPos.y - (bounds.y + bounds.height))
                 };
             }
-            // INSIDE
+
+            return null;
+        }
+        private DropTargetInfo CalculateDropPosition(VisualElement element, Rect bounds, Vector2 localPos)
+        {
+            float h = bounds.height;
+            float top = bounds.y + h * 0.25f;
+            float bottom = bounds.y + h * 0.75f;
+
+            var target = GetSceneObjectFromElement(element);
+            var dragged = currentDragData.SceneObject;
+
+            if (localPos.y < top)
+            {
+                return new DropTargetInfo
+                {
+                    TargetElement = element,
+                    Position = DropPosition.Above,
+                    Distance = Mathf.Abs(localPos.y - bounds.y)
+                };
+            }
+            else if (localPos.y > bottom)
+            {
+                return new DropTargetInfo
+                {
+                    TargetElement = element,
+                    Position = DropPosition.Below,
+                    Distance = Mathf.Abs(localPos.y - (bounds.y + bounds.height))
+                };
+            }
             else
             {
-                if (target.Type == ObjectType.Node &&
-                    dragged.Type == ObjectType.Primitive)
+                if (target.Type == ObjectType.Node && dragged.Type == ObjectType.Primitive)
                 {
                     return new DropTargetInfo
                     {
@@ -2226,8 +2304,7 @@ namespace Assets.Scripts.UI
 
                 if (!(element is CustomFoldout)) return null;
 
-                if (target.Type == ObjectType.Node &&
-                    dragged.Type == ObjectType.Node)
+                if (target.Type == ObjectType.Node && dragged.Type == ObjectType.Node)
                 {
                     return new DropTargetInfo
                     {
@@ -2236,10 +2313,7 @@ namespace Assets.Scripts.UI
                         Distance = 0
                     };
                 }
-
-                // Команды/программы могут быть внутри робота
-                else if (target.Type == ObjectType.Robot &&
-                    (IsProgramOrCommand(dragged)))
+                else if (target.Type == ObjectType.Robot && IsProgramOrCommand(dragged))
                 {
                     return new DropTargetInfo
                     {
@@ -2248,9 +2322,7 @@ namespace Assets.Scripts.UI
                         Distance = 0
                     };
                 }
-
-                else if (target.Type == ObjectType.Program &&
-                    (dragged.Type == ObjectType.LinearMoveCommand
+                else if (target.Type == ObjectType.Program && (dragged.Type == ObjectType.LinearMoveCommand
                     || dragged.Type == ObjectType.StateEndEffectorCommand
                     || dragged.Type == ObjectType.WaitCommand))
                 {
@@ -2266,133 +2338,138 @@ namespace Assets.Scripts.UI
             return null;
         }
 
-        private bool CanDropOnTarget(SceneObject dragged, SceneObject target)
+        private bool CanDropOnTarget(VisualElement targetElement)
         {
-            if (dragged == null || target == null)
-                return false;
+            if (currentDragData == null) return false;
 
-            if (dragged.Id == target.Id)
-                return false;
-
-            // нельзя дропать в своего потомка
-            if (IsChildOf(target.Id, dragged.Id))
-                return false;
-
-            // ===== ROBOT =====
-            if (dragged.Type == ObjectType.Robot)
+            if (currentDragData.UserData is CommandObject draggedRobotCommand)
             {
-                // роботы перемещаются только в корень
-                return string.IsNullOrEmpty(target.ParentId);
-            }
-
-            // ===== WORKPIECE =====
-            if (dragged.Type == ObjectType.Workpiece)
-            {
-                // роботы перемещаются только в корень
-                return string.IsNullOrEmpty(target.ParentId);
-            }
-
-            // ===== PRIMITIVE =====
-            if (dragged.Type == ObjectType.Primitive)
-            {
-                // Находим родительскую ноду для dragged
-                SceneObject draggedParent = null;
-                if (!string.IsNullOrEmpty(dragged.ParentId))
+                if (targetElement.name == "hierarchy-item-program")
                 {
-                    draggedParent = _sceneObjectManager.GetById(dragged.ParentId);
-                }
+                    var targetProgram = _sceneObjectManager.Commands.FindElementById(targetElement.userData?.ToString()) as RobotProgramObject;
+                    if (targetProgram == null) return false;
 
-                // Находим родительскую ноду для target
-                SceneObject targetParent = null;
-                if (!string.IsNullOrEmpty(target.ParentId))
-                {
-                    targetParent = _sceneObjectManager.GetById(target.ParentId);
-                }
+                    // Нельзя дропнуть в ту же программу, если команда уже в ней?
+                    // Тут можно добавить логику
 
-                // Если оба примитива в одной ноде, можно перемещать над/под
-                if (draggedParent != null && targetParent != null &&
-                    draggedParent.Type == ObjectType.Node &&
-                    targetParent.Type == ObjectType.Node)
-                {
-                    return draggedParent.Id == targetParent.Id;
-                }
-
-                // Если оба примитива в корне (нет ParentId), можно перемещать над/под
-                if (string.IsNullOrEmpty(dragged.ParentId) && string.IsNullOrEmpty(target.ParentId))
-                {
                     return true;
                 }
 
-                if (string.IsNullOrEmpty(dragged.ParentId) && targetParent != null && targetParent.Type == ObjectType.Node)
+                if (targetElement.name == "hierarchy-item-command")
                 {
+                    var targetCommand = ResolveCommand(targetElement);
+                    if (targetCommand == null) return false;
+
+                    var draggedProgram = GetParentProgram(draggedRobotCommand);
+                    var targetProgram = GetParentProgram(targetCommand);
+
+                    if (draggedProgram == null || targetProgram == null)
+                        return false;
+
+                    var draggedRobot = GetRobotParent(draggedProgram);
+                    var targetRobot = GetRobotParent(targetProgram);
+
+                    if (draggedRobot == null || targetRobot == null)
+                        return false;
+
+                    if (draggedRobot.Id != targetRobot.Id)
+                        return false;
+
                     return true;
                 }
 
-                if (draggedParent != null && draggedParent.Type == ObjectType.Node &&
-                        string.IsNullOrEmpty(target.ParentId))
-                {
-                    return true;
-                }
-
-                // Если один примитив в ноде, а другой в корне - нельзя дропать
                 return false;
             }
 
-            // ===== NODE =====
-            if (dragged.Type == ObjectType.Node)
+            // Для PLC команд
+            if (currentDragData.UserData is PLCCommand draggedPLCCommand)
             {
-                return string.IsNullOrEmpty(target.ParentId) || target.Type == ObjectType.Node;
+                var targetCondition = GetConditionFromElement(targetElement);
+                if (targetCondition == null) return false;
+
+                // Нельзя дропнуть в то же условие
+                if (IsCommandInCondition(draggedPLCCommand.Id, targetCondition)) return false;
+
+                // Получаем роботов
+                string sourceRobotId = GetRobotIdFromCommand(draggedPLCCommand.Id);
+                string targetRobotId = GetRobotIdFromCondition(targetCondition);
+
+                // Если роботы разные - запрещаем
+                if (sourceRobotId != targetRobotId) return false;
+
+                // Если это StartProgram - можно только если нет другой StartProgram
+                if (draggedPLCCommand is PLCStartProgram && HasStartProgramInCondition(targetCondition)) return false;
+
+                return true;
             }
 
-            // ===== PROGRAM / COMMAND =====
-            if (IsProgramOrCommand(dragged))
-            {
-                // только внутри своего робота
-                var draggedRobot = GetRobotParent(dragged);
-                var targetRobot = GetRobotParent(target);
-                if (draggedRobot == null || targetRobot == null)
-                    return false;
+            // Для SceneObject
+            if (currentDragData.SceneObject == null) return false;
 
-                return draggedRobot.Id == targetRobot.Id;
-            }
+            var target = GetSceneObjectFromElement(targetElement);
+            if (target == null) return false;
+            if (currentDragData.SceneObject.Id == target.Id) return false;
+            if (IsChildOf(target.Id, currentDragData.SceneObject.Id)) return false;
 
-            return false;
+            return true;
         }
-
-        private bool CanDropInRoot(SceneObject draggedObject)
+        private RobotProgramObject GetParentProgram(CommandObject command)
         {
-            return IsRootOnlyType(draggedObject);
-        }
-
-        private bool IsChildOf(string potentialChildId, string potentialParentId)
-        {
-            // Если проверяем относительно корня (нет родителя)
-            if (string.IsNullOrEmpty(potentialParentId))
-                return false;
-
-            // Если потенциальный ребенок null - проверка невозможна
-            if (string.IsNullOrEmpty(potentialChildId))
-                return false;
-
-            var current = _sceneObjectManager.GetById(potentialChildId);
-
-            while (current != null && !string.IsNullOrEmpty(current.ParentId))
+            // Ищем во ВСЕХ роботах
+            foreach (var robot in _sceneObjectManager.GetGameObjectsList().Where(r => r.Type == ObjectType.Robot))
             {
-                if (current.ParentId == potentialParentId)
-                    return true;
-
-                current = _sceneObjectManager.GetById(current.ParentId);
+                var programs = _sceneObjectManager.Commands.GetSubPrograms(robot.Id);
+                foreach (var program in programs)
+                {
+                    if (program.Items.Contains(command))
+                        return program;
+                }
             }
-
-            return false;
+            return null;
         }
-
         private void UpdateDropIndicators(DropTargetInfo dropTarget)
         {
             ClearDropIndicators();
-
             currentDropTarget = dropTarget;
             if (dropTarget == null) return;
+
+            // Для команд робота
+            if (currentDragData?.UserData is CommandObject)
+            {
+                if (dropTarget.TargetElement.name == "hierarchy-item-program")
+                {
+                    dropTarget.TargetElement.AddToClassList(DROP_TARGET_INSIDE_CLASS);
+                }
+                else if (dropTarget.TargetElement.name == "hierarchy-item-command")
+                {
+                    if (dropTarget.Position == DropPosition.Above)
+                    {
+                        dropTarget.TargetElement.AddToClassList(DROP_TARGET_ABOVE_CLASS);
+                        Debug.Log("Adding ABOVE class to command");
+                    }
+                    else if (dropTarget.Position == DropPosition.Below)
+                    {
+                        dropTarget.TargetElement.AddToClassList(DROP_TARGET_BELOW_CLASS);
+                        Debug.Log("Adding BELOW class to command");
+                    }
+                }
+                return;
+            }
+
+            // Для PLC команд
+            if (currentDragData?.UserData is PLCCommand draggedCommand)
+            {
+                var targetCondition = GetConditionFromElement(dropTarget.TargetElement);
+                if (targetCondition != null)
+                {
+                    string sourceRobotId = GetRobotIdFromCommand(draggedCommand.Id);
+                    string targetRobotId = GetRobotIdFromCondition(targetCondition);
+                    if (sourceRobotId != targetRobotId) return;
+                    if (draggedCommand is PLCStartProgram && HasStartProgramInCondition(targetCondition)) return;
+                }
+                dropTarget.TargetElement.AddToClassList(DROP_TARGET_INSIDE_CLASS);
+                return;
+            }
 
             switch (dropTarget.Position)
             {
@@ -2419,16 +2496,102 @@ namespace Assets.Scripts.UI
             currentDropTarget = null;
         }
 
+        private void RemoveCommandFromAllLists(string commandId)
+        {
+            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+                RemoveCommandFromList(rb.ConditionsList, commandId);
+            RemoveCommandFromList(_sceneObjectManager.PLCData.LogicBlockItems, commandId);
+        }
+
         private void HandleDrop()
         {
+            Debug.Log($"=== HANDLE DROP ===");
+            Debug.Log($"currentDragData: {currentDragData != null}");
+            Debug.Log($"currentDropTarget: {currentDropTarget != null}");
             if (currentDragData == null || currentDropTarget == null) return;
 
-            var draggedObject = currentDragData.SceneObject;
-            var targetElement = currentDropTarget.TargetElement;
-            var targetObject = GetSceneObjectFromElement(targetElement);
+            if (currentDragData.UserData is CommandObject draggedRobotCommand)
+            {
+                var targetElement = currentDropTarget.TargetElement;
 
-            // Проверка на попытку перетащить объект на самого себя
-            if (targetObject != null && targetObject.Id == draggedObject.Id)
+                // Дроп в программу (в конец)
+                if (targetElement.name == "hierarchy-item-program")
+                {
+                    var targetProgram = _sceneObjectManager.Commands.FindElementById(targetElement.userData?.ToString()) as RobotProgramObject;
+                    if (targetProgram != null)
+                    {
+                        // Удаляем из старого места
+                        RemoveCommandFromProgram(draggedRobotCommand);
+                        // Добавляем в новую программу
+                        targetProgram.Items.Add(draggedRobotCommand);
+                        UpdateHierarchy();
+                        CleanupDrag();
+                        return;
+                    }
+                }
+
+                // Дроп выше/ниже команды
+                if (targetElement.name == "hierarchy-item-command")
+                {
+                    var targetCommand = ResolveCommand(targetElement);
+                    if (targetCommand != null)
+                    {
+                        var targetProgram = GetParentProgram(targetCommand);
+                        if (targetProgram != null)
+                        {
+                            int oldIndex = targetProgram.Items.IndexOf(draggedRobotCommand);
+                            int targetIndex = targetProgram.Items.IndexOf(targetCommand);
+
+                            if (currentDropTarget.Position == DropPosition.Below)
+                                targetIndex++;
+                            if (targetIndex > oldIndex && oldIndex != -1)
+                                targetIndex--;
+
+                            // Удаляем со старого места
+                            if (oldIndex != -1)
+                                targetProgram.Items.RemoveAt(oldIndex);
+                            else
+                                RemoveCommandFromProgram(draggedRobotCommand);
+
+                            // Вставляем на новое место
+                            targetProgram.Items.Insert(targetIndex, draggedRobotCommand);
+                            UpdateHierarchy();
+                            CleanupDrag();
+                            return;
+                        }
+                    }
+                }
+                CleanupDrag();
+                return;
+            }
+
+            if (currentDragData.UserData is PLCCommand draggedCommand)
+            {
+                var targetCondition = GetConditionFromElement(currentDropTarget.TargetElement);
+                if (targetCondition != null)
+                {
+                    if (draggedCommand is PLCStartProgram && HasStartProgramInCondition(targetCondition))
+                    {
+                        CleanupDrag();
+                        return;
+                    }
+                    RemoveCommandFromAllLists(draggedCommand.Id);
+                    targetCondition.Content.Add(draggedCommand);
+                    UpdateHierarchy();
+                    CleanupDrag();
+                    return;
+                }
+            }
+
+            var draggedObject = currentDragData.SceneObject;
+            var targetObject = GetSceneObjectFromElement(currentDropTarget.TargetElement);
+            if (targetObject == null || draggedObject == null)
+            {
+                CleanupDrag();
+                return;
+            }
+
+            if (targetObject.Id == draggedObject.Id)
             {
                 CleanupDrag();
                 return;
@@ -2437,51 +2600,39 @@ namespace Assets.Scripts.UI
             string newParentId = null;
             int? insertAtIndex = null;
 
-            // Обработка для роботов - всегда перемещаем в корень
             switch (currentDropTarget.Position)
             {
                 case DropPosition.Above:
-                    newParentId = targetObject?.ParentId;
+                    newParentId = targetObject.ParentId;
                     insertAtIndex = GetSiblingIndexInParent(targetObject);
                     break;
-
                 case DropPosition.Below:
-                    newParentId = targetObject?.ParentId;
+                    newParentId = targetObject.ParentId;
                     insertAtIndex = GetSiblingIndexInParent(targetObject) + 1;
                     break;
-
                 case DropPosition.Inside:
-                    newParentId = targetObject?.Id;
-                    insertAtIndex = 0; // В начало списка детей
+                    newParentId = targetObject.Id;
+                    insertAtIndex = 0;
                     break;
             }
+
             if (!string.IsNullOrEmpty(newParentId) && IsChildOf(newParentId, draggedObject.Id))
             {
                 CleanupDrag();
                 return;
             }
 
-            // Специальные проверки
             if (IsProgramOrCommand(draggedObject) && string.IsNullOrEmpty(newParentId))
             {
                 CleanupDrag();
                 return;
             }
 
-            // Проверяем, не пытаемся ли переместить объект в его собственного потомка
-            if (IsChildOf(newParentId, draggedObject.Id))
-            {
-                CleanupDrag();
-                return;
-            }
-
-            // Для команд/программ проверяем, что остаемся в том же роботе
             if (IsProgramOrCommand(draggedObject))
             {
                 var newParent = _sceneObjectManager.GetById(newParentId);
                 var newRobot = GetRobotParent(newParent ?? targetObject);
                 var oldRobot = GetRobotParent(draggedObject);
-
                 if (newRobot == null || newRobot.Id != oldRobot.Id)
                 {
                     CleanupDrag();
@@ -2489,68 +2640,73 @@ namespace Assets.Scripts.UI
                 }
             }
 
-            // Выполняем команду перемещения
             var command = new ChangeParentCommand(draggedObject.Id, newParentId, insertAtIndex);
             _undoRedoManager.Execute(command);
-
             CleanupDrag();
         }
-
-        private int GetSiblingIndexInParent(SceneObject sceneObject)
+        private void RemoveCommandFromProgram(CommandObject command)
         {
-            if (sceneObject == null) return 0;
-
-            var siblings = _sceneObjectManager.GetGameObjectsList()
-                .Where(o => o.ParentId == sceneObject.ParentId)
-                .ToList();
-
-            for (int i = 0; i < siblings.Count; i++)
+            foreach (var robot in _sceneObjectManager.GetGameObjectsList().Where(r => r.Type == ObjectType.Robot))
             {
-                if (siblings[i].Id == sceneObject.Id)
+                var programs = _sceneObjectManager.Commands.GetSubPrograms(robot.Id);
+                foreach (var program in programs)
                 {
-                    return i;
+                    if (program.Items.Contains(command))
+                    {
+                        program.Items.Remove(command);
+                        return;
+                    }
                 }
             }
-
-            return 0;
         }
-
-        private int GetSiblingIndex(string objectId, string parentId)
+        private void CleanupDrag()
         {
-            if (string.IsNullOrEmpty(objectId)) return -1;
-
-            var siblings = _sceneObjectManager.GetGameObjectsList()
-                .Where(o => o.ParentId == parentId)
-                .ToList();
-
-            for (int i = 0; i < siblings.Count; i++)
-            {
-                if (siblings[i].Id == objectId)
-                {
-                    return i;
-                }
-            }
-
-            return 0;
+            ClearDropIndicators();
+            if (currentDragData?.SourceElement != null)
+                currentDragData.SourceElement.RemoveFromClassList(DRAGGING_CLASS);
+            if (dragPreviewElement != null)
+                dragPreviewElement.style.display = DisplayStyle.None;
+            currentDragData = null;
+            isDragging = false;
         }
-        private int GetRootObjectIndex(string objectId)
+        private List<VisualElement> GetHierarchyElementsInOrder()
         {
-            var rootObjects = GetRootObjects();
-            return GetSiblingIndex(objectId, null);
-        }
+            var result = new List<VisualElement>();
 
-        private List<SceneObject> GetRootObjects()
-        {
-            return _sceneObjectManager.GetGameObjectsList()
+            var roots = _sceneObjectManager.GetGameObjectsList()
                 .Where(o => string.IsNullOrEmpty(o.ParentId))
+                .OrderBy(o => GetObjectIndex(o.Id))
                 .ToList();
+
+            foreach (var root in roots)
+            {
+                var rootElement = FindElementByUserIdCached(root.Id);
+                if (rootElement == null) continue;
+
+                result.Add(rootElement);
+
+                AddChildrenRecursive(root.Id, result);
+            }
+
+            return result;
         }
 
-        private List<SceneObject> GetDirectChildren(string parentId)
+        private void AddChildrenRecursive(string parentId, List<VisualElement> elements)
         {
-            return _sceneObjectManager.GetGameObjectsList()
+            var children = _sceneObjectManager.GetGameObjectsList()
                 .Where(o => o.ParentId == parentId)
+                .OrderBy(o => GetSiblingIndex(o.Id, parentId))
                 .ToList();
+
+            foreach (var child in children)
+            {
+                var element = FindElementByUserIdCached(child.Id);
+                if (element != null)
+                {
+                    elements.Add(element);
+                    AddChildrenRecursive(child.Id, elements);
+                }
+            }
         }
 
         private int GetObjectIndex(string objectId)
@@ -2572,31 +2728,284 @@ namespace Assets.Scripts.UI
             return -1;
         }
 
-        private void CleanupDrag()
+        private int GetSiblingIndex(string objectId, string parentId)
         {
-            ClearDropIndicators();
+            var parent = !string.IsNullOrEmpty(parentId) ?
+                ((SceneObject)_sceneObjectManager.Items[parentId])?.Reference : null;
 
-            if (currentDragData?.SourceElement != null)
+            if (parent != null)
             {
-                currentDragData.SourceElement.RemoveFromClassList(DRAGGING_CLASS);
+                for (int i = 0; i < parent.transform.childCount; i++)
+                {
+                    var child = parent.transform.GetChild(i);
+                    var childProvider = child.GetComponent<IPropertyProvider>();
+                    if (childProvider != null && childProvider.Id == objectId)
+                    {
+                        return i;
+                    }
+                }
             }
 
-            if (dragPreviewElement != null)
+            var rootObjects = _sceneObjectManager.GetGameObjectsList()
+                .Where(o => string.IsNullOrEmpty(o.ParentId))
+                .ToList();
+
+            for (int i = 0; i < rootObjects.Count; i++)
             {
-                dragPreviewElement.style.display = DisplayStyle.None;
+                if (rootObjects[i].Id == objectId)
+                {
+                    return i;
+                }
             }
 
-            currentDragData = null;
-            isDragging = false;
+            return 0;
+        }
+        private PLCCondition GetConditionFromElement(VisualElement element)
+        {
+            var foldout = GetParentElement(element);
+            if (foldout != null && (foldout.name == "plc-if-block" || foldout.name == "plc-elif-block" || foldout.name == "plc-else-block"))
+            {
+                var conditionId = foldout.userData?.ToString();
+                if (conditionId != null)
+                    return GetConditionById(conditionId);
+            }
+            return null;
         }
 
+        private bool IsProgramOrCommand(SceneObject obj)
+        {
+            return obj.Type == ObjectType.Program
+                || obj.Type == ObjectType.LinearMoveCommand
+                || obj.Type == ObjectType.StateEndEffectorCommand
+                || obj.Type == ObjectType.WaitCommand;
+        }
 
+        private bool HasStartProgramInCondition(PLCCondition condition)
+        {
+            foreach (var item in condition.Content)
+            {
+                if (item is PLCStartProgram)
+                    return true;
+            }
+            return false;
+        }
 
+        private bool IsCommandInCondition(string commandId, PLCCondition condition)
+        {
+            foreach (var item in condition.Content)
+            {
+                if (item is PLCCommand cmd && cmd.Id == commandId)
+                    return true;
+            }
+            return false;
+        }
 
+        private int GetSiblingIndexInParent(SceneObject sceneObject)
+        {
+            if (sceneObject == null) return 0;
 
+            var siblings = _sceneObjectManager.GetGameObjectsList()
+                .Where(o => o.ParentId == sceneObject.ParentId)
+                .ToList();
 
+            for (int i = 0; i < siblings.Count; i++)
+            {
+                if (siblings[i].Id == sceneObject.Id)
+                {
+                    return i;
+                }
+            }
 
+            return 0;
+        }
 
+        private bool IsChildOf(string potentialChildId, string potentialParentId)
+        {
+            if (string.IsNullOrEmpty(potentialParentId))
+                return false;
+
+            if (string.IsNullOrEmpty(potentialChildId))
+                return false;
+
+            var current = _sceneObjectManager.GetById(potentialChildId);
+
+            while (current != null && !string.IsNullOrEmpty(current.ParentId))
+            {
+                if (current.ParentId == potentialParentId)
+                    return true;
+
+                current = _sceneObjectManager.GetById(current.ParentId);
+            }
+
+            return false;
+        }
+
+        private SceneObject GetRobotParent(SceneObject sceneObject)
+        {
+            var current = sceneObject;
+            while (current != null)
+            {
+                if (current.Type == ObjectType.Robot)
+                    return current;
+
+                if (string.IsNullOrEmpty(current.ParentId))
+                    return null;
+
+                current = _sceneObjectManager.GetById(current.ParentId);
+            }
+            return null;
+        }
+
+        private bool CanDropInRoot(SceneObject draggedObject)
+        {
+            return IsRootOnlyType(draggedObject);
+        }
+
+        private bool IsRootOnlyType(SceneObject obj)
+        {
+            return obj.Type == ObjectType.Robot;
+        }
+
+        private string GetRobotIdFromCommand(string commandId)
+        {
+            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+            {
+                if (FindCommandInListRecursive(rb.ConditionsList, commandId))
+                    return rb.RobotId;
+            }
+
+            if (FindCommandInListRecursive(_sceneObjectManager.PLCData.LogicBlockItems, commandId))
+                return "logic";
+
+            return null;
+        }
+        private bool FindCommandInListRecursive(List<PLCBase> items, string commandId)
+        {
+            foreach (var item in items)
+            {
+                if (item is PLCCommand cmd && cmd.Id == commandId)
+                    return true;
+
+                if (item is PLCBlockCondition block)
+                {
+                    // Рекурсивно ищем в IF блоке
+                    if (FindCommandInListRecursive(block.IfCondition.Content, commandId))
+                        return true;
+                    // Рекурсивно ищем в ELSE IF блоках
+                    foreach (var elif in block.ElifConditions)
+                    {
+                        if (FindCommandInListRecursive(elif.Content, commandId))
+                            return true;
+                    }
+                    // Рекурсивно ищем в ELSE блоке
+                    if (block.ElseConndition != null && FindCommandInListRecursive(block.ElseConndition.Content, commandId))
+                        return true;
+                }
+            }
+            return false;
+        }
+        private string GetRobotIdFromCondition(PLCCondition condition)
+        {
+            // Ищем, какому блоку условий принадлежит это condition
+            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+            {
+                if (FindConditionInBlockRecursive(rb.ConditionsList, condition.Id))
+                    return rb.RobotId;
+            }
+
+            if (FindConditionInBlockRecursive(_sceneObjectManager.PLCData.LogicBlockItems, condition.Id))
+                return "logic";
+
+            return null;
+        }
+
+        private bool FindConditionInBlockRecursive(List<PLCBase> items, string conditionId)
+        {
+            foreach (var item in items)
+            {
+                if (item is PLCBlockCondition block)
+                {
+                    // Проверяем сам блок и его внутренние условия
+                    if (block.IfCondition.Id == conditionId)
+                        return true;
+                    foreach (var elif in block.ElifConditions)
+                    {
+                        if (elif.Id == conditionId)
+                            return true;
+                    }
+                    if (block.ElseConndition != null && block.ElseConndition.Id == conditionId)
+                        return true;
+
+                    // Рекурсивно ищем во вложенных Content
+                    if (FindConditionInBlockRecursive(block.IfCondition.Content, conditionId))
+                        return true;
+                    foreach (var elif in block.ElifConditions)
+                    {
+                        if (FindConditionInBlockRecursive(elif.Content, conditionId))
+                            return true;
+                    }
+                    if (block.ElseConndition != null && FindConditionInBlockRecursive(block.ElseConndition.Content, conditionId))
+                        return true;
+                }
+            }
+            return false;
+        }
+        private SceneObject GetSceneObjectFromElement(VisualElement element)
+        {
+            if (element?.userData == null)
+                return null;
+
+            string id = element.userData.ToString();
+
+            if (string.IsNullOrEmpty(id))
+                return null;
+
+            return _sceneObjectManager.GetById(id);
+        }
+
+        private CommandObject ResolveCommand(VisualElement element)
+        {
+            if (element == null) return null;
+
+            // 1. напрямую
+            if (element.userData is string id)
+            {
+                foreach (var robot in _sceneObjectManager.GetGameObjectsList().Where(r => r.Type == ObjectType.Robot))
+                {
+                    var programs = _sceneObjectManager.Commands.GetSubPrograms(robot.Id);
+
+                    foreach (var program in programs)
+                    {
+                        var cmd = program.Items.FirstOrDefault(c => c.Id == id);
+                        if (cmd != null) return cmd;
+                    }
+                }
+            }
+
+            // 2. fallback по иерархии (если userData не заполнен)
+            var sceneObj = GetSceneObjectFromElement(element);
+            if (sceneObj is CommandObject cmdObj)
+                return cmdObj;
+
+            return null;
+        }
+
+        private RobotProgramObject ResolveProgram(VisualElement element)
+        {
+            if (element?.userData is string id)
+            {
+                foreach (var robot in _sceneObjectManager.GetGameObjectsList().Where(r => r.Type == ObjectType.Robot))
+                {
+                    var program = _sceneObjectManager.Commands.GetSubPrograms(robot.Id)
+                        .FirstOrDefault(p => p.Id == id);
+
+                    if (program != null)
+                        return program;
+                }
+            }
+
+            return null;
+        }
 
         #endregion
         #region Вспомогательные методы

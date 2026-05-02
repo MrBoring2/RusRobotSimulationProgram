@@ -1,4 +1,5 @@
 using Assets.Scripts.Models;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -68,6 +69,37 @@ public class ObjectInfo
 public class SceneData
 {
     public List<ObjectInfo> objectsData = new List<ObjectInfo>();
+    public CommandsContainerData CommandsData;
+    public PLCData PLCData;
+}
+
+[Serializable]
+public class CommandsContainerData
+{
+    public List<RobotCommandsData> RobotsCommands = new List<RobotCommandsData>();
+}
+
+[Serializable]
+public class RobotCommandsData
+{
+    public string RobotId;
+    public List<ProgramData> Programs = new List<ProgramData>();
+}
+[Serializable]
+public class ProgramData
+{
+    public string ProgramId;
+    public List<CommandSaveData> Commands = new List<CommandSaveData>();
+}
+
+[Serializable]
+public class CommandSaveData
+{
+    public string Id;
+    public string Name;
+    public string SourcePath;
+    public ObjectType CommandType;
+    public ProviderSaveData ProviderData;
 }
 
 [System.Serializable]

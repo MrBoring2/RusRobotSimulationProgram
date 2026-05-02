@@ -329,104 +329,162 @@
     margin-top: 2px;
     margin-bottom: 2px;
 }
-
-    /* Базовый стиль для всех PLC блоков */
-.plc-condition-block {
-    background-color: rgba(40, 40, 55, 0.8);
-    border-radius: 4px;
-    margin-bottom: 5px;
-    border-left: 3px solid #ffaa44;
+/* Базовый стиль для всех PLC блоков - убираем скругление везде */
+.plc-condition-block,
+.plc-if-block,
+.plc-elif-block,
+.plc-else-block,
+.plc-robot-block,
+.plc-robots-block,
+.plc-init-block,
+.plc-logic-block {
+    margin-bottom: 4px;
+    overflow: hidden;
+    border-left-width: 0;
 }
 
-/* IF блок */
-.plc-if-block {
-    background-color: rgba(50, 70, 50, 0.6);
-    border-radius: 3px;
-    margin: 2px 0;
-    border-left: 3px solid #44ff44;
+/* Раскрытые блоки - добавляем левый бордер */
+.plc-condition-block.expanded,
+.plc-if-block.expanded,
+.plc-elif-block.expanded,
+.plc-else-block.expanded,
+.plc-robot-block.expanded,
+.plc-robots-block.expanded,
+.plc-init-block.expanded,
+.plc-logic-block.expanded {
+    border-left-width: 3px;
 }
 
-/* ELSE IF блок */
-.plc-elif-block {
-    background-color: rgba(70, 70, 40, 0.6);
-    border-radius: 3px;
-    margin: 2px 0;
-    border-left: 3px solid #ffaa44;
+/* Цвета бордеров */
+.plc-condition-block.expanded { border-left-color: #8ac0e0; }
+.plc-if-block.expanded { border-left-color: #80e0a0; }
+.plc-elif-block.expanded { border-left-color: #e0c080; }
+.plc-else-block.expanded { border-left-color: #e08080; }
+.plc-robot-block.expanded { border-left-color: #80e0c0; }
+.plc-robots-block.expanded { border-left-color: #6ac0a0; }
+.plc-init-block.expanded { border-left-color: #a0e080; }
+.plc-logic-block.expanded { border-left-color: #c080e0; }
+
+/* Заголовки - без скругления */
+.plc-condition-block > .header {
+    background-color: #5a7a9a;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+.plc-if-block > .header {
+    background-color: #4a8a6a;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+.plc-elif-block > .header {
+    background-color: #9a8a4a;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+.plc-else-block > .header {
+    background-color: #9a5a5a;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+.plc-robot-block > .header {
+    background-color: #5a7a7a;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+.plc-robots-block > .header {
+    background-color: #4a6a6a;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+.plc-init-block > .header {
+    background-color: #6a8a4a;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+.plc-logic-block > .header {
+    background-color: #8a6aaa;
+    border-radius: 0;
+    margin-bottom: 0;
 }
 
-/* ELSE блок */
-.plc-else-block {
-    background-color: rgba(70, 50, 50, 0.6);
-    border-radius: 3px;
-    margin: 2px 0;
-    border-left: 3px solid #ff4444;
+/* Контент */
+.plc-condition-block > .content {
+    background-color: #4a6a8a;
+}
+.plc-if-block > .content {
+    background-color: #3a7a5a;
+}
+.plc-elif-block > .content {
+    background-color: #8a7a3a;
+}
+.plc-else-block > .content {
+    background-color: #8a4a4a;
+}
+.plc-robot-block > .content {
+    background-color: #4a6a6a;
+}
+.plc-robots-block > .content {
+    background-color: #4a6a6a;
+}
+.plc-init-block > .content {
+    background-color: #5a7a3a;
+}
+.plc-logic-block > .content {
+    background-color: #7a5a9a;
+}
+
+/* Общие стили для контента */
+.plc-condition-block > .content,
+.plc-if-block > .content,
+.plc-elif-block > .content,
+.plc-else-block > .content,
+.plc-robot-block > .content,
+.plc-robots-block > .content,
+.plc-init-block > .content,
+.plc-logic-block > .content {
+    margin-top: 0;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 12px;
+}
+
+/* Текст заголовков */
+.unity-label {
+    color: #ffffff;
 }
 
 /* Команды */
 .plc-command {
-    background-color: rgba(60, 60, 75, 0.5);
-    border-radius: 3px;
-    margin: 2px 0;
-    border-left: 2px solid #8888ff;
+    background-color: rgba(100, 120, 140, 0.8);
+    border-radius: 0;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    border-left-color: #a0d0f0;
+    border-left-width: 2px;
 }
 
-/* Блок робота */
-.plc-robot-block {
-    background-color: rgba(40, 40, 60, 0.7);
-    border-radius: 4px;
-    margin-bottom: 5px;
-    border: 1px solid #6688aa;
+.plc-command .label-hierarchy {
+    color: #ffffff;
 }
 
-/* Блок инициализации */
-.plc-init-block {
-    background-color: rgba(40, 55, 40, 0.7);
-    border-radius: 4px;
-    border: 1px solid #88aa88;
+.hierarchy-item-program.drop-target-inside {
+    border-left-color: #4CAF50;
+    border-left-width: 2px;
+    background-color: rgba(76, 175, 80, 0.2);
 }
 
-/* Блок логики */
-.plc-logic-block {
-    background-color: rgba(55, 45, 55, 0.7);
-    border-radius: 4px;
-    margin-bottom: 5px;
-    border: 1px solid #aa88aa;
+.hierarchy-item-command.drop-target-above {
+    border-top-color: #4CAF50;
+    border-top-width: 2px;
 }
 
-.plc-condition-block > .header {
-    background-color: #8B5E3C !important;
-    border-left: 3px solid #ffaa44;
+.hierarchy-item-command.drop-target-below {
+    border-bottom-color: #4CAF50;
+    border-bottom-width: 2px;
 }
 
-/* Заголовок IF блока */
-.plc-if-block > .header {
-    background-color: #2E7D32 !important;
-    border-left: 3px solid #44ff44;
-}
-
-/* Заголовок ELSE IF блока */
-.plc-elif-block > .header {
-    background-color: #F57F17 !important;
-    border-left: 3px solid #ffaa44;
-}
-
-/* Заголовок ELSE блока */
-.plc-else-block > .header {
-    background-color: #C62828 !important;
-    border-left: 3px solid #ff4444;
-}
-
-/* Заголовок блока робота */
-.plc-robot-block > .header {
-    background-color: #1565C0 !important;
-}
-
-/* Заголовок блока инициализации */
-.plc-init-block > .header {
-    background-color: #2E7D32 !important;
-}
-
-/* Заголовок блока логики */
-.plc-logic-block > .header {
-    background-color: #6A1B9A !important;
+.hierarchy-item-command.drop-target-inside {
+    border-left-color: #4CAF50;
+    border-left-width: 2px;
+    background-color: rgba(76, 175, 80, 0.2);
 }

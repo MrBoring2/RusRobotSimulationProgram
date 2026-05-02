@@ -944,7 +944,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         _eventBus.Invoke(new UnpickObjectSignal());
         var type = prefab.GetComponent<SceneObjectMarker>().type;
 
-        if (_sceneObjectManager.GetGameObjectsList().FirstOrDefault(p => p.Type == ObjectType.PLC) != null)
+        if (type == ObjectType.PLC && _sceneObjectManager.GetGameObjectsList().FirstOrDefault(p => p.Type == ObjectType.PLC) != null)
         {
             _notificationSystemManager.ShowWarning("ПЛК ячейки может быть только один");
             return;

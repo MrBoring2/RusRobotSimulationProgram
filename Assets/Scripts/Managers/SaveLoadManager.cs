@@ -1,6 +1,7 @@
 ﻿using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Models;
 using SFB;
 using System;
 using System.Collections.Generic;
@@ -43,7 +44,10 @@ namespace Assets.Scripts.Managers
             if (!string.IsNullOrEmpty(savePath))
             {
                 if (File.Exists(savePath))
-                    saveLoadProvider.Save(savePath, _sceneObjectManager.GetGameObjectsList()); //hierarchyPanelEvents.Items);
+                    saveLoadProvider.Save(savePath,
+                              _sceneObjectManager.GetGameObjectsList(),
+                              _sceneObjectManager.Commands,
+                              _sceneObjectManager.PLCData);
                 return;
             }
             var extentionsList = new[]
@@ -55,7 +59,10 @@ namespace Assets.Scripts.Managers
                 if (string.IsNullOrEmpty(path))
                     return;
                 savePath = path;
-                saveLoadProvider.Save(path, _sceneObjectManager.GetGameObjectsList());//hierarchyPanelEvents.Items);
+                saveLoadProvider.Save(savePath,
+                              _sceneObjectManager.GetGameObjectsList(),
+                              _sceneObjectManager.Commands,
+                              _sceneObjectManager.PLCData);
             });
         }
 
@@ -77,13 +84,17 @@ namespace Assets.Scripts.Managers
                     return;
                 }
                 savePath = paths[0];
-
+                if (loaded.PLCData != null)
+                {
+                    _sceneObjectManager.SetPLCData(loaded.PLCData);
+                }
                 // hierarchyPanelEvents.LoadHierarchy();
-                _sceneObjectManager.SpawnRestoredObjects(loaded.objectsData);
+                _sceneObjectManager.SpawnRestoredObjects(loaded.objectsData, loaded.CommandsData);
                 //foreach (var data in loaded.objectsData)
                 //{
                 //    SpawnRestoredObject(data);
                 //}
+                
                 _eventBus.Invoke(new LoadObjectsSignal(_sceneObjectManager.GetGameObjectsList()));
             }
             finally
@@ -91,6 +102,7 @@ namespace Assets.Scripts.Managers
                 _undoRedoManager.EndExternalOperation();
             }
         }
+
         public void ClearScene(bool spawnFloor = true)
         {
             //var itemsToDelete = new List<GameObject>(hierarchyPanelEvents.Items.Select(item => item.Reference));

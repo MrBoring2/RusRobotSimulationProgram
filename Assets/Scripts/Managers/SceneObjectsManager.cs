@@ -30,7 +30,10 @@ namespace Assets.Scripts.Managers
         public OrderedDictionary Items { get; private set; } = new OrderedDictionary();
         public CommandsContainer Commands { get; private set; } = new CommandsContainer();
         public PLCData PLCData { get; private set; } = new PLCData();
-
+        public void SetPLCData(PLCData data)
+        {
+            PLCData = data;
+        }
 
         public SceneObject Create(GameObject prefab, Vector3 position, Quaternion rotation, ObjectType type, string id = null, string parentId = null)
         {
@@ -78,7 +81,10 @@ namespace Assets.Scripts.Managers
                         //    break;
                         case ObjectType.Robot:
                             sceneObj = new RobotObject(id, objectMaker.type, obj, parentId);
-                            PLCData.RobotCommandsBlockItems.Add(new PLCRobotBlock(id));
+                            if (!Items.Contains(id))
+                            {
+                                PLCData.RobotCommandsBlockItems.Add(new PLCRobotBlock(id));
+                            }
                             break;
                         case ObjectType.PLC:
                             sceneObj = new PLCObject(id, objectMaker.type, obj, parentId);
@@ -250,6 +256,10 @@ namespace Assets.Scripts.Managers
             {
                 Remove(gameObject.Id);
             }
+
+            Commands = new CommandsContainer();
+            PLCData = new PLCData();
+
             if (spawnFloor)
             {
                 var prefab = Resources.Load<GameObject>("Prefabs/Primitive/Куб");
@@ -264,26 +274,93 @@ namespace Assets.Scripts.Managers
             _eventBus.Invoke(new LoadObjectsSignal(Items.Values.Cast<SceneObject>().ToList()));
         }
 
-        public void SpawnRestoredObjects(List<ObjectInfo> data)
+        public void SpawnRestoredObjects(List<ObjectInfo> data, CommandsContainerData commandsData)
         {
+            // ПРОХОД 1: Создаём все объекты БЕЗ родительских связей
+            var createdObjects = new Dictionary<string, SceneObject>();
+
             foreach (var item in data)
             {
                 var prefab = Resources.Load<GameObject>(item.SourcePath);
-                var instance = Create(prefab, Vector3.zero, Quaternion.identity, item.ObjectType, item.Id, item.ParentId);
-                var provider = instance.Reference.GetComponent<IPropertyProvider>();// GetProvider(instance.Reference, item.ProviderData.ProviderType);
+                if (prefab == null)
+                {
+                    Debug.LogError($"Prefab not found: {item.SourcePath}");
+                    continue;
+                }
+
+                // Создаём объект без parentId (сначала без родителя)
+                var instance = Create(prefab, item.Position.ToVector3(), item.Rotation.ToQuaternion(),
+                                      item.ObjectType, item.Id, null);
+
+                if (instance == null) continue;
+
+                var provider = instance.Reference.GetComponent<IPropertyProvider>();
                 provider?.RestoreCustomState(item.ProviderData);
                 instance.Reference.name = item.Name;
                 instance.Reference.tag = "SceneObject";
-                instance.Reference.transform.position = item.Position.ToVector3();
-                instance.Reference.transform.rotation = item.Rotation.ToQuaternion();
                 instance.Reference.transform.localScale = item.Scale.ToVector3();
-                var m = instance.Reference.AddComponent<SceneObjectMarker>();
+
+                var m = instance.Reference.GetComponent<SceneObjectMarker>();
+                if (m == null)
+                    m = instance.Reference.AddComponent<SceneObjectMarker>();
                 m.type = item.ObjectType;
                 m.sourcePath = item.SourcePath;
 
-                //var sceneObject = new SceneObject(item.Id, item.ObjectType, instance, item.ParentId);
+                createdObjects[item.Id] = instance;
             }
 
+            // ПРОХОД 2: Устанавливаем родительские связи
+            foreach (var item in data)
+            {
+                if (!string.IsNullOrEmpty(item.ParentId) && createdObjects.TryGetValue(item.ParentId, out var parent))
+                {
+                    if (createdObjects.TryGetValue(item.Id, out var child))
+                    {
+                        child.Reference.transform.SetParent(parent.Reference.transform, false);
+                        child.SetParent(item.ParentId);
+                    }
+                }
+            }
+
+            // ПРОХОД 3: Восстанавливаем команды в CommandsContainer
+            if (commandsData != null)
+            {
+                foreach (var robotData in commandsData.RobotsCommands)
+                {
+                    var robot = GetById(robotData.RobotId);
+                    if (robot == null) continue;
+
+                    foreach (var programData in robotData.Programs)
+                    {
+                        // Программа не в data! Создаём с нуля
+                        var programPrefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
+                        if (programPrefab == null) continue;
+
+                        var program = CreateCommand(programPrefab, Vector3.zero, Quaternion.identity,
+                                                    ObjectType.Program, programData.ProgramId, robot.Id) as RobotProgramObject;
+
+                        if (program == null) continue;
+
+                        // Восстанавливаем команды
+                        foreach (var cmdSaveData in programData.Commands)
+                        {
+                            var cmdPrefab = Resources.Load<GameObject>(cmdSaveData.SourcePath);
+                            if (cmdPrefab == null) continue;
+
+                            var cmd = CreateCommand(cmdPrefab, Vector3.zero, Quaternion.identity,
+                                    cmdSaveData.CommandType, cmdSaveData.Id, program.Id) as CommandObject;
+
+                            if (cmd != null)
+                            {
+                                var cmdProvider = cmd.Reference.GetComponent<IPropertyProvider>();
+                                cmdProvider?.RestoreCustomState(cmdSaveData.ProviderData);
+                                cmdProvider.Name = cmdSaveData.Name;
+                            }
+                        }
+                    }
+                }
+            }
+            _eventBus.Invoke(new LoadObjectsSignal(GetGameObjectsList()));
         }
         //private IPropertyProvider GetProvider(GameObject obj, string type)
         //{

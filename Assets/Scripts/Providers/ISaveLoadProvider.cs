@@ -4,6 +4,6 @@ using UnityEngine;
 
 public interface ISaveLoadProvider
 {
-    void Save(string path, List<SceneObject> objects);
+    void Save(string path, List<SceneObject> objects, CommandsContainer commands, PLCData plcData);
     SceneData Load(string path);
 }

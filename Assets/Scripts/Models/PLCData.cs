@@ -4,6 +4,7 @@ using UnityEngine.UIElements;
 
 namespace Assets.Scripts.Models
 {
+    [Serializable]
     public class PLCData
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -64,7 +65,7 @@ namespace Assets.Scripts.Models
     [Serializable]
     public class PLCCommand : PLCBase
     {
-        public string Id { get; private set; }
+        public string Id { get; set; }
         public CommandType Type;
         public PLCCommand()
         {
@@ -114,7 +115,6 @@ namespace Assets.Scripts.Models
     [Serializable]
     public class PLCSetVariable : PLCCommand
     {
-        public string Id;
         public string VariableName;
         public string Value;
         public PLCSetVariable() { Id = Guid.NewGuid().ToString(); Type = CommandType.SetVariable; }

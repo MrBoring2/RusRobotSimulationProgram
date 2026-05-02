@@ -154,5 +154,14 @@ public partial class CustomFoldout : VisualElement
             : DisplayStyle.None;
 
         toggleButton.text = (IsExpanded && hasChildren) ? "-" : "+";
+
+        if (IsExpanded && hasChildren)
+        {
+            AddToClassList("expanded");
+        }
+        else
+        {
+            RemoveFromClassList("expanded");
+        }
     }
 }

@@ -14,6 +14,7 @@ namespace Assets.Scripts.Models
         public VisualElement SourceElement { get; set; }
         public SceneObject SceneObject { get; set; }
         public Vector2 StartPosition { get; set; }
+        public object UserData { get; set;  }
     }
 
     public enum DropPosition
