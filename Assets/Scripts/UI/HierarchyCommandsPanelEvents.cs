@@ -907,7 +907,8 @@ namespace Assets.Scripts.UI
                     }
                     else if (foldout.name == "plc-init-block")
                     {
-                        contextMenu.Add(CreateMenuButton("Добавить переменную", () => Debug.Log("Добавить переменную в инициализацию")));
+                        var parentId = foldout.userData.ToString();
+                        contextMenu.Add(CreateMenuButton("Добавить переменную", () => ShowAddVariableWindow(parentId)));
                     }
                     else if (foldout.name == "plc-logic-block")
                     {
@@ -996,6 +997,18 @@ namespace Assets.Scripts.UI
 
             root.Add(contextMenu);
             iBlocker.AddNewContextMenu(contextMenu);
+        }
+
+        private void ShowAddVariableWindow(string blockId)
+        {
+            ModalParameters parameters = new ModalParameters();
+            _modalWindowServiceManager.ShowWindow<PLCSetVariable>("variable-init-window", "Инициализация переменной", parameters, (result) =>
+            {
+                if (result != null)
+                {
+                    AddVariableInitToPLC(blockId, result);
+                }
+            });
         }
 
         private void UpdateConditionExpression(string conditionId, string newExpression)
@@ -1325,6 +1338,11 @@ namespace Assets.Scripts.UI
 
         private PLCCommand GetCommandById(string commandId)
         {
+            foreach (var item in _sceneObjectManager.PLCData.InitBlockItems)
+            {
+                if (item.Id == commandId) return item;
+            }
+
             foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
             {
                 var found = FindCommandInList(rb.ConditionsList, commandId);
@@ -1364,6 +1382,11 @@ namespace Assets.Scripts.UI
         {
             var startProgram = new PLCStartProgram { ProgramName = program.PropertyProvider.Name, ProgramId = program.Id };
             AddToPLCContent(blockId, startProgram);
+        }
+
+        private void AddVariableInitToPLC(string blockId, PLCSetVariable pLCSet)
+        {
+            AddToPLCContent(blockId, pLCSet);
         }
 
         // Добавить условие
@@ -1433,41 +1456,51 @@ namespace Assets.Scripts.UI
                 return;
             }
 
-            // 1. Проверяем в блоках роботов
-            var robotBlock = _sceneObjectManager.PLCData.RobotCommandsBlockItems
-                .FirstOrDefault(x => x.RobotId == parentId);
-            if (robotBlock != null)
+
+            if (itemToAdd is PLCSetVariable s)
             {
-                robotBlock.ConditionsList.Add(itemToAdd);
-                UpdateHierarchy();
-                return;
+                var logicBlockItems = _sceneObjectManager.PLCData.InitBlockItems;
+                logicBlockItems.Add(s);
             }
 
-            // 2. Проверяем в блоке логики
-            var logicParent = _sceneObjectManager.PLCData.LogicBlockItems
-                .FirstOrDefault(x => x is PLCBlockCondition && ((PLCBlockCondition)x).Id == parentId);
-            if (logicParent is PLCBlockCondition block)
+            else if (itemToAdd is PLCStartProgram || itemToAdd is PLCBlockCondition || itemToAdd is PLCCondition)
             {
-                block.IfCondition.Content.Add(itemToAdd);
-                UpdateHierarchy();
-                return;
-            }
+                // 1. Проверяем в блоках роботов
+                var robotBlock = _sceneObjectManager.PLCData.RobotCommandsBlockItems
+                    .FirstOrDefault(x => x.RobotId == parentId);
+                if (robotBlock != null)
+                {
+                    robotBlock.ConditionsList.Add(itemToAdd);
+                    UpdateHierarchy();
+                    return;
+                }
 
-            // 3. Рекурсивно ищем в условиях роботов
-            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
-            {
-                if (TryAddToContent(rb.ConditionsList, parentId, itemToAdd))
+                // 2. Проверяем в блоке логики
+                var logicParent = _sceneObjectManager.PLCData.LogicBlockItems
+                    .FirstOrDefault(x => x is PLCBlockCondition && ((PLCBlockCondition)x).Id == parentId);
+                if (logicParent is PLCBlockCondition block)
+                {
+                    block.IfCondition.Content.Add(itemToAdd);
+                    UpdateHierarchy();
+                    return;
+                }
+
+                // 3. Рекурсивно ищем в условиях роботов
+                foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+                {
+                    if (TryAddToContent(rb.ConditionsList, parentId, itemToAdd))
+                    {
+                        UpdateHierarchy();
+                        return;
+                    }
+                }
+
+                // 4. Рекурсивно ищем в блоке логики
+                if (TryAddToContent(_sceneObjectManager.PLCData.LogicBlockItems, parentId, itemToAdd))
                 {
                     UpdateHierarchy();
                     return;
                 }
-            }
-
-            // 4. Рекурсивно ищем в блоке логики
-            if (TryAddToContent(_sceneObjectManager.PLCData.LogicBlockItems, parentId, itemToAdd))
-            {
-                UpdateHierarchy();
-                return;
             }
 
             UpdateHierarchy();
@@ -1678,11 +1711,7 @@ namespace Assets.Scripts.UI
 
             foreach (var variable in _sceneObjectManager.PLCData.InitBlockItems)
             {
-                var varElement = new VisualElement();
-                varElement.name = "plc-var";
-                varElement.userData = variable.Id;
-                varElement.Add(new Label($"{variable.VariableName} = {variable.Value}"));
-                initBlock.AddChild(varElement);
+                DrawCommand(variable, initBlock);
             }
             MainHierarchyItem.AddChild(initBlock);
 
@@ -2110,14 +2139,13 @@ namespace Assets.Scripts.UI
 
         private DropTargetInfo FindDropTarget(Vector2 position)
         {
-            Debug.Log($"=== FindDropTarget === UserData type: {currentDragData?.UserData?.GetType()}");
-
             var allElementsList = new List<VisualElement>();
             allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("hierarchy-item-program").ToList());
             allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("hierarchy-item-command").ToList());
             allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-if-block").ToList());
             allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-elif-block").ToList());
             allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-else-block").ToList());
+            allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-command").ToList());
             DropTargetInfo bestTarget = null;
             float minDistance = float.MaxValue;
 
@@ -2128,12 +2156,10 @@ namespace Assets.Scripts.UI
 
             foreach (var element in allElementsList)
             {
-                Debug.Log($"Checking element: {element.name}, userData: {element.userData}");
                 if (element == currentDragData?.SourceElement) continue;
 
                 if (currentDragData?.UserData is CommandObject)
                 {
-                    Debug.Log($"Is CommandObject, element.name: {element.name}");
                     // Для программы - дроп внутрь (в конец)
                     if (element.name == "hierarchy-item-program")
                     {
@@ -2156,10 +2182,8 @@ namespace Assets.Scripts.UI
                         }
                     }
 
-                    // Для команды - дроп выше/ниже
                     if (element.name == "hierarchy-item-command")
                     {
-                        Debug.Log($"Found command: {element.userData}");
                         if (!CanDropOnTarget(element)) continue;
 
                         var bounds = GetElementBounds(element, panelWorldBounds);
@@ -2177,6 +2201,24 @@ namespace Assets.Scripts.UI
 
                 if (currentDragData?.UserData is PLCCommand)
                 {
+                    bool isInitCommand = element.name == "plc-command" &&
+                              element.parent?.parent?.name == "plc-init-block";
+                    if (isInitCommand)
+                    {
+                        if (!CanDropOnTarget(element)) continue;
+
+                        var bounds = GetElementBounds(element, panelWorldBounds);
+                        if (!bounds.Contains(localPos)) continue;
+
+                        var dropInfoInit = CalculateCommandDropPosition(element, bounds, localPos);
+                        if (dropInfoInit != null && dropInfoInit.Distance < minDistance)
+                        {
+                            minDistance = dropInfoInit.Distance;
+                            bestTarget = dropInfoInit;
+                        }
+                        continue;
+                    }
+
                     var condition = GetConditionFromElement(element);
                     if (condition != null)
                     {
@@ -2184,10 +2226,7 @@ namespace Assets.Scripts.UI
 
                         var plcBounds = GetElementBounds(element, panelWorldBounds);
 
-                        // ========== КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ==========
-                        // Проверяем, что мышь ДЕЙСТВИТЕЛЬНО НАД этим элементом
                         if (!plcBounds.Contains(localPos)) continue;
-                        // =========================================
 
                         float dist = Vector2.Distance(localPos, plcBounds.center);
                         if (dist < minDistance)
@@ -2384,6 +2423,13 @@ namespace Assets.Scripts.UI
             // Для PLC команд
             if (currentDragData.UserData is PLCCommand draggedPLCCommand)
             {
+                if (targetElement.name == "plc-command" && IsInsideInitBlock(targetElement))
+                {
+                    // В init блоке можно перемещать только выше/ниже
+                    if (targetElement.userData?.ToString() == draggedPLCCommand.Id) return false;
+                    return true;
+                }
+
                 var targetCondition = GetConditionFromElement(targetElement);
                 if (targetCondition == null) return false;
 
@@ -2413,6 +2459,19 @@ namespace Assets.Scripts.UI
 
             return true;
         }
+
+        private bool IsInsideInitBlock(VisualElement element)
+        {
+            var current = element.parent;
+            while (current != null)
+            {
+                if (current.name == "plc-init-block")
+                    return true;
+                current = current.parent;
+            }
+            return false;
+        }
+
         private RobotProgramObject GetParentProgram(CommandObject command)
         {
             // Ищем во ВСЕХ роботах
@@ -2440,7 +2499,7 @@ namespace Assets.Scripts.UI
                 {
                     dropTarget.TargetElement.AddToClassList(DROP_TARGET_INSIDE_CLASS);
                 }
-                else if (dropTarget.TargetElement.name == "hierarchy-item-command")
+                else if (dropTarget.TargetElement.name == "hierarchy-item-command" || dropTarget.TargetElement.name == "plc-command")
                 {
                     if (dropTarget.Position == DropPosition.Above)
                     {
@@ -2459,6 +2518,20 @@ namespace Assets.Scripts.UI
             // Для PLC команд
             if (currentDragData?.UserData is PLCCommand draggedCommand)
             {
+                if (draggedCommand is PLCSetVariable)
+                {
+                    if (dropTarget.Position == DropPosition.Above)
+                    {
+                        dropTarget.TargetElement.AddToClassList(DROP_TARGET_ABOVE_CLASS);
+                        return;
+                    }
+                    else if (dropTarget.Position == DropPosition.Below)
+                    {
+                        dropTarget.TargetElement.AddToClassList(DROP_TARGET_BELOW_CLASS);
+                        return;
+                    }
+                }
+
                 var targetCondition = GetConditionFromElement(dropTarget.TargetElement);
                 if (targetCondition != null)
                 {
@@ -2505,9 +2578,6 @@ namespace Assets.Scripts.UI
 
         private void HandleDrop()
         {
-            Debug.Log($"=== HANDLE DROP ===");
-            Debug.Log($"currentDragData: {currentDragData != null}");
-            Debug.Log($"currentDropTarget: {currentDropTarget != null}");
             if (currentDragData == null || currentDropTarget == null) return;
 
             if (currentDragData.UserData is CommandObject draggedRobotCommand)
@@ -2567,6 +2637,39 @@ namespace Assets.Scripts.UI
 
             if (currentDragData.UserData is PLCCommand draggedCommand)
             {
+                var targetElement = currentDropTarget.TargetElement;
+
+                if (targetElement.name == "plc-command")
+                {
+                    var draggedSetVar = draggedCommand as PLCSetVariable;
+                    if (draggedSetVar == null)
+                    {
+                        CleanupDrag();
+                        return;
+                    }
+
+                    var targetCommand = GetCommandById(targetElement.userData?.ToString()) as PLCSetVariable;
+                    if (targetCommand != null)
+                    {
+                        var initList = _sceneObjectManager.PLCData.InitBlockItems;
+                        int oldIndex = initList.IndexOf(draggedSetVar);
+                        int targetIndex = initList.IndexOf(targetCommand);
+
+                        if (currentDropTarget.Position == DropPosition.Below)
+                            targetIndex++;
+                        if (targetIndex > oldIndex && oldIndex != -1)
+                            targetIndex--;
+
+                        if (oldIndex != -1)
+                            initList.RemoveAt(oldIndex);
+
+                        initList.Insert(targetIndex, draggedSetVar);
+                        UpdateHierarchy();
+                        CleanupDrag();
+                        return;
+                    }
+                }
+
                 var targetCondition = GetConditionFromElement(currentDropTarget.TargetElement);
                 if (targetCondition != null)
                 {

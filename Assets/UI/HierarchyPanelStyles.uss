@@ -454,7 +454,7 @@
 }
 
 /* Команды */
-.plc-command {
+.plc-var, .plc-command {
     background-color: rgba(100, 120, 140, 0.8);
     border-radius: 0;
     margin-top: 2px;

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Assets.Scripts.UI
 {
-    internal class VariableSetField
+    public class VariableSetPanelEvents
     {
     }
 }

@@ -131,6 +131,7 @@ GameObject:
   - component: {fileID: 21706620}
   - component: {fileID: 21706619}
   - component: {fileID: 21706618}
+  - component: {fileID: 21706622}
   m_Layer: 0
   m_Name: ModalWindows
   m_TagString: Untagged
@@ -202,6 +203,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1417352188}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &21706622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 21706617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82c39d56489c35d498ba4c76f5a30281, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.VariableInitPanelEvents
+  windowId: variable-init-window
+  windowUXML: {fileID: 9197481963319205126, guid: f60276202c0c86f4fad54544d8d37709, type: 3}
+  UIBlocker: {fileID: 1239946562}
+  UIDocument: {fileID: 1239946556}
 --- !u!1 &152640449
 GameObject:
   m_ObjectHideFlags: 0
