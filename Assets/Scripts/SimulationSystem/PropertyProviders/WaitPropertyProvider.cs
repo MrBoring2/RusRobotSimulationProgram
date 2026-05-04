@@ -1,4 +1,4 @@
-using Assets.Scripts.Models;
+ï»¿using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
 using System.Collections.Generic;
 using UnityEngine;
@@ -29,21 +29,13 @@ public class WaitPropertyProvider : BasePropertyProvider
         };
     }
 
-    public override IEnumerable<CustomProperty> GetCustomProperties()
+    public override List<CustomProperty> GetCustomProperties()
     {
         Debug.Log($"[GetCustomProperties] instance {GetInstanceID()} Time = {Time}");
-
-        yield return new CustomProperty(
-            "Time",
-            "Âðåìÿ",
-            typeof(float),
-            () =>
-            {
-                Debug.Log($"[Getter] instance {GetInstanceID()} Time = {Time}");
-                return Time;
-            },
-            val => Time = (float)val
-        );
+        return new List<CustomProperty>()
+        {
+            new CustomProperty("Time","Ð’Ñ€ÐµÐ¼Ñ",typeof(float),() =>{return Time;},val => Time = (float)val)
+        };
     }
 
     public override void RestoreCustomState(ProviderSaveData data)

@@ -1,4 +1,4 @@
-//DI
+Ôªø//DI
 using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.Manipulator;
 using Assets.Scripts.CustomEventBus.Signals.Robot;
@@ -10,7 +10,7 @@ using UnityEngine;
 public class SimulationManager : MonoBehaviour,IService
 {
     private EventBus _eventBus;
-    private SIM_STAT SimulationStat = SIM_STAT.STOP; //ÒÚ‡ÚÛÒ ÒËÏÛÎˇˆËË ‚ Ì‡ÒÚ. ‚ÂÏˇ
+    private SIM_STAT SimulationStat = SIM_STAT.STOP; //—Å—Ç–∞—Ç—É—Å —Å–∏–º—É–ª—è—Ü–∏–∏ –≤ –Ω–∞—Å—Ç. –≤—Ä–µ–º—è
     private MODE SimulationMode = MODE.NONE;
     private MODE oldSimulationMode = MODE.NONE;
     void Start()
@@ -19,8 +19,7 @@ public class SimulationManager : MonoBehaviour,IService
         _eventBus.Subscribe<StartSimulationSignal>(StartSim);
         _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
         _eventBus.Subscribe<PauseSimulationSignal>(PauseSim);
-
-        _eventBus.Subscribe<StopSimulationSignal>(StopSim);  //ÕÛÊÂÌ ÒË„Ì‡Î —“Œœ_—»Ã”Àﬂ÷»ﬂ
+        _eventBus.Subscribe<StopSimulationSignal>(StopSim); 
 
     }
 
@@ -44,9 +43,18 @@ public class SimulationManager : MonoBehaviour,IService
     {
         if(SimulationStat != SIM_STAT.PLAY)
         {
-            SimulationStat = SIM_STAT.PLAY;
-            ChangeMode(MODE.NONE);
-            _eventBus.Invoke(new StartProgramm());
+            try
+            {
+                ChangeMode(MODE.NONE);
+                SimulationStat = SIM_STAT.PLAY;
+                _eventBus.Invoke(new StartProgramm());
+                ////////////
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"–û—à–∏–±–∫–∞ –∑–∞–ø—É—Å–∫–∞ —Å–∏–º—É–ª—è—Ü–∏–∏: {ex}");
+            }
+            
         }
     }
     private void PauseSim(PauseSimulationSignal s)

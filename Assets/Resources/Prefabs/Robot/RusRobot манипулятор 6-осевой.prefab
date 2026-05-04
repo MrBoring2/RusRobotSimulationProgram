@@ -668,9 +668,9 @@ GameObject:
   - component: {fileID: 338621209258235640}
   - component: {fileID: 647134665470056457}
   - component: {fileID: 7573109030372696143}
-  - component: {fileID: 7647283258267575459}
   - component: {fileID: 3198072680286399013}
   - component: {fileID: 5925056863803799285}
+  - component: {fileID: 4023378273382719188}
   m_Layer: 0
   m_Name: "RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
     6-\u043E\u0441\u0435\u0432\u043E\u0439"
@@ -730,42 +730,6 @@ MonoBehaviour:
   type: 7
   sourcePath: "Prefabs/Robot/RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
     6-\u043E\u0441\u0435\u0432\u043E\u0439"
---- !u!114 &7647283258267575459
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3126245551890948002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0154e894b15591428e7e2650e6564bc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RobotController
-  SpeedCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
 --- !u!114 &3198072680286399013
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -814,13 +778,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af428d7098573694ca5346a3a114a4fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RobotPropertyProvider
+  Notification: {fileID: 0}
+  SpeedEffector: 0.5
+  ChangeAngles:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
   J1Angle: 0
   J2Angle: 90
   J3Angle: 90
   J4Angle: 0
   J5Angle: 0
   J6Angle: 0
-  SpeedEffector: 0.5
   thetha:
   - 0
   - 0
@@ -843,21 +815,25 @@ MonoBehaviour:
   - 0
   - 0
   JOGpoint: {fileID: 127623807452593988}
-  ChangeAngles:
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  ogrAngleSpeed:
-  - 140
-  - 93
-  - 108
-  - 205
-  - 295
-  - 465
   _forwarKinObj: {fileID: 4812517328117703329}
+--- !u!114 &4023378273382719188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3126245551890948002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c4d444c4e70e142b09e6a94dd6f9d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.SimulationSystem.RobotSimulation.RobotController
+  SpeedCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &3137455119182969186
 GameObject:
   m_ObjectHideFlags: 0
@@ -2097,7 +2073,7 @@ Transform:
   m_GameObject: {fileID: 8898380700363887062}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: 0, y: 0, z: 0.24100095}
+  m_LocalPosition: {x: 0, y: 0, z: 0.241}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

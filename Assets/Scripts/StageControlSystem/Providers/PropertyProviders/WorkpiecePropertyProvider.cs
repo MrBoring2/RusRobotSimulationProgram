@@ -33,16 +33,21 @@ namespace Assets.Scripts.Providers.PropertyProviders
             };
         }
 
-        public override IEnumerable<CustomProperty> GetCustomProperties()
+        public override List<CustomProperty> GetCustomProperties()
         {
-            yield return new CustomProperty(
+            return new List<CustomProperty>()
+            {
+                new CustomProperty(
                 "IsKinematic",
                 "Фиксировать деталь",
                 typeof(bool),
                 () => IsKinematic,
                 val => IsKinematic = (bool)val
-            );
+            )
+            };
         }
+            
+        
 
         public override void RestoreCustomState(ProviderSaveData data)
         {

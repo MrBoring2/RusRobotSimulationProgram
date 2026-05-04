@@ -24,9 +24,9 @@ namespace Assets.Scripts.Providers
             };
         }
 
-        public override IEnumerable<CustomProperty> GetCustomProperties()
+        public override List<CustomProperty> GetCustomProperties()
         {
-            return null;
+            return new List<CustomProperty>();
         }
 
         public override void RestoreCustomState(ProviderSaveData data)

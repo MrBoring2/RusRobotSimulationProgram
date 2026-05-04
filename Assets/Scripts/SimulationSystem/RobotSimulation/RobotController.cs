@@ -1,4 +1,4 @@
-using Assets.Scripts.CustomEventBus;
+Ôªøusing Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
 using Assets.Scripts.CustomEventBus.Signals.Robot;
 using Assets.Scripts.CustomServiceManager;
@@ -9,330 +9,703 @@ using Assets.Scripts.Providers.PropertyProviders;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.UIElements;
-public class RobotController : MonoBehaviour
+
+namespace Assets.Scripts.SimulationSystem.RobotSimulation
 {
-    private RobotPropertyProvider _propertyProvider;
-    private SimulationManager _simManager => ServiceManager.Current.Get<SimulationManager>();
-    private SceneObjectsManager _sceneObjectManager => ServiceManager.Current.Get<SceneObjectsManager>();
-    private EventBus _eventBus => ServiceManager.Current.Get<EventBus>();
 
-    private float Speed;//Ï/Ò
-    
-    private Point EffectorPosition;
-    private Angles[] angles;
-
-    //
-    private Vector3 oldJOGposition = Vector3.zero;
-    private Quaternion oldJOGrotation = Quaternion.identity;
-    private float[] oldAngles = new float[6] { 0, 0, 0, 0, 0, 0 };
-
-
-    public string ID => _propertyProvider.Id;
-    public bool RunTask { get; set; }
-    private bool CommandComplete = true;
-
-    public AnimationCurve SpeedCurve;
-    private InverseK_new InvKin;
-    
-    void Start()
+    public class RobotController : MonoBehaviour
     {
-        InvKin = gameObject.GetComponent<InverseK_new>();
-        _eventBus.Subscribe<StopProgramm>(StopSim);
-        _eventBus.Subscribe<PickCommandSignal>(TeleportToPoint);
-        _propertyProvider = GetComponent<RobotPropertyProvider>();
-        _propertyProvider.JOGpoint.LocalPosition = new Vector3(1, 1, 1);
-        SetJogMove();  
-    }
-    private void FixedUpdate()
-    {
-        if (_simManager.GetModeSim() == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
+        RobotPropertyProvider _propertyProvider;
+        SimulationManager _simManager => ServiceManager.Current.Get<SimulationManager>();
+        SceneObjectsManager _sceneObjectManager => ServiceManager.Current.Get<SceneObjectsManager>();
+        EventBus _eventBus => ServiceManager.Current.Get<EventBus>();
+
+        float Speed;//–º/—Å
+
+        Angles[] angles;
+
+        //–æ–ø—Ç–∏–º–∏–∑–∞—Ü–∏—è
+        Vector3 oldJOGposition = Vector3.zero;
+        Quaternion oldJOGrotation = Quaternion.identity;
+        float[] oldAngles = new float[6] { 0, 0, 0, 0, 0, 0 };
+
+
+        public string ID => _propertyProvider.Id;
+        public bool RunTask { get; set; }
+        bool CommandComplete = true;
+        public List<SubProgramm> Programm { get; set; }
+
+        public AnimationCurve SpeedCurve;
+        private InverseK_new InvKin;
+
+
+
+        void Start()
         {
+            InvKin = gameObject.GetComponent<InverseK_new>();
+            _eventBus.Subscribe<StopProgramm>(StopSim);
+            _eventBus.Subscribe<PickCommandSignal>(TeleportToPoint);
+            _eventBus.Subscribe<RobotsControllerResetState>(ControllerResetState);
+            _propertyProvider = GetComponent<RobotPropertyProvider>();
+            _propertyProvider.JOGpoint.Position = new Vector3(1, 1, 1);
+            _propertyProvider.JOGpoint.Rotation = new Vector3(180, 0, 0);
+            ///////////
+            Vector3[] testData = new Vector3[10000];
+            HashSet<Vector3> uniquePoints = new HashSet<Vector3>();
+
+            System.Random random = new System.Random();
+
+            for (int i = 0; i < 10000; i++)
+            {
+                Vector3 newPoint;
+                do
+                {
+                    float x = 1f + (float)random.NextDouble();
+                    float y = 1f + (float)random.NextDouble();
+                    float z = 1f + (float)random.NextDouble();
+                    newPoint = new Vector3(x, y, z);
+                }
+                while (uniquePoints.Contains(newPoint));
+
+                uniquePoints.Add(newPoint);
+                testData[i] = newPoint;
+            }
+            //////
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            for (int i = 0; i < 10000; i++)
+            {
+                InvKin.IKCalc(_propertyProvider.RP, testData[i], Quaternion.identity);
+            }
+            stopwatch.Stop();
+            UnityEngine.Debug.Log($"10000 —Ç–æ—á–µ–∫ IKCalc –≤—ã–ø–æ–ª–Ω–∏–ª—Å—è –∑–∞: {(double)stopwatch.ElapsedMilliseconds / Stopwatch.Frequency} —Å –∏–ª–∏ {stopwatch.ElapsedTicks} —Ç–∏–∫–æ–≤ ");
             SetJogMove();
         }
-        else if(_simManager.GetModeSim() == MODE.ANGLES_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
+        private void FixedUpdate()
         {
-            SetAngleMove();
-        }
-    }
-    //-- ÓÏ‡Ì‰‡ ÓÊË‰‡ÌËˇ--
-    public void RobotSetWait(WaitPropertyProvider cmd)
-    {
-        StartCoroutine(SetWait(cmd.Get()));
-    }
-    private IEnumerator SetWait(float time)
-    {
-        yield return new WaitForSeconds(time);
-        //_eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
-        CommandComplete = true;
-    }
-    //-- ÓÏ‡Ì‰‡ ËÁÏÂÌÂÌËˇ ÒÓÒÚÓˇÌËˇ ˝ÙÙÂÍÚÓ‡
-    public void RobotSetStateEndEffector(StateEndEffectorPropertyProvider cmd)
-    {
-        _propertyProvider.EndEffectorOn = cmd.Get();
-        //_eventBus.Invoke(new RobotEndMove { RoboID = _propertyProvider.Id });
-        CommandComplete = true;
-    }
-    //-- ÓÏ‡Ì‰‡ ÎËÌÂÈÌÓÂ ‰‚ËÊÂÌËÂ
-    public void RobotSetLinMove(LinearPointPropertyProvider point)
-    {
-        StartCoroutine(LinMove(point));
-    }
-    //--«‡‰‡Ú¸ ÔÓÁËˆË˛ ƒ∆Œ√‡
-    public void SetJogMove()
-    {
-        if (oldJOGposition != _propertyProvider.JOGpoint.LocalPosition || oldJOGrotation != _propertyProvider.JOGpoint.LocalRotationQ)
-        {
-            angles = InvKin.IKCalc(_propertyProvider.RP, _propertyProvider.JOGpoint.LocalPosition, _propertyProvider.JOGpoint.LocalRotationQ);
-            //‰Ó·‡‚ËÚ¸ ‡‚ÚÓ‚˚·Ó ÍÓÌÙË„Û‡ˆËË ËÎË Û˜ÌÓÈ ‚‚Ó‰
-            InvKin.CheckLimit(angles[0]);
-            if (InvKin.checkIsNaN(angles[0]))
+            if (_simManager.GetModeSim() == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
             {
-                ModifyRobot(_propertyProvider, angles[0].GetFloats());
-                angles[0].GetFloats().CopyTo(_propertyProvider.ChangeAngles, 0);
-                //_propertyProvider.XYZ = _propertyProvider.oldXYZ = EffectorPosition.Position;
-                //_propertyProvider.XYZRot = _propertyProvider.oldXYZRot = EffectorPosition.Rotation;
+                SetJogMove();
             }
-            oldJOGposition = _propertyProvider.JOGpoint.LocalPosition;
-            oldJOGrotation = _propertyProvider.JOGpoint.LocalRotationQ;
-
-        }
-
-    }
-    public void SetAngleMove()
-    {
-        if(!oldAngles.SequenceEqual(_propertyProvider.ChangeAngles))
-        ModifyRobot(_propertyProvider, _propertyProvider.ChangeAngles);
-        Point position = _propertyProvider.GetActualPosEffector();
-        _propertyProvider.JOGpoint.GlobalPosition = position.Position;
-        _propertyProvider.JOGpoint.GlobalRotationQ = position.Rotation;
-        _propertyProvider.ChangeAngles.CopyTo(oldAngles, 0);
-
-    }
-    //--Ã„ÌÓ‚ÂÌÌÓÂ ÔÂÂÏÂ˘ÂÌËÂ Í ÔÂÂ‰‡ÌÌÓÈ ÚÓ˜ÍÂ
-    private void TeleportToPoint(PickCommandSignal s)
-    {
-        if (_simManager.GetStatusSim() == SIM_STAT.STOP)
-        {
-            SceneObject obj = s.Point;
-            if (obj.Type == ObjectType.LinearMoveCommand && (ServiceManager.Current.Get<SceneObjectsManager>().Commands.GetSubProgram(obj.ParentId).ParentId == ID))
+            else if (_simManager.GetModeSim() == MODE.ANGLES_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
             {
-                if (s.Point.Type == ObjectType.LinearMoveCommand)
-                {
-                    TeleportToPoint((LinearPointPropertyProvider)s.Point.PropertyProvider);
-                }
+                SetAngleMove();
             }
-            /*else
-            {
-                if(obj.ParentId != null)
-                {
-                    if(obj.Type == ObjectType.LinearMoveCommand)
-                        obj = _sceneObjectsManager.Commands.GetSubProgram(obj.ParentId);
-                    else obj = _sceneObjectsManager.GetById(obj.ParentId);
-                }
-
-            }*/
-
-
         }
-    }
-    public void TeleportToPoint(LinearPointPropertyProvider p)
-    {
-        angles = InvKin.IKCalc(_propertyProvider.RP, GetPositionInfo(p).Position, GetPositionInfo(p).Rotation);
-        //¬˚·Ó ÍÓÌÙË„Û‡ˆËË ÚÓ˜ÍË
-        InvKin.CheckLimit(angles[0]);
-        if (InvKin.checkIsNaN(angles[0]))
+        //=================================== –ö–û–ú–ê–ù–î–´ ===================================//
+        public async Awaitable RobotSetWait(WaitPropertyProvider cmd)
         {
-            ModifyRobot(_propertyProvider, angles[0].GetFloats());
-            _propertyProvider.JOGpoint.LocalPosition = GetPositionInfo(p).Position;
-            _propertyProvider.JOGpoint.GlobalRotationQ = GetPositionInfo(p).Rotation;
-
+            await SetWait(cmd.Get());
         }
-    }
-    //--œÓÎÛ˜ËÚ¸ ÔÓÁËˆË˛ ÚÓ˜ÍË--
-    public Point GetPositionInfo(LinearPointPropertyProvider p)
-    {
-        Speed = p.Speed;
-        return new Point { Position = _propertyProvider.transform.InverseTransformPoint(p.Position), Rotation = p.transform.rotation, Speed = Speed };
-    }
-    public Point GetPositionInfo(Point p)
-    {
-        Speed = p.Speed;
-        return new Point { Position = _propertyProvider.transform.InverseTransformPoint(p.Position), Rotation = p.Rotation, Speed = Speed };
-    }
-    //-- ÓÛÚËÌ‡ ÎËÌÂÈÌÓ„Ó ‰‚ËÊÂÌËˇ--
-    IEnumerator LinMove(LinearPointPropertyProvider point)
-    {
-        Vector3 start = _propertyProvider.JOGpoint.LocalPosition; //_propertyProvider.XYZ;
-        Quaternion startRot = _propertyProvider.JOGpoint.LocalRotationQ; //_propertyProvider.XYZRot;
-        Quaternion endRot = GetPositionInfo(point).Rotation;
-        Vector3 currentXYZ = start;
-        Vector3 end = GetPositionInfo(point).Position;
-        Vector3 direction = (end - start).normalized;
-        Quaternion currentRot = Quaternion.identity;
-        float distance = Vector3.Distance(start, end);
-        float traveled = 0f;
-
-        ///time
-        float timeInWay = distance / Speed;
-        float timeCurrent = 0;
-        float timeCurrenScale = 0;
-        //—‰ÂÎ‡Ú¸ ÔÓ‚ÂÍÛ ÚÓ˜ÍË Ì‡ ‰ÓÒÚÂÊËÏÓÒÚ¸, ÂÒÎË ÚÓ˜Í‡ ÌÂ‰ÓÒÚÛÔÌ‡, ÚÓ ÌÂ ‚˚ÔÓÎÌˇÚ¸ ‰‚ËÊÂÌËÂ Ë ‚˚‰‡‚‡Ú¸ Ó¯Ë·ÍÛ
-
-        
-        while (traveled < distance)
+        private async Awaitable SetWait(float time)
         {
+            await Awaitable.WaitForSecondsAsync(time);
+        }
+        //--–ö–æ–º–∞–Ω–¥–∞ –∏–∑–º–µ–Ω–µ–Ω–∏—è —Å–æ—Å—Ç–æ—è–Ω–∏—è —ç—Ñ—Ñ–µ–∫—Ç–æ—Ä–∞
+        public async Awaitable RobotSetStateEndEffector(StateEndEffectorPropertyProvider cmd)
+        {
+            await Awaitable.FixedUpdateAsync();
+            _propertyProvider.EndEffectorOn = cmd.Get();
+        }
+        //--–ö–æ–º–∞–Ω–¥–∞ –ª–∏–Ω–µ–π–Ω–æ–µ –¥–≤–∏–∂–µ–Ω–∏–µ
+        //public async Awaitable RobotSetLinMove(LinearPointPropertyProvider point)
+        //{
+        //    UnityEngine.Debug.LogError("–õ–∏–Ω–µ–π–Ω–æ–µ –¥–≤–∏–∂–µ–Ω–∏–µ: –°—Ç–∞—Ä—Ç ");
 
-            //yield return new WaitUntil(()=>allowNextMove);
-            /*float t0 = MathF.Floor((traveled / distance) * 100f) / 100f;
+        //    Point Start = new(_propertyProvider.JOGpoint.Position, _propertyProvider.JOGpoint.LocalRotationQ);
+        //    Point End = new(GetPositionInfo(point).Position, GetPositionInfo(point).Rotation);
+        //    Point wayPoint = new(Start.Position, Start.Rotation);
+        //    Vector3 wayDirection = (End.Position - Start.Position).normalized;
+        //    float distance = Vector3.Distance(Start.Position, End.Position);
+        //    float traveled = 0f;
 
-            float s = ik.Curva(t0);
-            float g = Mathf.Min(1, distance - traveled);
-            
-            currentXYZ += direction * g;*/
-            timeCurrenScale = timeCurrent / timeInWay;
-            float positionInLine = SpeedCurve.Evaluate(timeCurrenScale) * distance;
-            float step = positionInLine - traveled;
-            currentXYZ += direction * step;
-            
-            // _propertyProvider.XYZRot = Quaternion.identity;
-            currentRot = Quaternion.Lerp(startRot, endRot, SpeedCurve.Evaluate(timeCurrenScale));
-            //UnityEngine.Debug.LogWarning("XYZ " + _propertyProvider.XYZRot.eulerAngles.y);
+        //    ///–≤—Ä–µ–º—è
+        //    float timeInWay = distance / Speed;
 
-            InvKin.Translate(currentXYZ, currentRot);
-            angles = InvKin.IKCalc(_propertyProvider.RP, _propertyProvider.JOGpoint.LocalPosition, _propertyProvider.JOGpoint.LocalRotationQ);
+        //    float timeCurrent = 0;
+        //    float timeCurrenScale = 0;
+        //    //–°–¥–µ–ª–∞—Ç—å –ø—Ä–æ–≤–µ—Ä–∫—É —Ç–æ—á–∫–∏ –Ω–∞ –¥–æ—Å—Ç–∏–∂–∏–º–æ—Å—Ç—å, –µ—Å–ª–∏ —Ç–æ—á–∫–∞ –Ω–µ–¥–æ—Å—Ç—É–ø–Ω–∞, —Ç–æ –Ω–µ –≤—ã–ø–æ–ª–Ω—è—Ç—å –¥–≤–∏–∂–µ–Ω–∏–µ –∏ –≤—ã–¥–∞–≤–∞—Ç—å –æ—à–∏–±–∫—É
+        //    if (Start.Position == End.Position)
+        //    {
+        //        float angle = (Quaternion.Angle(Start.Rotation, End.Rotation));
+        //        Vector3 ang1 = Start.Rotation.eulerAngles;
+        //        Vector3 ang2 = End.Rotation.eulerAngles;
+        //        timeInWay = (Quaternion.Angle(Start.Rotation, End.Rotation)) / point.AngleSpeed;
+        //    }
+        //    while (End.Position != wayPoint.Position || (Quaternion.Angle(wayPoint.Rotation, End.Rotation) > 0.001))
+        //    {
+        //        if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+        //        timeCurrenScale = timeCurrent / timeInWay;
+        //        if (timeCurrenScale > 1) timeCurrenScale = 1;
+        //        float positionInLine = SpeedCurve.Evaluate(timeCurrenScale) * distance;
+        //        float step = positionInLine - traveled;
+        //        wayPoint.Position += wayDirection * step;
 
-            //ik.CalculateInverseKinematics();
-            //CheckAngle();
+        //        wayPoint.Rotation = Quaternion.SlerpUnclamped(Start.Rotation, End.Rotation, SpeedCurve.Evaluate(timeCurrenScale));
+        //        angles = InvKin.IKCalc(_propertyProvider.RP, wayPoint.Position, wayPoint.Rotation);
 
-            traveled = positionInLine;
+        //        traveled = positionInLine;
+
+        //        //–í—ã–±–æ—Ä –∫–æ–Ω—Ñ–∏–≥—É—Ä–∞—Ü–∏–∏ —Ç–æ—á–∫–∏
+        //        InvKin.CheckLimit(angles[0]);
+        //        if (InvKin.checkIsNaN(angles[0]))
+        //        {
+        //            ModifyRobot(_propertyProvider, angles[0].GetFloats());
+        //            SetJogPosition(wayPoint);
+
+        //            timeCurrent += Time.deltaTime;
+        //            await Awaitable.FixedUpdateAsync();
+        //            //yield return new WaitForSeconds(Time.fixedDeltaTime);
+        //        }
+
+        //    }
+        //    //CommandComplete = true;
+        //    return;
+        //}
+        public async Awaitable RobotSetLinMove(LinearPointPropertyProvider point)
+        {
+            UnityEngine.Debug.LogError("–õ–∏–Ω–µ–π–Ω–æ–µ –¥–≤–∏–∂–µ–Ω–∏–µ: –°—Ç–∞—Ä—Ç ");
+
+            Point Start = new(_propertyProvider.JOGpoint.Position, _propertyProvider.JOGpoint.LocalRotationQ);
+            Point End = new(GetPositionInfo(point).Position, GetPositionInfo(point).Rotation);
+
+            Point wayPoint = new(Start.Position, Start.Rotation);
+            Vector3 wayDirection = (End.Position - Start.Position).normalized;
+            float distance = Vector3.Distance(Start.Position, End.Position);
+            Quaternion rotateDirect;
+            bool isTriangularProfile = false;
+            bool onlyRotate = false;
+            //–≤—Ä–µ–º–µ–Ω–Ω—ã–µ
+            float LinAcceler = point.LinAcceler;
+            float LinBrake = point.LinBrake;
+            float AngleAcceler = point.AngleAcceler;
+            float AngleBreak = point.AngleBrake;
+            float AngleSpeed = point.AngleSpeed;
+            float LinearSpeed = point.LinearSpeed;
+            float vMax = 0;
+            //–≤—Ä–µ–º–µ–Ω–Ω—ã–µ
+            float currentTimeMove = 0;
+            float currentWay = 0;
+            float Angle = 0;
             //
-            //¬˚·Ó ÍÓÌÙË„Û‡ˆËË ÚÓ˜ÍË
-            InvKin.CheckLimit(angles[0]);
-            if (InvKin.checkIsNaN(angles[0]))
+            float tAc—Åeler = 0;
+            float tBrake = 0;
+            float sAc—Åeler = 0;
+            float sBrake = 0;
+            float sLinear = 0;
+            float tLinear = 0;
+
+            //—Ä–∞–≤–Ω–æ—É—Å–∫–æ—Ä–µ–Ω–Ω–æ–µ –≤—Ä–∞—â–µ–Ω–∏–µ
+            if (Vector3.Distance(End.Position, Start.Position) < 0.001)
             {
-                ModifyRobot(_propertyProvider, angles[0].GetFloats());
+                onlyRotate = true;
+                Angle = Quaternion.Angle(Start.Rotation, End.Rotation);
+                tAc—Åeler = AngleSpeed / AngleAcceler;
+                tBrake = AngleSpeed / AngleBreak;
+                sAc—Åeler = (AngleAcceler * tAc—Åeler * tAc—Åeler) / 2;
+                sBrake = (AngleBreak * tBrake * tBrake) / 2;
+                //—Ç—Ä–∞–Ω–≥—É–ª—è—Ä–Ω–∞—è —Å–∫–æ—Ä–æ—Å—Ç—å
+                if ((sAc—Åeler + sBrake) > Angle)
+                {
+                    isTriangularProfile = true;
+                    vMax = Mathf.Sqrt(Angle / ((1 / (2 * AngleAcceler)) + (1 / (2 * AngleBreak))));
+                    tAc—Åeler = vMax / AngleAcceler;
+                    tBrake = vMax / AngleBreak;
+                    sAc—Åeler = (AngleAcceler * tAc—Åeler * tAc—Åeler) / 2;
+                    sBrake = (AngleBreak * tBrake * tBrake) / 2;
+                }
+                //—Ç—Ä–∞–ø–µ—Ü–∏–≤–∏–¥–Ω–∞—è —Å–∫–æ—Ä–æ—Å—Ç—å
+                else
+                {
+                    sLinear = Angle - (sAc—Åeler + sBrake);
+                    tLinear = sLinear / AngleSpeed;
+                }
+            }
+            else
+            {
+                tAc—Åeler = LinearSpeed / LinAcceler;
+                tBrake = LinearSpeed / LinBrake;
+                sAc—Åeler = (LinAcceler * tAc—Åeler * tAc—Åeler) / 2;
+                sBrake = (LinBrake * tBrake * tBrake) / 2;
+                //—Ç—Ä–∏–∞–Ω–≥—É–ª—è—Ä–Ω–∞—è —Å–∫–æ—Ä–æ—Å—Ç—å
+                if ((sAc—Åeler + sBrake) > distance)
+                {
+                    isTriangularProfile = true;
+                    vMax = Mathf.Sqrt(distance / ((1 / (2 * LinAcceler)) + (1 / (2 * LinBrake))));
+                    tAc—Åeler = vMax / LinAcceler;
+                    tBrake = vMax / LinBrake;
+                    sAc—Åeler = (LinAcceler * tAc—Åeler * tAc—Åeler) / 2;
+                    sBrake = (LinBrake * tBrake * tBrake) / 2;
+                }
+                //—Ç—Ä–∞–ø–µ—Ü–∏–≤–∏–¥–Ω–∞—è —Å–∫–æ—Ä–æ—Å—Ç—å
+                else
+                {
+                    sLinear = distance - (sAc—Åeler + sBrake);
+                    tLinear = sLinear / LinearSpeed;
+                }
+            }
+
+
+            //–°–¥–µ–ª–∞—Ç—å –ø—Ä–æ–≤–µ—Ä–∫—É —Ç–æ—á–∫–∏ –Ω–∞ –¥–æ—Å—Ç–∏–∂–∏–º–æ—Å—Ç—å, –µ—Å–ª–∏ —Ç–æ—á–∫–∞ –Ω–µ–¥–æ—Å—Ç—É–ø–Ω–∞, —Ç–æ –Ω–µ –≤—ã–ø–æ–ª–Ω—è—Ç—å –¥–≤–∏–∂–µ–Ω–∏–µ –∏ –≤—ã–¥–∞–≤–∞—Ç—å –æ—à–∏–±–∫—É
+
+            while (/*End.Position != wayPoint.Position*/Vector3.Distance(End.Position, wayPoint.Position) > 0.001 || (Quaternion.Angle(wayPoint.Rotation, End.Rotation) > 0.001))
+            {
+                if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                //—Ç—Ä–∞–ø–µ—Ü–∏—è
+                if (!isTriangularProfile && !onlyRotate)
+                {
+                    if (currentTimeMove < tAc—Åeler)
+                    {
+                        currentWay = (LinAcceler * currentTimeMove * currentTimeMove) / 2;
+
+                    }
+                    else if ((currentTimeMove >= tAc—Åeler) && (currentTimeMove <= tAc—Åeler + tLinear))
+                    {
+                        currentWay = sAc—Åeler + LinearSpeed * (currentTimeMove - tAc—Åeler);
+                    }
+                    else if (currentTimeMove > tAc—Åeler + tLinear)
+                    {
+                        float t_brake = currentTimeMove - (tAc—Åeler + tLinear);
+                        currentWay = sAc—Åeler + sLinear + (LinearSpeed * t_brake - (LinBrake * t_brake * t_brake) / 2);
+
+                    }
+                    wayPoint.Position = Start.Position + (wayDirection * currentWay);
+                    wayPoint.Rotation = Quaternion.Lerp(Start.Rotation, End.Rotation, currentWay / distance);
+                }
+                //—Ç—Ä–µ—É–≥–æ–ª—å–Ω–∏–∫
+                else if (isTriangularProfile && !onlyRotate)
+                {
+                    if (currentTimeMove <= tAc—Åeler)
+                    {
+                        currentWay = (LinAcceler * currentTimeMove * currentTimeMove) / 2;
+
+                    }
+                    else if (currentTimeMove > tAc—Åeler)
+                    {
+                        float t_brake = currentTimeMove - tAc—Åeler;
+                        currentWay = sAc—Åeler + (vMax * t_brake - (LinBrake * t_brake * t_brake) / 2);
+
+                    }
+                    wayPoint.Position = Start.Position + (wayDirection * currentWay);
+                    wayPoint.Rotation = Quaternion.Lerp(Start.Rotation, End.Rotation, currentWay / distance);
+                }
+                //—Ç–æ—á–∫–∞
+                else
+                {
+                    if (!isTriangularProfile)
+                    {
+                        if (currentTimeMove < tAc—Åeler)
+                        {
+                            currentWay = (AngleAcceler * currentTimeMove * currentTimeMove) / 2;
+
+                        }
+                        else if ((currentTimeMove >= tAc—Åeler) && (currentTimeMove <= tAc—Åeler + tLinear))
+                        {
+                            currentWay = sAc—Åeler + AngleSpeed * (currentTimeMove - tAc—Åeler);
+                        }
+                        else if (currentTimeMove > tAc—Åeler + tLinear)
+                        {
+                            float t_brake = currentTimeMove - (tAc—Åeler + tLinear);
+                            currentWay = sAc—Åeler + sLinear + (AngleSpeed * t_brake - (AngleBreak * t_brake * t_brake) / 2);
+
+                        }
+                        wayPoint.Rotation = Quaternion.Lerp(Start.Rotation, End.Rotation, currentWay / Angle);
+                    }
+                    else
+                    {
+                        if (currentTimeMove <= tAc—Åeler)
+                        {
+                            currentWay = (AngleAcceler * currentTimeMove * currentTimeMove) / 2;
+
+                        }
+                        else if (currentTimeMove > tAc—Åeler)
+                        {
+                            float t_brake = currentTimeMove - tAc—Åeler;
+                            currentWay = sAc—Åeler + (vMax * t_brake - (AngleBreak * t_brake * t_brake) / 2);
+
+                        }
+                        wayPoint.Rotation = Quaternion.Lerp(Start.Rotation, End.Rotation, currentWay / Angle);
+                    }
+                }
+                
+                angles = InvKin.IKCalc(_propertyProvider.RP, wayPoint.Position, wayPoint.Rotation);
+                
+
+                //–í—ã–±–æ—Ä –∫–æ–Ω—Ñ–∏–≥—É—Ä–∞—Ü–∏–∏ —Ç–æ—á–∫–∏
+                InvKin.CheckLimit(angles[0]);
+                if (InvKin.checkIsNaN(angles[0]))
+                {
+                    stopwatch.Stop();
+                    long freq = Stopwatch.Frequency;
+                    UnityEngine.Debug.Log($"–ú–µ—Ç–æ–¥ IKCalc –≤—ã–ø–æ–ª–Ω–∏–ª—Å—è –∑–∞: {(double)stopwatch.ElapsedMilliseconds/freq} —Å");
+                    UnityEngine.Debug.Log($"–ò–ª–∏ –≤ —Ç–∏–∫–∞—Ö: {stopwatch.ElapsedTicks}");
+                    ModifyRobot(_propertyProvider, angles[0].GetFloats());
+                    SetJogPosition(wayPoint);
+
+                    currentTimeMove += Time.deltaTime;
+                    await Awaitable.FixedUpdateAsync();
+                    //yield return new WaitForSeconds(Time.fixedDeltaTime);
+                }
+                else
+                {
+                    await Awaitable.FixedUpdateAsync();
+                    UnityEngine.Debug.LogError("–û—à–∏–±–∫–∞ –ª–∏–Ω–µ–π–Ω–æ–≥–æ –¥–≤–∏–∂–µ–Ω–∏—è");
+                }
 
             }
-           // _propertyProvider.XYZ = currentXYZ;
-            //_propertyProvider.XYZRot = currentRot;
-            _propertyProvider.JOGpoint.LocalPosition = currentXYZ;
-            _propertyProvider.JOGpoint.LocalRotationQ = currentRot;
-
-            //timeCurrent += Time.fixedDeltaTime;
-            timeCurrent += Time.deltaTime;
-            //yield return new WaitForSeconds((1f/Speed*s)/1000f);
-            yield return new WaitForSeconds(Time.fixedDeltaTime);
+            //CommandComplete = true;
+            return;
         }
-        //XYZRot = XYZBuf;
-       /* _propertyProvider.oldXYZ = end;
-        _propertyProvider.oldXYZRot = currentXYZRot;//ËÁÏ Ì‡Á‚‡ÌËÂ
-
-        _propertyProvider.XYZ = end;
-        _propertyProvider.XYZRot = currentXYZRot;//ËÁÏ Ì‡Á‚‡ÌËÂ*/
-
-        //SyncJogPos();
-        CommandComplete = true;
-    }
-    //--œÂÂÏÂ˘‡ÂÚ ÚÓ˜ÍÛ JOG ‚ ÔÓÁËˆË˛ ˝ÙÙÂÍÚÓ‡, ËÒÔÓÎ¸ÁÛÂÚÒˇ ‰Îˇ ÒËÌıÓÌËÁ‡ˆËË ÔÓÁËˆËË ÚÓ˜ÍË JOG--
-    public void SyncJogPos(Point point)
-    {
-        _propertyProvider.JOGpoint.LocalPosition = point.Position;
-        _propertyProvider.JOGpoint.LocalRotationQ = point.Rotation;
-    }
-    //--»ÁÏÂÌËÚ¸ ÔÓÁËˆË˛ ÏÓ‰ÂÎË Ó·ÓÚ‡--
-    public void ModifyRobot(RobotPropertyProvider _propertyProvider, float[] ang)
-    {
-        _propertyProvider.J1Angle = ang[0];
-        _propertyProvider.J2Angle = ang[1];
-        _propertyProvider.J3Angle = ang[2];
-        _propertyProvider.J4Angle = ang[3];
-        _propertyProvider.J5Angle = ang[4];
-        _propertyProvider.J6Angle = ang[5];
-    }
-    //--¬˚ÔÓÎÌËÚ¸ ÔÓ‰ÔÓ„‡ÏÏÛ (Á‡‰‡˜Û)--
-    public void RunSubProgramm(RobotProgrammElement RPE)
-    {
-      StartCoroutine(Run(RPE));
-    }
-    //-- ÓÛÚËÌ‡ ‚˚ÔÓÎÌÂÌËÂ ÔÓ‰ÔÓ„‡ÏÏ˚ (Á‡‰‡˜Ë)--
-    public IEnumerator Run(RobotProgrammElement RPE)
-    {
-        SubProgramm sub;
-        if (RPE != null && RPE.TypeComand == ENUM_COMMANDS.SUBPROGRAMM)
+        /// <summary>
+        /// —Ä–∞—Å—á–µ—Ç –ø–∞—Ä–∞–º–µ—Ç—Ä–æ–≤ —Ä–∞–≤–Ω–æ—É—Å–∫–æ—Ä–µ–Ω–Ω–æ–≥–æ –¥–≤–∏–∂–µ–Ω–∏—è, —Ç—Ä–∞–ø–µ—Ü–∏—è –∏ —Ç—Ä–µ—É–≥–æ–ª—å–Ω–∏–∫
+        /// </summary>
+        /// <param name="LinearSpeed"></param>
+        /// <param name="LinAcceler"></param>
+        /// <param name="LinBrake"></param>
+        /// <param name="distance"></param>
+        public (float tAc—Åeler, float sAc—Åeler, float tBrake, float sBrake, float tLinear, float sLinear, float vMax, int DirectRoteate, bool isTriangularProfile)
+            –°alc(float LinearSpeed, float LinAcceler, float LinBrake, float distance, int direct)
         {
-            sub = RPE as SubProgramm;
-            foreach (var element in sub.ProgrammElement)
+            float tAc—Åeler = LinearSpeed / LinAcceler;
+            float tBrake = LinearSpeed / LinBrake;
+            float sAc—Åeler = (LinAcceler * tAc—Åeler * tAc—Åeler) / 2;
+            float sBrake = (LinBrake * tBrake * tBrake) / 2;
+            float sLinear = 0;
+            float tLinear = 0;
+            float vMax = LinearSpeed;
+            int DirectRoteate = direct;
+            bool isTriangularProfile = false;
+            //—Ç—Ä–∞–Ω–≥—É–ª—è—Ä–Ω–∞—è —Å–∫–æ—Ä–æ—Å—Ç—å
+            if ((sAc—Åeler + sBrake) > Mathf.Abs(distance))
             {
-                yield return new WaitUntil(() => CommandComplete && _simManager.GetStatusSim() == SIM_STAT.PLAY);
-                CommandComplete = false;
-                element.Execute(this);
+                isTriangularProfile = true;
+                vMax = Mathf.Sqrt(Mathf.Abs(distance) / ((1 / (2 * LinAcceler)) + (1 / (2 * LinBrake))));
+                if (Mathf.Abs(distance) <= 1e-6f)
+                {
+                    vMax = 0f;
+                }
+                tAc—Åeler = vMax / LinAcceler;
+                tBrake = vMax / LinBrake;
+                sAc—Åeler = (LinAcceler * tAc—Åeler * tAc—Åeler) / 2;
+                sBrake = (LinBrake * tBrake * tBrake) / 2;
+            }
+            //—Ç—Ä–∞–ø–µ—Ü–∏–≤–∏–¥–Ω–∞—è —Å–∫–æ—Ä–æ—Å—Ç—å
+            else
+            {
+                sLinear = Mathf.Abs(distance) - (sAc—Åeler + sBrake);
+                tLinear = sLinear / LinearSpeed;
+            }
+            return (tAc—Åeler, sAc—Åeler, tBrake, sBrake, tLinear, sLinear, vMax, DirectRoteate, isTriangularProfile);
+        }
+
+        public async Awaitable RobotSetPTPMove(LinearPointPropertyProvider point)
+        {
+            //–ø–∞—Ä–∞–º–µ—Ç—Ä—ã –¥–≤–∏–∂–µ–Ω–∏—è
+            Angles AngleAcceler = _propertyProvider.AngleAcceler;
+            Angles AngleBrake = _propertyProvider.AngleBrake;
+            float percent = point.SpeedPercent;
+            Angles AnglesSpeed = new(_propertyProvider.AnglesSpeedLimit.PercentAngles(percent));
+            //–ø–∞—Ä–∞–º–µ—Ç—Ä—ã –¥–≤–∏–∂–µ–Ω–∏—è
+            UnityEngine.Debug.LogError("PTP –¥–≤–∏–∂–µ–Ω–∏–µ: –°—Ç–∞—Ä—Ç ");
+            float CurrentTimeMove = 0;
+            Point End = new(GetPositionInfo(point).Position, GetPositionInfo(point).Rotation);
+
+            Angles EndAngles = InvKin.IKCalc(_propertyProvider.RP, End.Position, End.Rotation)[0];
+            Angles CurrentAngles = new(_propertyProvider.J1Angle, _propertyProvider.J2Angle, _propertyProvider.J3Angle, _propertyProvider.J4Angle, _propertyProvider.J5Angle, _propertyProvider.J6Angle);
+            Angles StartAngles = new(_propertyProvider.J1Angle, _propertyProvider.J2Angle, _propertyProvider.J3Angle, _propertyProvider.J4Angle, _propertyProvider.J5Angle, _propertyProvider.J6Angle);
+            Angles Distance = new();
+            List<(float tAc—Åeler, float sAc—Åeler, float tBrake, float sBrake, float tLinear, float sLinear, float vMax, int DirectRoteate, bool isTriangularProfile)> ListParameters = new();
+            (float LongTime, int LongThetha) = (float.NegativeInfinity, -1);
+            for (int i = 0; i < 6; i++)
+            {
+                Distance.SetThetha(i, EndAngles.GetThetha(i) - StartAngles.GetThetha(i));
+                int Direct = 0;
+                if (Distance.GetThetha(i) > 0)
+                {
+                    Direct = 1;
+                }
+                else
+                {
+                    Direct = -1;
+                }
+                //—Ä–∞—Å—á–µ—Ç –ø–∞—Ä–∞–º–µ—Ç—Ä–æ–≤ –¥–ª—è –∫–∞–∂–¥–æ–π –æ—Å–∏
+                ListParameters.Add(–°alc(AnglesSpeed.GetThetha(i), AngleAcceler.GetThetha(i), AngleBrake.GetThetha(i), Distance.GetThetha(i), Direct));
+
+                var x = ListParameters[i];
+                if (LongTime < x.tLinear + x.tBrake + x.tAc—Åeler)
+                {
+                    LongTime = x.tLinear + x.tBrake + x.tAc—Åeler;
+                    LongThetha = i;
+                }
+            }
+
+            while (CurrentAngles.Diff(EndAngles) > 0.001f)
+            {
+                if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                await Awaitable.FixedUpdateAsync();
+                CurrentTimeMove += Time.deltaTime;
+                if (!ListParameters[LongThetha].isTriangularProfile)
+                {
+                    if (CurrentTimeMove < ListParameters[LongThetha].tAc—Åeler)
+                    {
+                        CurrentAngles.SetThetha(LongThetha, StartAngles.GetThetha(LongThetha) + ListParameters[LongThetha].DirectRoteate * (AngleAcceler.GetThetha(LongThetha) * CurrentTimeMove * CurrentTimeMove) / 2);
+                    }
+                    else if ((CurrentTimeMove >= ListParameters[LongThetha].tAc—Åeler) && (CurrentTimeMove <= ListParameters[LongThetha].tAc—Åeler + ListParameters[LongThetha].tLinear))
+                    {
+                        CurrentAngles.SetThetha(LongThetha, StartAngles.GetThetha(LongThetha) + ListParameters[LongThetha].DirectRoteate * (ListParameters[LongThetha].sAc—Åeler + ((CurrentTimeMove - ListParameters[LongThetha].tAc—Åeler) * AnglesSpeed.GetThetha(LongThetha))));
+                    }
+                    else
+                    {
+                        float t_brake = CurrentTimeMove - (ListParameters[LongThetha].tAc—Åeler + ListParameters[LongThetha].tLinear);
+                        CurrentAngles.SetThetha(LongThetha, StartAngles.GetThetha(LongThetha) + ListParameters[LongThetha].DirectRoteate * (ListParameters[LongThetha].sAc—Åeler + ListParameters[LongThetha].sLinear + (ListParameters[LongThetha].vMax * t_brake - (AngleBrake.GetThetha(LongThetha) * t_brake * t_brake) / 2)));
+                    }
+                }
+                else
+                {
+                    if (CurrentTimeMove < ListParameters[LongThetha].tAc—Åeler)
+                    {
+                        CurrentAngles.SetThetha(LongThetha, StartAngles.GetThetha(LongThetha) + ListParameters[LongThetha].DirectRoteate * (AngleAcceler.GetThetha(LongThetha) * CurrentTimeMove * CurrentTimeMove) / 2);
+                    }
+                    else
+                    {
+                        float t_brake = CurrentTimeMove - (ListParameters[LongThetha].tAc—Åeler);
+                        CurrentAngles.SetThetha(LongThetha, StartAngles.GetThetha(LongThetha) + ListParameters[LongThetha].DirectRoteate * (ListParameters[LongThetha].sAc—Åeler + (ListParameters[LongThetha].vMax * t_brake - (AngleBrake.GetThetha(LongThetha) * t_brake * t_brake) / 2)));
+                    }
+                }
+
+                float percentMove = MathF.Abs((CurrentAngles.GetThetha(LongThetha) - StartAngles.GetThetha(LongThetha)) / Mathf.Abs(Distance.GetThetha(LongThetha)));
+                for (int i = 0; i < 6; i++)
+                {
+                    if (i != LongThetha)
+                    {
+                        CurrentAngles.SetThetha(i, StartAngles.GetThetha(i) + ListParameters[i].DirectRoteate * (Mathf.Abs(Distance.GetThetha(i)) * percentMove));
+                    }
+                }
+                _propertyProvider.J1Angle = CurrentAngles.thetha1;
+                _propertyProvider.J2Angle = CurrentAngles.thetha2;
+                _propertyProvider.J3Angle = CurrentAngles.thetha3;
+                _propertyProvider.J4Angle = CurrentAngles.thetha4;
+                _propertyProvider.J5Angle = CurrentAngles.thetha5;
+                _propertyProvider.J6Angle = CurrentAngles.thetha6;
+                SetJogPosition(GetPositionInfo(_propertyProvider._forwarKinObj.Pos));
+            }
+
+        }
+        //=================================== –ö–û–ú–ê–ù–î–´ ===================================//
+        //--–ó–∞–¥–∞—Ç—å –ø–æ–∑–∏—Ü–∏—é –î–ñ–û–ì–∞
+        public void SetJogMove()
+        {
+            if (oldJOGposition != _propertyProvider.JOGpoint.Position || oldJOGrotation != _propertyProvider.JOGpoint.LocalRotationQ)
+            {
+                angles = InvKin.IKCalc(_propertyProvider.RP, _propertyProvider.JOGpoint.Position, _propertyProvider.JOGpoint.LocalRotationQ);
+                //–¥–æ–±–∞–≤–∏—Ç—å –∞–≤—Ç–æ–≤—ã–±–æ—Ä –∫–æ–Ω—Ñ–∏–≥—É—Ä–∞—Ü–∏–∏ –∏–ª–∏ —Ä—É—á–Ω–æ–π –≤–≤–æ–¥
+                InvKin.CheckLimit(angles[0]);
+                if (InvKin.checkIsNaN(angles[0]))
+                {
+                    ModifyRobot(_propertyProvider, angles[0].GetFloats());
+                    angles[0].GetFloats().CopyTo(_propertyProvider.ChangeAngles, 0);
+                    //_propertyProvider.XYZ = _propertyProvider.oldXYZ = EffectorPosition.Position;
+                    //_propertyProvider.XYZRot = _propertyProvider.oldXYZRot = EffectorPosition.Rotation;
+                }
+                oldJOGposition = _propertyProvider.JOGpoint.Position;
+                oldJOGrotation = _propertyProvider.JOGpoint.LocalRotationQ;
 
             }
-            _propertyProvider.RobotController.RunTask = false;
-        }
-        else
-        {
-            Debug.LogError("Œ¯Ë·Í‡: ÔÂÂ‰‡ÌÌ˚È ˝ÎÂÏÂÌÚ ÌÂ ˇ‚ÎˇÂÚÒˇ ÔÓ‰ÔÓ„‡ÏÏÓÈ.");
-        }
-    }
-    public void StopSim(StopProgramm s)
-    {
-        StopAllCoroutines();
-        RunTask = false;
-        CommandComplete = true;
-    }
 
-    /// <summary>
-    /// ÔÓÎÛ˜ÂÌËÂ ‰ÂÂ‚‡ ÔÓ„‡ÏÏ˚
-    /// </summary>
-    public List<RobotProgrammElement> Programm
-    {
-        get
-        {
-            var a = BuildTreeInternal(ID);
-            return a;
         }
-    }
-
-    private List<RobotProgrammElement> BuildTreeInternal(string parentId)
-    {
-        List<RobotProgrammElement> programm = new();
-        List<RobotProgramObject> itemsDict = _sceneObjectManager.Commands.GetSubPrograms(parentId);
-        if (itemsDict == null) return null;
-        foreach (var item in itemsDict)
+        public void SetAngleMove()
         {
-            var subProgram = new SubProgramm(new List<RobotProgrammElement>(), ENUM_COMMANDS.SUBPROGRAMM, item.Id);
-            foreach (var item2 in item.Items)
+            if (!oldAngles.SequenceEqual(_propertyProvider.ChangeAngles))
             {
-                ConvertToRobotProgrammElement(item2, subProgram.ProgrammElement);
+                _propertyProvider.ChangeAngles = InvKin.CheckLimit(_propertyProvider.ChangeAngles);
+                ModifyRobot(_propertyProvider, _propertyProvider.ChangeAngles);
+                Point position = _propertyProvider.GetActualPosEffector();
+                _propertyProvider.JOGpoint.GlobalPosition = position.Position;
+                _propertyProvider.JOGpoint.GlobalRotationQ = position.Rotation;
+                _propertyProvider.ChangeAngles.CopyTo(oldAngles, 0);
             }
-            programm.Add(subProgram);
         }
-        return programm;
-    }
+        //--–í—ã–ø–æ–ª–Ω–∏—Ç—å –ø–æ–¥–ø—Ä–æ–≥—Ä–∞–º–º—É (–∑–∞–¥–∞—á—É)--
+        public void RunSubProgramm(string IDTaskToRun)
+        {
 
-    private void ConvertToRobotProgrammElement(CommandObject obj, List<RobotProgrammElement> programm)
-    {
-        if (obj.Type == ObjectType.LinearMoveCommand)
-        {
-            var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
-            programm.Add(command);
+            try
+            {
+                //Programm = BuildProgramm(ID);
+                //SubProgramm Task = Programm.FirstOrDefault(x => x.ID == IDTaskToRun);
+                RunTask = true;
+                _ = Run(Programm.FirstOrDefault(x => x.ID == IDTaskToRun));
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogWarning($"–ü–æ–¥–ø—Ä–æ–≥—Ä–∞–º–º–∞ —Å ID '{ID}' –¥–ª—è —Ä–æ–±–æ—Ç–∞ {IDTaskToRun} –æ—à–∏–±–∫–∞: {ex}");
+            }
+
+
         }
-        else if (obj.Type == ObjectType.StateEndEffectorCommand)
+        //--–ö–æ—Ä—É—Ç–∏–Ω–∞ –≤—ã–ø–æ–ª–Ω–µ–Ω–∏–µ –ø–æ–¥–ø—Ä–æ–≥—Ä–∞–º–º—ã (–∑–∞–¥–∞—á–∏)--
+        async Awaitable Run(SubProgramm Task)
         {
-            var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
-            programm.Add(command);
+            foreach (var comand in Task.ProgrammElement)
+            {
+                if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                while (!(_simManager.GetStatusSim() == SIM_STAT.PLAY))
+                {
+                    if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                    await Awaitable.FixedUpdateAsync();
+                }
+                //await Awaitable.FixedUpdateAsync();
+                //CommandComplete = false;
+                await comand.Execute(this);
+
+            }
+            UnityEngine.Debug.LogWarning("–ó–∞–¥–∞—á–∞ –∑–∞–≤–µ—Ä—à–µ–Ω–∞");
+            ////final
+            RunTask = false;
+
         }
-        else if (obj.Type == ObjectType.WaitCommand)
+        public void StopSim(StopProgramm s)
         {
-            var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
-            programm.Add(command);
+            //tokenTask.Cancel();
+            //tokenTask.Dispose();
+            RunTask = false;
+            CommandComplete = true;
+        }
+
+        /// <summary>
+        /// –ø–æ–ª—É—á–µ–Ω–∏–µ –¥–µ—Ä–µ–≤–∞ –ø—Ä–æ–≥—Ä–∞–º–º—ã
+        /// </summary>
+        //public List<RobotProgrammElement> Programm
+        //{
+        //    get
+        //    {
+        //        var a = BuildTreeInternal(ID);
+        //        return a;
+        //    }
+        //}
+
+        public List<SubProgramm> GetProgramm()
+        {
+            return BuildProgramm(ID);
+        }
+        private List<SubProgramm> BuildProgramm(string parentId)
+        {
+            List<SubProgramm> programm = new();
+            List<RobotProgramObject> Tasks = _sceneObjectManager.Commands.GetSubPrograms(parentId);
+
+            foreach (var item in Tasks)
+            {
+                SubProgramm Task = new(new List<RobotProgrammElement>(), ENUM_COMMANDS.SUBPROGRAMM, item.Id);
+                var Commands = _sceneObjectManager.Commands.GetCommandsFromSubProgram(parentId, item.Id);
+                foreach (var command in Commands)
+                {
+                    ConvertToRobotProgrammElement(command, Task.ProgrammElement);
+                }
+                programm.Add(Task);
+            }
+            return programm;
+        }
+
+        private void ConvertToRobotProgrammElement(CommandObject obj, List<RobotProgrammElement> programm)
+        {
+            if (obj.Type == ObjectType.LinearMoveCommand)
+            {
+                var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
+                programm.Add(command);
+            }
+            else if (obj.Type == ObjectType.StateEndEffectorCommand)
+            {
+                var command = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
+                programm.Add(command);
+            }
+            else if (obj.Type == ObjectType.WaitCommand)
+            {
+                var command = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
+                programm.Add(command);
+            }
+        }
+        void ControllerResetState(RobotsControllerResetState s)
+        {
+            CommandComplete = true;
+            Programm = null;
+            Programm = BuildProgramm(ID);
+        }
+        //--–ú–≥–Ω–æ–≤–µ–Ω–Ω–æ–µ –ø–µ—Ä–µ–º–µ—â–µ–Ω–∏–µ –∫ –ø–µ—Ä–µ–¥–∞–Ω–Ω–æ–π —Ç–æ—á–∫–µ
+        private void TeleportToPoint(PickCommandSignal s)
+        {
+            if (_simManager.GetStatusSim() == SIM_STAT.STOP)
+            {
+                SceneObject obj = s.Point;
+                if (obj.Type == ObjectType.LinearMoveCommand && (ServiceManager.Current.Get<SceneObjectsManager>().Commands.GetSubProgram(obj.ParentId).ParentId == ID))
+                {
+                    if (s.Point.Type == ObjectType.LinearMoveCommand)
+                    {
+
+                        LinearPointPropertyProvider LPPP = (LinearPointPropertyProvider)s.Point.PropertyProvider;
+                        angles = InvKin.IKCalc(_propertyProvider.RP, GetPositionInfo(LPPP));
+                        //–í—ã–±–æ—Ä –∫–æ–Ω—Ñ–∏–≥—É—Ä–∞—Ü–∏–∏ —Ç–æ—á–∫–∏
+                        InvKin.CheckLimit(angles[0]);
+                        if (InvKin.checkIsNaN(angles[0]))
+                        {
+                            ModifyRobot(_propertyProvider, angles[0].GetFloats());
+                            _propertyProvider.JOGpoint.Position = GetPositionInfo(LPPP).Position;
+                            _propertyProvider.JOGpoint.GlobalRotationQ = GetPositionInfo(LPPP).Rotation;
+
+                        }
+                    }
+                }
+
+            }
+        }
+        public void TeleportToPoint(LinearPointPropertyProvider p)
+        {
+
+        }
+        //--–ü–æ–ª—É—á–∏—Ç—å –ø–æ–∑–∏—Ü–∏—é —Ç–æ—á–∫–∏--
+        public Point GetPositionInfo(LinearPointPropertyProvider p)
+        {
+            Speed = p.LinearSpeed;
+            return new Point { Position = _propertyProvider.transform.InverseTransformPoint(p.Position), Rotation = p.transform.localRotation, Speed = Speed };
+        }
+        public Point GetPositionInfo(Point p)
+        {
+            Speed = p.Speed;
+            return new Point { Position = _propertyProvider.transform.InverseTransformPoint(p.Position), Rotation = p.Rotation, Speed = Speed };
+        }
+
+        /// <summary>
+        /// –∑–∞–¥–∞—Ç—å –ø–æ–∑–∏—Ü–∏—é –¥–∂–æ–≥–∞
+        /// </summary>
+        /// <param name="point"></param>
+        public void SetJogPosition(Point point)
+        {
+            _propertyProvider.JOGpoint.Position = point.Position;
+            _propertyProvider.JOGpoint.LocalRotationQ = point.Rotation;
+        }
+        /// <summary>
+        /// –ø—Ä–∏–º–µ–Ω–∏—Ç—å —É–≥–ª—ã –Ω–∞ –º–æ–¥–µ–ª—å —Ä–æ–±–æ—Ç–∞
+        /// </summary>
+        /// <param name="_propertyProvider"></param>
+        /// <param name="ang"></param>
+        public void ModifyRobot(RobotPropertyProvider _propertyProvider, float[] ang)
+        {
+            _propertyProvider.J1Angle = ang[0];
+            _propertyProvider.J2Angle = ang[1];
+            _propertyProvider.J3Angle = ang[2];
+            _propertyProvider.J4Angle = ang[3];
+            _propertyProvider.J5Angle = ang[4];
+            _propertyProvider.J6Angle = ang[5];
+        }
+        void OnDestroy()
+        {
+            _eventBus.Unsubcribe<StopProgramm>(StopSim);
+            _eventBus.Unsubcribe<PickCommandSignal>(TeleportToPoint);
+            _eventBus.Unsubcribe<RobotsControllerResetState>(ControllerResetState);
+
+
         }
     }
 }
-

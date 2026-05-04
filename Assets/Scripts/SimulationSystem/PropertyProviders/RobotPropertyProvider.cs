@@ -1,33 +1,28 @@
-using Assets.Scripts.CustomEventBus;
-using Assets.Scripts.CustomEventBus.Signals.Robot;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
-using Assets.Scripts.Providers.PropertyProviders;
+using Assets.Scripts.SimulationSystem.RobotSimulation;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
-using UnityEngine;
-using UnityEngine.UIElements;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
-using static UnityEngine.EventSystems.EventTrigger;
-public class RobotElement
-{
-    [SerializeField]
-    public string Id;
-    public ObjectType Type;
-    public GameObject Reference;
-    public List<RobotElement> Children = new List<RobotElement>();
-}
 public class RobotPropertyProvider : BasePropertyProvider
 {
-    private SceneObjectsManager _sceneObjectManager;
-    
     public RobotController RobotController { get; set; }
     public float RotSpeedPercent { get; set; } = 100f;
+
+    //=================== ПАРАМЕТРЫ ===================
+    public bool EndEffectorOn { get; set; }
+    public float SpeedEffector = 0.5f;
+    //ogranicheniya anglesSpeed
+    public Angles AnglesSpeedLimit { get; set; } = new(90, 60, 60, 120, 96, 210);
+    public Angles AngleAcceler { get; set; } = new(155, 145, 185, 310, 270, 465);
+    public Angles AngleBrake { get; set; } = new(155, 145, 185, 310, 270, 465);
+    public float[] ChangeAngles  = new float[6] { 0, 0, 0, 0, 0, 0 };
+    //=================== ПАРАМЕТРЫ ===================
+
+
 
     //ugli obnovlaemie in FixedUpdate
     public float J1Angle = 0;
@@ -36,18 +31,10 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J4Angle = 0;
     public float J5Angle = 0;
     public float J6Angle = 0;
-    public bool EndEffectorOn { get; set; }
-    public float SpeedEffector = 0.5f;
+    
+    
     //parameters zveniev
-    public RP RP = new RP(450, -350, 0, 447, 1150, 1350, 500);
-
-    //IK
-    //public Vector3 XYZ = Vector3.zero;
-    //public Vector3 oldXYZ = Vector3.zero;
-    //public Quaternion XYZRot;
-    //public Quaternion oldXYZRot = Quaternion.identity;
-    //public Vector3 absoluteXYZ => GetAbsolutePosition(XYZ);
-    //public Vector3 absoluteOldXYZ => GetAbsolutePosition(oldXYZ);
+    public RP RP = new(450, -350, 0, 447, 1150, 1350, 500);
 
     public float[] thetha = { 0, 0, 0, 0, 0, 0 };
     public float[] old_thetha = { 0, 90, 90, 0, -90, 0 };
@@ -56,39 +43,19 @@ public class RobotPropertyProvider : BasePropertyProvider
 
     //JOG
     public JOGPropertyProvider JOGpoint;
-
-    public float[] ChangeAngles = new float[6] {0, 0, 0, 0, 0, 0 };
-    //ogranicheniya anglesSpeed
-    public float[] ogrAngleSpeed = { 140, 93, 108, 205, 295, 465 };
-
     //объект находящийся всегда в захвате для расчте прямой кинематики
     public ForwarKinObj _forwarKinObj;
     public Point GetActualPosEffector()
     {
         return _forwarKinObj.Pos;
     }
-
-
-    /// <summary>
-    /// reset position end Effector
-    /// </summary>
     private void Start()
     {
+        base.Start();
         RobotController = GetComponent<RobotController>();
-        _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
         displayScale = false;
     }
     
-
-    private Vector3 GetAbsolutePosition(Vector3 pos)
-    {
-        Vector3 point = new Vector3();
-        return transform.TransformPoint(point);
-    }
-
-
-
-
     //------------------------------------------------------------------------------------------------------------------------//
 
     public override ProviderSaveData CaptureCustomState()
@@ -99,14 +66,41 @@ public class RobotPropertyProvider : BasePropertyProvider
         };
     }
 
-    public override IEnumerable<CustomProperty> GetCustomProperties()
+    public override List<CustomProperty> GetCustomProperties()
     {
-        return null;
+        return new List<CustomProperty>()
+        {
+            new CustomProperty("AnglesSpeedLimit",
+                "Максимальная скорость осей",
+                typeof(string),
+                () => string.Join(",", AnglesSpeedLimit.GetFloats()),
+                val =>
+                {
+                    if(AnglesSpeedLimit == null) UnityEngine.Debug.LogWarning("РАВЕН НАЛЛ");
+                    if(AnglesSpeedLimit.UpdateFromString((string)val) != 0) Notification.ShowError(" Убедитесь, что вы ввели 6 чисел, разделенных запятыми, и что все числа положительные (J1, J2, J3, J4, J5, J6).");
+                }),
+            new CustomProperty("AngleAcceler",
+                "Линейное усорение осей",
+                typeof(string),
+                () => string.Join(",", AngleAcceler.GetFloats()),
+                 val =>
+                {
+                    if(AngleAcceler.UpdateFromString((string)val) != 0) Notification.ShowError(" Убедитесь, что вы ввели 6 чисел, разделенных запятыми, и что все числа положительные (J1, J2, J3, J4, J5, J6).");
+                }),
+            new CustomProperty("AngleBrake",
+                "Линейное торможение осей",
+                typeof(string),
+                () => string.Join(",", AngleBrake.GetFloats()),
+                val => 
+                {
+                    if(AngleBrake.UpdateFromString((string)val) != 0) Notification.ShowError(" Убедитесь, что вы ввели 6 чисел, разделенных запятыми, и что все числа положительные (J1, J2, J3, J4, J5, J6).");
+                })
+        };
     }
 
     public override void RestoreCustomState(ProviderSaveData data)
     {
-        
+
     }
 
     

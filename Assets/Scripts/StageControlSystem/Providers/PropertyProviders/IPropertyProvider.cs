@@ -8,7 +8,7 @@ public interface IPropertyProvider
 {
     string Id { get; set; }
     string Name { get; set;}
-    Vector3 LocalPosition { get; set;}
+    Vector3 Position { get; set;}
     Vector3 Rotation { get; set;}
     Vector3 Scale { get; set;}
     bool DisplayName { get; set;  }
@@ -16,7 +16,8 @@ public interface IPropertyProvider
     bool DisplayRotation { get; set; }
     bool DisplayScale { get; set; }
 
-    IEnumerable<CustomProperty> GetCustomProperties();
+    //IEnumerable<CustomProperty> GetCustomProperties();
+    List<CustomProperty> GetCustomProperties();
     ProviderSaveData CaptureCustomState();
     void RestoreCustomState(ProviderSaveData data);
 }

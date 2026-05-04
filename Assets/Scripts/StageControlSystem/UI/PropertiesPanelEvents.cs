@@ -194,19 +194,19 @@ public class PropertiesPanelEvents : MonoBehaviour
         if (current == null) return;
 
         // ������� - ��������� Action ��� �������
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posX, current, nameof(IPropertyProvider.LocalPosition), _undoRedoManager, _UIStatusManager, () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posX, current, nameof(IPropertyProvider.Position), _undoRedoManager, _UIStatusManager, () =>
         {
-            if (current != null) current.LocalPosition = new Vector3(posX.value, current.LocalPosition.y, current.LocalPosition.z);
+            if (current != null) current.Position = new Vector3(posX.value, current.Position.y, current.Position.z);
         }));
 
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posY, current, nameof(IPropertyProvider.LocalPosition), _undoRedoManager, _UIStatusManager, () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posY, current, nameof(IPropertyProvider.Position), _undoRedoManager, _UIStatusManager, () =>
         {
-            if (current != null) current.LocalPosition = new Vector3(current.LocalPosition.x, posY.value, current.LocalPosition.z);
+            if (current != null) current.Position = new Vector3(current.Position.x, posY.value, current.Position.z);
         }));
 
-        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posZ, current, nameof(IPropertyProvider.LocalPosition), _undoRedoManager, _UIStatusManager, () =>
+        cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(posZ, current, nameof(IPropertyProvider.Position), _undoRedoManager, _UIStatusManager, () =>
         {
-            if (current != null) current.LocalPosition = new Vector3(current.LocalPosition.x, current.LocalPosition.y, posZ.value);
+            if (current != null) current.Position = new Vector3(current.Position.x, current.Position.y, posZ.value);
         }));
 
         // ������� - ��������� Action ��� �������
@@ -410,9 +410,9 @@ public class PropertiesPanelEvents : MonoBehaviour
     {
         //if (provider == null) return;
 
-        posX.SetValueWithoutNotify(current.LocalPosition.x);
-        posY.SetValueWithoutNotify(current.LocalPosition.y);
-        posZ.SetValueWithoutNotify(current.LocalPosition.z);
+        posX.SetValueWithoutNotify(current.Position.x);
+        posY.SetValueWithoutNotify(current.Position.y);
+        posZ.SetValueWithoutNotify(current.Position.z);
 
         rotX.SetValueWithoutNotify(current.Rotation.x);
         rotY.SetValueWithoutNotify(current.Rotation.y);

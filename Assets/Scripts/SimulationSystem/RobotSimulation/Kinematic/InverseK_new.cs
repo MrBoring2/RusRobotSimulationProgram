@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
-using UnityEditor.Rendering.Universal;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -14,7 +13,7 @@ public class InverseK_new : MonoBehaviour
     //Translate
     public float X = 0, Y = 0, Z = 0;
     public float UX = 0, UY = 0, UZ = 0;
-    public Quaternion RotateQ = Quaternion.Euler(0,0,0);
+    public Quaternion RotateQ = Quaternion.Euler(0, 0, 0);
     public Matrix4x4 RotateMatrix = Matrix4x4.zero;
 
     //Рез. ИК
@@ -31,7 +30,8 @@ public class InverseK_new : MonoBehaviour
     /// </summary>
     /// <param name="_propertyProvider"></param>
     /// <returns></returns>
-    public Point Translate(Vector3 position, Quaternion  rotation)
+    /// 
+    public Point Translate(Vector3 position, Quaternion rotation)
     {
 
         Quaternion correct = Quaternion.Euler(0, 0, 0);
@@ -44,18 +44,25 @@ public class InverseK_new : MonoBehaviour
         return new Point(new Vector3(X, Y, Z), RotateQ);
 
     }
-
+    public Angles[] IKCalc(RP RP, Vector3 position, Quaternion rotation)
+    {
+        return IK(RP, position, rotation);
+    }
+    public Angles[] IKCalc(RP RP,Point point)
+    {
+        return IK(RP, point.Position, point.Rotation);
+    }
     /// <summary>
     /// Расчет инверсной кинематики n-конфигураций
     /// </summary>
     /// <param name="ZP"></param>
     /// <returns></returns>
-    public Angles[] IKCalc(RP RP, Vector3 position, Quaternion rotation)
+    public Angles[] IK(RP RP, Vector3 position, Quaternion rotation)
     {
         Translate(position, rotation);
         //рачсет точки расположения основания сферического запястья
         Vector3 C0 = new Vector3();
-        RotateMatrix = Matrix4x4.Rotate(new Quaternion(x:RotateQ.z, y:RotateQ.x, z:RotateQ.y, w:RotateQ.w));
+        RotateMatrix = Matrix4x4.Rotate(new Quaternion(x: RotateQ.z, y: RotateQ.x, z: RotateQ.y, w: RotateQ.w));
         //C0.x = X - RP.c4 * RotateMatrix[0, 2];
         //C0.y = Y - RP.c4 * RotateMatrix[1, 2];
         //C0.z = Z - RP.c4 * RotateMatrix[2, 2];
@@ -121,11 +128,17 @@ public class InverseK_new : MonoBehaviour
         Angles[0].thetha6 = (Angles[0].thetha6 * 180 / Mathf.PI);
         return Angles;
     }
+    public float[] CheckLimit(float[] ang)
+    {
+        Angles Ang = new(ang[0], ang[1], ang[2], ang[3], ang[4], ang[5]);
+        CheckLimit(Ang);
+        return new float[] {Ang.thetha1, Ang.thetha2, Ang.thetha3, Ang.thetha4, Ang.thetha5, Ang.thetha6};
+    }
     /// <summary>
     /// ограничение углов в соответствии с техническими характеристиками робота
     /// </summary>
     /// <param name="ang"></param>
-    public void CheckLimit(Angles ang)
+    public Angles CheckLimit(Angles ang)
     {
         if (ang.thetha1 < -175)
         {
@@ -175,7 +188,7 @@ public class InverseK_new : MonoBehaviour
         if (ang.thetha5 > 105)
         {
             ang.thetha5 = 105;
-            UnityEngine.Debug.LogWarning("ОГР А6");
+            UnityEngine.Debug.LogWarning("ОГР А5");
         }
         if (ang.thetha6 < -180)
         {
@@ -187,6 +200,7 @@ public class InverseK_new : MonoBehaviour
             ang.thetha6 = 180;
             UnityEngine.Debug.LogWarning("ОГР А6");
         }
+        return ang;
     }
     /// <summary>
     /// проверка на выход за пределы расчетов (NaN) при невозможности достижения заданной позиции эффектора

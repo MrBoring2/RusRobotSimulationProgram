@@ -96,7 +96,7 @@ public class ObjectPicker : MonoBehaviour
             if (startPos != endPos)
             {
                 _undoRedoManager.Execute(
-                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.LocalPosition), startPos, endPos)
+                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Position), startPos, endPos)
                 );
             }
 

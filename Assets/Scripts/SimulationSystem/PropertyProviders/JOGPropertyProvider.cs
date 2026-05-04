@@ -21,9 +21,7 @@ namespace Assets.Scripts.Providers
         }
         private RobotPropertyProvider _robotPropertyProvider;
 
-        /// <summary>
-        /// Óãë ïîâîðîòà ãåò ñåò èç ìåíþ
-        /// </summary>
+        
         private Vector3 rotationEuler;
         public Vector3 Rotation
         {
@@ -42,7 +40,7 @@ namespace Assets.Scripts.Providers
             }
         }
 
-        public Vector3 LocalPosition { get => transform.localPosition; set => transform.localPosition = value; }
+        public Vector3 Position { get => transform.localPosition; set => transform.localPosition = value; }
         public Quaternion LocalRotationQ { get => transform.localRotation; set => transform.localRotation = value; }
         public Vector3 GlobalPosition { get => transform.position; set => transform.position = value; }
         public Quaternion GlobalRotationQ{ get => transform.rotation; set => transform.rotation = value; }
@@ -69,7 +67,7 @@ namespace Assets.Scripts.Providers
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private Mesh sphereMesh;
-        public Vector3 Position { get => transform.localPosition * 1000; set => transform.localPosition = value / 1000; }
+        //public Vector3 PositionScale { get => transform.localPosition * 1000; set => transform.localPosition = value / 1000; }
        
         public Quaternion RotationQ
         {
@@ -94,12 +92,12 @@ namespace Assets.Scripts.Providers
             };
         }
 
-        public IEnumerable<CustomProperty> GetCustomProperties()
+        public  List<CustomProperty> GetCustomProperties()
         {
             var list = new List<CustomProperty>();
             var endEffect = new CustomProperty(
                 "EndEffectorOn",
-                "Ñîñòîÿíèå çàõâàòà",
+                "Статус захвата",
                 typeof(bool),
                 () => EndEffectorOn,
                 val => EndEffectorOn = (bool)val

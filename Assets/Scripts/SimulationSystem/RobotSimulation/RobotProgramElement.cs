@@ -4,12 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using static Unity.Burst.Intrinsics.X86.Avx;
+using UnityEngine;
+using Assets.Scripts.SimulationSystem.RobotSimulation;
 
 namespace Assets.Scripts.Models
 {
-    public abstract class RobotProgrammElement
+    public abstract class RobotProgrammElement 
     {
         public ENUM_COMMANDS TypeComand;
         public string ID { get; set; }
@@ -17,7 +19,7 @@ namespace Assets.Scripts.Models
         {
             ID = id;
         }
-        public abstract void Execute(RobotController rc);
+        public abstract Awaitable Execute(RobotController rc);
     }
     public class CommandMove : RobotProgrammElement
     {
@@ -27,13 +29,14 @@ namespace Assets.Scripts.Models
             Point = p;
             TypeComand = tc;
         }
-        public LinearPointPropertyProvider Get()
+        public async override Awaitable Execute(RobotController rc)
         {
-            return Point;
-        }
-        public override void Execute(RobotController rc)
-        {
-            rc.RobotSetLinMove(Point);
+            if (Point.PointType == POINTTYPE.PointToPoint)
+            {
+                await rc.RobotSetPTPMove(Point);
+            }
+            else if (Point.PointType == POINTTYPE.LinearPoint)
+                await rc.RobotSetLinMove(Point);
         }
     }
     public class CommandWait : RobotProgrammElement
@@ -48,9 +51,9 @@ namespace Assets.Scripts.Models
         {
             return Wait;
         }
-        public override void Execute(RobotController rc)
+        public async override Awaitable Execute(RobotController rc)
         {
-            rc.RobotSetWait(Wait);
+            await rc.RobotSetWait(Wait);
         }
     }
     public class ComandSetStateEndEffector : RobotProgrammElement
@@ -65,9 +68,9 @@ namespace Assets.Scripts.Models
         {
             return stateEndEffectorProperty;
         }
-        public override void Execute(RobotController rc)
+        public async override Awaitable Execute(RobotController rc)
         {
-            rc.RobotSetStateEndEffector(stateEndEffectorProperty);
+            await rc.RobotSetStateEndEffector(stateEndEffectorProperty);
         }
     }
 
@@ -88,7 +91,7 @@ namespace Assets.Scripts.Models
         {
             return ProgrammElement;
         }
-        public override void Execute(RobotController rc)
+        public async override Awaitable Execute(RobotController rc)
         {
             //rc.RobotSetLinMove(Cmd);
         }

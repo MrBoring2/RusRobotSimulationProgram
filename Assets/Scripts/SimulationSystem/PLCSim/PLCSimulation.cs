@@ -13,16 +13,18 @@ using UnityEngine;
 using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
 using Assets.Scripts.Providers;
 using Assets.Scripts.Managers;
-using Assets.Scripts.PLC;
+using Assets.Scripts.SimulationSystem.PLC;
+using System.Threading;
 
 public class PLCSimulation : MonoBehaviour
 {
     private EventBus _eventBus;
     private SimulationManager _simManager;
     private SceneObjectsManager _sceneObjectsManager;
-    public Dictionary<string, List<RobotProgrammElement>> RobotsPrograms;
+    public Dictionary<string, List<SubProgramm>> RobotsPrograms;
     public List<PLCProgrammElement> PLCProgramm = new List<PLCProgrammElement>();
 
+    IEnumerator cor;
     private void Start()
     {
         _simManager = ServiceManager.Current.Get<SimulationManager>();
@@ -35,11 +37,11 @@ public class PLCSimulation : MonoBehaviour
         //--//
         
     }
-    
-    //--Получение программы всех роботов--
+
+    //--Получение программы всех роботов-- ///////////////////////////////////////// потом уберется
     private void GetAllRobotsProg()
     {
-        RobotsPrograms = new Dictionary<string, List<RobotProgrammElement>>();
+        RobotsPrograms = new Dictionary<string, List<SubProgramm>>();
         var list = _sceneObjectsManager.GetGameObjectsList();
         if (list != null)
         {
@@ -75,37 +77,48 @@ public class PLCSimulation : MonoBehaviour
     //--Запуск симуляции--
     void StartSim(StartProgramm s)
     {
+        _eventBus.Invoke(new RobotsControllerResetState());
         GetAllRobotsProg();
-        int count = RobotsPrograms.Count;
-        PLCProgramm.Clear();
-        //////////тестовое условие для блока робота//////////
+        //int count = RobotsPrograms.Count;
+        //PLCProgramm.Clear();
+        ////////////тестовое условие для блока робота//////////
         PLCCommandBlockRobotsTask block = new PLCCommandBlockRobotsTask("1",RobotsPrograms.Keys.First());
-        PLCCommandInit init = new PLCCommandInit("911");
-        PLCConditionBlock condition = new PLCConditionBlock("10");
-        PLCConditionBranch branch = new PLCConditionBranch("21");
-        PLCConditionBranch branch2 = new PLCConditionBranch("22");
-        PLCConditionBranch branch3 = new PLCConditionBranch("22");
-        PLCConditionBlock condition2 = new PLCConditionBlock("23");
-        condition.Branches.Add(branch);
-        condition2.Branches.Add(branch3);
-        condition.Branches.Add(branch2);
-        block.ProgrammElements.Add(condition);
-
-        PLCProgramm.Add(init);
+        //PLCCommandInit init = new PLCCommandInit("911");
+        //PLCConditionBlock condition = new PLCConditionBlock("10");
+        //PLCConditionBranch branch = new PLCConditionBranch("21");
+        //PLCConditionBranch branch2 = new PLCConditionBranch("22");
+        //condition.Branches.Add(branch);
+        //condition.Branches.Add(branch2);
+        //block.ProgrammElements.Add(condition);
+        
+        //PLCProgramm.Add(init);
         PLCProgramm.Add(block);
 
-        branch.Condition = new PLCCondition("key == true && counter == 98");
-        branch3.Condition = new PLCCondition("key2");
-        branch2.Condition = new PLCCondition("key == true && counter == 99");
-        SubProgramm subProgramm1 = RobotsPrograms.Values.First().First() as SubProgramm;
-        SubProgramm subProgramm2 = RobotsPrograms.Values.First().Skip(1).First() as SubProgramm;
-        SubProgramm subProgramm3 = RobotsPrograms.Values.First().Skip(2).First() as SubProgramm;
-        //branch.Commands.Add(new PLCCommandTask("31", subProgramm1.ID));
-        branch2.ProgrammElements.Add(new PLCCommandTask("32", subProgramm2.ID));
-        branch3.ProgrammElements.Add(new PLCCommandTask("33", subProgramm3.ID));
-        branch3.ProgrammElements.Add(new PLCCommandSetBool("993", "key2", false));
-        branch.ProgrammElements.Add(condition2);
-        init.ProgrammElements.Add(new PLCCommandSetInt("992", "counter", 99));
+        //branch.Condition = new PLCCondition("key == true");
+        //branch2.Condition = new PLCCondition("key2");
+        SubProgramm subProgramm1 = RobotsPrograms.Values.First().First();
+        //SubProgramm subProgramm2 = RobotsPrograms.Values.First().Skip(1).First() as SubProgramm;
+        ////branch.Commands.Add(new PLCCommandTask("31", subProgramm1.ID));
+        //branch2.ProgrammElements.Add(new PLCCommandTask("32", subProgramm1.ID));
+        //branch.ProgrammElements.Add(new PLCCommandTask("33", subProgramm2.ID));
+        //init.ProgrammElements.Add(new PLCCommandSetInt("992", "counter", 99));
+        block.ProgrammElements.Add(new PLCCommandTask("31", subProgramm1.ID));
+        //PLCCommandCycleBlock cycle = new("1");
+        //PLCConditionBlock condition = new("2");
+        //PLCConditionBranch conditionBranch = new("3", ENUM_PLC_COMMANDS.IF_CONDITION);
+        //PLCConditionBranch conditionBranch2 = new("4", ENUM_PLC_COMMANDS.ELSE_CONDITION);
+        //PLCCondition con1 = new("ke1");
+        //PLCCommandSetBool set1 = new("4", "key2", true);
+        //PLCCommandSetBool set2 = new("5", "key2", false);
+
+        //PLCProgramm.Add(cycle);
+        //cycle.ProgrammElements.Add(condition);
+        //condition.Branches.Add(conditionBranch);
+        //conditionBranch.ProgrammElements.Add(set1);
+        //conditionBranch.Condition = con1;
+        //condition.Branches.Add(conditionBranch2);
+        //conditionBranch2.ProgrammElements.Add(set2);
+        //
         StartPLC();
         //StartCoroutine(ExecuteProgramm());
     }
@@ -114,12 +127,6 @@ public class PLCSimulation : MonoBehaviour
     {
         foreach(var programmElement in PLCProgramm)
         {
-
-            /*if(programmElement.TypeComand == ENUM_PLC_COMMANDS.BLOCK_ROBOTS)
-            {
-                PLCCommandBlockRobotsTask block = (PLCCommandBlockRobotsTask)programmElement;
-                StartCoroutine(ExecuteRobotBlock(block));
-            }*/
             try
             {
                 if(programmElement.GetType() == typeof(PLCCommandInit))
@@ -129,19 +136,24 @@ public class PLCSimulation : MonoBehaviour
                 if(programmElement.GetType() == typeof(PLCCommandBlockRobotsTask))
                 {
                     PLCCommandBlockRobotsTask block = (PLCCommandBlockRobotsTask)programmElement;
-                    StartCoroutine(ExecuteRobotBlock(block));
+                    _=ExecuteRobotBlock(block);
                 }
-                
+                if (programmElement.GetType() == typeof(PLCCommandCycleBlock))
+                {
+                    PLCCommandCycleBlock block = (PLCCommandCycleBlock)programmElement;
+                    StartCoroutine(ExecuteCycleBlock(block));
+                }
+
             }
             
             catch (Exception ex)
             {
-                Debug.LogError($"Не удалсь запустить ПЛК {ex}");
+                Debug.LogError($"Ошибка исполнителя ПЛК: {ex}");
             }
         }
     }
     //--Выполнение блока работы с роботом--
-    public IEnumerator ExecuteRobotBlock(PLCCommandBlockRobotsTask BlockRobotTasks)
+    public async Awaitable ExecuteRobotBlock(PLCCommandBlockRobotsTask BlockRobotTasks)
     {
         string robotID = BlockRobotTasks.RobotID;
         var RC = GetRobotById(robotID).RobotController;
@@ -149,163 +161,50 @@ public class PLCSimulation : MonoBehaviour
         if (RC == null)
         {
             Debug.LogError($"RobotController для {robotID} не найден!");
-            yield break;
+            return;
         }
-
+        if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
         while (_simManager.GetStatusSim() == SIM_STAT.PLAY)
         {
-            yield return new WaitForFixedUpdate();
-
+            if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+            await Awaitable.FixedUpdateAsync();
+          
             // Ждём, пока робот свободен
-            yield return new WaitUntil(() => !RC.RunTask);
-
-            foreach (var element in BlockRobotTasks.ProgrammElements)
+            while (RC.RunTask)
             {
-                //если робот занят выходим
-                if (GetRobotById(robotID).RobotController.RunTask) break;
-                bool success = element.Execute(RC, RobotsPrograms);
+                if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                await Awaitable.FixedUpdateAsync();
+            }
+            foreach (var command in BlockRobotTasks.ProgrammElements)
+            {
+                if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                if (command.Execute(RC)) break;
             }
 
             // Если ничего не выполнилось — можно добавить логику "по умолчанию"
         }
     }
-    //public IEnumerator ExecuteRobotBlock(PLCCommandBlockRobotsTask BlockRobotTasks)
-    //{
-    //    string RobotID = BlockRobotTasks.RobotID;
-    //    while (_simManager.GetStatusSim() == SIM_STAT.PLAY)
-    //    {
-    //        yield return new WaitForFixedUpdate();
-    //        yield return new WaitUntil(() => !GetRobotById(RobotID).RobotController.RunTask);
-    //        foreach (PLCProgrammElement comand in BlockRobotTasks.Get())
-    //        {
-    //            if(comand.TypeComand == ENUM_PLC_COMMANDS.BLOCK_ROBOT_TASK)
-    //            {
-    //                bool flag = comand.Execute(GetRobotById(RobotID).RobotController, RobotsPrograms, BlockRobotTasks.RobotID);
-    //                if (flag) { break; }
-    //                //для теста
-    //                yield return new WaitUntil(() => _simManager.GetStatusSim() == SIM_STAT.PLAY && !GetRobotById(RobotID).RobotController.RunTask);
-    //            }
-    //            else
-    //            {
-    //                Debug.LogError("Вложенный блок управления роботом не поддерживается");
-    //            }
-
-    //        }
-    //    }
-
-    //}
-
-    // Êîðóòèíà äëÿ ïîñëåäîâàòåëüíîãî âûïîëíåíèÿ ïðîãðàììû
-    //private IEnumerator ExecuteProgramm()
-    //{
-    //    currentCommandIndex = 0;
-
-    //    while (LocalSimStat != SIM_STAT.STOP)
-    //    {
-    //        if (currentCommandIndex < Programm.Count)
-    //        {
-    //            RobotProgrammElement element = Programm[currentCommandIndex];
-
-    //            yield return new WaitUntil(() => allowNextCommand && LocalSimStat == SIM_STAT.PLAY );
-
-    //            yield return ExecuteElementProgramm(element);
-
-    //            currentCommandIndex++;
-    //        }
-    //        else if(_simManager.GetStatusSim() == SIM_STAT.PLAY)
-    //        {
-    //            currentCommandIndex = 0;
-    //        }
-    //        else
-    //        {
-    //            yield break;
-    //        }
-    //    }
-    //}
-    //public IEnumerator ExecuteElementProgramm(RobotProgrammElement EP)
-    //{
-    //    if (CheckComand(EP))
-    //    {
-    //        HandlerCommand(EP);
-
-    //        yield return new WaitUntil(() => allowNextCommand);
-    //    }
-    //    else if (EP.TypeComand == ENUM_COMMANDS.SUBPROGRAMM)
-    //    {
-    //        SubProgramm subProgramm = (SubProgramm)EP;
-
-    //        yield return ExecuteSubProgramm(subProgramm);
-    //    }
-    //}
-
-
-    //private IEnumerator ExecuteSubProgramm(SubProgramm subProgramm)
-    //{
-    //    foreach (var element in subProgramm.Get())
-    //    {
-    //        yield return new WaitUntil(() => allowNextCommand && LocalSimStat == SIM_STAT.PLAY );
-
-    //        yield return ExecuteElementProgramm(element);
-    //    }
-    //}
-
-
-    /*private void StartSim(StartProgramm s)
+    public IEnumerator ExecuteCycleBlock(PLCCommandCycleBlock block)
     {
-        if(LocalSimStat == SIM_STAT.PAUSE)
+        while (_simManager.GetStatusSim() == SIM_STAT.PLAY)
         {
-            ContinueSim();
-        }
-        else
-        {
-            LocalSimStat = SIM_STAT.PLAY;
-            allowNextCommand = true;
-            RC.SetAllowNextMove(true);
-            StartProgramm();
-        }
-        
+            yield return new WaitForFixedUpdate();
 
-    }*/
+            foreach (var element in block.ProgrammElements)
+            {
+                element.Execute();
+            }
+        }
+    }
+ 
     private void PauseSim(PauseProgramm s)
     {
-        //LocalSimStat = SIM_STAT.PAUSE;
         
     }
     private void StopSim(StopProgramm s)
     {
-        //LocalSimStat = SIM_STAT.STOP;
-        //RC.StopSim();
-        StopAllCoroutines();
-    }
-    private void ContinueSim()
-    {
-        //LocalSimStat = SIM_STAT.PLAY;
-        
-    }
-    //private void EndCurrentMove(RobotEndMove s)
-    //{
-    //    if(s.RoboID == _propertyProvider.Id)
-    //    {
-    //        allowNextCommand = true;
-    //    }
-    //}
 
-    //public bool CheckComand(RobotProgrammElement c)
-    //{
-    //    switch (c.TypeComand)
-    //    {
-    //        case ENUM_COMMANDS.MOVE_PTP: return true;
-    //        case ENUM_COMMANDS.MOVE_LIN: return true;
-    //        case ENUM_COMMANDS.WAIT: return true;
-    //        case ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR: return true;
-    //        default: return false;
-    //    }
-    //}
-    //public void HandlerCommand(RobotProgrammElement c)
-    //{
-    //    //InProgress();
-    //    //c.Execute(RC);  
-    //}
+    }
 
     private void OnDestroy()
     {

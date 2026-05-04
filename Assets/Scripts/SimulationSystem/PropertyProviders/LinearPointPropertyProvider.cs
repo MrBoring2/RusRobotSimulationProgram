@@ -13,158 +13,121 @@ namespace Assets.Scripts.Providers
 {
     public class LinearPointPropertyProvider : BasePropertyProvider
     {
+        //=================== ПАРАМЕТРЫ ===================
+
+        public POINTTYPE PointType { get; set; } = POINTTYPE.LinearPoint;
+        //Линейная точка
+        public float LinearSpeed { get; set; } = 0.5f; ///_м/с
+        public float LinAcceler { get; set; } = 1;
+        public float LinBrake { get; set; } = 1;
+        public float AngleSpeed { get; set; } = 90; ///_град/с
+        public float AngleAcceler { get; set; } = 10;
+        public float AngleBrake { get; set; } = 10;
+        //точка-точка точка
+        public float SpeedPercent { get; set; } = 50;
+
+        //===========================================//
         public bool ShowVisual = true;
         public Material material;
         public float PointSize = 0.3f;
-        private MeshFilter meshFilter;
-        private MeshRenderer meshRenderer;
-        private Mesh sphereMesh;
-        public Quaternion RotationQ
-        {
-            get => transform.rotation;
-            set => transform.rotation = value;
-        }
-        public Vector3 Position
-        {
-            get => transform.localPosition;
-            set=> transform.localPosition = value;
-        }
-        //public float PersentSpeed { get; set; } = 100f;
-        public float Speed { get; set;} = 0.1f;
-       // public TypePoint pointType = TypePoint.LIN;
-        //магнит
-       // public MagnitS magnitStatus = MagnitS.NotControl;
-
-        //в точке
-        //public float delay = 0;
-        private void Awake()
-        {
-            displayScale = false;
-            if (ShowVisual)
-            {
-                //CreateMeshVisual();
-            }
-        }
-
+        //===========================================//
+        
         public override ProviderSaveData CaptureCustomState()
         {
             return new ProviderSaveData
             {
                 ProviderType = nameof(LinearPointPropertyProvider),
                 FloatValues =
-            {
-                ["Speed"] = Speed
-            }
+                {
+                    ["Speed"] = LinearSpeed,
+                    ["AngleSpeed"] = AngleSpeed
+                }
             };
         }
 
-        public override IEnumerable<CustomProperty> GetCustomProperties()
+        public override List<CustomProperty> GetCustomProperties()
         {
-            yield return new CustomProperty(
-                "Speed",
-                "Скорость",
-                typeof(float),
-                () => Speed,
-                val => Speed = (float)val
-            );
+            return PointType switch
+            {
+                POINTTYPE.LinearPoint => new List<CustomProperty>()
+                {
+                    new CustomProperty("PointType",
+                    "ТИП ТОЧКИ",
+                    typeof(string),
+                    () => PointType.ToString(),
+                    val => PointType = (POINTTYPE)Enum.Parse(typeof(POINTTYPE), (string)val)),
+                    new CustomProperty("LinearSpeed",
+                    "Л Скорость",
+                    typeof(float),
+                    () => LinearSpeed,
+                    val => LinearSpeed = (float)val),
+                    new CustomProperty("LinAcceler",
+                    " Л ускорение разгона",
+                    typeof(float),
+                    () => LinAcceler,
+                    val => LinAcceler = (float)val),
+                    new CustomProperty("LinBrake",
+                    "Л ускорение торможения",
+                    typeof(float),
+                    () => LinBrake,
+                    val => LinBrake = (float)val),
+                     new CustomProperty("AngleSpeed",
+                    "У Скорость",
+                    typeof(float),
+                    () => AngleSpeed,
+                    val => AngleSpeed = (float)val),
+                     new CustomProperty("AngleAcceler",
+                    "У ускорение разгона",
+                    typeof(float),
+                    () => AngleAcceler,
+                    val => AngleAcceler = (float)val),
+                    new CustomProperty("AngleBrake",
+                    "У ускорение торможения",
+                    typeof(float),
+                    () => AngleBrake,
+                    val => AngleBrake = (float)val)
+                },
+                POINTTYPE.PointToPoint => new List<CustomProperty>()
+                    {
+                        new CustomProperty("PointType",
+                        "ТИП ТОЧКИ",
+                        typeof(string),
+                        () => PointType.ToString(),
+                        val => PointType = (POINTTYPE)Enum.Parse(typeof(POINTTYPE), (string)val)),
+                        new CustomProperty("SpeedPercent",
+                        "Скорость %",
+                        typeof(float),
+                        () => SpeedPercent,
+                        val =>
+                        {
+                            if((float)val < 0 || (float)val > 100) Notification.ShowError("% скорости может >=0 и <=100");
+                            else
+                                SpeedPercent = (float)val;
+                        })
+            },
+                _ => new List<CustomProperty>(),
+            };
         }
 
         public override void RestoreCustomState(ProviderSaveData data)
         {
-            if (data.FloatValues.TryGetValue("Speed", out var v))
-                Speed = v;
+            if (data.FloatValues.TryGetValue("Speed", out var v1))
+                LinearSpeed = v1;
+            if (data.FloatValues.TryGetValue("AngleSpeed", out var v2))
+                AngleSpeed = v2;
+            if (data.FloatValues.TryGetValue("LinAcceler", out var v3 ))
+                LinAcceler = v3;
+            if (data.FloatValues.TryGetValue("LinBrake", out var v4))
+                LinBrake = v4;
+            if (data.FloatValues.TryGetValue("AngleAcceler", out var v5))
+                LinAcceler = v5;
+            if (data.FloatValues.TryGetValue("AngleBrake", out var v6))
+                LinBrake = v6;
         }
-
-        private void CreateMeshVisual()
-        {
-            sphereMesh = CreateSphereMesh(PointSize, 16, 16);
-
-            meshFilter = gameObject.AddComponent<MeshFilter>();
-            meshRenderer = gameObject.AddComponent<MeshRenderer>();
-
-            meshFilter.mesh = sphereMesh;
-
-            meshRenderer.material = material;
-        }
-
-        private Mesh CreateSphereMesh(float radius, int segmentsU, int segmentsV)
-        {
-            Mesh mesh = new Mesh();
-
-            int vertexCount = (segmentsU + 1) * (segmentsV + 1);
-            Vector3[] vertices = new Vector3[vertexCount];
-            Vector3[] normals = new Vector3[vertexCount];
-            Vector2[] uv = new Vector2[vertexCount];
-            int[] triangles = new int[segmentsU * segmentsV * 6];
-
-            int index = 0;
-
-            for (int v = 0; v <= segmentsV; v++)
-            {
-                float vAngle = Mathf.PI * v / segmentsV;
-                float sinV = Mathf.Sin(vAngle);
-                float cosV = Mathf.Cos(vAngle);
-
-                for (int u = 0; u <= segmentsU; u++)
-                {
-                    float uAngle = 2 * Mathf.PI * u / segmentsU;
-                    float sinU = Mathf.Sin(uAngle);
-                    float cosU = Mathf.Cos(uAngle);
-
-                    vertices[index] = new Vector3(
-                        radius * sinV * cosU,
-                        radius * cosV,
-                        radius * sinV * sinU
-                    );
-
-                    normals[index] = vertices[index].normalized;
-                    uv[index] = new Vector2((float)u / segmentsU, (float)v / segmentsV);
-                    index++;
-                }
-            }
-
-            index = 0;
-            for (int v = 0; v < segmentsV; v++)
-            {
-                for (int u = 0; u < segmentsU; u++)
-                {
-                    int current = v * (segmentsU + 1) + u;
-                    int next = current + segmentsU + 1;
-
-                    triangles[index++] = current;
-                    triangles[index++] = next;
-                    triangles[index++] = current + 1;
-
-                    triangles[index++] = current + 1;
-                    triangles[index++] = next;
-                    triangles[index++] = next + 1;
-                }
-            }
-
-            mesh.vertices = vertices;
-            mesh.normals = normals;
-            mesh.uv = uv;
-            mesh.triangles = triangles;
-
-            return mesh;
-        }
-        //public void UpdateVisual(Color newColor, float newSize)
-        //{
-        //    if (meshRenderer != null && meshRenderer.material != null)
-        //    {
-        //        meshRenderer.material.color = newColor;
-        //    }
-
-        //    if (sphereMesh != null && meshFilter != null)
-        //    {
-        //        var vertices = sphereMesh.vertices;
-        //        for (int i = 0; i < vertices.Length; i++)
-        //        {
-        //            vertices[i] = vertices[i].normalized * newSize;
-        //        }
-        //        sphereMesh.vertices = vertices;
-        //        sphereMesh.RecalculateBounds();
-        //    }
-        //}
     }
+}
+public enum POINTTYPE
+{
+    LinearPoint,
+    PointToPoint
 }

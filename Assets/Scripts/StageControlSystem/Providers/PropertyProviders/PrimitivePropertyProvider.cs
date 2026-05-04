@@ -2,7 +2,6 @@ using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class PrimitivePropertyProvider : BasePropertyProvider
 {
@@ -16,15 +15,18 @@ public class PrimitivePropertyProvider : BasePropertyProvider
         };
     }
 
-    public override IEnumerable<CustomProperty> GetCustomProperties()
+    public override List<CustomProperty> GetCustomProperties()
     {
-        yield return new CustomProperty(
+        return new List<CustomProperty>
+        {
+            new CustomProperty(
             "Color",
             "Цвет",
             typeof(Color),
             () => Color,
             val => Color = (Color)val
-        );
+        )
+        };
     }
 
     public override void RestoreCustomState(ProviderSaveData data)
