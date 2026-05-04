@@ -70,17 +70,17 @@ public class UIBlocker : MonoBehaviour
 
     public void ResolveUI()
     {
-        _uiStatusManager.SetPointerOverUI(false);
+        _uiStatusManager?.SetPointerOverUI(false);
     }
 
     private void OnMouseEnter(MouseEnterEvent evt)
     {
-        _uiStatusManager.SetPointerOverUI(true);  // Когда курсор заходит на панель 
+        _uiStatusManager?.SetPointerOverUI(true);  // Когда курсор заходит на панель 
     }
 
     private void OnMouseLeave(MouseLeaveEvent evt)
     {
-        _uiStatusManager.SetPointerOverUI(false); // Когда курсор покидает панель
+        _uiStatusManager?.SetPointerOverUI(false); // Когда курсор покидает панель
     }
 
     private void OnModalWindowMouseEnter(MouseEnterEvent evt)
@@ -93,12 +93,12 @@ public class UIBlocker : MonoBehaviour
     }
     private void OnContextMenuMouseEnter(MouseEnterEvent evt)
     {
-        _uiStatusManager.SetPointerOverUI(true);
+        _uiStatusManager?.SetPointerOverUI(true);
     }
 
     private void OnContextMenuMouseLeave(MouseLeaveEvent evt)
     {
-        _uiStatusManager.SetPointerOverUI(false);
+        _uiStatusManager?.SetPointerOverUI(false);
     }
     private void UnregisterUIElements()
     {
@@ -112,12 +112,12 @@ public class UIBlocker : MonoBehaviour
 
     public void EnableInputMode()
     {
-        _uiStatusManager.SetInputMode(true);
+        _uiStatusManager?.SetInputMode(true);
     }
 
     public void DisableInputMode()
     {
-        _uiStatusManager.SetInputMode(false);
+        _uiStatusManager?.SetInputMode(false);
     }
     private void OnDisable()
     {

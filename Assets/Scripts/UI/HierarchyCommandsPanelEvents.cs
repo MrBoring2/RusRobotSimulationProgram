@@ -933,6 +933,10 @@ namespace Assets.Scripts.UI
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         contextMenu.Add(CreateMenuButton("Изменить условие", () => ShowExpressionWindow(parentId, false, condition.Expression)));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
+                        contextMenu.Add(CreateMenuButton("Добавить изменение переменной", () =>
+                        {
+                            ShowSetVariableWindow(parentId);
+                        }));
                         contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
                         {
                             if (!HasProgramCallInCondition(parentId))
@@ -940,6 +944,7 @@ namespace Assets.Scripts.UI
                                 ShowProgramSetWindow(parentId, robotId);
                             }
                         }));
+                       
                     }
                     else if (foldout.name == "plc-elif-block")
                     {
@@ -999,10 +1004,23 @@ namespace Assets.Scripts.UI
             iBlocker.AddNewContextMenu(contextMenu);
         }
 
+        private void ShowSetVariableWindow(string parentId)
+        {
+
+            ModalParameters parameters = new ModalParameters();
+            _modalWindowServiceManager.ShowWindow<PLCSetVariable>("variable-set-window", "Изменение переменной", parameters, (result) =>
+            {
+                if (result != null)
+                {
+                    AddToPLCContent(parentId, result);
+                }
+            });
+        }
+
         private void ShowAddVariableWindow(string blockId)
         {
             ModalParameters parameters = new ModalParameters();
-            _modalWindowServiceManager.ShowWindow<PLCSetVariable>("variable-init-window", "Инициализация переменной", parameters, (result) =>
+            _modalWindowServiceManager.ShowWindow<PLCInitVariable>("variable-init-window", "Инициализация переменной", parameters, (result) =>
             {
                 if (result != null)
                 {
@@ -1377,16 +1395,16 @@ namespace Assets.Scripts.UI
             return null;
         }
 
-        // Добавить команду (программу)
         private void AddProgramInPLC(string blockId, RobotProgramObject program)
         {
             var startProgram = new PLCStartProgram { ProgramName = program.PropertyProvider.Name, ProgramId = program.Id };
             AddToPLCContent(blockId, startProgram);
         }
 
-        private void AddVariableInitToPLC(string blockId, PLCSetVariable pLCSet)
+        private void AddVariableInitToPLC(string blockId, PLCInitVariable pLCSet)
         {
             AddToPLCContent(blockId, pLCSet);
+            _sceneObjectManager.PLCData.Variables.Add(new Variable(pLCSet.Id, pLCSet.VarType, pLCSet.VariableName));
         }
 
         // Добавить условие
@@ -1457,7 +1475,7 @@ namespace Assets.Scripts.UI
             }
 
 
-            if (itemToAdd is PLCSetVariable s)
+            if (itemToAdd is PLCInitVariable s)
             {
                 var logicBlockItems = _sceneObjectManager.PLCData.InitBlockItems;
                 logicBlockItems.Add(s);
@@ -1874,6 +1892,9 @@ namespace Assets.Scripts.UI
                     break;
                 case PLCSetVariable set:
                     commandText = $"Присвоить: {set.VariableName} = {set.Value}";
+                    break;
+                case PLCInitVariable set:
+                    commandText = $"Присвоить: {set.VarType}: {set.VariableName} = {set.StartValue}";
                     break;
                 default:
                     commandText = "Неизвестная команда";
@@ -2518,7 +2539,7 @@ namespace Assets.Scripts.UI
             // Для PLC команд
             if (currentDragData?.UserData is PLCCommand draggedCommand)
             {
-                if (draggedCommand is PLCSetVariable)
+                if (draggedCommand is PLCInitVariable)
                 {
                     if (dropTarget.Position == DropPosition.Above)
                     {
@@ -2641,14 +2662,14 @@ namespace Assets.Scripts.UI
 
                 if (targetElement.name == "plc-command")
                 {
-                    var draggedSetVar = draggedCommand as PLCSetVariable;
+                    var draggedSetVar = draggedCommand as PLCInitVariable;
                     if (draggedSetVar == null)
                     {
                         CleanupDrag();
                         return;
                     }
 
-                    var targetCommand = GetCommandById(targetElement.userData?.ToString()) as PLCSetVariable;
+                    var targetCommand = GetCommandById(targetElement.userData?.ToString()) as PLCInitVariable;
                     if (targetCommand != null)
                     {
                         var initList = _sceneObjectManager.PLCData.InitBlockItems;

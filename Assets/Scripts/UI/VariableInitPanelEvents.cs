@@ -1,7 +1,9 @@
 ﻿using Assets.Scripts.Models;
+using Assets.UI.CustomElements;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEditor;
 using UnityEngine.UIElements;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
@@ -14,6 +16,8 @@ namespace Assets.Scripts.UI
         private Button confirmButton;
         private TextField varNameTextBox;
         private TextField varValueTextBox;
+        private StringPopupField typesList;
+        private string selectedType;
 
         protected override void Start()
         {
@@ -27,15 +31,43 @@ namespace Assets.Scripts.UI
             {
                 string message = parameters.Get("message", "Инициализация переменной");
                 messageLabel.text = message;
+              
             }
+            typesList.choices = new List<string>
+                {
+                    "string",
+                    "int",
+                    "float",
+                    "bool"
+                };
         }
 
 
         private void ConfirmCondition()
         {
-            CloseWithValue(new PLCSetVariable { VariableName = varName, Value = varValue });
+            VarType type = VarType.String;
+            switch (selectedType)
+            {
+                case "string":
+                    type = VarType.String;
+                    break;
+                case "int":
+                    type = VarType.Int;
+                    break;
+                case "float":
+                    type = VarType.Float;
+                    break;
+                case "bool":
+                    type = VarType.Bool;
+                    break;
+                default:
+                    break;
+            }
+            CloseWithValue(new PLCInitVariable { VarType = type, VariableName = varName, StartValue = varValue });
             varName = "";
             varValue = "";
+            selectedType = "";
+            typesList.SetValueWithoutNotify(null);
             varNameTextBox.SetValueWithoutNotify("");
             varValueTextBox.SetValueWithoutNotify("");
         }
@@ -51,6 +83,10 @@ namespace Assets.Scripts.UI
             {
                 varValue = p.newValue;
             });
+            typesList.RegisterCallback<ChangeEvent<string>>(p =>
+            {
+                selectedType = p.newValue;
+            });
             confirmButton.clicked += () => { ConfirmCondition(); };
         }
         protected override void InitializeElements(VisualElement root)
@@ -61,6 +97,7 @@ namespace Assets.Scripts.UI
             closeButton = root.Q<Button>("close-button");
             varNameTextBox = root.Q<TextField>("variable-name");
             varValueTextBox = root.Q<TextField>("set-field");
+            typesList = root.Q<StringPopupField>("types-list");
             confirmButton = root.Q<Button>("confirmBtn");
         }
     }

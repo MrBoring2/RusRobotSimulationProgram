@@ -9,12 +9,30 @@ namespace Assets.Scripts.Models
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         //Блок инициалзиации
-        public List<PLCSetVariable> InitBlockItems = new List<PLCSetVariable>();
+        public List<PLCInitVariable> InitBlockItems = new List<PLCInitVariable>();
         //Блок команд роботов
         public List<PLCRobotBlock> RobotCommandsBlockItems = new List<PLCRobotBlock>();
         //Блок логики
         public List<PLCBase> LogicBlockItems = new List<PLCBase>();
+        public List<Variable> Variables = new List<Variable>();
     }
+    [Serializable]
+    public class Variable
+    {
+        public Variable(string id, VarType type, string name)
+        {
+            Id = id;
+            VarType = type;
+            Name = name;
+        }
+        public string Id { get; set; }
+
+        public VarType VarType { get; set; }
+        public string Name { get; set; }
+
+    }
+
+
     [Serializable]
     public class PLCBase
     {
@@ -86,6 +104,7 @@ namespace Assets.Scripts.Models
         Increment,
         Decrement,
         SetVariable,
+        InitVariable
     }
     [Serializable]
     public class PLCStartProgram : PLCCommand
@@ -110,13 +129,29 @@ namespace Assets.Scripts.Models
         public float Step;
         public PLCDecrement() { Type = CommandType.Decrement; }
     }
-
+    [Serializable]
+    public class PLCInitVariable : PLCCommand
+    {
+        public VarType VarType;
+        public string VariableName;
+        public string StartValue;
+        public PLCInitVariable() { Id = Guid.NewGuid().ToString(); Type = CommandType.InitVariable; }
+    }
 
     [Serializable]
     public class PLCSetVariable : PLCCommand
     {
+        public VarType VarType;
         public string VariableName;
         public string Value;
         public PLCSetVariable() { Id = Guid.NewGuid().ToString(); Type = CommandType.SetVariable; }
+    }
+
+    public enum VarType
+    {
+        Int,
+        String,
+        Float,
+        Bool
     }
 }

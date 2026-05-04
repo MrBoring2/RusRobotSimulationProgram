@@ -3,17 +3,21 @@
         <ui:Label text="Инициализация переменной" style="unity-font-style: bold; font-size: 16px; margin-bottom: 8px; color: rgb(255, 255, 255); -unity-font-style: bold;"/>
         <ui:VisualElement style="flex-grow: 1; flex-direction: row; align-content: stretch; align-self: stretch; justify-content: flex-start;">
             <ui:VisualElement style="flex-grow: 0;">
+                <ui:Label text="Тип переменной" style="flex-grow: 0;"/>
+                <Assets.UI.CustomElements.StringPopupField name="types-list" style="height: 19px;"/>
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-grow: 0;">
                 <ui:Label text="Имя переменной"/>
                 <ui:TextField label="" placeholder-text="" name="variable-name" style="width: 200px; height: 20px;"/>
             </ui:VisualElement>
             <ui:VisualElement style="flex-grow: 1;">
-                <ui:Label text="Начальное зханчение"/>
+                <ui:Label text="Начальное значение"/>
                 <ui:TextField label="" placeholder-text="" name="set-field" style="height: 20px;"/>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement style="flex-direction: row; justify-content: space-between; margin-top: 8px; align-content: stretch; align-self: center; flex-grow: 1;">
-            <ui:Button name="confirmBtn" text="Принять" style="background-color: rgb(30, 147, 53); color: white; height: 30px;"/>
-            <ui:Button name="cancelBtn" text="Отмена" style="background-color: rgb(204, 51, 51); color: white; height: 30px;"/>
+        <ui:VisualElement style="flex-direction: row; justify-content: space-between; margin-top: 8px; align-content: stretch; align-self: center;">
+            <ui:Button name="confirmBtn" text="Принять" style="background-color: rgb(30, 147, 53); color: white;"/>
+            <ui:Button name="close-button" text="Отмена" style="background-color: rgb(204, 51, 51); color: white;"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

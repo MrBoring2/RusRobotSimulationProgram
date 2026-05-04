@@ -78,6 +78,8 @@ namespace Assets.Scripts.Models
         }
         public virtual void Hide(object returnValue)
         {
+            UIBlocker.ResolveUI();
+            UIBlocker.DisableInputMode();
             UIBlocker.RemoveModalWindow(windowRoot);
             this.returnValue = returnValue;
             windowRoot.style.display = DisplayStyle.None;
