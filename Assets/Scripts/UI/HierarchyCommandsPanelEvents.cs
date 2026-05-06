@@ -931,49 +931,74 @@ namespace Assets.Scripts.UI
                         var parentId = foldout.userData.ToString();
                         var condition = GetConditionById(parentId);
                         string robotId = GetRobotIdFromPLCBlock(foldout);
+                        bool isInLogic = IsInsideLogicBlock(foldout);
+
                         contextMenu.Add(CreateMenuButton("Изменить условие", () => ShowExpressionWindow(parentId, false, condition.Expression)));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить изменение переменной", () =>
                         {
                             ShowSetVariableWindow(parentId);
                         }));
-                        contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
+                        if (!isInLogic)
                         {
-                            if (!HasProgramCallInCondition(parentId))
+                           
+                            contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
                             {
-                                ShowProgramSetWindow(parentId, robotId);
-                            }
-                        }));
-                       
+                                if (!HasProgramCallInCondition(parentId))
+                                {
+                                    ShowProgramSetWindow(parentId, robotId);
+                                }
+                            }));
+                        }
                     }
                     else if (foldout.name == "plc-elif-block")
                     {
                         var parentId = foldout.userData.ToString();
                         var condition = GetConditionById(parentId);
                         string robotId = GetRobotIdFromPLCBlock(foldout);
+                        bool isInLogic = IsInsideLogicBlock(foldout);
+
                         contextMenu.Add(CreateMenuButton("Изменить условие", () => ShowExpressionWindow(parentId, true, condition.Expression)));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
-                        contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
+                        contextMenu.Add(CreateMenuButton("Добавить изменение переменной", () =>
                         {
-                            if (!HasProgramCallInCondition(parentId))
-                            {
-                                ShowProgramSetWindow(parentId, robotId);
-                            }
+                            ShowSetVariableWindow(parentId);
                         }));
+
+                        if (!isInLogic)
+                        {
+                            contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
+                            {
+                                if (!HasProgramCallInCondition(parentId))
+                                {
+                                    ShowProgramSetWindow(parentId, robotId);
+                                }
+                            }));
+                        }
                         contextMenu.Add(CreateMenuButton("Удалить блок иначе если", () => DeleteELIFCondition(parentId)));
                     }
                     else if (foldout.name == "plc-else-block")
                     {
                         var parentId = foldout.userData.ToString();
                         string robotId = GetRobotIdFromPLCBlock(foldout);
+                        bool isInLogic = IsInsideLogicBlock(foldout);
+
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
-                        contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
+                        contextMenu.Add(CreateMenuButton("Добавить изменение переменной", () =>
                         {
-                            if (!HasProgramCallInCondition(parentId))
-                            {
-                                ShowProgramSetWindow(parentId, robotId);
-                            }
+                            ShowSetVariableWindow(parentId);
                         }));
+
+                        if (!isInLogic)
+                        {
+                            contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
+                            {
+                                if (!HasProgramCallInCondition(parentId))
+                                {
+                                    ShowProgramSetWindow(parentId, robotId);
+                                }
+                            }));
+                        }
                     }
                     else if (foldout.name == "plc-command")
                     {
@@ -1003,7 +1028,19 @@ namespace Assets.Scripts.UI
             root.Add(contextMenu);
             iBlocker.AddNewContextMenu(contextMenu);
         }
-
+        private bool IsInsideLogicBlock(VisualElement element)
+        {
+            var current = element.parent;
+            while (current != null)
+            {
+                if (current.name == "plc-logic-block")
+                    return true;
+                if (current.name == "plc-robot-block")
+                    return false;
+                current = current.parent;
+            }
+            return false;
+        }
         private void ShowSetVariableWindow(string parentId)
         {
 
@@ -1481,7 +1518,7 @@ namespace Assets.Scripts.UI
                 logicBlockItems.Add(s);
             }
 
-            else if (itemToAdd is PLCStartProgram || itemToAdd is PLCBlockCondition || itemToAdd is PLCCondition)
+            else if (itemToAdd is PLCStartProgram || itemToAdd is PLCSetVariable || itemToAdd is PLCBlockCondition || itemToAdd is PLCCondition)
             {
                 // 1. Проверяем в блоках роботов
                 var robotBlock = _sceneObjectManager.PLCData.RobotCommandsBlockItems
@@ -1492,7 +1529,12 @@ namespace Assets.Scripts.UI
                     UpdateHierarchy();
                     return;
                 }
-
+                if (parentId == "logic_block")
+                {
+                    _sceneObjectManager.PLCData.LogicBlockItems.Add(itemToAdd);
+                    UpdateHierarchy();
+                    return;
+                }
                 // 2. Проверяем в блоке логики
                 var logicParent = _sceneObjectManager.PLCData.LogicBlockItems
                     .FirstOrDefault(x => x is PLCBlockCondition && ((PLCBlockCondition)x).Id == parentId);
@@ -1884,17 +1926,25 @@ namespace Assets.Scripts.UI
                 case PLCStartProgram start:
                     commandText = $"Запустить программу: {start.ProgramName}";
                     break;
-                case PLCIncrement inc:
-                    commandText = $"Инкремент: {inc.VariableName} += {inc.Step}";
-                    break;
-                case PLCDecrement dec:
-                    commandText = $"Декремент: {dec.VariableName} -= {dec.Step}";
-                    break;
-                case PLCSetVariable set:
-                    commandText = $"Присвоить: {set.VariableName} = {set.Value}";
+                case PLCSetVariable setVariable:
+                    switch (setVariable.Operation)
+                    {
+                        case OperationType.Increment:
+                            commandText = $"Инкремент: {setVariable.VariableName} += {setVariable.Value}";
+                            break;
+                        case OperationType.Decrement:
+                            commandText = $"Декремент: {setVariable.VariableName} -= {setVariable.Value}";
+                            break;
+                        case OperationType.Assign:
+                            commandText = $"Присвоить: {setVariable.VariableName} = {setVariable.Value}";
+                            break;
+                        default:
+                            break;
+                    }
+                   
                     break;
                 case PLCInitVariable set:
-                    commandText = $"Присвоить: {set.VarType}: {set.VariableName} = {set.StartValue}";
+                    commandText = $"Создать {set.VarType}: {set.VariableName} = {set.StartValue}";
                     break;
                 default:
                     commandText = "Неизвестная команда";
@@ -2167,6 +2217,9 @@ namespace Assets.Scripts.UI
             allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-elif-block").ToList());
             allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-else-block").ToList());
             allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-command").ToList());
+            allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-robot-block").ToList());
+            allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-logic-block").ToList());
+            allElementsList.AddRange(hierarchyPanel.Query<VisualElement>("plc-condition-block").ToList());
             DropTargetInfo bestTarget = null;
             float minDistance = float.MaxValue;
 
@@ -2236,6 +2289,56 @@ namespace Assets.Scripts.UI
                         {
                             minDistance = dropInfoInit.Distance;
                             bestTarget = dropInfoInit;
+                        }
+                        continue;
+                    }
+                    if (element.name == "plc-condition-block")
+                    {
+                        if (!CanDropOnTarget(element)) continue;
+
+                        var bounds = GetElementBounds(element, panelWorldBounds);
+                        if (!bounds.Contains(localPos)) continue;
+
+                        var dropInfoCond = CalculateCommandDropPosition(element, bounds, localPos);
+                        if (dropInfoCond != null && dropInfoCond.Distance < minDistance)
+                        {
+                            minDistance = dropInfoCond.Distance;
+                            bestTarget = dropInfoCond;
+                        }
+                        continue;
+                    }
+                    if (element.name == "plc-robot-block" || element.name == "plc-logic-block")
+                    {
+                        if (!CanDropOnTarget(element)) continue;
+
+                        var bounds = GetElementBounds(element, panelWorldBounds);
+                        if (!bounds.Contains(localPos)) continue;
+
+                        float dist = Vector2.Distance(localPos, bounds.center);
+                        if (dist < minDistance)
+                        {
+                            minDistance = dist;
+                            bestTarget = new DropTargetInfo
+                            {
+                                TargetElement = element,
+                                Position = DropPosition.Inside,
+                                Distance = dist
+                            };
+                        }
+                        continue;
+                    }
+                    if (element.name == "plc-command")
+                    {
+                        if (!CanDropOnTarget(element)) continue;
+
+                        var bounds = GetElementBounds(element, panelWorldBounds);
+                        if (!bounds.Contains(localPos)) continue;
+
+                        var dropInfoCmd = CalculateCommandDropPosition(element, bounds, localPos);
+                        if (dropInfoCmd != null && dropInfoCmd.Distance < minDistance)
+                        {
+                            minDistance = dropInfoCmd.Distance;
+                            bestTarget = dropInfoCmd;
                         }
                         continue;
                     }
@@ -2448,7 +2551,29 @@ namespace Assets.Scripts.UI
                 {
                     // В init блоке можно перемещать только выше/ниже
                     if (targetElement.userData?.ToString() == draggedPLCCommand.Id) return false;
+                    if (!(draggedPLCCommand is PLCInitVariable)) return false;
                     return true;
+                }
+                if (targetElement.name == "plc-condition-block")
+                {
+                    // Проверяем что в том же роботе
+                    string sourceRobId = GetRobotIdFromCommand(draggedPLCCommand.Id);
+                    string targetRobId = GetRobotIdFromConditionBlock(targetElement);
+                    return sourceRobId == targetRobId;
+                }
+                if (targetElement.name == "plc-robot-block" || targetElement.name == "plc-logic-block")
+                {
+                    if (draggedPLCCommand is PLCStartProgram) return false;
+                    return true;
+                }
+                if (targetElement.name == "plc-command")
+                {
+                    if (targetElement.userData?.ToString() == draggedPLCCommand.Id) return false;
+
+                    string sourceRobId = GetRobotIdFromCommand(draggedPLCCommand.Id);
+                    string targetRobId = GetRobotIdFromCommandById(targetElement.userData?.ToString());
+
+                    return sourceRobId == targetRobId;
                 }
 
                 var targetCondition = GetConditionFromElement(targetElement);
@@ -2481,6 +2606,56 @@ namespace Assets.Scripts.UI
             return true;
         }
 
+        private string GetRobotIdFromConditionBlock(VisualElement element)
+        {
+            // Ищем родительский plc-robot-block или plc-logic-block
+            var current = element.parent;
+            while (current != null)
+            {
+                if (current.name == "plc-robot-block" && current.userData != null)
+                    return current.userData.ToString();
+                if (current.name == "plc-logic-block")
+                    return "logic";
+                current = current.parent;
+            }
+            return null;
+        }
+        private string GetRobotIdFromCommandById(string commandId)
+        {
+            if (string.IsNullOrEmpty(commandId)) return null;
+
+            // Ищем в init блоке
+            foreach (var item in _sceneObjectManager.PLCData.InitBlockItems)
+            {
+                if (item.Id == commandId)
+                    return "init";
+            }
+
+            // Ищем в блоках роботов
+            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+            {
+                // Проверяем корень ConditionsList
+                foreach (var item in rb.ConditionsList)
+                {
+                    if (item is PLCCommand cmd && cmd.Id == commandId)
+                        return rb.RobotId;
+                }
+                // Рекурсивно
+                if (FindCommandInListRecursive(rb.ConditionsList, commandId))
+                    return rb.RobotId;
+            }
+
+            // Ищем в логике
+            foreach (var item in _sceneObjectManager.PLCData.LogicBlockItems)
+            {
+                if (item is PLCCommand cmd && cmd.Id == commandId)
+                    return "logic";
+            }
+            if (FindCommandInListRecursive(_sceneObjectManager.PLCData.LogicBlockItems, commandId))
+                return "logic";
+
+            return null;
+        }
         private bool IsInsideInitBlock(VisualElement element)
         {
             var current = element.parent;
@@ -2539,18 +2714,17 @@ namespace Assets.Scripts.UI
             // Для PLC команд
             if (currentDragData?.UserData is PLCCommand draggedCommand)
             {
-                if (draggedCommand is PLCInitVariable)
+                if (dropTarget.TargetElement.name == "plc-command" || dropTarget.TargetElement.name == "plc-condition-block")
                 {
                     if (dropTarget.Position == DropPosition.Above)
                     {
                         dropTarget.TargetElement.AddToClassList(DROP_TARGET_ABOVE_CLASS);
-                        return;
                     }
                     else if (dropTarget.Position == DropPosition.Below)
                     {
                         dropTarget.TargetElement.AddToClassList(DROP_TARGET_BELOW_CLASS);
-                        return;
                     }
+                    return;
                 }
 
                 var targetCondition = GetConditionFromElement(dropTarget.TargetElement);
@@ -2592,6 +2766,15 @@ namespace Assets.Scripts.UI
 
         private void RemoveCommandFromAllLists(string commandId)
         {
+            var initList = _sceneObjectManager.PLCData.InitBlockItems;
+            for (int i = initList.Count - 1; i >= 0; i--)
+            {
+                if (initList[i].Id == commandId)
+                {
+                    initList.RemoveAt(i);
+                    break;
+                }
+            }
             foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
                 RemoveCommandFromList(rb.ConditionsList, commandId);
             RemoveCommandFromList(_sceneObjectManager.PLCData.LogicBlockItems, commandId);
@@ -2659,52 +2842,188 @@ namespace Assets.Scripts.UI
             if (currentDragData.UserData is PLCCommand draggedCommand)
             {
                 var targetElement = currentDropTarget.TargetElement;
+                if (targetElement.name == "plc-robot-block")
+                {
+                    var robotId = targetElement.userData?.ToString();
+                    if (!string.IsNullOrEmpty(robotId))
+                    {
+                        var robotData = _sceneObjectManager.PLCData.RobotCommandsBlockItems
+                            .FirstOrDefault(r => r.RobotId == robotId);
+                        if (robotData != null)
+                        {
+                            RemoveCommandFromAllLists(draggedCommand.Id);
+                            robotData.ConditionsList.Add(draggedCommand);
+                            UpdateHierarchy();
+                            CleanupDrag();
+                            return;
+                        }
+                    }
+                    CleanupDrag();
+                    return;
+                }
 
+                // Дроп в корень логики
+                if (targetElement.name == "plc-logic-block")
+                {
+                    RemoveCommandFromAllLists(draggedCommand.Id);
+                    _sceneObjectManager.PLCData.LogicBlockItems.Add(draggedCommand);
+                    UpdateHierarchy();
+                    CleanupDrag();
+                    return;
+                }
+                if (targetElement.name == "plc-condition-block")
+                {
+                    var targetConditionBlockId = targetElement.userData?.ToString();
+                    if (!string.IsNullOrEmpty(targetConditionBlockId))
+                    {
+                        foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+                        {
+                            int idx = FindConditionBlockIndex(rb.ConditionsList, targetConditionBlockId);
+                            if (idx >= 0)
+                            {
+                                RemoveCommandFromAllLists(draggedCommand.Id);
+                                if (currentDropTarget.Position == DropPosition.Below)
+                                    idx++;
+                                idx = Mathf.Clamp(idx, 0, rb.ConditionsList.Count);
+                                rb.ConditionsList.Insert(idx, draggedCommand);
+                                UpdateHierarchy();
+                                CleanupDrag();
+                                return;
+                            }
+                        }
+                        int idx2 = FindConditionBlockIndex(_sceneObjectManager.PLCData.LogicBlockItems, targetConditionBlockId);
+                        if (idx2 >= 0)
+                        {
+                            RemoveCommandFromAllLists(draggedCommand.Id);
+                            if (currentDropTarget.Position == DropPosition.Below)
+                                idx2++;
+                            idx2 = Mathf.Clamp(idx2, 0, _sceneObjectManager.PLCData.LogicBlockItems.Count);
+                            _sceneObjectManager.PLCData.LogicBlockItems.Insert(idx2, draggedCommand);
+                            UpdateHierarchy();
+                            CleanupDrag();
+                            return;
+                        }
+                    }
+                    CleanupDrag();
+                    return;
+                }
+                // Дроп Above/Below на команду
                 if (targetElement.name == "plc-command")
                 {
-                    var draggedSetVar = draggedCommand as PLCInitVariable;
-                    if (draggedSetVar == null)
+                    var targetCommand = GetCommandById(targetElement.userData?.ToString());
+                    if (targetCommand == null)
                     {
                         CleanupDrag();
                         return;
                     }
 
-                    var targetCommand = GetCommandById(targetElement.userData?.ToString()) as PLCInitVariable;
-                    if (targetCommand != null)
+                    // Init блок
+                    if (IsInsideInitBlock(targetElement))
                     {
                         var initList = _sceneObjectManager.PLCData.InitBlockItems;
-                        int oldIndex = initList.IndexOf(draggedSetVar);
-                        int targetIndex = initList.IndexOf(targetCommand);
 
+                        RemoveCommandFromAllLists(draggedCommand.Id);
+
+                        int targetIndex = initList.FindIndex(x => x.Id == targetCommand.Id);
+
+                        if (targetIndex >= 0)
+                        {
+                            if (currentDropTarget.Position == DropPosition.Below)
+                                targetIndex++;
+
+                            initList.Insert(targetIndex, (PLCInitVariable)draggedCommand);
+                            UpdateHierarchy();
+                            CleanupDrag();
+                            return;
+                        }
+
+                        CleanupDrag();
+                        return;
+                    }
+                    
+                    foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+                    {
+                        var foundList = FindParentListForCommandInConditions(rb.ConditionsList, targetCommand.Id);
+                        if (foundList != null)
+                        {
+                            RemoveCommandFromAllLists(draggedCommand.Id);
+
+                            int targetIndex = foundList.IndexOf(targetCommand);
+                            if (currentDropTarget.Position == DropPosition.Below)
+                                targetIndex++;
+
+                            foundList.Insert(targetIndex, draggedCommand);
+                            UpdateHierarchy();
+                            CleanupDrag();
+                            return;
+                        }
+
+                        // Проверяем в корне ConditionsList
+                        int idx = rb.ConditionsList.IndexOf(targetCommand);
+                        if (idx >= 0)
+                        {
+                            RemoveCommandFromAllLists(draggedCommand.Id);
+                            if (currentDropTarget.Position == DropPosition.Below) idx++;
+                            idx = Mathf.Clamp(idx, 0, rb.ConditionsList.Count);
+                            rb.ConditionsList.Insert(idx, draggedCommand);
+                            UpdateHierarchy();
+                            CleanupDrag();
+                            return;
+                        }
+                    }
+
+                    // 2. Ищем в логике
+                    var logicList = FindParentListForCommandInConditions(_sceneObjectManager.PLCData.LogicBlockItems, targetCommand.Id);
+                    if (logicList != null)
+                    {
+                        RemoveCommandFromAllLists(draggedCommand.Id);
+
+                        int targetIndex = logicList.IndexOf(targetCommand);
                         if (currentDropTarget.Position == DropPosition.Below)
                             targetIndex++;
-                        if (targetIndex > oldIndex && oldIndex != -1)
-                            targetIndex--;
 
-                        if (oldIndex != -1)
-                            initList.RemoveAt(oldIndex);
-
-                        initList.Insert(targetIndex, draggedSetVar);
+                        logicList.Insert(targetIndex, draggedCommand);
                         UpdateHierarchy();
                         CleanupDrag();
                         return;
                     }
+
+                    // Проверяем в корне LogicBlockItems
+                    int idx2 = _sceneObjectManager.PLCData.LogicBlockItems.IndexOf(targetCommand);
+                    if (idx2 >= 0)
+                    {
+                        RemoveCommandFromAllLists(draggedCommand.Id);
+                        if (currentDropTarget.Position == DropPosition.Below) idx2++;
+                        idx2 = Mathf.Clamp(idx2, 0, _sceneObjectManager.PLCData.LogicBlockItems.Count);
+                        _sceneObjectManager.PLCData.LogicBlockItems.Insert(idx2, draggedCommand);
+                        UpdateHierarchy();
+                        CleanupDrag();
+                        return;
+                    }
+
+                    CleanupDrag();
+                    return;
                 }
 
-                var targetCondition = GetConditionFromElement(currentDropTarget.TargetElement);
-                if (targetCondition != null)
+
+                // Дроп Inside условия
+                var targetCondition2 = GetConditionFromElement(currentDropTarget.TargetElement);
+                if (targetCondition2 != null)
                 {
-                    if (draggedCommand is PLCStartProgram && HasStartProgramInCondition(targetCondition))
+                    if (draggedCommand is PLCStartProgram && HasStartProgramInCondition(targetCondition2))
                     {
                         CleanupDrag();
                         return;
                     }
                     RemoveCommandFromAllLists(draggedCommand.Id);
-                    targetCondition.Content.Add(draggedCommand);
+                    targetCondition2.Content.Add(draggedCommand);
                     UpdateHierarchy();
                     CleanupDrag();
                     return;
                 }
+
+                CleanupDrag();
+                return;
             }
 
             var draggedObject = currentDragData.SceneObject;
@@ -2782,6 +3101,15 @@ namespace Assets.Scripts.UI
                     }
                 }
             }
+        }
+        private int FindConditionBlockIndex(List<PLCBase> items, string blockId)
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] is PLCBlockCondition block && block.Id == blockId)
+                    return i;
+            }
+            return -1;
         }
         private void CleanupDrag()
         {
@@ -2884,8 +3212,67 @@ namespace Assets.Scripts.UI
 
             return 0;
         }
+        private List<PLCBase> FindParentListForCommandInConditions(List<PLCBase> items, string commandId)
+        {
+            foreach (var item in items)
+            {
+                if (item is PLCBlockCondition block)
+                {
+                    // Проверяем IF Content
+                    foreach (var c in block.IfCondition.Content)
+                    {
+                        if (c is PLCCommand cmd && cmd.Id == commandId)
+                            return block.IfCondition.Content;
+                    }
+                    var found = FindParentListForCommandInConditions(block.IfCondition.Content, commandId);
+                    if (found != null) return found;
+
+                    // Проверяем ELIF Content
+                    foreach (var elif in block.ElifConditions)
+                    {
+                        foreach (var c in elif.Content)
+                        {
+                            if (c is PLCCommand cmd && cmd.Id == commandId)
+                                return elif.Content;
+                        }
+                        found = FindParentListForCommandInConditions(elif.Content, commandId);
+                        if (found != null) return found;
+                    }
+
+                    // Проверяем ELSE Content
+                    if (block.ElseConndition != null)
+                    {
+                        foreach (var c in block.ElseConndition.Content)
+                        {
+                            if (c is PLCCommand cmd && cmd.Id == commandId)
+                                return block.ElseConndition.Content;
+                        }
+                        found = FindParentListForCommandInConditions(block.ElseConndition.Content, commandId);
+                        if (found != null) return found;
+                    }
+                }
+            }
+            return null;
+        }
         private PLCCondition GetConditionFromElement(VisualElement element)
         {
+            if (element.name == "plc-command")
+            {
+                var current = element.parent;
+                while (current != null)
+                {
+                    if (current.name == "plc-if-block" || current.name == "plc-elif-block" || current.name == "plc-else-block")
+                    {
+                        var conditionId = current.userData?.ToString();
+                        if (conditionId != null)
+                            return GetConditionById(conditionId);
+                    }
+                    current = current.parent;
+                }
+                return null;
+            }
+
+            // Для foldout — старая логика
             var foldout = GetParentElement(element);
             if (foldout != null && (foldout.name == "plc-if-block" || foldout.name == "plc-elif-block" || foldout.name == "plc-else-block"))
             {

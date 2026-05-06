@@ -43,17 +43,32 @@ namespace Assets.Scripts.UI
                 "Инкремент",
                 "Декремент"
             };
-            operationsList.SetValueWithoutNotify(operationsList.choices[0]);
+            operationsList.value = operationsList.choices[0];
             variablesList.choices = _sceneObjectManager.PLCData.Variables;
         }
 
 
         private void ConfirmCondition()
-        { 
-            CloseWithValue(new PLCSetVariable { VarType = selectedVariable.VarType, VariableName = selectedVariable.Name, Value = varValue });
+        {
+            OperationType operation = OperationType.Assign;
+            switch (selectedOperation)
+            {
+                case "Присвоить":
+                    operation = OperationType.Assign;
+                    break;
+                case "Инкремент":
+                    operation = OperationType.Increment;
+                    break;
+                case "Декремент":
+                    operation = OperationType.Decrement;
+                    break;
+                default:
+                    break;
+            }
+            CloseWithValue(new PLCSetVariable { VarType = selectedVariable.VarType, Operation = operation, VariableName = selectedVariable.Name, Value = varValue });
             selectedOperation = operationsList.choices[0];
             selectedVariable = variablesList.choices[0];
-            operationsList.SetValueWithoutNotify(operationsList.choices[0]);
+            operationsList.value = operationsList.choices[0];
             variablesList.SetValueWithoutNotify(variablesList.choices[0]);
             varValue = "";
             varValueTextBox.SetValueWithoutNotify("");
@@ -81,7 +96,16 @@ namespace Assets.Scripts.UI
                     default:
                         break;
                 }
-                variablesList.SetValueWithoutNotify(variablesList.choices[0]);
+                if (variablesList.choices.Count > 0)
+                {
+                    selectedVariable = variablesList.choices[0];
+                    variablesList.SetValueWithoutNotify(selectedVariable);
+                }
+                else
+                {
+                    selectedVariable = null;
+                    variablesList.SetValueWithoutNotify(null);
+                }
             });
             variablesList.RegisterCallback<ChangeEvent<Variable>>(p =>
             {

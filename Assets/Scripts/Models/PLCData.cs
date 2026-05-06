@@ -142,6 +142,7 @@ namespace Assets.Scripts.Models
     public class PLCSetVariable : PLCCommand
     {
         public VarType VarType;
+        public OperationType Operation;
         public string VariableName;
         public string Value;
         public PLCSetVariable() { Id = Guid.NewGuid().ToString(); Type = CommandType.SetVariable; }
@@ -153,5 +154,11 @@ namespace Assets.Scripts.Models
         String,
         Float,
         Bool
+    }
+    public enum OperationType
+    {
+        Increment,
+        Decrement,
+        Assign
     }
 }
