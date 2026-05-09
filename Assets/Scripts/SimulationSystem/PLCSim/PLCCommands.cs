@@ -293,8 +293,8 @@ namespace Assets.Scripts.SimulationSystem.PLC
 
             try
             {
-                var boolVars = ServiceManager.Current.Get<LogicSignalBus>().GetSignals();
-                var intVars = ServiceManager.Current.Get<LogicSignalBus>().GetIntData();
+                var boolVars = ServiceManager.Current.Get<LogicSignalBus>().GetCopySignals();
+                var intVars = ServiceManager.Current.Get<LogicSignalBus>().GetCopyIntData();
 
                 return BooleanExpressionParser.Evaluate(ConditionString, boolVars, intVars);
             }
@@ -321,7 +321,7 @@ namespace Assets.Scripts.SimulationSystem.PLC
         }
         public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)
         {
-            ServiceManager.Current.Get<LogicSignalBus>().SetSignal(SignalName, ValueToSet);
+            ServiceManager.Current.Get<LogicSignalBus>().SetCopySignal(SignalName, ValueToSet);
             return false;
         }
     }
@@ -341,7 +341,23 @@ namespace Assets.Scripts.SimulationSystem.PLC
         }
         public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)
         {
-            ServiceManager.Current.Get<LogicSignalBus>().SetIntData(DataName, ValueToSet);
+            ServiceManager.Current.Get<LogicSignalBus>().SetCopyIntData(DataName, ValueToSet);
+            return false;
+        }
+    }
+    public class PLCCommandSetIncrement : PLCProgrammElement
+    {
+        public string DataName { get; set; }
+        public int ValueToSet { get; set; }
+        public PLCCommandSetIncrement(string id, string Name, int Value) : base(id)
+        {
+            DataName = Name;
+            ValueToSet = Value;
+        }
+        public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)
+        {
+            var LSB = ServiceManager.Current.Get<LogicSignalBus>();
+            LSB.SetCopyIntData(DataName, LSB.GetCopyIntData(DataName) + ValueToSet);
             return false;
         }
     }

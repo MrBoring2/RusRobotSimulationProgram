@@ -25,6 +25,7 @@ namespace Assets.Scripts.Providers
         public float AngleBrake { get; set; } = 10;
         //точка-точка точка
         public float SpeedPercent { get; set; } = 50;
+        public int ConfigPoint { get; set; } = 0;
 
         //===========================================//
         public bool ShowVisual = true;
@@ -51,11 +52,19 @@ namespace Assets.Scripts.Providers
             {
                 POINTTYPE.LinearPoint => new List<CustomProperty>()
                 {
+
                     new CustomProperty("PointType",
                     "ТИП ТОЧКИ",
                     typeof(string),
                     () => PointType.ToString(),
                     val => PointType = (POINTTYPE)Enum.Parse(typeof(POINTTYPE), (string)val)),
+                    new CustomProperty(
+                    "ConfigPoint",
+                    "Конфигурация",
+                    typeof(string),
+                    () => (ConfigPoint+1).ToString(),
+                    val => ConfigPoint = int.Parse((string)val)-1
+                    ),
                     new CustomProperty("LinearSpeed",
                     "Л Скорость",
                     typeof(float),
@@ -123,7 +132,10 @@ namespace Assets.Scripts.Providers
                 LinAcceler = v5;
             if (data.FloatValues.TryGetValue("AngleBrake", out var v6))
                 LinBrake = v6;
+            /*if (data.FloatValues.TryGetValue("AngleBrake", out var v7))
+                ConfigPoint = v7;*/
         }
+        
     }
 }
 public enum POINTTYPE

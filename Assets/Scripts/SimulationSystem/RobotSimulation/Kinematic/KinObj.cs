@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Angles
 {
@@ -115,14 +116,21 @@ public class Angles
                (GetThetha(4) == ang.GetThetha(4)) &&
                (GetThetha(5) == ang.GetThetha(5));
     }
+    float NormalizeAngle360(float angle)
+    {
+        angle = angle % 360f;
+        if (angle < 0) angle += 360f;
+        return angle;
+    }
     public float Diff(Angles ang)
     {
         if (ang == null) return 0;
         float max = float.NegativeInfinity;
         for(int i = 0; i < 6; i++)
             {
-                float diff = Mathf.Abs(GetThetha(i) - ang.GetThetha(i));
+                float diff = Mathf.Abs(NormalizeAngle360(GetThetha(i)) - NormalizeAngle360(ang.GetThetha(i)));
                 if (diff > max) max = diff;
+                
             }
         return max;
     }

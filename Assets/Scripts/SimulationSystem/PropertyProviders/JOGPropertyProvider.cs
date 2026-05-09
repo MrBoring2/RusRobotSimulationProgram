@@ -13,7 +13,14 @@ namespace Assets.Scripts.Providers
 {
     public class JOGPropertyProvider : MonoBehaviour, IPropertyProvider
     {
-            
+        public int ConfigPoint { get; set; }
+        public bool VerificationAngles { get; set; }
+        private bool EndEffectorOn
+        {
+            get => _robotPropertyProvider.EndEffectorOn;
+            set => _robotPropertyProvider.EndEffectorOn = value;
+        }
+
         public string Id
         {
             get => _robotPropertyProvider.Id;
@@ -46,11 +53,7 @@ namespace Assets.Scripts.Providers
         public Quaternion GlobalRotationQ{ get => transform.rotation; set => transform.rotation = value; }
         
         public RobotPropertyProvider RobotPropertyProvider => _robotPropertyProvider;
-        private bool EndEffectorOn
-        {
-            get => _robotPropertyProvider.EndEffectorOn;
-            set => _robotPropertyProvider.EndEffectorOn = value;
-        }
+        
         public bool IsReadondly { get; set; }
         public string Name { get => gameObject.name; set { gameObject.name = value; } }
         public Vector3 Scale { get => transform.localScale; set => transform.localScale = value; }
@@ -94,22 +97,43 @@ namespace Assets.Scripts.Providers
 
         public  List<CustomProperty> GetCustomProperties()
         {
-            var list = new List<CustomProperty>();
-            var endEffect = new CustomProperty(
+            var list = new List<CustomProperty>()
+            {
+                new CustomProperty(
                 "EndEffectorOn",
                 "Статус захвата",
                 typeof(bool),
                 () => EndEffectorOn,
                 val => EndEffectorOn = (bool)val
-            );
-            list.Add(endEffect);
+                ),
+                new CustomProperty(
+                "ConfigPoint",
+                "Конфигурация",
+                typeof(string),
+                () => (ConfigPoint+1).ToString(),
+                val => ConfigPoint = int.Parse((string)val)-1
+                ),
+                new CustomProperty(
+                "VerificationAngles",
+                "Проверка углов",
+                typeof(bool),
+                () => VerificationAngles,
+                val => VerificationAngles = (bool)val
+                )
+            };
+                
             return list;
         }
+        
 
         public void RestoreCustomState(ProviderSaveData data)
         {
-            if (data.BoolValues.TryGetValue("EndEffectorOn", out var v))
-                EndEffectorOn = v;
+            if (data.BoolValues.TryGetValue("EndEffectorOn", out var v1))
+                EndEffectorOn = v1;
+            if (data.FloatValues.TryGetValue("ConfigPoint", out var v2))
+                ConfigPoint = int.Parse(((float)v2).ToString());
+            if (data.BoolValues.TryGetValue("VerificationAngles", out var v3))
+                VerificationAngles = (bool)v3;
         }
 
         protected string id;

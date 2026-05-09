@@ -995,7 +995,7 @@ namespace Assets.Scripts.UI
             var type = prefab.GetComponent<SceneObjectMarker>().type;
             var pos = Vector3.zero;
             var rot = Quaternion.identity;
-            if (_simulationManager.GetModeSim() == MODE.JOG_MODE)
+            if (_simulationManager.GetModeSim().SimulationMode == MODE.JOG_MODE)
             {
                 if (type == ObjectType.LinearMoveCommand)
                 {

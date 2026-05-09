@@ -89,9 +89,10 @@ public class SimulationManager : MonoBehaviour,IService
     {
         return SimulationStat;
     }
-    public MODE GetModeSim()
+    public (MODE SimulationMode, MODE oldSimulationMode) GetModeSim()
     {
-        return SimulationMode;
+        (MODE, MODE) modes = (SimulationMode, oldSimulationMode);
+        return modes;
     }
 
 }

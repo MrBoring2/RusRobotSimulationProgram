@@ -32,8 +32,6 @@ public class PLCSimulation : MonoBehaviour
         _eventBus = ServiceManager.Current.Get<EventBus>();
         //Статусы симуляции//
         _eventBus.Subscribe<StartProgramm>(StartSim);
-        _eventBus.Subscribe<PauseProgramm>(PauseSim);
-        _eventBus.Subscribe<StopProgramm>(StopSim);
         //--//
         
     }
@@ -119,39 +117,53 @@ public class PLCSimulation : MonoBehaviour
         //condition.Branches.Add(conditionBranch2);
         //conditionBranch2.ProgrammElements.Add(set2);
         //
-        StartPLC();
         //StartCoroutine(ExecuteProgramm());
+        StartPLC();
     }
-    //--"Асинхронный" старт блоков работы с роботом--
-    public void StartPLC()
+    // старт ПЛК--
+    private async void StartPLC()
     {
-        foreach(var programmElement in PLCProgramm)
+        ServiceManager.Current.Get<LogicSignalBus>().CreateSignalCadr();
+        while (_simManager.GetStatusSim() == SIM_STAT.PLAY)
+        {
+            if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+            await Awaitable.FixedUpdateAsync();
+            // Логика ПЛК
+            await PLC();
+            ServiceManager.Current.Get<LogicSignalBus>().CadrToActiveSignal();
+        }
+    }
+    public async Awaitable PLC()
+    {
+
+        foreach (var programmElement in PLCProgramm)
         {
             try
             {
-                if(programmElement.GetType() == typeof(PLCCommandInit))
+                if (programmElement.GetType() == typeof(PLCCommandInit))
                 {
                     programmElement.Execute();
                 }
-                if(programmElement.GetType() == typeof(PLCCommandBlockRobotsTask))
+                if (programmElement.GetType() == typeof(PLCCommandBlockRobotsTask))
                 {
                     PLCCommandBlockRobotsTask block = (PLCCommandBlockRobotsTask)programmElement;
-                    _=ExecuteRobotBlock(block);
+                    await ExecuteRobotBlock(block);
                 }
                 if (programmElement.GetType() == typeof(PLCCommandCycleBlock))
                 {
                     PLCCommandCycleBlock block = (PLCCommandCycleBlock)programmElement;
-                    StartCoroutine(ExecuteCycleBlock(block));
+                    await ExecuteCycleBlock(block);
                 }
 
             }
-            
+
             catch (Exception ex)
             {
                 Debug.LogError($"Ошибка исполнителя ПЛК: {ex}");
             }
         }
     }
+    
     //--Выполнение блока работы с роботом--
     public async Awaitable ExecuteRobotBlock(PLCCommandBlockRobotsTask BlockRobotTasks)
     {
@@ -178,38 +190,25 @@ public class PLCSimulation : MonoBehaviour
             foreach (var command in BlockRobotTasks.ProgrammElements)
             {
                 if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
-                if (command.Execute(RC)) break;
+                if (command.Execute(RC)) ;// break;
             }
-
-            // Если ничего не выполнилось — можно добавить логику "по умолчанию"
         }
     }
-    public IEnumerator ExecuteCycleBlock(PLCCommandCycleBlock block)
+    public async Awaitable ExecuteCycleBlock(PLCCommandCycleBlock block)
     {
         while (_simManager.GetStatusSim() == SIM_STAT.PLAY)
         {
-            yield return new WaitForFixedUpdate();
-
+            await Awaitable.FixedUpdateAsync();
             foreach (var element in block.ProgrammElements)
             {
                 element.Execute();
             }
         }
     }
- 
-    private void PauseSim(PauseProgramm s)
-    {
-        
-    }
-    private void StopSim(StopProgramm s)
-    {
 
-    }
 
     private void OnDestroy()
     {
-        _eventBus?.Unsubcribe<StartProgramm>(StartSim);
-        _eventBus?.Unsubcribe<PauseProgramm>(PauseSim);
 
     }
 }

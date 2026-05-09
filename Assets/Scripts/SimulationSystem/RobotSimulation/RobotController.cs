@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Scripts.SimulationSystem.RobotSimulation
@@ -31,7 +32,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         Vector3 oldJOGposition = Vector3.zero;
         Quaternion oldJOGrotation = Quaternion.identity;
         float[] oldAngles = new float[6] { 0, 0, 0, 0, 0, 0 };
-
+        bool needUpdateConf = false;
 
         public string ID => _propertyProvider.Id;
         public bool RunTask { get; set; }
@@ -74,24 +75,33 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 testData[i] = newPoint;
             }
             //////
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            /*Stopwatch stopwatch = Stopwatch.StartNew();
             for (int i = 0; i < 10000; i++)
             {
                 InvKin.IKCalc(_propertyProvider.RP, testData[i], Quaternion.identity);
             }
             stopwatch.Stop();
             UnityEngine.Debug.Log($"10000 точек IKCalc выполнился за: {(double)stopwatch.ElapsedMilliseconds / Stopwatch.Frequency} с или {stopwatch.ElapsedTicks} тиков ");
-            SetJogMove();
+            */
+            _SetJogMove();
         }
         private void FixedUpdate()
         {
-            if (_simManager.GetModeSim() == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
+            if(_simManager.GetModeSim() == (MODE.JOG_MODE, MODE.ANGLES_MODE) && needUpdateConf)
             {
-                SetJogMove();
+                int config = InvKin.CheckConfig(new Angles(_propertyProvider.ChangeAngles) ,_propertyProvider.RP, _propertyProvider.JOGpoint.Position, _propertyProvider.JOGpoint.LocalRotationQ);
+
+                _propertyProvider.JOGpoint.ConfigPoint = config;
+                needUpdateConf = false;
             }
-            else if (_simManager.GetModeSim() == MODE.ANGLES_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
+            if (_simManager.GetModeSim().SimulationMode == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
             {
-                SetAngleMove();
+                _ = SetJogMove();
+            }
+            else if (_simManager.GetModeSim().SimulationMode == MODE.ANGLES_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
+            {
+                _ = SetAngleMove();
+                needUpdateConf = true;
             }
         }
         //=================================== КОМАНДЫ ===================================//
@@ -253,6 +263,11 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             while (/*End.Position != wayPoint.Position*/Vector3.Distance(End.Position, wayPoint.Position) > 0.001 || (Quaternion.Angle(wayPoint.Rotation, End.Rotation) > 0.001))
             {
                 if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                while (_simManager.GetStatusSim() == SIM_STAT.PAUSE)
+                {
+                    if(_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                    await Awaitable.FixedUpdateAsync();
+                }
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 //трапеция
                 if (!isTriangularProfile && !onlyRotate)
@@ -335,14 +350,14 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 
 
                 //Выбор конфигурации точки
-                InvKin.CheckLimit(angles[0]);
-                if (InvKin.checkIsNaN(angles[0]))
+                InvKin.CheckLimit(angles[point.ConfigPoint]);
+                if (InvKin.checkIsNaN(angles[point.ConfigPoint]))
                 {
-                    stopwatch.Stop();
+                    /*stopwatch.Stop();
                     long freq = Stopwatch.Frequency;
                     UnityEngine.Debug.Log($"Метод IKCalc выполнился за: {(double)stopwatch.ElapsedMilliseconds/freq} с");
-                    UnityEngine.Debug.Log($"Или в тиках: {stopwatch.ElapsedTicks}");
-                    ModifyRobot(_propertyProvider, angles[0].GetFloats());
+                    UnityEngine.Debug.Log($"Или в тиках: {stopwatch.ElapsedTicks}");*/
+                    ModifyRobot(_propertyProvider, angles[point.ConfigPoint].GetFloats());
                     SetJogPosition(wayPoint);
 
                     currentTimeMove += Time.deltaTime;
@@ -413,7 +428,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             float CurrentTimeMove = 0;
             Point End = new(GetPositionInfo(point).Position, GetPositionInfo(point).Rotation);
 
-            Angles EndAngles = InvKin.IKCalc(_propertyProvider.RP, End.Position, End.Rotation)[0];
+            Angles EndAngles = InvKin.IKCalc(_propertyProvider.RP, End.Position, End.Rotation)[point.ConfigPoint];
             Angles CurrentAngles = new(_propertyProvider.J1Angle, _propertyProvider.J2Angle, _propertyProvider.J3Angle, _propertyProvider.J4Angle, _propertyProvider.J5Angle, _propertyProvider.J6Angle);
             Angles StartAngles = new(_propertyProvider.J1Angle, _propertyProvider.J2Angle, _propertyProvider.J3Angle, _propertyProvider.J4Angle, _propertyProvider.J5Angle, _propertyProvider.J6Angle);
             Angles Distance = new();
@@ -445,6 +460,11 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             while (CurrentAngles.Diff(EndAngles) > 0.001f)
             {
                 if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                while (_simManager.GetStatusSim() == SIM_STAT.PAUSE)
+                {
+                    if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                    await Awaitable.FixedUpdateAsync();
+                }
                 await Awaitable.FixedUpdateAsync();
                 CurrentTimeMove += Time.deltaTime;
                 if (!ListParameters[LongThetha].isTriangularProfile)
@@ -496,19 +516,41 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         }
         //=================================== КОМАНДЫ ===================================//
         //--Задать позицию ДЖОГа
-        public void SetJogMove()
+        public async Awaitable SetJogMove()
+        {
+            await _SetJogMove();
+        }
+        public async Awaitable _SetJogMove()
         {
             if (oldJOGposition != _propertyProvider.JOGpoint.Position || oldJOGrotation != _propertyProvider.JOGpoint.LocalRotationQ)
             {
+                
                 angles = InvKin.IKCalc(_propertyProvider.RP, _propertyProvider.JOGpoint.Position, _propertyProvider.JOGpoint.LocalRotationQ);
-                //добавить автовыбор конфигурации или ручной ввод
-                InvKin.CheckLimit(angles[0]);
-                if (InvKin.checkIsNaN(angles[0]))
+                //добавить автовыбор конфигурации или ручной ввод\
+                bool InLimit = false;
+                if (_propertyProvider.JOGpoint.VerificationAngles) 
                 {
-                    ModifyRobot(_propertyProvider, angles[0].GetFloats());
-                    angles[0].GetFloats().CopyTo(_propertyProvider.ChangeAngles, 0);
+                    InLimit =  InvKin.CheckLimit(angles[_propertyProvider.JOGpoint.ConfigPoint]);
+                };
+                if (!InLimit && InvKin.checkIsNaN(angles[_propertyProvider.JOGpoint.ConfigPoint]))
+                {
+                    ModifyRobot(_propertyProvider, angles[_propertyProvider.JOGpoint.ConfigPoint].GetFloats());
+                    angles[_propertyProvider.JOGpoint.ConfigPoint].GetFloats().CopyTo(_propertyProvider.ChangeAngles, 0);
+
+                    //////
+                    //await Awaitable.FixedUpdateAsync();
+                    //var jogPos = _propertyProvider.JOGpoint.GlobalPosition;
+                    //var objPos = _propertyProvider.GetActualPosEffector().Position;
+
+                    //UnityEngine.Debug.LogWarning($"JOG:({jogPos.x:F4}, {jogPos.y:F4}, {jogPos.z:F4});;;OBJ:({objPos.x:F4}, {objPos.y:F4}, {objPos.z:F4})");
                     //_propertyProvider.XYZ = _propertyProvider.oldXYZ = EffectorPosition.Position;
                     //_propertyProvider.XYZRot = _propertyProvider.oldXYZRot = EffectorPosition.Rotation;
+                }
+                else
+                {
+                    _propertyProvider.JOGpoint.Position = oldJOGposition;
+                    _propertyProvider.JOGpoint.LocalRotationQ = oldJOGrotation;
+                    //UnityEngine.Debug.LogError("Точка недостижима");
                 }
                 oldJOGposition = _propertyProvider.JOGpoint.Position;
                 oldJOGrotation = _propertyProvider.JOGpoint.LocalRotationQ;
@@ -516,12 +558,17 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             }
 
         }
-        public void SetAngleMove()
+        public async Awaitable SetAngleMove()
+        {
+            await _SetAngleMove();
+        }
+        public async Awaitable _SetAngleMove()
         {
             if (!oldAngles.SequenceEqual(_propertyProvider.ChangeAngles))
             {
-                _propertyProvider.ChangeAngles = InvKin.CheckLimit(_propertyProvider.ChangeAngles);
+                _propertyProvider.ChangeAngles = InvKin.CheckLimit(_propertyProvider.ChangeAngles); //углы
                 ModifyRobot(_propertyProvider, _propertyProvider.ChangeAngles);
+                await Awaitable.FixedUpdateAsync();
                 Point position = _propertyProvider.GetActualPosEffector();
                 _propertyProvider.JOGpoint.GlobalPosition = position.Position;
                 _propertyProvider.JOGpoint.GlobalRotationQ = position.Rotation;
@@ -647,10 +694,10 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                         LinearPointPropertyProvider LPPP = (LinearPointPropertyProvider)s.Point.PropertyProvider;
                         angles = InvKin.IKCalc(_propertyProvider.RP, GetPositionInfo(LPPP));
                         //Выбор конфигурации точки
-                        InvKin.CheckLimit(angles[0]);
-                        if (InvKin.checkIsNaN(angles[0]))
+                        InvKin.CheckLimit(angles[LPPP.ConfigPoint]);
+                        if (InvKin.checkIsNaN(angles[LPPP.ConfigPoint]))
                         {
-                            ModifyRobot(_propertyProvider, angles[0].GetFloats());
+                            ModifyRobot(_propertyProvider, angles[LPPP.ConfigPoint].GetFloats());
                             _propertyProvider.JOGpoint.Position = GetPositionInfo(LPPP).Position;
                             _propertyProvider.JOGpoint.GlobalRotationQ = GetPositionInfo(LPPP).Rotation;
 
