@@ -1,4 +1,4 @@
-//DI
+п»ї//DI
 using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.Manipulator;
 using Assets.Scripts.CustomEventBus.Signals.Robot;
@@ -7,43 +7,54 @@ using Assets.Scripts.CustomServiceManager;
 using System;
 using UnityEngine;
 
-public class SimulationManager : MonoBehaviour, IService
+public class SimulationManager : MonoBehaviour,IService
 {
-    public LogisSignalBus LogisSignalBus;
     private EventBus _eventBus;
-    private SIM_STAT SimulationStat = SIM_STAT.STOP; //статус симуляции в наст. время
-    private MODE SimulationMode = MODE.NONE; // режим симуляции, пока так.
+    private SIM_STAT SimulationStat = SIM_STAT.STOP; //СЃС‚Р°С‚СѓСЃ СЃРёРјСѓР»СЏС†РёРё РІ РЅР°СЃС‚. РІСЂРµРјСЏ
+    private MODE SimulationMode = MODE.NONE;
+    private MODE oldSimulationMode = MODE.NONE;
     void Start()
     {
-        LogisSignalBus = new LogisSignalBus();
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<StartSimulationSignal>(StartSim);
         _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
         _eventBus.Subscribe<PauseSimulationSignal>(PauseSim);
-
-        _eventBus.Subscribe<StopSimulationSignal>(StopSim);  //Нужен сигнал СТОП_СИМУЛЯЦИЯ
+        _eventBus.Subscribe<StopSimulationSignal>(StopSim); 
 
     }
-
+    public void Init() { }
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
     {
         if (signal.Mode == Assets.Scripts.Managers.SceneManipulatorMode.JOG)
         {
-            SimulationMode = MODE.JOG_MODE;
+            ChangeMode(MODE.JOG_MODE);
+        }
+        else if(signal.Mode == Assets.Scripts.Managers.SceneManipulatorMode.Rotation)
+        {
+            ChangeMode(MODE.ANGLES_MODE);
         }
         else
         {
-            SimulationMode = MODE.NONE;
+            ChangeMode(MODE.NONE);
         }
     }
 
     private void StartSim(StartSimulationSignal s)
     {
-        if(1==1/*SimulationStat != SIM_STAT.RESUME*/)
+        if(SimulationStat != SIM_STAT.PLAY)
         {
-            SimulationStat = SIM_STAT.PLAY;
-            SimulationMode = MODE.NONE;
-            _eventBus.Invoke(new StartProgramm());
+            try
+            {
+                ChangeMode(MODE.NONE);
+                SimulationStat = SIM_STAT.PLAY;
+                _eventBus.Invoke(new StartProgramm());
+                ////////////
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"РћС€РёР±РєР° Р·Р°РїСѓСЃРєР° СЃРёРјСѓР»СЏС†РёРё: {ex}");
+            }
+            
         }
     }
     private void PauseSim(PauseSimulationSignal s)
@@ -60,24 +71,30 @@ public class SimulationManager : MonoBehaviour, IService
         {
             SimulationStat = SIM_STAT.STOP;
             _eventBus.Invoke(new StopProgramm());
+            ChangeOldMode();
         }
     }
-
+    private void ChangeMode(MODE mode)
+    {
+        oldSimulationMode = SimulationMode;
+        SimulationMode = mode;
+    }
+    private void ChangeOldMode()
+    {
+        (oldSimulationMode, SimulationMode) = (SimulationMode, oldSimulationMode);
+    }
 
 
     public SIM_STAT GetStatusSim()
     {
         return SimulationStat;
     }
-    public MODE GetModeSim()
+    public (MODE SimulationMode, MODE oldSimulationMode) GetModeSim()
     {
-        return SimulationMode;
+        (MODE, MODE) modes = (SimulationMode, oldSimulationMode);
+        return modes;
     }
 
-    public void Init()
-    {
-        
-    }
 }
 
 public enum SIM_STAT
@@ -88,7 +105,7 @@ public enum SIM_STAT
 }
 public enum MODE
 {
-    STEP,
     JOG_MODE,
+    ANGLES_MODE,
     NONE
 }

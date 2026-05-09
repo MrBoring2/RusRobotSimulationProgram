@@ -597,7 +597,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2423190242658182375}
   - component: {fileID: 2530315365824414446}
-  - component: {fileID: 2060894501816403660}
+  - component: {fileID: 2824626051575175961}
   m_Layer: 6
   m_Name: JOG_Manipulator
   m_TagString: Untagged
@@ -642,7 +642,7 @@ MonoBehaviour:
   textOffset: {x: 0, y: 0.15, z: 0}
   gizmoRoot: {fileID: 0}
   gizmoRootStartRotation: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &2060894501816403660
+--- !u!114 &2824626051575175961
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -651,7 +651,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2740521812811356901}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cea8c07d8f7071845bafaf0c3b20024c, type: 3}
+  m_Script: {fileID: 11500000, guid: fde8f4da40122734f967a2c0d64b7e59, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.JOGPropertyProvider
   ShowVisual: 1
@@ -666,12 +666,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 338621209258235640}
-  - component: {fileID: 2123557221313985019}
-  - component: {fileID: 4249141246246613869}
   - component: {fileID: 647134665470056457}
   - component: {fileID: 7573109030372696143}
-  - component: {fileID: 8734229360267228368}
-  - component: {fileID: 715974298080056987}
+  - component: {fileID: 4461988403044309250}
+  - component: {fileID: 4905987346383271110}
+  - component: {fileID: 4709234608051669132}
   m_Layer: 0
   m_Name: "RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
     6-\u043E\u0441\u0435\u0432\u043E\u0439"
@@ -698,56 +697,6 @@ Transform:
   - {fileID: 2423190242658182375}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2123557221313985019
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3126245551890948002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36fee666a10083940a096f572f7c6904, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RobotSimulation
-  allowNextCommand: 1
---- !u!114 &4249141246246613869
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3126245551890948002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0154e894b15591428e7e2650e6564bc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RobotController
-  SpeedCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  InvKin: {fileID: 8734229360267228368}
 --- !u!114 &647134665470056457
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -781,7 +730,7 @@ MonoBehaviour:
   type: 7
   sourcePath: "Prefabs/Robot/RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
     6-\u043E\u0441\u0435\u0432\u043E\u0439"
---- !u!114 &8734229360267228368
+--- !u!114 &4461988403044309250
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -790,7 +739,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3126245551890948002}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 81646d70d50914d49831cee77676935e, type: 3}
+  m_Script: {fileID: 11500000, guid: e23ad4e330b17334a8214543b8f0fbfc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InverseK_new
   X: 0
@@ -817,7 +766,7 @@ MonoBehaviour:
     e31: 0
     e32: 0
     e33: 0
---- !u!114 &715974298080056987
+--- !u!114 &4905987346383271110
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -826,28 +775,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 3126245551890948002}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 221bca855f6172d48a5cb762d52e7742, type: 3}
+  m_Script: {fileID: 11500000, guid: af428d7098573694ca5346a3a114a4fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RobotPropertyProvider
+  Notification: {fileID: 0}
+  SpeedEffector: 0.5
+  ChangeAngles:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
   J1Angle: 0
-  J2Angle: 90
+  J2Angle: -90
   J3Angle: 90
   J4Angle: 0
   J5Angle: 0
   J6Angle: 0
-  SpeedEffector: 0.5
-  L1: 450
-  L2: 447
-  L3: 1150
-  L4: 350
-  L5: 1350
-  L6: 550
-  SpeedPercent: 100
-  XYZ: {x: 0, y: 0, z: 0}
-  oldXYZ: {x: 0, y: 0, z: 0}
-  XYZRot: {x: 0, y: 0, z: 0, w: 0}
-  oldXYZRot: {x: 0, y: 0, z: 0, w: 1}
-  XYZ_robot_Rotate: {x: 0, y: 0, z: 0, w: 0}
   thetha:
   - 0
   - 0
@@ -869,8 +814,44 @@ MonoBehaviour:
   - 0
   - 0
   - 0
-  JOGpoint: {fileID: 2060894501816403660}
-  JOG_IK_Configuration: 0
+  JOGpoint: {fileID: 2824626051575175961}
+  _forwarKinObj: {fileID: 0}
+--- !u!114 &4709234608051669132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3126245551890948002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c4d444c4e70e142b09e6a94dd6f9d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.SimulationSystem.RobotSimulation.RobotController
+  SpeedCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &3137455119182969186
 GameObject:
   m_ObjectHideFlags: 0
@@ -951,7 +932,7 @@ GameObject:
   - component: {fileID: 161305905012334114}
   - component: {fileID: 7624666729113259304}
   - component: {fileID: 2149858949980625546}
-  - component: {fileID: 452207021410786595}
+  - component: {fileID: 3764513646930620522}
   m_Layer: 0
   m_Name: "\u0417\u0430\u0436\u0438\u043C21"
   m_TagString: Untagged
@@ -1080,7 +1061,7 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 7968362455460133229, guid: af44fb957f9977f4795b0c8e005a6313, type: 3}
---- !u!114 &452207021410786595
+--- !u!114 &3764513646930620522
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1089,7 +1070,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3429348313907132287}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a7b540a0f5f2666419c33ef4f033c3dc, type: 3}
+  m_Script: {fileID: 11500000, guid: de1b3f1c0886cfb45b4a325debb22fc7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZajimZZ
   numZ: 2
@@ -1138,7 +1119,7 @@ GameObject:
   - component: {fileID: 6492520832718719102}
   - component: {fileID: 2637570150518154466}
   - component: {fileID: 844208916532001711}
-  - component: {fileID: 5178662806857817766}
+  - component: {fileID: 5526725236091910}
   m_Layer: 0
   m_Name: "\u0417\u0430\u0445\u0432\u0430\u0442_\u041E\u0441\u043D1"
   m_TagString: Untagged
@@ -1243,7 +1224,7 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -3827450339197655817, guid: af44fb957f9977f4795b0c8e005a6313, type: 3}
---- !u!114 &5178662806857817766
+--- !u!114 &5526725236091910
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1252,7 +1233,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4929092817794012301}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5a432d453b34d0f4eb12c87c9a52d295, type: 3}
+  m_Script: {fileID: 11500000, guid: f9a5cbcfad72ba045961067b87f9e114, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Zajim
   z1: {fileID: 7817584039701820378}
@@ -1263,7 +1244,7 @@ MonoBehaviour:
   z2Col: 0
   z1Collision: {fileID: 7817584039701820378}
   z2Collision: {fileID: 3429348313907132287}
-  _propertyProvider: {fileID: 715974298080056987}
+  _propertyProvider: {fileID: 4905987346383271110}
 --- !u!1 &5062091622153642625
 GameObject:
   m_ObjectHideFlags: 0
@@ -1408,6 +1389,7 @@ Transform:
   m_Children:
   - {fileID: 2610878995007751906}
   - {fileID: 844597624923919161}
+  - {fileID: 8270392682814202559}
   m_Father: {fileID: 5695258987970394882}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5645071553321762835
@@ -1908,7 +1890,7 @@ GameObject:
   - component: {fileID: 7959300342587950947}
   - component: {fileID: 6416296596126397727}
   - component: {fileID: 3029108098083142942}
-  - component: {fileID: 7089883785472146084}
+  - component: {fileID: 7730210830136159495}
   m_Layer: 0
   m_Name: "\u0417\u0430\u0436\u0438\u043C11"
   m_TagString: Untagged
@@ -2037,7 +2019,7 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 2731542700852356151, guid: af44fb957f9977f4795b0c8e005a6313, type: 3}
---- !u!114 &7089883785472146084
+--- !u!114 &7730210830136159495
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2046,10 +2028,54 @@ MonoBehaviour:
   m_GameObject: {fileID: 7817584039701820378}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a7b540a0f5f2666419c33ef4f033c3dc, type: 3}
+  m_Script: {fileID: 11500000, guid: de1b3f1c0886cfb45b4a325debb22fc7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZajimZZ
   numZ: 1
+--- !u!1 &8178499018072366967
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8270392682814202559}
+  - component: {fileID: 1422309896803570807}
+  m_Layer: 0
+  m_Name: ForwarKinObj
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8270392682814202559
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8178499018072366967}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.241}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7040336656543550991}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1422309896803570807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8178499018072366967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8acc91aae998f34682cb774e93aa1e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ForwarKinObj
 --- !u!1 &8603038861439863139
 GameObject:
   m_ObjectHideFlags: 0

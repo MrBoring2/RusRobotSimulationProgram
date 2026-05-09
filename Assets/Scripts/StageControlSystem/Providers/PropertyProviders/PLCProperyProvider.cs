@@ -17,7 +17,7 @@ public class PLCProperyProvider : BasePropertyProvider
         };
     }
 
-    public override IEnumerable<CustomProperty> GetCustomProperties()
+    public override List<CustomProperty> GetCustomProperties()
     {
         return null;
     }

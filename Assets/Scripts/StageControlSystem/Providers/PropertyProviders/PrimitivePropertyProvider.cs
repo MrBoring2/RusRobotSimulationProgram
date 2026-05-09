@@ -21,7 +21,7 @@ public class PrimitivePropertyProvider : BasePropertyProvider
         };
     }
 
-    public override IEnumerable<CustomProperty> GetCustomProperties()
+    public override List<CustomProperty> GetCustomProperties()
     {
         return new List<CustomProperty>
         {

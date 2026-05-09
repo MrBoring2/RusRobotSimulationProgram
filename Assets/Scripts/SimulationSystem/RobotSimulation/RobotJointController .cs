@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class RobotMove : MonoBehaviour
+public class RobotJointController  : MonoBehaviour
 {
     public GameObject J1;
     public GameObject J2;

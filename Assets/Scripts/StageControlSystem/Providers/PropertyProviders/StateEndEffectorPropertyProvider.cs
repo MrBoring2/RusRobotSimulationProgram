@@ -33,16 +33,18 @@ namespace Assets.Scripts.Providers.PropertyProviders
             };
         }
 
-        public override IEnumerable<CustomProperty> GetCustomProperties()
+        public override List<CustomProperty> GetCustomProperties()
         {
-            yield return new CustomProperty(
+            return new List<CustomProperty>{
+                new CustomProperty(
                 "StatusEndEffector",
                 "Захват закрыт",
                 typeof(bool),
                 () => StatusEndEffector,
-                val => StatusEndEffector = (bool)val
-            );
+                val => StatusEndEffector = (bool)val)
+                };
         }
+
 
         public override void RestoreCustomState(ProviderSaveData data)
         {

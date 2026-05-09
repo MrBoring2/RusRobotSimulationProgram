@@ -17,7 +17,7 @@ public interface IPropertyProvider
     bool DisplayScale { get; set; }
     bool NameReadOnly { get; set; }
 
-    IEnumerable<CustomProperty> GetCustomProperties();
+    List<CustomProperty> GetCustomProperties();
     ProviderSaveData CaptureCustomState();
     void RestoreCustomState(ProviderSaveData data);
 }

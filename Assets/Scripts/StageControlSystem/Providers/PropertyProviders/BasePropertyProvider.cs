@@ -1,4 +1,6 @@
-﻿using Assets.Scripts.Models;
+﻿using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using Assets.Scripts.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +15,8 @@ namespace Assets.Scripts.Providers
         public string Id { get => id; set => id = value; }
 
         public string Name { get => gameObject.name; set { gameObject.name = value; } }
-        public Vector3 LocalPosition { get => transform.position; set => transform.position = value; }
+        public Vector3 Position { get => transform.position; set => transform.position = value; }
+        public Vector3 LocalPosition { get => transform.localPosition; set => transform.localPosition = value; }
         protected Vector3 rotationEuler;
         protected string id;
         protected bool displayName = true;
@@ -43,16 +46,21 @@ namespace Assets.Scripts.Providers
         public bool DisplayRotation { get => displayRotation; set => displayRotation = value; }
         public bool DisplayScale { get => displayScale; set => displayScale = value; }
         public bool NameReadOnly { get => nameReadOnly; set => nameReadOnly = value;  }
+        public NotificationSystemManager Notification;
 
         private void Awake()
         {
             rotationEuler = transform.eulerAngles;
         }
+        protected void Start()
+        {
+            Notification = ServiceManager.Current.Get<NotificationSystemManager>();
+        }
 
 
         public abstract ProviderSaveData CaptureCustomState();
 
-        public abstract IEnumerable<CustomProperty> GetCustomProperties();
+        public abstract List<CustomProperty> GetCustomProperties();
 
         public abstract void RestoreCustomState(ProviderSaveData data);
     }
