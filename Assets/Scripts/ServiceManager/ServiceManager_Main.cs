@@ -23,7 +23,7 @@ namespace Assets.Scripts.CustomServiceManager
         [SerializeField] private ModalWindowServiceManager _modalWindowServiceManager;
         private CustomEventBus.EventBus _eventBus;
         [SerializeField] private SimulationManager _simulationManager;
-
+        [SerializeField] private LogicSignalBus _logicSignalBus;
         private void Awake()
         {
             _eventBus = new CustomEventBus.EventBus();
@@ -46,6 +46,7 @@ namespace Assets.Scripts.CustomServiceManager
             ServiceManager.Current.Register(_simulationManager);
             ServiceManager.Current.Register(_notificationSystemManager);
             ServiceManager.Current.Register(_modalWindowServiceManager);
+            ServiceManager.Current.Register(_logicSignalBus);
         }
 
         private void Init()

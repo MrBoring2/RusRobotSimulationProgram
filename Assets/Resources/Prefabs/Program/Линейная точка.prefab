@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 4610136791562471236}
   - component: {fileID: 136962427809383958}
   - component: {fileID: 5782663322389934629}
-  - component: {fileID: 6216727589939552882}
   - component: {fileID: 4873874282588785345}
+  - component: {fileID: 5938881589677674509}
   m_Layer: 7
   m_Name: "\u041B\u0438\u043D\u0435\u0439\u043D\u0430\u044F \u0442\u043E\u0447\u043A\u0430"
   m_TagString: SceneObject
@@ -97,6 +97,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &5782663322389934629
 MeshFilter:
@@ -106,21 +107,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1139193118161750693}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &6216727589939552882
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1139193118161750693}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 831e9c3d93bbb764eada140225da6de5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.LinearPointPropertyProvider
-  ShowVisual: 1
-  material: {fileID: 2100000, guid: 3753d7944e6b6a44bb2553db2fdb9bfd, type: 2}
-  PointSize: 0.05
 --- !u!64 &4873874282588785345
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -143,3 +129,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &5938881589677674509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1139193118161750693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 111d94c5403c4264ba72d8cd28df2e70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.LinearPointPropertyProvider
+  Notification: {fileID: 0}
+  ShowVisual: 1
+  material: {fileID: 0}
+  PointSize: 0.3

@@ -815,7 +815,7 @@ MonoBehaviour:
   - 0
   - 0
   JOGpoint: {fileID: 2824626051575175961}
-  _forwarKinObj: {fileID: 0}
+  _forwarKinObj: {fileID: 1422309896803570807}
 --- !u!114 &4709234608051669132
 MonoBehaviour:
   m_ObjectHideFlags: 0
