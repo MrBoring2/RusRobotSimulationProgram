@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5685450171945702375}
   - component: {fileID: 3373425223654352413}
-  - component: {fileID: 8917265208214222605}
+  - component: {fileID: 818570664260568940}
   m_Layer: 7
   m_Name: "\u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430"
   m_TagString: Untagged
@@ -47,7 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
   type: 6
   sourcePath: "Prefabs/Program/\u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430"
---- !u!114 &8917265208214222605
+--- !u!114 &818570664260568940
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -56,6 +56,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 4657342435901537138}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 56661ffce16e283418d687103a744c27, type: 3}
+  m_Script: {fileID: 11500000, guid: 01c512fae37116549b31daa30f7830e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.RobotProgramPropertyProvider
