@@ -889,6 +889,8 @@ Transform:
   - {fileID: 645784141}
   - {fileID: 1827411684}
   - {fileID: 365700417}
+  - {fileID: 680451400}
+  - {fileID: 1813151205}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &544480372
@@ -1110,6 +1112,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb098a1122864fa4f9cbf08717699ef4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimulationManager
+--- !u!1 &680451399
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 680451400}
+  - component: {fileID: 680451401}
+  m_Layer: 0
+  m_Name: LogicSignalBus
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &680451400
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 680451399}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.40235996, y: 2.02839, z: 3.9531999}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 469165501}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &680451401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 680451399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68b463416d29c5d41aad2080a6901c85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LogicSignalBus
+  boolSignals: []
+  intDataList: []
 --- !u!1 &732570051
 GameObject:
   m_ObjectHideFlags: 0
@@ -1587,30 +1635,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81646d70d50914d49831cee77676935e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OpwKinematics
-  X: 0
-  Y: 0
-  Z: 0
-  UX: 0
-  UY: 0
-  UZ: 0
-  RotateQ: {x: 0, y: 0, z: 0, w: 1}
-  RotateMatrix:
-    e00: 0
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 0
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 0
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 0
 --- !u!4 &1046687316
 Transform:
   m_ObjectHideFlags: 0
@@ -2587,6 +2611,50 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 32a622fe02fdc5b479478063e185f814, type: 3}
+--- !u!1 &1813151204
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1813151205}
+  - component: {fileID: 1813151206}
+  m_Layer: 0
+  m_Name: PLCSimulation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1813151205
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1813151204}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.40235996, y: 2.02839, z: 3.9531999}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 469165501}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1813151206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1813151204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 089c489e852459b47992662063cf9e1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PLCSimulation
 --- !u!1 &1827411683
 GameObject:
   m_ObjectHideFlags: 0
@@ -3027,6 +3095,7 @@ MonoBehaviour:
   _notificationSystemManager: {fileID: 732570053}
   _modalWindowServiceManager: {fileID: 365700418}
   _simulationManager: {fileID: 645784142}
+  _logicSignalBus: {fileID: 680451401}
 --- !u!1 &6728728365230234436
 GameObject:
   m_ObjectHideFlags: 0
