@@ -122,6 +122,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!64 &2526616258880308129
 MeshCollider:
@@ -234,6 +235,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!64 &8348483410988868058
 MeshCollider:
@@ -380,6 +382,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!64 &1102026869777940641
 MeshCollider:
@@ -487,6 +490,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &1153610342963745746
 MonoBehaviour:
@@ -546,6 +550,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -592,7 +597,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2423190242658182375}
   - component: {fileID: 2530315365824414446}
-  - component: {fileID: 8847216311470501691}
+  - component: {fileID: 2060894501816403660}
   m_Layer: 6
   m_Name: JOG_Manipulator
   m_TagString: Untagged
@@ -637,7 +642,7 @@ MonoBehaviour:
   textOffset: {x: 0, y: 0.15, z: 0}
   gizmoRoot: {fileID: 0}
   gizmoRootStartRotation: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &8847216311470501691
+--- !u!114 &2060894501816403660
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -646,7 +651,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2740521812811356901}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4ced2a471ef6252489062f8db7db56a3, type: 3}
+  m_Script: {fileID: 11500000, guid: cea8c07d8f7071845bafaf0c3b20024c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.JOGPropertyProvider
   ShowVisual: 1
@@ -664,9 +669,9 @@ GameObject:
   - component: {fileID: 2123557221313985019}
   - component: {fileID: 4249141246246613869}
   - component: {fileID: 647134665470056457}
-  - component: {fileID: 3784784265109912282}
   - component: {fileID: 7573109030372696143}
   - component: {fileID: 8734229360267228368}
+  - component: {fileID: 715974298080056987}
   m_Layer: 0
   m_Name: "RusRobot \u043C\u0430\u043D\u0438\u043F\u0443\u043B\u044F\u0442\u043E\u0440
     6-\u043E\u0441\u0435\u0432\u043E\u0439"
@@ -720,11 +725,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RobotController
   SpeedCurve:
     serializedVersion: 2
-    m_Curve: []
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  InvKin: {fileID: 0}
+  InvKin: {fileID: 8734229360267228368}
 --- !u!114 &647134665470056457
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -743,60 +766,6 @@ MonoBehaviour:
   J4: {fileID: 8603038861439863139}
   J5: {fileID: 7329963268227289007}
   J6: {fileID: 5454164292136530033}
---- !u!114 &3784784265109912282
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3126245551890948002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ddd57dcaaa4e4134e9e7803052e1d91b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RobotPropertyProvider
-  J1Angle: 0
-  J2Angle: 90
-  J3Angle: 90
-  J4Angle: 0
-  J5Angle: 0
-  J6Angle: 0
-  SpeedEffector: 0.5
-  L1: 450
-  L2: 447
-  L3: 1150
-  L4: 350
-  L5: 1350
-  L6: 550
-  SpeedPercent: 100
-  XYZ: {x: 0, y: 0, z: 0}
-  oldXYZ: {x: 0, y: 0, z: 0}
-  XYZRot: {x: 0, y: 0, z: 0, w: 0}
-  oldXYZRot: {x: 0, y: 0, z: 0, w: 1}
-  XYZ_robot_Rotate: {x: 0, y: 0, z: 0, w: 0}
-  thetha:
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  old_thetha:
-  - 0
-  - 90
-  - 90
-  - 0
-  - -90
-  - 0
-  step_thetha:
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  JOGpoint: {fileID: 8847216311470501691}
-  JOG_IK_Configuration: 0
 --- !u!114 &7573109030372696143
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -848,6 +817,60 @@ MonoBehaviour:
     e31: 0
     e32: 0
     e33: 0
+--- !u!114 &715974298080056987
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3126245551890948002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 221bca855f6172d48a5cb762d52e7742, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RobotPropertyProvider
+  J1Angle: 0
+  J2Angle: 90
+  J3Angle: 90
+  J4Angle: 0
+  J5Angle: 0
+  J6Angle: 0
+  SpeedEffector: 0.5
+  L1: 450
+  L2: 447
+  L3: 1150
+  L4: 350
+  L5: 1350
+  L6: 550
+  SpeedPercent: 100
+  XYZ: {x: 0, y: 0, z: 0}
+  oldXYZ: {x: 0, y: 0, z: 0}
+  XYZRot: {x: 0, y: 0, z: 0, w: 0}
+  oldXYZRot: {x: 0, y: 0, z: 0, w: 1}
+  XYZ_robot_Rotate: {x: 0, y: 0, z: 0, w: 0}
+  thetha:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  old_thetha:
+  - 0
+  - 90
+  - 90
+  - 0
+  - -90
+  - 0
+  step_thetha:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  JOGpoint: {fileID: 2060894501816403660}
+  JOG_IK_Configuration: 0
 --- !u!1 &3137455119182969186
 GameObject:
   m_ObjectHideFlags: 0
@@ -928,7 +951,7 @@ GameObject:
   - component: {fileID: 161305905012334114}
   - component: {fileID: 7624666729113259304}
   - component: {fileID: 2149858949980625546}
-  - component: {fileID: 8339291587393473682}
+  - component: {fileID: 452207021410786595}
   m_Layer: 0
   m_Name: "\u0417\u0430\u0436\u0438\u043C21"
   m_TagString: Untagged
@@ -1006,6 +1029,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!54 &7624666729113259304
 Rigidbody:
@@ -1056,7 +1080,7 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 7968362455460133229, guid: af44fb957f9977f4795b0c8e005a6313, type: 3}
---- !u!114 &8339291587393473682
+--- !u!114 &452207021410786595
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1065,7 +1089,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3429348313907132287}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 80c18e103b532a34a8dae2480a5a190b, type: 3}
+  m_Script: {fileID: 11500000, guid: a7b540a0f5f2666419c33ef4f033c3dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZajimZZ
   numZ: 2
@@ -1113,8 +1137,8 @@ GameObject:
   - component: {fileID: 844597624923919161}
   - component: {fileID: 6492520832718719102}
   - component: {fileID: 2637570150518154466}
-  - component: {fileID: 8873984188017313121}
   - component: {fileID: 844208916532001711}
+  - component: {fileID: 5178662806857817766}
   m_Layer: 0
   m_Name: "\u0417\u0430\u0445\u0432\u0430\u0442_\u041E\u0441\u043D1"
   m_TagString: Untagged
@@ -1195,28 +1219,8 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &8873984188017313121
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4929092817794012301}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 159f6ef6a15442843874fc0675a4d1c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Zajim
-  z1: {fileID: 7817584039701820378}
-  z2: {fileID: 3429348313907132287}
-  Base: {fileID: 805792089729871822}
-  zajat: 0
-  z1Col: 0
-  z2Col: 0
-  z1Collision: {fileID: 0}
-  z2Collision: {fileID: 0}
-  _propertyProvider: {fileID: 3784784265109912282}
 --- !u!64 &844208916532001711
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1239,6 +1243,27 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -3827450339197655817, guid: af44fb957f9977f4795b0c8e005a6313, type: 3}
+--- !u!114 &5178662806857817766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4929092817794012301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a432d453b34d0f4eb12c87c9a52d295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Zajim
+  z1: {fileID: 7817584039701820378}
+  z2: {fileID: 3429348313907132287}
+  Base: {fileID: 4929092817794012301}
+  zajat: 0
+  z1Col: 0
+  z2Col: 0
+  z1Collision: {fileID: 7817584039701820378}
+  z2Collision: {fileID: 3429348313907132287}
+  _propertyProvider: {fileID: 715974298080056987}
 --- !u!1 &5062091622153642625
 GameObject:
   m_ObjectHideFlags: 0
@@ -1328,6 +1353,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!64 &7589099607859138516
 MeshCollider:
@@ -1473,6 +1499,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!64 &320194045194121841
 MeshCollider:
@@ -1585,6 +1612,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!64 &7448332900030131868
 MeshCollider:
@@ -1697,6 +1725,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!64 &819167966006460206
 MeshCollider:
@@ -1809,6 +1838,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!64 &4230642503954784252
 MeshCollider:
@@ -1878,7 +1908,7 @@ GameObject:
   - component: {fileID: 7959300342587950947}
   - component: {fileID: 6416296596126397727}
   - component: {fileID: 3029108098083142942}
-  - component: {fileID: 9157352562088666667}
+  - component: {fileID: 7089883785472146084}
   m_Layer: 0
   m_Name: "\u0417\u0430\u0436\u0438\u043C11"
   m_TagString: Untagged
@@ -1956,6 +1986,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!54 &6416296596126397727
 Rigidbody:
@@ -2006,7 +2037,7 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 2731542700852356151, guid: af44fb957f9977f4795b0c8e005a6313, type: 3}
---- !u!114 &9157352562088666667
+--- !u!114 &7089883785472146084
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2015,7 +2046,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7817584039701820378}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 80c18e103b532a34a8dae2480a5a190b, type: 3}
+  m_Script: {fileID: 11500000, guid: a7b540a0f5f2666419c33ef4f033c3dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZajimZZ
   numZ: 1
@@ -2142,6 +2173,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!65 &4566230819333425416
 BoxCollider:
