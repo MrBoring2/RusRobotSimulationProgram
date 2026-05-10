@@ -12,6 +12,7 @@ using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
+using Assets.Scripts.StageControlSystem.Models;
 using Assets.UI.CustomElements;
 using System;
 using System.Collections.Generic;
@@ -123,7 +124,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
     private void OnCommandUndoned(UndoneCommandSignal signal)
     {
-        if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand)
+        if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand || signal.Command is CustomPropertyChangeCommand)
         {
             UpdateHierarchy();
             _eventBus.Invoke(new UpdateLineDrawer());
@@ -133,7 +134,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
     private void OnCommandExecuted(ExecuteCommandSignal signal)
     {
-        if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand)
+        if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand || signal.Command is CustomPropertyChangeCommand)
         {
             UpdateHierarchy();
             _eventBus.Invoke(new UpdateLineDrawer());
@@ -162,16 +163,16 @@ public class HierarchyPanelEvents : MonoBehaviour
     private void OnLoadObjects(LoadObjectsSignal signal) => UpdateHierarchy();
     private void OnChangeNameProperty(ChangeNamePropertySignal signal)
     {
-        var elem = FindElementByUserIdCached(signal.Id);
-        if (elem is CustomFoldout f)
-        {
-            f.Text = signal.Name;
-        }
-        else if (elem is Label l)
-        {
-            l.text = signal.Name;
-        }
-        UpdateHierarchy();
+        //var elem = FindElementByUserIdCached(signal.Id);
+        //if (elem is CustomFoldout f)
+        //{
+        //    f.Text = signal.Name;
+        //}
+        //else if (elem is Label l)
+        //{
+        //    l.text = signal.Name;
+        //}
+        //UpdateHierarchy();
         //signal.Name
         //signal.Id
         //обновить имя
@@ -635,8 +636,9 @@ public class HierarchyPanelEvents : MonoBehaviour
                         _eventBus.Invoke(new StopLineDrawer());
                         break;
                 }
-                ShowProperties(element);
                 SelectHierarchyItem(element);
+                ShowProperties(element);
+              
             }
         }
     }
