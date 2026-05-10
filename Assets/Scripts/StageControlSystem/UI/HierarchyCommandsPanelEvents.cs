@@ -928,6 +928,10 @@ namespace Assets.Scripts.UI
                         var robot = _sceneObjectManager.GetById(MainHierarchyItem.userData.ToString());
                         contextMenu.Add(CreateMenuButton("Добавить задачу", () => CreateProgram(robot.Id)));
                     }
+                    else if (foldout.name == "hierarchy-item-command")
+                    {
+                        contextMenu.Add(CreateMenuButton("Удалить команду", () => DeleteObject(clickedElement)));
+                    }
                     else if (foldout.name == "plc-init-block")
                     {
                         var parentId = foldout.userData.ToString();
