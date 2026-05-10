@@ -37,7 +37,7 @@ public class PLCSimulation : MonoBehaviour
     }
 
     //--Получение программы всех роботов-- ///////////////////////////////////////// потом уберется
-    private void GetAllRobotsProg()
+   /* private void GetAllRobotsProg()
     {
         RobotsPrograms = new Dictionary<string, List<SubProgramm>>();
         var list = _sceneObjectsManager.GetGameObjectsList();
@@ -54,7 +54,7 @@ public class PLCSimulation : MonoBehaviour
                 }
             }
         }
-    }
+    }*/
     //--Получение провайдера робота по ID--
     private RobotPropertyProvider GetRobotById(string id)
     {
@@ -68,79 +68,51 @@ public class PLCSimulation : MonoBehaviour
         // Ничего не найдено
         return null;
     }
-    //убрать
-    
-
-   
+    PLCBlockInit Init;
+    List<PLCCommandBlockRobotsTask> RobotsBlocks;
+    PLCCommandLogicBlock LogicBlock;
     //--Запуск симуляции--
     void StartSim(StartProgramm s)
     {
         _eventBus.Invoke(new RobotsControllerResetState());
-        GetAllRobotsProg();
-        //int count = RobotsPrograms.Count;
-        //PLCProgramm.Clear();
-        ////////////тестовое условие для блока робота//////////
-        PLCCommandBlockRobotsTask block = new PLCCommandBlockRobotsTask("1",RobotsPrograms.Keys.First());
-        //PLCCommandInit init = new PLCCommandInit("911");
-        //PLCConditionBlock condition = new PLCConditionBlock("10");
-        //PLCConditionBranch branch = new PLCConditionBranch("21");
-        //PLCConditionBranch branch2 = new PLCConditionBranch("22");
-        //condition.Branches.Add(branch);
-        //condition.Branches.Add(branch2);
-        //block.ProgrammElements.Add(condition);
-        
-        //PLCProgramm.Add(init);
-        PLCProgramm.Add(block);
 
-        //branch.Condition = new PLCCondition("key == true");
-        //branch2.Condition = new PLCCondition("key2");
-        SubProgramm subProgramm1 = RobotsPrograms.Values.First().First();
-        //SubProgramm subProgramm2 = RobotsPrograms.Values.First().Skip(1).First() as SubProgramm;
-        ////branch.Commands.Add(new PLCCommandTask("31", subProgramm1.ID));
-        //branch2.ProgrammElements.Add(new PLCCommandTask("32", subProgramm1.ID));
-        //branch.ProgrammElements.Add(new PLCCommandTask("33", subProgramm2.ID));
-        //init.ProgrammElements.Add(new PLCCommandSetInt("992", "counter", 99));
-        block.ProgrammElements.Add(new PLCCommandTask("31", subProgramm1.ID));
-        //PLCCommandCycleBlock cycle = new("1");
-        //PLCConditionBlock condition = new("2");
-        //PLCConditionBranch conditionBranch = new("3", ENUM_PLC_COMMANDS.IF_CONDITION);
-        //PLCConditionBranch conditionBranch2 = new("4", ENUM_PLC_COMMANDS.ELSE_CONDITION);
-        //PLCCondition con1 = new("ke1");
-        //PLCCommandSetBool set1 = new("4", "key2", true);
-        //PLCCommandSetBool set2 = new("5", "key2", false);
-
-        //PLCProgramm.Add(cycle);
-        //cycle.ProgrammElements.Add(condition);
-        //condition.Branches.Add(conditionBranch);
-        //conditionBranch.ProgrammElements.Add(set1);
-        //conditionBranch.Condition = con1;
-        //condition.Branches.Add(conditionBranch2);
-        //conditionBranch2.ProgrammElements.Add(set2);
-        //
-        //StartCoroutine(ExecuteProgramm());
+        (PLCBlockInit Init, List<PLCCommandBlockRobotsTask> RobotsBlocks, PLCCommandLogicBlock LogicBlocks) PLC = PLCDataConverter.Convert(_sceneObjectsManager.PLCData);
+        Init = PLC.Init;
+        RobotsBlocks = PLC.RobotsBlocks;
+        LogicBlock = PLC.LogicBlocks;
         StartPLC();
     }
     // старт ПЛК--
     private async void StartPLC()
     {
-        ServiceManager.Current.Get<LogicSignalBus>().CreateSignalCadr();
+        foreach(var cmd in Init.ProgrammElements)
+        {
+            cmd.Execute();
+        }
+        ServiceManager.Current.Get<LogicSignalBus>().CadrToActiveSignal();
         while (_simManager.GetStatusSim() == SIM_STAT.PLAY)
         {
+            ServiceManager.Current.Get<LogicSignalBus>().CreateSignalCadr();
             if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
-            await Awaitable.FixedUpdateAsync();
+            
             // Логика ПЛК
             await PLC();
             ServiceManager.Current.Get<LogicSignalBus>().CadrToActiveSignal();
+            await Awaitable.WaitForSecondsAsync(0.1f);
         }
     }
     public async Awaitable PLC()
     {
-
-        foreach (var programmElement in PLCProgramm)
+        foreach(var block in RobotsBlocks)
+        {
+            await ExecuteRobotBlock(block);
+        }
+        await ExecuteCycleBlock(LogicBlock);
+        /*foreach (var programmElement in PLCProgramm)
         {
             try
             {
-                if (programmElement.GetType() == typeof(PLCCommandInit))
+                if (programmElement.GetType() == typeof(PLCBlockInit))
                 {
                     programmElement.Execute();
                 }
@@ -161,7 +133,7 @@ public class PLCSimulation : MonoBehaviour
             {
                 Debug.LogError($"Ошибка исполнителя ПЛК: {ex}");
             }
-        }
+        }*/
     }
     
     //--Выполнение блока работы с роботом--
@@ -175,35 +147,24 @@ public class PLCSimulation : MonoBehaviour
             Debug.LogError($"RobotController для {robotID} не найден!");
             return;
         }
-        if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
-        while (_simManager.GetStatusSim() == SIM_STAT.PLAY)
+        // Ждём, пока робот свободен
+        if (!RC.RunTask)
         {
-            if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
-            await Awaitable.FixedUpdateAsync();
-          
-            // Ждём, пока робот свободен
-            while (RC.RunTask)
-            {
-                if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
-                await Awaitable.FixedUpdateAsync();
-            }
             foreach (var command in BlockRobotTasks.ProgrammElements)
             {
                 if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
                 if (command.Execute(RC)) ;// break;
             }
         }
+        
     }
-    public async Awaitable ExecuteCycleBlock(PLCCommandCycleBlock block)
+    public async Awaitable ExecuteCycleBlock(PLCCommandLogicBlock block)
     {
-        while (_simManager.GetStatusSim() == SIM_STAT.PLAY)
-        {
-            await Awaitable.FixedUpdateAsync();
+        if (block.ProgrammElements == null) return;
             foreach (var element in block.ProgrammElements)
             {
                 element.Execute();
             }
-        }
     }
 
 
@@ -213,3 +174,306 @@ public class PLCSimulation : MonoBehaviour
     }
 }
 
+public static class PLCDataConverter
+{
+    public static (PLCBlockInit Init, List<PLCCommandBlockRobotsTask> RobotsBlocks, PLCCommandLogicBlock LogicBlocks) Convert(PLCData data)
+    {
+        (PLCBlockInit Init, List<PLCCommandBlockRobotsTask> RobotsBlocks, PLCCommandLogicBlock LogicBlocks) result = new();
+
+        result.RobotsBlocks = new List<PLCCommandBlockRobotsTask>();
+
+        if (data == null) return result;
+
+        // Init block
+        var init = new PLCBlockInit("1");
+        foreach (var initVar in data.InitBlockItems ?? new List<PLCInitVariable>())
+        {
+            var el = ParseInitVariable(initVar);
+            if (el != null) init.ProgrammElements.AddRange(el);
+        }
+        result.Init = init;
+
+        // Robot blocks
+        foreach (var rb in data.RobotCommandsBlockItems ?? new List<PLCRobotBlock>())
+        {
+            var block = new PLCCommandBlockRobotsTask(rb.RobotId, rb.RobotId)
+            {
+                ProgrammElements = ParsePLCBaseList(rb?.ConditionsList)
+            };
+            result.RobotsBlocks.Add(block);
+        }
+
+        // Logic blocks (верхний уровень)\
+        PLCCommandLogicBlock LogicBlock = new("2");
+        foreach (var b in data.LogicBlockItems ?? new List<PLCBase>())
+        {
+            var parsed = ParsePLCBase(b);
+            if (parsed != null) LogicBlock.ProgrammElements.AddRange(parsed);
+        }
+        result.LogicBlocks = LogicBlock;
+
+        return result;
+    }
+
+    private static List<PLCProgrammElement> ParsePLCBaseList(List<PLCBase> list)
+    {
+        var outList = new List<PLCProgrammElement>();
+        if (list == null) return outList;
+        foreach (var item in list)
+        {
+            var parsed = ParsePLCBase(item);
+            if (parsed != null) outList.AddRange(parsed);
+        }
+        return outList;
+    }
+
+    private static List<PLCProgrammElement> ParsePLCBase(PLCBase item)
+    {
+        var outList = new List<PLCProgrammElement>();
+        if (item == null) return outList;
+
+        // PLCBlockCondition -> PLCConditionBlock
+        if (item is PLCBlockCondition blockCond)
+        {
+            var condBlock = new PLCConditionBlock(blockCond.Id);
+            // If branch
+            if (blockCond.IfCondition != null)
+            {
+                var branch = new PLCConditionBranch(blockCond.IfCondition.Id, ENUM_PLC_COMMANDS.IF_CONDITION)
+                {
+                    Condition = new PLCConditionStr(blockCond.IfCondition.Expression),
+                    ProgrammElements = ParsePLCBaseList(blockCond.IfCondition.Content)
+                };
+                condBlock.Branches.Add(branch);
+            }
+
+            // Elif branches
+            foreach (var elif in blockCond.ElifConditions)
+            {
+                var branch = new PLCConditionBranch(elif.Id, ENUM_PLC_COMMANDS.ELIF_CONDITION)
+                {
+                    Condition = new Assets.Scripts.SimulationSystem.PLC.PLCConditionStr(elif.Expression),
+                    ProgrammElements = ParsePLCBaseList(elif.Content)
+                };
+                condBlock.Branches.Add(branch);
+            }
+
+            // Else
+            if (blockCond.ElseConndition != null)
+            {
+                var elseBranch = new PLCConditionBranch(blockCond.ElseConndition.Id, ENUM_PLC_COMMANDS.ELSE_CONDITION)
+                {
+                    Condition = null,
+                    ProgrammElements = ParsePLCBaseList(blockCond.ElseConndition.Content)
+                };
+                condBlock.Branches.Add(elseBranch);
+            }
+
+            outList.Add(condBlock);
+            return outList;
+        }
+
+        // PLCCondition (single condition block)
+        /*if (item is PLCCondition singleCond)
+        {
+            var condBlock = new PLCConditionBlock(singleCond.Id ?? Guid.NewGuid().ToString());
+            var branch = new PLCConditionBranch(singleCond.Id ?? Guid.NewGuid().ToString(), ENUM_PLC_COMMANDS.IF_CONDITION)
+            {
+                Condition = new PLCCCondition(singleCond.Expression),
+                ProgrammElements = ParsePLCBaseList(singleCond.Content)
+            };
+            condBlock.Branches.Add(branch);
+            outList.Add(condBlock);
+            return outList;
+        }*/
+
+        // PLCCommand and derived
+        if (item is PLCCommand cmd)
+        {
+            // Start program => PLCCommandTask
+            if (cmd is PLCStartProgram start)
+            {
+                var com = new PLCCommandTask(start.Id, start.ProgramId);
+                outList.Add(com);
+                return outList;
+            }
+
+            // Increment => PLCCommandSetIncrement (int)
+            if (cmd is PLCIncrement inc)
+            {
+                var val = ConvertFloatToIntSafe(inc.Step);
+                var setInc = new PLCCommandSetIncrement(cmd.Id, inc.VariableName, val);
+                outList.Add(setInc);
+                return outList;
+            }
+
+            // Decrement => PLCCommandSetIncrement with negative value
+            if (cmd is PLCDecrement dec)
+            {
+                var val = -ConvertFloatToIntSafe(dec.Step);
+                var setInc = new PLCCommandSetIncrement(cmd.Id, dec.VariableName, val);
+                outList.Add(setInc);
+                return outList;
+            }
+
+            // Init variable => create set/assign depending on type
+            if (cmd is PLCInitVariable initVar)
+            {
+                var created = ParseInitVariableToSet(initVar);
+                if (created != null) outList.AddRange(created);
+                return outList;
+            }
+
+            // Set variable => OperationType
+            if (cmd is PLCSetVariable setVar)
+            {
+                var parsed = ParseSetVariable(setVar);
+                if (parsed != null) outList.AddRange(parsed);
+                return outList;
+            }
+
+            Debug.LogWarning($"PLC converter: неизвестная команда PLCCommand (id={cmd.Id}) типа {cmd.GetType().Name}");
+        }
+
+        Debug.LogWarning($"PLC converter: неожиданный тип PLCBase {item.GetType().Name}");
+        return outList;
+    }
+
+    private static List<PLCProgrammElement> ParseInitVariableToSet(PLCInitVariable initVar)
+    {
+        var list = new List<PLCProgrammElement>();
+        if (initVar == null) return list;
+
+        switch (initVar.VarType)
+        {
+            case VarType.Int:
+                if (int.TryParse(initVar.StartValue, out var iv))
+                {
+                    list.Add(new PLCCommandSetInt(initVar.Id, initVar.VariableName, iv));
+                }
+                else
+                {
+                    Debug.LogWarning($"PLC converter: не удалось распарсить int StartValue для {initVar.VariableName}");
+                }
+                break;
+            case VarType.Bool:
+                if (bool.TryParse(initVar.StartValue, out var bv))
+                {
+                    list.Add(new PLCCommandSetBool(initVar.Id, initVar.VariableName, bv));
+                }
+                else if (int.TryParse(initVar.StartValue, out var ib))
+                {
+                    list.Add(new PLCCommandSetBool(initVar.Id, initVar.VariableName, ib != 0));
+                }
+                else
+                {
+                    Debug.LogWarning($"PLC converter: не удалось распарсить bool StartValue для {initVar.VariableName}");
+                }
+                break;
+            /*case VarType.Float:
+                // нет прямого float-set в целевых PLCProgrammElement — логируем
+                Debug.LogWarning($"PLC converter: Float init for '{initVar.VariableName}' не поддерживается целевой моделью. Значение='{initVar.StartValue}'");
+                break;
+            case VarType.String:
+                Debug.LogWarning($"PLC converter: String init for '{initVar.VariableName}' не поддерживается целевой моделью.");
+                break;*/
+        }
+
+        return list;
+    }
+
+    private static List<PLCProgrammElement> ParseInitVariable(PLCInitVariable initVar)
+    {
+        return ParseInitVariableToSet(initVar);
+    }
+
+    private static List<PLCProgrammElement> ParseSetVariable(PLCSetVariable setVar)
+    {
+        var list = new List<PLCProgrammElement>();
+        if (setVar == null) return list;
+
+        switch (setVar.VarType)
+        {
+            case VarType.Int:
+                if (setVar.Operation == OperationType.Assign)
+                {
+                    if (int.TryParse(setVar.Value, out var iv))
+                    {
+                        list.Add(new PLCCommandSetInt(setVar.Id, setVar.VariableName, iv));
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"PLC converter: не удалось распарсить int Value для {setVar.VariableName}");
+                    }
+                }
+                else if (setVar.Operation == OperationType.Increment)
+                {
+                    if (int.TryParse(setVar.Value, out var incVal))
+                    {
+                        list.Add(new PLCCommandSetIncrement(setVar.Id, setVar.VariableName, incVal));
+                    }
+                    else if (float.TryParse(setVar.Value, out var fInc))
+                    {
+                        list.Add(new PLCCommandSetIncrement(setVar.Id, setVar.VariableName, ConvertFloatToIntSafe(fInc)));
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"PLC converter: не удалось распарсить increment Value для {setVar.VariableName}");
+                    }
+                }
+                else if (setVar.Operation == OperationType.Decrement)
+                {
+                    if (int.TryParse(setVar.Value, out var decVal))
+                    {
+                        list.Add(new PLCCommandSetIncrement(setVar.Id, setVar.VariableName, -decVal));
+                    }
+                    else if (float.TryParse(setVar.Value, out var fDec))
+                    {
+                        list.Add(new PLCCommandSetIncrement(setVar.Id, setVar.VariableName, -ConvertFloatToIntSafe(fDec)));
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"PLC converter: не удалось распарсить decrement Value для {setVar.VariableName}");
+                    }
+                }
+                break;
+
+            case VarType.Bool:
+                if (setVar.Operation == OperationType.Assign)
+                {
+                    if (bool.TryParse(setVar.Value, out var bv))
+                    {
+                        list.Add(new PLCCommandSetBool(setVar.Id, setVar.VariableName, bv));
+                    }
+                    else if (int.TryParse(setVar.Value, out var ib))
+                    {
+                        list.Add(new PLCCommandSetBool(setVar.Id, setVar.VariableName, ib != 0));
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"PLC converter: не удалось распарсить bool Value для {setVar.VariableName}");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"PLC converter: операция {setVar.Operation} для bool не поддерживается");
+                }
+                break;
+
+            case VarType.Float:
+                Debug.LogWarning($"PLC converter: операции с Float не поддержаны целевой моделью");
+                break;
+
+            case VarType.String:
+                Debug.LogWarning($"PLC converter: операции со String не поддержаны целевой моделью");
+                break;
+        }
+
+        return list;
+    }
+
+    private static int ConvertFloatToIntSafe(float f)
+    {
+        return Mathf.RoundToInt(f);
+    }
+}

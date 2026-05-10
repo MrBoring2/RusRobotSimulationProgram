@@ -160,10 +160,10 @@ namespace Assets.Scripts.SimulationSystem.PLC
     /// <summary>
     /// блок инициализации
     /// </summary>
-    public class PLCCommandInit : PLCProgrammElement
+    public class PLCBlockInit : PLCProgrammElement
     {
         public List<PLCProgrammElement> ProgrammElements { get; set; } = new List<PLCProgrammElement>();
-        public PLCCommandInit(string id) : base(id)
+        public PLCBlockInit(string id) : base(id)
         {
 
         }
@@ -254,7 +254,7 @@ namespace Assets.Scripts.SimulationSystem.PLC
     public class PLCConditionBranch
     {
         public string ID { get; set; }
-        public PLCCondition Condition { get; set; }
+        public PLCConditionStr? Condition { get; set; }
         public List<PLCProgrammElement> ProgrammElements { get; set; } = new List<PLCProgrammElement>();
         public ENUM_PLC_COMMANDS BranchType { get; set; }   // IF_CONDITION, ELIF_CONDITION, ELSE_CONDITION
         public PLCConditionBranch(string id, ENUM_PLC_COMMANDS type)
@@ -278,11 +278,11 @@ namespace Assets.Scripts.SimulationSystem.PLC
     /// <summary>
     /// ветка условия
     /// </summary>
-    public class PLCCondition
+    public class PLCConditionStr
     {
         public string ConditionString = "";
 
-        public PLCCondition(string conditionString)
+        public PLCConditionStr(string conditionString)
         {
             ConditionString = conditionString;
         }
@@ -361,10 +361,10 @@ namespace Assets.Scripts.SimulationSystem.PLC
             return false;
         }
     }
-    public class PLCCommandCycleBlock : PLCProgrammElement
+    public class PLCCommandLogicBlock : PLCProgrammElement
     {
         public List<PLCProgrammElement> ProgrammElements { get; set; } = new List<PLCProgrammElement>();
-        public PLCCommandCycleBlock(string id) : base(id)
+        public PLCCommandLogicBlock(string id) : base(id)
         {
         }
         public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)

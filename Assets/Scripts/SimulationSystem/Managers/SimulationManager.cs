@@ -43,17 +43,17 @@ public class SimulationManager : MonoBehaviour,IService
     {
         if(SimulationStat != SIM_STAT.PLAY)
         {
-            try
-            {
+            //try
+            //{
                 ChangeMode(MODE.NONE);
                 SimulationStat = SIM_STAT.PLAY;
                 _eventBus.Invoke(new StartProgramm());
                 ////////////
-            }
-            catch (Exception ex)
+            //}
+           /* catch (Exception ex)
             {
                 Debug.LogError($"Ошибка запуска симуляции: {ex}");
-            }
+            }*/
             
         }
     }
