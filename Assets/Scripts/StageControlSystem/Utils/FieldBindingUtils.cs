@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.Managers;
+using Assets.Scripts.StageControlSystem.Models;
 using Assets.Scripts.SystemManager;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,7 @@ namespace Assets.Scripts.Models
 {
     public class FieldBindingUtils
     {
+        private static List<Action> _pendingFlushActions = new List<Action>();
         public static Action BindFieldWithHistory<T>(BaseField<T> field, object target, string propertyName, UndoRedoManager undoRedoManager, UIStatusManager uIStatusManager, Action applyImmediately = null)
         {
             if (target == null || field == null || string.IsNullOrEmpty(propertyName))
@@ -37,20 +39,20 @@ namespace Assets.Scripts.Models
                 uIStatusManager.SetInputMode(true);
             };
 
-            EventCallback<ChangeEvent<T>> changeHandler = evt =>
-            {
-                applyImmediately?.Invoke();
-                if (isFocused)
-                {
-                    var currentValue = propertyInfo.GetValue(target);
-                    if (!Equals(oldValue, currentValue))
-                    {
-                        var command = new PropertyChangeCommand(target, propertyName, oldValue, currentValue);
-                        undoRedoManager.Execute(command);
-                        oldValue = currentValue; // Обновляем oldValue для следующих изменений
-                    }
-                }
-            };
+            //EventCallback<ChangeEvent<T>> changeHandler = evt =>
+            //{
+            //    applyImmediately?.Invoke();
+            //    if (isFocused)
+            //    {
+            //        var currentValue = propertyInfo.GetValue(target);
+            //        if (!Equals(oldValue, currentValue))
+            //        {
+            //            var command = new PropertyChangeCommand(target, propertyName, oldValue, currentValue);
+            //            undoRedoManager.Execute(command);
+            //            oldValue = currentValue; // Обновляем oldValue для следующих изменений
+            //        }
+            //    }
+            //};
 
             EventCallback<MouseEnterEvent> mouseEnterHandler = evt =>
             {
@@ -70,28 +72,152 @@ namespace Assets.Scripts.Models
 
             EventCallback<BlurEvent> blurHandler = _ =>
             {
+                applyImmediately?.Invoke();
+                if (isFocused)
+                {
+                    var currentValue = propertyInfo.GetValue(target);
+                    if (!Equals(oldValue, currentValue))
+                    {
+                        var command = new PropertyChangeCommand(target, propertyName, oldValue, currentValue);
+                        undoRedoManager.Execute(command);
+                        oldValue = currentValue; // Обновляем oldValue для следующих изменений
+                    }
+                }
                 field.focusable = false;
                 uIStatusManager.SetInputMode(false);
             };
             // Регистрируем обработчики
             field.RegisterCallback(focusHandler);
-            field.RegisterValueChangedCallback(changeHandler);
+            //field.RegisterValueChangedCallback(changeHandler);
             field.RegisterCallback(blurHandler);
             field.RegisterCallback(mouseEnterHandler);
             field.RegisterCallback(mouseLeaveHandler);
             //field.RegisterCallback(onDestroy);
-
+            Action flushAction = () =>
+            {
+                if (isFocused && field != null && propertyInfo != null && target != null)
+                {
+                    applyImmediately?.Invoke();
+                    var currentValue = propertyInfo.GetValue(target);
+                    if (!Equals(oldValue, currentValue))
+                    {
+                        var command = new PropertyChangeCommand(target, propertyName, oldValue, currentValue);
+                        undoRedoManager.Execute(command);
+                        oldValue = currentValue;
+                    }
+                    isFocused = false;
+                    uIStatusManager.SetInputMode(false);
+                }
+            };
+            _pendingFlushActions.Add(flushAction);
             // Возвращаем функцию для отписки
             return () =>
             {
+                _pendingFlushActions.Remove(flushAction);
                 field.UnregisterCallback(focusHandler);
-                field.UnregisterValueChangedCallback(changeHandler);
+                //field.UnregisterValueChangedCallback(changeHandler);
+                field.UnregisterCallback(blurHandler);
+                field.UnregisterCallback(mouseEnterHandler);
+                field.UnregisterCallback(mouseLeaveHandler);
+            };
+        }
+        public static Action BindCustomFieldWithHistory<T>(
+    BaseField<T> field,
+    object target,
+    string propertyName,
+    Func<object> getter,
+    Action<object> setter,
+    UndoRedoManager undoRedoManager,
+    UIStatusManager uIStatusManager)
+        {
+            if (target == null || field == null || getter == null || setter == null)
+                return () => { };
+
+            object oldValue = null;
+            bool isFocused = false;
+
+            field.focusable = false;
+
+            EventCallback<FocusEvent> focusHandler = _ =>
+            {
+                isFocused = true;
+                oldValue = getter();
+                uIStatusManager.SetInputMode(true);
+            };
+
+            EventCallback<MouseEnterEvent> mouseEnterHandler = _ => field.focusable = true;
+            EventCallback<MouseLeaveEvent> mouseLeaveHandler = _ => field.focusable = false;
+
+            EventCallback<BlurEvent> blurHandler = _ =>
+            {
+                if (!isFocused)
+                {
+                    field.focusable = false;
+                    uIStatusManager.SetInputMode(false);
+                    return;
+                }
+
+                setter(GetFieldValue(field));  // Применяем значение
+                var currentValue = getter();   // Читаем результат
+
+                if (!Equals(oldValue, currentValue))
+                {
+                    // Создаём команду с кастомными делегатами
+                    var command = new CustomPropertyChangeCommand(
+                        target, propertyName, oldValue, currentValue, setter, getter);
+                    undoRedoManager.Execute(command);
+                }
+
+                isFocused = false;
+                field.focusable = false;
+                uIStatusManager.SetInputMode(false);
+            };
+            Action flushAction = () =>
+            {
+                if (isFocused && field != null && target != null)
+                {
+                    setter(GetFieldValue(field));  // Применяем значение
+                    var currentValue = getter();   // Читаем результат
+
+                    if (!Equals(oldValue, currentValue))
+                    {
+                        var command = new CustomPropertyChangeCommand(
+                            target, propertyName, oldValue, currentValue, setter, getter);
+                        undoRedoManager.Execute(command);
+                    }
+
+                    isFocused = false;
+                    uIStatusManager.SetInputMode(false);
+                }
+            };
+            _pendingFlushActions.Add(flushAction);
+            field.RegisterCallback(focusHandler);
+            field.RegisterCallback(blurHandler);
+            field.RegisterCallback(mouseEnterHandler);
+            field.RegisterCallback(mouseLeaveHandler);
+
+            return () =>
+            {
+                field.UnregisterCallback(focusHandler);
                 field.UnregisterCallback(blurHandler);
                 field.UnregisterCallback(mouseEnterHandler);
                 field.UnregisterCallback(mouseLeaveHandler);
             };
         }
 
+        private static object GetFieldValue<T>(BaseField<T> field)
+        {
+            return field.value;
+        }
+        public static void FlushAllPendingChanges()
+        {
+            // Создаём копию, т.к. flushAction может модифицировать список
+            var actions = new List<Action>(_pendingFlushActions);
+            foreach (var action in actions)
+            {
+                action?.Invoke();
+            }
+        }
         //public static Action BindFieldWithHistory(TextField field, object target, string propertyName, Action applyImmediately = null)
         //{
         //    return BindFieldWithHistory<string>(field, target, propertyName, applyImmediately);

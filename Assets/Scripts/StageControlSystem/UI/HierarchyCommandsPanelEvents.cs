@@ -672,8 +672,9 @@ namespace Assets.Scripts.UI
                             StartPosition = evt.mousePosition,
                             UserData = command
                         };
-                        ShowProperties(element);
                         SelectHierarchyItem(element);
+                        ShowProperties(element);
+                     
                     }
                     return;
                 }
@@ -691,14 +692,36 @@ namespace Assets.Scripts.UI
                             StartPosition = evt.mousePosition,
                             UserData = command
                         };
-                        ShowProperties(element);
+                        switch (command.Type)
+                        {
+                            case ObjectType.LinearMoveCommand:
+                                if (!string.IsNullOrEmpty(element.userData.ToString()) &&
+                                        _lineManager.IsCommandInCurrentProgram(commandId))
+                                {
+                                    _eventBus.Invoke(new PickObjectSignal(command));
+                                }
+                                else
+                                {
+                                    _eventBus.Invoke(new PickObjectSignal(command));
+                                    _eventBus.Invoke(new StopLineDrawer());
+                                }
+                                break;
+                            case ObjectType.StateEndEffectorCommand or ObjectType.WaitCommand:
+                                break;
+                            default:
+                                _eventBus.Invoke(new PickObjectSignal(command));
+                                _eventBus.Invoke(new StopLineDrawer());
+                                break;
+                        }
                         SelectHierarchyItem(element);
+                        ShowProperties(element);
+                 
                     }
                     return;
                 }
-
-                ShowProperties(element);
                 SelectHierarchyItem(element);
+                ShowProperties(element);
+           
             }
         }
 

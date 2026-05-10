@@ -4,6 +4,7 @@ using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
+using Assets.Scripts.StageControlSystem.Models;
 using Assets.Scripts.SystemManager;
 using Assets.UI.CustomElements.ColorPicker;
 using System;
@@ -105,6 +106,7 @@ public class PropertiesPanelEvents : MonoBehaviour
 
     public void ChangePropertiesProvider(IPropertyProvider propertyProvider)
     {
+        FieldBindingUtils.FlushAllPendingChanges();
         ClearBindings();
 
         current = propertyProvider;
@@ -130,10 +132,10 @@ public class PropertiesPanelEvents : MonoBehaviour
         }
         else ShowElement(scalePropertyContainer);
 
-        if(propertyProvider == null || current.NameReadOnly)
+        if (propertyProvider == null || current.NameReadOnly)
         {
             var name = namePropertyContainer.Q<TextField>("name");
-            if(name != null)
+            if (name != null)
             {
                 name.isReadOnly = true;
             }
@@ -185,6 +187,15 @@ public class PropertiesPanelEvents : MonoBehaviour
                 (propertyCommand.Target is IPropertyProvider provider && provider == current))
             {
                 UpdateUI();
+            }
+        }
+        else if (command is CustomPropertyChangeCommand customCommand)
+        {
+            if (customCommand.Target == current ||
+                (customCommand.Target is IPropertyProvider provider && provider == current))
+            {
+                // Перестроить кастомные поля
+                BuildCustomProperties(current);
             }
         }
     }
@@ -457,10 +468,12 @@ public class PropertiesPanelEvents : MonoBehaviour
                 container.Add(field);
                 customContainer.Add(container);
                 //RegisterEventsforInput(field);
-                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
-                {
-                    prop.Setter(field.value);
-                }));
+                cleanupActions.Add(FieldBindingUtils.BindCustomFieldWithHistory(
+                     field, provider, prop.Name,
+                     () => prop.Getter(),           // getter
+                     val => prop.Setter(val),       // setter
+                     _undoRedoManager, _UIStatusManager));
+
                 //RegisterEventsforInput(field);
 
             }
@@ -474,10 +487,11 @@ public class PropertiesPanelEvents : MonoBehaviour
                 container.Add(field);
                 customContainer.Add(container);
                 RegisterEventsforInput(field);
-                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
-                {
-                    prop.Setter(field.value);
-                }));
+                cleanupActions.Add(FieldBindingUtils.BindCustomFieldWithHistory(
+                        field, provider, prop.Name,
+                        () => prop.Getter(),
+                        val => prop.Setter(val),
+                        _undoRedoManager, _UIStatusManager));
             }
             else if (prop.PropertyType == typeof(int))
             {
@@ -489,10 +503,11 @@ public class PropertiesPanelEvents : MonoBehaviour
                 container.Add(field);
                 customContainer.Add(container);
 
-                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
-                {
-                    prop.Setter(field.value);
-                }));
+                cleanupActions.Add(FieldBindingUtils.BindCustomFieldWithHistory(
+                   field, provider, prop.Name,
+                   () => prop.Getter(),
+                   val => prop.Setter(val),
+                   _undoRedoManager, _UIStatusManager));
                 RegisterEventsforInput(field);
             }
             else if (prop.PropertyType == typeof(string))
@@ -505,10 +520,11 @@ public class PropertiesPanelEvents : MonoBehaviour
                 container.Add(field);
                 customContainer.Add(container);
                 RegisterEventsforInput(field);
-                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
-                {
-                    prop.Setter(field.value);
-                }));
+                cleanupActions.Add(FieldBindingUtils.BindCustomFieldWithHistory(
+                        field, provider, prop.Name,
+                        () => prop.Getter(),
+                        val => prop.Setter(val),
+                        _undoRedoManager, _UIStatusManager));
             }
             else if (prop.PropertyType == typeof(Color))
             {
