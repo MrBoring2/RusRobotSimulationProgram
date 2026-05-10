@@ -24,58 +24,23 @@ public class PLCSimulation : MonoBehaviour
     public Dictionary<string, List<SubProgramm>> RobotsPrograms;
     public List<PLCProgrammElement> PLCProgramm = new List<PLCProgrammElement>();
 
-    IEnumerator cor;
     private void Start()
     {
         _simManager = ServiceManager.Current.Get<SimulationManager>();
         _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
         _eventBus = ServiceManager.Current.Get<EventBus>();
-        //Статусы симуляции//
+
         _eventBus.Subscribe<StartProgramm>(StartSim);
-        //--//
         
     }
 
-    //--Получение программы всех роботов-- ///////////////////////////////////////// потом уберется
-   /* private void GetAllRobotsProg()
-    {
-        RobotsPrograms = new Dictionary<string, List<SubProgramm>>();
-        var list = _sceneObjectsManager.GetGameObjectsList();
-        if (list != null)
-        {
-            foreach (var so in list)
-            {
-                if (so == null)
-                    continue;
-
-                if (so.Type == ObjectType.Robot)
-                {
-                    RobotsPrograms.Add(so.Id, (so.PropertyProvider as RobotPropertyProvider).RobotController.Programm);
-                }
-            }
-        }
-    }*/
-    //--Получение провайдера робота по ID--
-    private RobotPropertyProvider GetRobotById(string id)
-    {
-        var obj = _sceneObjectsManager.GetById(id);
-
-            if (obj.Type == ObjectType.Robot && obj.Id == id)
-            {
-                //возврат провайдера робота
-                return obj.PropertyProvider as RobotPropertyProvider;
-            }
-        // Ничего не найдено
-        return null;
-    }
+    
     PLCBlockInit Init;
     List<PLCCommandBlockRobotsTask> RobotsBlocks;
     PLCCommandLogicBlock LogicBlock;
     //--Запуск симуляции--
     void StartSim(StartProgramm s)
     {
-        _eventBus.Invoke(new RobotsControllerResetState());
-
         (PLCBlockInit Init, List<PLCCommandBlockRobotsTask> RobotsBlocks, PLCCommandLogicBlock LogicBlocks) PLC = PLCDataConverter.Convert(_sceneObjectsManager.PLCData);
         Init = PLC.Init;
         RobotsBlocks = PLC.RobotsBlocks;
@@ -101,6 +66,10 @@ public class PLCSimulation : MonoBehaviour
             await Awaitable.WaitForSecondsAsync(0.1f);
         }
     }
+    /// <summary>
+    /// Цикл ПЛК
+    /// </summary>
+    /// <returns></returns>
     public async Awaitable PLC()
     {
         foreach(var block in RobotsBlocks)
@@ -108,32 +77,6 @@ public class PLCSimulation : MonoBehaviour
             await ExecuteRobotBlock(block);
         }
         await ExecuteCycleBlock(LogicBlock);
-        /*foreach (var programmElement in PLCProgramm)
-        {
-            try
-            {
-                if (programmElement.GetType() == typeof(PLCBlockInit))
-                {
-                    programmElement.Execute();
-                }
-                if (programmElement.GetType() == typeof(PLCCommandBlockRobotsTask))
-                {
-                    PLCCommandBlockRobotsTask block = (PLCCommandBlockRobotsTask)programmElement;
-                    await ExecuteRobotBlock(block);
-                }
-                if (programmElement.GetType() == typeof(PLCCommandCycleBlock))
-                {
-                    PLCCommandCycleBlock block = (PLCCommandCycleBlock)programmElement;
-                    await ExecuteCycleBlock(block);
-                }
-
-            }
-
-            catch (Exception ex)
-            {
-                Debug.LogError($"Ошибка исполнителя ПЛК: {ex}");
-            }
-        }*/
     }
     
     //--Выполнение блока работы с роботом--
@@ -153,10 +96,23 @@ public class PLCSimulation : MonoBehaviour
             foreach (var command in BlockRobotTasks.ProgrammElements)
             {
                 if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
-                if (command.Execute(RC)) ;// break;
+                if (command.Execute(RC));// break;
             }
         }
         
+    }
+    //--Получение провайдера робота по ID--
+    private RobotPropertyProvider GetRobotById(string id)
+    {
+        var obj = _sceneObjectsManager.GetById(id);
+
+        if (obj.Type == ObjectType.Robot && obj.Id == id)
+        {
+            //возврат провайдера робота
+            return obj.PropertyProvider as RobotPropertyProvider;
+        }
+        // Ничего не найдено
+        return null;
     }
     public async Awaitable ExecuteCycleBlock(PLCCommandLogicBlock block)
     {

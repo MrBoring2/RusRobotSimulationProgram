@@ -35,37 +35,10 @@ public class Angles
     }
     public void SetThetha(int i, float value)
     {
-       /* switch (i)
-        {
-            case 0:
-                thetha1 = value;
-                break;
-            case 1:
-                thetha2 = value;
-                break;
-            case 2:
-                thetha3 = value;
-                break;
-            case 3:
-                thetha4 = value;
-                break;
-            case 4:
-                thetha5 = value;
-                break;
-            case 5:
-                thetha6 = value;
-                break;
-        }*/
         angs[i] = value;
     }
     public Angles(float thetha1, float thetha2, float thetha3, float thetha4, float thetha5, float thetha6)
     {
-        /*this.thetha1 = thetha1;
-        this.thetha2 = thetha2;
-        this.thetha3 = thetha3;
-        this.thetha4 = thetha4;
-        this.thetha5 = thetha5;
-        this.thetha6 = thetha6;*/
         angs[0] = thetha1;
         angs[1] = thetha2;
         angs[2] = thetha3;
@@ -75,12 +48,6 @@ public class Angles
     }
     public Angles(float[] thetha)
     {
-        /*thetha1 = thetha[0];
-        thetha2 = thetha[1];
-        thetha3 = thetha[2];
-        thetha4 = thetha[3];
-        thetha5 = thetha[4];
-        thetha6 = thetha[5];*/
         for(int i = 0; i < 6; i++)
         {
             angs[i] = thetha[i];
@@ -88,12 +55,6 @@ public class Angles
     }
     public Angles(Angles ang)
     {
-        /*this.thetha1 = ang.thetha1;
-        this.thetha2 = ang.thetha2;
-        this.thetha3 = ang.thetha3;
-        this.thetha4 = ang.thetha4;
-        this.thetha5 = ang.thetha5;
-        this.thetha6 = ang.thetha6;*/
         for (int i = 0; i < 6; i++)
         {
             angs[i] = ang.angs[i];
@@ -103,12 +64,6 @@ public class Angles
     public  bool Equals(Angles ang)
     {
         if (ang == null) return false;
-        /*return thetha1 == ang.thetha1 &&
-               thetha2 == ang.thetha2 &&
-               thetha3 == ang.thetha3 &&
-               thetha4 == ang.thetha4 &&
-               thetha5 == ang.thetha5 &&
-               thetha6 == ang.thetha6;*/
         return (GetThetha(0) == ang.GetThetha(0)) &&
                (GetThetha(1) == ang.GetThetha(1)) &&
                (GetThetha(2) == ang.GetThetha(2)) &&

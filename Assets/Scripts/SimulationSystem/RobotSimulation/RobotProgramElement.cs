@@ -77,10 +77,6 @@ namespace Assets.Scripts.Models
         public class SubProgramm : RobotProgrammElement
     {
         public List<RobotProgrammElement> ProgrammElement { get; set; } = new List<RobotProgrammElement>();
-        //public SubProgramm(ENUM_COMANDS tc)
-        //{
-        //    TypeComand = tc;
-        //}
         public SubProgramm(List<RobotProgrammElement> p, ENUM_COMMANDS tc, string id) : base(id)
         {
             ProgrammElement = p;
@@ -93,13 +89,9 @@ namespace Assets.Scripts.Models
         }
         public async override Awaitable Execute(RobotController rc)
         {
-            //rc.RobotSetLinMove(Cmd);
         }
 
     }
-
-
-
 
    
     public enum ENUM_COMMANDS

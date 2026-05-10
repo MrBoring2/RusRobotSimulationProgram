@@ -18,7 +18,7 @@ public class RobotJointController  : MonoBehaviour
     {
         _propertyProvider = gameObject.GetComponent<RobotPropertyProvider>();
     }
-    // Update is called once per frame
+    
     void FixedUpdate()
     {
         J1.transform.localRotation = Quaternion.AngleAxis(_propertyProvider.J1Angle, new Vector3(0, 1, 0));

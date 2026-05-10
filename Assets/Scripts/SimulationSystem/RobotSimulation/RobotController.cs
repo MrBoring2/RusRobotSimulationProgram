@@ -24,8 +24,6 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         SceneObjectsManager _sceneObjectManager => ServiceManager.Current.Get<SceneObjectsManager>();
         EventBus _eventBus => ServiceManager.Current.Get<EventBus>();
 
-        float Speed;//м/с
-
         Angles[] angles;
 
         //оптимизация
@@ -33,10 +31,10 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         Quaternion oldJOGrotation = Quaternion.identity;
         float[] oldAngles = new float[6] { 0, 0, 0, 0, 0, 0 };
         bool needUpdateConf = false;
+        int OldConfigPoint = 0;
 
         public string ID => _propertyProvider.Id;
         public bool RunTask { get; set; }
-        bool CommandComplete = true;
         public List<SubProgramm> Programm { get; set; }
 
         public AnimationCurve SpeedCurve;
@@ -47,9 +45,9 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         void Start()
         {
             InvKin = gameObject.GetComponent<InverseK_new>();
-            _eventBus.Subscribe<StopProgramm>(StopSim);
+            //_eventBus.Subscribe<StopProgramm>(StopSim);
             _eventBus.Subscribe<PickCommandSignal>(TeleportToPoint);
-            _eventBus.Subscribe<RobotsControllerResetState>(ControllerResetState);
+            _eventBus.Subscribe<Init>(ControllerResetState);
             _propertyProvider = GetComponent<RobotPropertyProvider>();
             _propertyProvider.JOGpoint.Position = new Vector3(1, 1, 1);
             _propertyProvider.JOGpoint.Rotation = new Vector3(180, 0, 0);
@@ -119,61 +117,6 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             await Awaitable.FixedUpdateAsync();
             _propertyProvider.EndEffectorOn = cmd.Get();
         }
-        //--Команда линейное движение
-        //public async Awaitable RobotSetLinMove(LinearPointPropertyProvider point)
-        //{
-        //    UnityEngine.Debug.LogError("Линейное движение: Старт ");
-
-        //    Point Start = new(_propertyProvider.JOGpoint.Position, _propertyProvider.JOGpoint.LocalRotationQ);
-        //    Point End = new(GetPositionInfo(point).Position, GetPositionInfo(point).Rotation);
-        //    Point wayPoint = new(Start.Position, Start.Rotation);
-        //    Vector3 wayDirection = (End.Position - Start.Position).normalized;
-        //    float distance = Vector3.Distance(Start.Position, End.Position);
-        //    float traveled = 0f;
-
-        //    ///время
-        //    float timeInWay = distance / Speed;
-
-        //    float timeCurrent = 0;
-        //    float timeCurrenScale = 0;
-        //    //Сделать проверку точки на достижимость, если точка недоступна, то не выполнять движение и выдавать ошибку
-        //    if (Start.Position == End.Position)
-        //    {
-        //        float angle = (Quaternion.Angle(Start.Rotation, End.Rotation));
-        //        Vector3 ang1 = Start.Rotation.eulerAngles;
-        //        Vector3 ang2 = End.Rotation.eulerAngles;
-        //        timeInWay = (Quaternion.Angle(Start.Rotation, End.Rotation)) / point.AngleSpeed;
-        //    }
-        //    while (End.Position != wayPoint.Position || (Quaternion.Angle(wayPoint.Rotation, End.Rotation) > 0.001))
-        //    {
-        //        if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
-        //        timeCurrenScale = timeCurrent / timeInWay;
-        //        if (timeCurrenScale > 1) timeCurrenScale = 1;
-        //        float positionInLine = SpeedCurve.Evaluate(timeCurrenScale) * distance;
-        //        float step = positionInLine - traveled;
-        //        wayPoint.Position += wayDirection * step;
-
-        //        wayPoint.Rotation = Quaternion.SlerpUnclamped(Start.Rotation, End.Rotation, SpeedCurve.Evaluate(timeCurrenScale));
-        //        angles = InvKin.IKCalc(_propertyProvider.RP, wayPoint.Position, wayPoint.Rotation);
-
-        //        traveled = positionInLine;
-
-        //        //Выбор конфигурации точки
-        //        InvKin.CheckLimit(angles[0]);
-        //        if (InvKin.checkIsNaN(angles[0]))
-        //        {
-        //            ModifyRobot(_propertyProvider, angles[0].GetFloats());
-        //            SetJogPosition(wayPoint);
-
-        //            timeCurrent += Time.deltaTime;
-        //            await Awaitable.FixedUpdateAsync();
-        //            //yield return new WaitForSeconds(Time.fixedDeltaTime);
-        //        }
-
-        //    }
-        //    //CommandComplete = true;
-        //    return;
-        //}
         public async Awaitable RobotSetLinMove(LinearPointPropertyProvider point)
         {
             UnityEngine.Debug.LogError("Линейное движение: Старт ");
@@ -260,7 +203,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
             //Сделать проверку точки на достижимость, если точка недоступна, то не выполнять движение и выдавать ошибку
 
-            while (/*End.Position != wayPoint.Position*/Vector3.Distance(End.Position, wayPoint.Position) > 0.001 || (Quaternion.Angle(wayPoint.Rotation, End.Rotation) > 0.001))
+            while (Vector3.Distance(End.Position, wayPoint.Position) > 0.001 || (Quaternion.Angle(wayPoint.Rotation, End.Rotation) > 0.001))
             {
                 if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
                 while (_simManager.GetStatusSim() == SIM_STAT.PAUSE)
@@ -371,7 +314,6 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 }
 
             }
-            //CommandComplete = true;
             return;
         }
         /// <summary>
@@ -522,7 +464,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         }
         public async Awaitable _SetJogMove()
         {
-            if (oldJOGposition != _propertyProvider.JOGpoint.Position || oldJOGrotation != _propertyProvider.JOGpoint.LocalRotationQ)
+            if (oldJOGposition != _propertyProvider.JOGpoint.Position || oldJOGrotation != _propertyProvider.JOGpoint.LocalRotationQ || OldConfigPoint != _propertyProvider.JOGpoint.ConfigPoint)
             {
                 
                 angles = InvKin.IKCalc(_propertyProvider.RP, _propertyProvider.JOGpoint.Position, _propertyProvider.JOGpoint.LocalRotationQ);
@@ -578,11 +520,8 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         //--Выполнить подпрограмму (задачу)--
         public void RunSubProgramm(string IDTaskToRun)
         {
-
             try
             {
-                //Programm = BuildProgramm(ID);
-                //SubProgramm Task = Programm.FirstOrDefault(x => x.ID == IDTaskToRun);
                 RunTask = true;
                 _ = Run(Programm.FirstOrDefault(x => x.ID == IDTaskToRun));
             }
@@ -593,7 +532,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
 
         }
-        //--Корутина выполнение подпрограммы (задачи)--
+        //-- Выполнение подпрограммы (задачи)--
         async Awaitable Run(SubProgramm Task)
         {
             foreach (var comand in Task.ProgrammElement)
@@ -604,36 +543,18 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                     if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
                     await Awaitable.FixedUpdateAsync();
                 }
-                //await Awaitable.FixedUpdateAsync();
-                //CommandComplete = false;
                 await comand.Execute(this);
 
             }
             UnityEngine.Debug.LogWarning("Задача завершена");
-            ////final
             RunTask = false;
 
         }
-        public void StopSim(StopProgramm s)
+        /*public void StopSim(StopProgramm s)
         {
-            //tokenTask.Cancel();
-            //tokenTask.Dispose();
             RunTask = false;
             CommandComplete = true;
-        }
-
-        /// <summary>
-        /// получение дерева программы
-        /// </summary>
-        //public List<RobotProgrammElement> Programm
-        //{
-        //    get
-        //    {
-        //        var a = BuildTreeInternal(ID);
-        //        return a;
-        //    }
-        //}
-
+        }*/
         public List<SubProgramm> GetProgramm()
         {
             return BuildProgramm(ID);
@@ -674,11 +595,11 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 programm.Add(command);
             }
         }
-        void ControllerResetState(RobotsControllerResetState s)
+        void ControllerResetState(Init s)
         {
-            CommandComplete = true;
+            RunTask = false;
             Programm = null;
-            Programm = BuildProgramm(ID);
+            Programm = BuildProgramm(ID);    
         }
         //--Мгновенное перемещение к переданной точке
         private void TeleportToPoint(PickCommandSignal s)
@@ -707,20 +628,16 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
             }
         }
-        public void TeleportToPoint(LinearPointPropertyProvider p)
-        {
-
-        }
         //--Получить позицию точки--
         public Point GetPositionInfo(LinearPointPropertyProvider p)
         {
-            Speed = p.LinearSpeed;
-            return new Point { Position = _propertyProvider.transform.InverseTransformPoint(p.Position), Rotation = p.transform.localRotation, Speed = Speed };
+            //Speed = p.LinearSpeed;
+            return new Point { Position = _propertyProvider.transform.InverseTransformPoint(p.Position), Rotation = p.transform.localRotation};
         }
         public Point GetPositionInfo(Point p)
         {
-            Speed = p.Speed;
-            return new Point { Position = _propertyProvider.transform.InverseTransformPoint(p.Position), Rotation = p.Rotation, Speed = Speed };
+            //Speed = p.Speed;
+            return new Point { Position = _propertyProvider.transform.InverseTransformPoint(p.Position), Rotation = p.Rotation};
         }
 
         /// <summary>
@@ -748,9 +665,9 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         }
         void OnDestroy()
         {
-            _eventBus.Unsubcribe<StopProgramm>(StopSim);
+            //_eventBus.Unsubcribe<StopProgramm>(StopSim);
             _eventBus.Unsubcribe<PickCommandSignal>(TeleportToPoint);
-            _eventBus.Unsubcribe<RobotsControllerResetState>(ControllerResetState);
+            _eventBus.Unsubcribe<Init>(ControllerResetState);
 
 
         }

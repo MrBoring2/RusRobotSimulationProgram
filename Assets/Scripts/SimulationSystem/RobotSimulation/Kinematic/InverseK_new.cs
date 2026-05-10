@@ -1,9 +1,6 @@
-﻿using Assets.Scripts.Providers;
-using System;
-using System.Collections.Generic;
-using Unity.Mathematics;
+﻿using System;
+using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 
 
@@ -11,10 +8,9 @@ using UnityEngine.UIElements;
 public class InverseK_new : MonoBehaviour
 {
     //Translate
-    public float X = 0, Y = 0, Z = 0;
-    public float UX = 0, UY = 0, UZ = 0;
-    public Quaternion RotateQ = Quaternion.Euler(0, 0, 0);
-    public Matrix4x4 RotateMatrix = Matrix4x4.zero;
+    Vector3 XYZ = Vector3.zero;
+    Quaternion RotateQ = Quaternion.Euler(0, 0, 0);
+    Matrix4x4 RotateMatrix = Matrix4x4.zero;
 
     //Рез. ИК
     public Angles[] Angles = new Angles[8];
@@ -66,25 +62,6 @@ public class InverseK_new : MonoBehaviour
     {
         return RotateMatrix[0, 1] * ss23(conf) * cc1(conf) + RotateMatrix[1, 1] * ss23(conf) * ss1(conf) + RotateMatrix[2, 1] * cc23(conf);
     }
-    /// <summary>
-    /// Перевод из системы координат Юнити в Координатную систему робота и подготовка данных для расчета ИК, передавать локальные координаты относительно основания робота
-    /// </summary>
-    /// <param name="_propertyProvider"></param>
-    /// <returns></returns>
-    /// 
-    public Point Translate(Vector3 position, Quaternion rotation)
-    {
-
-        Quaternion correct = Quaternion.Euler(0, 0, 0);
-
-        X = position.x;
-        Y = position.y;
-        Z = position.z;
-
-        RotateQ = correct * rotation;
-        return new Point(new Vector3(X, Y, Z), RotateQ);
-
-    }
     public Angles[] IKCalc(RP RP, Vector3 position, Quaternion rotation)
     {
         return IK(RP, position, rotation);
@@ -94,23 +71,22 @@ public class InverseK_new : MonoBehaviour
         return IK(RP, point.Position, point.Rotation);
     }
     /// <summary>
-    /// Расчет инверсной кинематики n-конфигураций
+    /// Расчет ИК для 6-осевого робота по заданной позиции и ориентации эффектора, возвращает массив из 8 конфигураций ИК, которые могут достигать заданной позиции и ориентации, с учетом всех возможных вариантов положения локтя и запястья
     /// </summary>
-    /// <param name="ZP"></param>
-    /// <returns></returns>
+    /// <param name="RP"></param>
+    /// <param name="position"></param>
+    /// <param name="rotation"></param>
+    /// <returns>Массив из 8 конфигураций углов для заданной позиции и ориентации эффектора</returns>
     public Angles[] IK(RP RP, Vector3 position, Quaternion rotation)
     {
-        Translate(position, rotation);
-        //рачсет точки расположения основания сферического запястья
-        Vector3 C0 = new Vector3();
-        RotateMatrix = Matrix4x4.Rotate(new Quaternion(x: RotateQ.z, y: RotateQ.x, z: RotateQ.y, w: RotateQ.w));
-        //C0.x = X - RP.c4 * RotateMatrix[0, 2];
-        //C0.y = Y - RP.c4 * RotateMatrix[1, 2];
-        //C0.z = Z - RP.c4 * RotateMatrix[2, 2];
-        C0.x = Z * 1000 - RP.c4 * RotateMatrix[0, 2];
-        C0.y = X * 1000 - RP.c4 * RotateMatrix[1, 2];
-        C0.z = Y * 1000 - RP.c4 * RotateMatrix[2, 2];
+        XYZ = position;
+        RotateQ = rotation;
 
+        Vector3 C0 = new Vector3();//координаты центра запястья в системе координат робота
+        RotateMatrix = Matrix4x4.Rotate(new Quaternion(x: RotateQ.z, y: RotateQ.x, z: RotateQ.y, w: RotateQ.w));
+        C0.x = XYZ.z * 1000 - RP.c4 * RotateMatrix[0, 2];
+        C0.y = XYZ.x * 1000 - RP.c4 * RotateMatrix[1, 2];
+        C0.z = XYZ.y * 1000 - RP.c4 * RotateMatrix[2, 2];
 
         float r = Mathf.Sqrt(C0.x * C0.x + C0.y * C0.y);
         float rr = r * r;
@@ -130,10 +106,10 @@ public class InverseK_new : MonoBehaviour
         float s1 = Mathf.Sqrt((nx1 * nx1) + ((C0.z - RP.c1) * (C0.z - RP.c1)));
         float s2 = MathF.Sqrt((nx1 + 2 * RP.a1) * (nx1 + 2 * RP.a1) + (C0.z - RP.c1) * (C0.z - RP.c1));
         float acosValue21 = (s1 * s1 + RP.c2 * RP.c2 - k * k) / (2 * s1 * RP.c2);
+        float acosValue22 = (s2 * s2 + RP.c2 * RP.c2 - k * k) / (2 * s2 * RP.c2);
         //thetha2
         Angles[0].thetha2 = (Mathf.Atan2(nx1, C0.z - RP.c1) - Mathf.Acos(acosValue21)); //i
-        Angles[1].thetha2 = (Mathf.Atan2(nx1, C0.z - RP.c1) + Mathf.Acos(acosValue21)); //ii
-        float acosValue22 = (s2 * s2 + RP.c2 * RP.c2 - k * k) / (2 * s2 * RP.c2); 
+        Angles[1].thetha2 = (Mathf.Atan2(nx1, C0.z - RP.c1) + Mathf.Acos(acosValue21)); //ii       
         Angles[2].thetha2 = -(Mathf.Atan2(nx1 + 2 * RP.a1, C0.z - RP.c1) - Mathf.Acos(acosValue22)); //iii
         Angles[3].thetha2 = -(Mathf.Atan2(nx1 + 2 * RP.a1, C0.z - RP.c1) + Mathf.Acos(acosValue22)); //iv
         Angles[4].thetha2 = Angles[0].thetha2;//i
@@ -142,10 +118,10 @@ public class InverseK_new : MonoBehaviour
         Angles[7].thetha2 = Angles[3].thetha2;//iv
 
         float acosValue31 = (s1 * s1 - RP.c2 * RP.c2 - k * k) / (2 * RP.c2 * k);
+        float acosValue32 = (s2 * s2 - RP.c2 * RP.c2 - k * k) / (2 * RP.c2 * k);
         // thetha3
         Angles[0].thetha3 = Mathf.Acos(acosValue31) - Mathf.Atan2(RP.a2, RP.c3);//i
-        Angles[1].thetha3 = -Mathf.Acos(acosValue31) - Mathf.Atan2(RP.a2, RP.c3);//ii
-        float acosValue32 = (s2 * s2 - RP.c2 * RP.c2 - k * k) / (2 * RP.c2 * k);
+        Angles[1].thetha3 = -Mathf.Acos(acosValue31) - Mathf.Atan2(RP.a2, RP.c3);//ii    
         Angles[2].thetha3 = -Mathf.Atan2(RP.a2, RP.c3) - Mathf.Acos(acosValue32);//iii
         Angles[3].thetha3 = -Mathf.Atan2(RP.a2, RP.c3) + Mathf.Acos(acosValue32);//iv
         Angles[4].thetha3 = Angles[0].thetha3; //i
@@ -153,20 +129,7 @@ public class InverseK_new : MonoBehaviour
         Angles[6].thetha3 = Angles[2].thetha3; //iii
         Angles[7].thetha3 = Angles[3].thetha3; //iv
 
-        ////////////////////////////////////////////
-        ///
-        //  s1, c1, s23, c23 
-        /*float s1i = Mathf.Sin(Angles[0].thetha1);
-        float c1i = Mathf.Cos(Angles[0].thetha1);
-        float s23i = Mathf.Sin(Angles[0].thetha2 + Angles[0].thetha3);
-        float c23i = Mathf.Cos(Angles[0].thetha2 + Angles[0].thetha3);*/
-
-        // Calculate m_i
-        //float mi = RotateMatrix[0, 2] * ss23(0) * cc1(0) + RotateMatrix[1, 2] * ss23(0) * ss1(0) + RotateMatrix[2, 2] * cc23(0);
-
         // thetha4
-        //float theta4i_numerator = RotateMatrix[0, 2] * cc23(0) * cc1(0) + RotateMatrix[1, 2] * cc23(0) * ss1(0) - RotateMatrix[2, 2] * ss23(0);
-        //float theta4i_denominator = RotateMatrix[1, 2] * cc1(0) - RotateMatrix[0, 2] * ss1(0);
         Angles[0].thetha4 = Mathf.Atan2(thetha4_denominator(0), thetha4_numerator(0));//i
         Angles[1].thetha4 = Mathf.Atan2(thetha4_denominator(1), thetha4_numerator(1));//ii
         Angles[2].thetha4 = Mathf.Atan2(thetha4_denominator(2), thetha4_numerator(2));//iii
@@ -175,8 +138,8 @@ public class InverseK_new : MonoBehaviour
         Angles[5].thetha4 = Mathf.Atan2(thetha4_denominator(5), thetha4_numerator(5)) + MathF.PI; //vi
         Angles[6].thetha4 = Mathf.Atan2(thetha4_denominator(6), thetha4_numerator(6)) + MathF.PI; //vii
         Angles[7].thetha4 = Mathf.Atan2(thetha4_denominator(7), thetha4_numerator(7)) + MathF.PI; //viii
-        //  thetha5
 
+        //  thetha5
         Angles[0].thetha5 = Mathf.Atan2(Mathf.Sqrt(1 - mm(0) * mm(0)), mm(0));//i
         Angles[1].thetha5 = Mathf.Atan2(Mathf.Sqrt(1 - mm(1) * mm(1)), mm(1));//ii
         Angles[2].thetha5 = Mathf.Atan2(Mathf.Sqrt(1 - mm(2) * mm(2)), mm(2));//iii
@@ -187,8 +150,6 @@ public class InverseK_new : MonoBehaviour
         Angles[7].thetha5 = -Mathf.Atan2(Mathf.Sqrt(1 - mm(7) * mm(7)), mm(7));//viii
 
         //  thetha6
-        // float theta6i_numerator = -RotateMatrix[0, 0] * ss23(0) * cc1(0) - RotateMatrix[1, 0] * ss23(0) * ss1(0) - RotateMatrix[2, 0] * cc23(0);
-        //float theta6i_denominator = RotateMatrix[0, 1] * ss23(0) * cc1(0) + RotateMatrix[1, 1] * ss23(0) * ss1(0) + RotateMatrix[2, 1] * cc23(0);
         Angles[0].thetha6 = Mathf.Atan2(thetha6_denominator(0), thetha6_numerator(0));//i
         Angles[1].thetha6 = Mathf.Atan2(thetha6_denominator(1), thetha6_numerator(1));//ii
         Angles[2].thetha6 = Mathf.Atan2(thetha6_denominator(2), thetha6_numerator(2));//iii
@@ -299,7 +260,14 @@ public class InverseK_new : MonoBehaviour
         }*/
         return InLimit;
     }
-
+    /// <summary>
+    /// Поиск среди 8 конфигураций ИК той, которая соответствует заданным углам, с учетом погрешности в 0.001 градуса
+    /// </summary>
+    /// <param name="Angl">Заданные углы</param>
+    /// <param name="RP">Параметры робота</param>
+    /// <param name="position">Позиция эффектора</param>
+    /// <param name="rotation">Вращение эффектора</param>
+    /// <returns>Индекс конфигурации</returns>
     public int CheckConfig(Angles Angl, RP RP, Vector3 position, Quaternion rotation)
     {
         Angles[] angles = IK(RP, position, rotation);
@@ -317,8 +285,8 @@ public class InverseK_new : MonoBehaviour
     /// <summary>
     /// проверка на выход за пределы расчетов (NaN) при невозможности достижения заданной позиции эффектора
     /// </summary>
-    /// <param name="ang"></param>
-    /// <returns></returns>
+    /// <param name="ang">Углы робота</param>
+    /// <returns>Возвращает true, если углы корректны, иначе false</returns>
     public bool checkIsNaN(Angles ang)
     {
         if (float.IsNaN(ang.thetha1) || float.IsNaN(ang.thetha2) || float.IsNaN(ang.thetha3) ||

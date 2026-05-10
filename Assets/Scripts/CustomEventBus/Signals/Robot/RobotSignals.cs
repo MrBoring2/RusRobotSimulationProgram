@@ -12,9 +12,7 @@ namespace Assets.Scripts.CustomEventBus.Signals.Robot
 
 
     //Симуляция
-    public class StartProgramm { }
-    public class PauseProgramm { }
-    public class StopProgramm { }
+   
 
 
     public class RobotEndMove

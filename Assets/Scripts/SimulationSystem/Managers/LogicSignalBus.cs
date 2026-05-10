@@ -1,6 +1,7 @@
 using Assets.Scripts.CustomServiceManager;
 using System.Collections.Generic;
 using UnityEngine;
+using Assets.Scripts.CustomEventBus;
 
 public class LogicSignalBus : MonoBehaviour, IService
 {
@@ -21,7 +22,20 @@ public class LogicSignalBus : MonoBehaviour, IService
     private Dictionary<string, bool> BufSignalsDict = new Dictionary<string, bool>();
     private Dictionary<string, int> BufIntDataDict = new Dictionary<string, int>();
 
-    public void Init(){}
+    void Start()
+    {
+         ServiceManager.Current.Get<EventBus>().Subscribe<Init>(Init);
+    }
+    public void Init() { }
+    void Init(Init s)
+    {
+        signalsDict.Clear();
+        intDataDict.Clear();
+        CopyIntDataDict.Clear();
+        CopyIntDataDict.Clear();
+        BufIntDataDict.Clear();
+        BufIntDataDict.Clear();
+    }
     private void ConvertDictionatyToList()
     {
         boolSignals.Clear();

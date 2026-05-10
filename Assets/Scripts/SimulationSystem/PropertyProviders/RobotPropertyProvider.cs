@@ -10,7 +10,6 @@ using System.Linq;
 public class RobotPropertyProvider : BasePropertyProvider
 {
     public RobotController RobotController { get; set; }
-    public float RotSpeedPercent { get; set; } = 100f;
 
     //=================== ПАРАМЕТРЫ ===================
     public bool EndEffectorOn { get; set; }
@@ -19,12 +18,17 @@ public class RobotPropertyProvider : BasePropertyProvider
     public Angles AnglesSpeedLimit { get; set; } = new(90, 60, 60, 120, 96, 210);
     public Angles AngleAcceler { get; set; } = new(155, 145, 185, 310, 270, 465);
     public Angles AngleBrake { get; set; } = new(155, 145, 185, 310, 270, 465);
+    /// <summary>
+    /// Углы которые можно менять из интерфейса
+    /// </summary>
     public float[] ChangeAngles  = new float[6] { 0, 0, 0, 0, 0, 0 };
     //=================== ПАРАМЕТРЫ ===================
 
 
 
-    //ugli obnovlaemie in FixedUpdate
+    /// <summary>
+    /// Углы обновляемы кажды кадр
+    /// </summary>
     public float J1Angle = 0;
     public float J2Angle = -90;
     public float J3Angle = 90;
@@ -33,7 +37,9 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J6Angle = 0;
     
     
-    //parameters zveniev
+    /// <summary>
+    /// Параметры звеньев робота
+    /// </summary>
     public RP RP = new(450, -350, 0, 447, 1150, 1350, 500);
 
     public float[] thetha = { 0, 0, 0, 0, 0, 0 };
@@ -45,6 +51,10 @@ public class RobotPropertyProvider : BasePropertyProvider
     public JOGPropertyProvider JOGpoint;
     //объект находящийся всегда в захвате для расчте прямой кинематики
     public ForwarKinObj _forwarKinObj;
+    /// <summary>
+    /// получить текущую позицию захвата, которая обновляется при каждом кадре, и которая используется для расчета прямой кинематики
+    /// </summary>
+    /// <returns></returns>
     public Point GetActualPosEffector()
     {
         return _forwarKinObj.Pos;

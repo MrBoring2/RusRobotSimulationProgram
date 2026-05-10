@@ -70,7 +70,6 @@ namespace Assets.Scripts.Providers
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private Mesh sphereMesh;
-        //public Vector3 PositionScale { get => transform.localPosition * 1000; set => transform.localPosition = value / 1000; }
        
         public Quaternion RotationQ
         {
