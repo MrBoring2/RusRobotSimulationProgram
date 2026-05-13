@@ -1,40 +1,42 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/UI/PropertiesPanelStyles.uss?fileID=7433441132597879392&amp;guid=1ebbdd19a7ef0154bb8ea71ea6917814&amp;type=3#PropertiesPanelStyles" />
-    <Style src="project://database/Assets/Resources/Styles/Default.uss?fileID=7433441132597879392&amp;guid=be02736ea5541bd428ad7e897bd93a90&amp;type=3#Default" />
+    <Style src="project://database/Assets/UI/PropertiesPanelStyles.uss?fileID=7433441132597879392&amp;guid=1ebbdd19a7ef0154bb8ea71ea6917814&amp;type=3#PropertiesPanelStyles"/>
+    <Style src="project://database/Assets/Resources/Styles/Default.uss?fileID=7433441132597879392&amp;guid=be02736ea5541bd428ad7e897bd93a90&amp;type=3#Default"/>
     <ui:VisualElement name="properties-panel-content-container">
-        <ui:VisualElement name="menu">
-            <ui:Button text="X" name="close-properties-button" focusable="false" />
-        </ui:VisualElement>
-        <ui:VisualElement name="base-properties-container">
-            <ui:VisualElement name="name-property-container" class="base-property">
-                <ui:Label text="Наименование" />
-                <ui:TextField name="name" />
+        <ui:ScrollView>
+            <ui:VisualElement name="menu">
+                <ui:Button text="X" name="close-properties-button" focusable="false"/>
             </ui:VisualElement>
-            <ui:VisualElement name="position-property-container">
-                <ui:Label text="Расположение" />
-                <ui:VisualElement name="position-input-container">
-                    <ui:FloatField label="X" name="position-z" />
-                    <ui:FloatField label="Y" name="position-x" />
-                    <ui:FloatField label="Z" name="position-y" />
+            <ui:VisualElement name="base-properties-container">
+                <ui:VisualElement name="name-property-container" class="base-property">
+                    <ui:Label text="Наименование"/>
+                    <ui:TextField name="name"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="position-property-container">
+                    <ui:Label text="Расположение"/>
+                    <ui:VisualElement name="position-input-container" style="justify-content: space-between;">
+                        <ui:FloatField label="X" name="position-z"/>
+                        <ui:FloatField label="Y" name="position-x"/>
+                        <ui:FloatField label="Z" name="position-y"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="rotation-property-container">
+                    <ui:Label text="Поворот"/>
+                    <ui:VisualElement name="rotation-input-container" style="justify-content: space-between;">
+                        <ui:FloatField label="X" name="rotation-x"/>
+                        <ui:FloatField label="Y" name="rotation-y"/>
+                        <ui:FloatField label="Z" name="rotation-z"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="scale-property-container">
+                    <ui:Label text="Масштаб"/>
+                    <ui:VisualElement name="scale-input-container" style="justify-content: space-between;">
+                        <ui:FloatField label="X" name="scale-x"/>
+                        <ui:FloatField label="Y" name="scale-y"/>
+                        <ui:FloatField label="Z" name="scale-z"/>
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="rotation-property-container">
-                <ui:Label text="Поворот" />
-                <ui:VisualElement name="rotation-input-container">
-                    <ui:FloatField label="X" name="rotation-x" />
-                    <ui:FloatField label="Y" name="rotation-y" />
-                    <ui:FloatField label="Z" name="rotation-z" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-            <ui:VisualElement name="scale-property-container">
-                <ui:Label text="Масштаб" />
-                <ui:VisualElement name="scale-input-container">
-                    <ui:FloatField label="X" name="scale-x" />
-                    <ui:FloatField label="Y" name="scale-y" />
-                    <ui:FloatField label="Z" name="scale-z" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-        </ui:VisualElement>
-        <ui:VisualElement name="custom-properties-container" />
+            <ui:VisualElement name="custom-properties-container"/>
+        </ui:ScrollView>
     </ui:VisualElement>
 </ui:UXML>

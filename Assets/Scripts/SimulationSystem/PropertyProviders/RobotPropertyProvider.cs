@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using UnityEngine;
 public class RobotPropertyProvider : BasePropertyProvider
 {
     public RobotController RobotController { get; set; }
@@ -21,7 +22,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     /// <summary>
     /// Углы которые можно менять из интерфейса
     /// </summary>
-    public float[] ChangeAngles  = new float[6] { 0, 0, 0, 0, 0, 0 };
+    public float[] ChangeAngles = new float[6] { 0, 0, 0, 0, 0, 0 };
     //=================== ПАРАМЕТРЫ ===================
 
 
@@ -29,14 +30,14 @@ public class RobotPropertyProvider : BasePropertyProvider
     /// <summary>
     /// Углы обновляемы кажды кадр
     /// </summary>
-    public float J1Angle = 0;
-    public float J2Angle = -90;
-    public float J3Angle = 90;
-    public float J4Angle = 0;
-    public float J5Angle = 0;
-    public float J6Angle = 0;
-    
-    
+    public float J1Angle { get; set; } = 0;
+    public float J2Angle { get; set; } = -90;
+    public float J3Angle { get; set; } = 90;
+    public float J4Angle { get; set; } = 0;
+    public float J5Angle { get; set; } = 0;
+    public float J6Angle { get; set; } = 0;
+
+
     /// <summary>
     /// Параметры звеньев робота
     /// </summary>
@@ -65,7 +66,7 @@ public class RobotPropertyProvider : BasePropertyProvider
         RobotController = GetComponent<RobotController>();
         displayScale = false;
     }
-    
+
     //------------------------------------------------------------------------------------------------------------------------//
 
     public override ProviderSaveData CaptureCustomState()
@@ -101,10 +102,11 @@ public class RobotPropertyProvider : BasePropertyProvider
                 "Линейное торможение осей",
                 typeof(string),
                 () => string.Join(",", AngleBrake.GetFloats()),
-                val => 
+                val =>
                 {
                     if(AngleBrake.UpdateFromString((string)val) != 0) Notification.ShowError(" Убедитесь, что вы ввели 6 чисел, разделенных запятыми, и что все числа положительные (J1, J2, J3, J4, J5, J6).");
-                })
+                }),
+           
         };
     }
 
@@ -113,5 +115,5 @@ public class RobotPropertyProvider : BasePropertyProvider
 
     }
 
-    
+
 }

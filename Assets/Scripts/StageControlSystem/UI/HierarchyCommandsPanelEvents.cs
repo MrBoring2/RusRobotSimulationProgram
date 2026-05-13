@@ -674,7 +674,7 @@ namespace Assets.Scripts.UI
                         };
                         SelectHierarchyItem(element);
                         ShowProperties(element);
-                     
+
                     }
                     return;
                 }
@@ -715,13 +715,13 @@ namespace Assets.Scripts.UI
                         }
                         SelectHierarchyItem(element);
                         ShowProperties(element);
-                 
+
                     }
                     return;
                 }
                 SelectHierarchyItem(element);
                 ShowProperties(element);
-           
+
             }
         }
 
@@ -968,7 +968,7 @@ namespace Assets.Scripts.UI
                         }));
                         if (!isInLogic)
                         {
-                           
+
                             contextMenu.Add(CreateMenuButton("Добавить задачу робота", () =>
                             {
                                 if (!HasProgramCallInCondition(parentId))
@@ -1319,19 +1319,19 @@ namespace Assets.Scripts.UI
             var type = prefab.GetComponent<SceneObjectMarker>().type;
             var pos = Vector3.zero;
             var rot = Quaternion.identity;
-            if (_simulationManager.GetModeSim().SimulationMode == MODE.JOG_MODE)
+            //if (_simulationManager.GetModeSim().SimulationMode == MODE.JOG_MODE)
+            //{
+            if (type == ObjectType.LinearMoveCommand)
             {
-                if (type == ObjectType.LinearMoveCommand)
-                {
-                    var robot = FindParentRobot(parentId);
-                    var manipulator = FindChildByName(robot.Reference.transform, "JOG_Manipulator");
-                    var provider = manipulator.gameObject.GetComponent<JOGPropertyProvider>();
-                    pos = new Vector3(provider.GlobalPosition.x, provider.GlobalPosition.y, provider.GlobalPosition.z);
-                    var a = provider.RotationQ;
-                    rot = Quaternion.Euler(provider.Rotation);
-                    var b = rot.eulerAngles;
-                }
+                var robot = FindParentRobot(parentId);
+                var manipulator = FindChildByName(robot.Reference.transform, "JOG_Manipulator");
+                var provider = manipulator.gameObject.GetComponent<JOGPropertyProvider>();
+                pos = new Vector3(provider.GlobalPosition.x, provider.GlobalPosition.y, provider.GlobalPosition.z);
+                var a = provider.RotationQ;
+                rot = Quaternion.Euler(provider.Rotation);
+                var b = rot.eulerAngles;
             }
+            //}
             var command = new AddObjCommandCommand(prefab, type, pos, rot, parentId);
             _undoRedoManager.Execute(command);
         }
@@ -1968,7 +1968,7 @@ namespace Assets.Scripts.UI
                         default:
                             break;
                     }
-                   
+
                     break;
                 case PLCInitVariable set:
                     commandText = $"Создать {set.VarType}: {set.VariableName} = {set.StartValue}";
@@ -2967,7 +2967,7 @@ namespace Assets.Scripts.UI
                         CleanupDrag();
                         return;
                     }
-                    
+
                     foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
                     {
                         var foundList = FindParentListForCommandInConditions(rb.ConditionsList, targetCommand.Id);

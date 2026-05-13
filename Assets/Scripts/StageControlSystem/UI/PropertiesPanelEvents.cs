@@ -5,6 +5,7 @@ using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using Assets.Scripts.StageControlSystem.Models;
+using Assets.Scripts.StageControlSystem.Utils;
 using Assets.Scripts.SystemManager;
 using Assets.UI.CustomElements.ColorPicker;
 using System;
@@ -458,93 +459,15 @@ public class PropertiesPanelEvents : MonoBehaviour
 
         foreach (var prop in provider.GetCustomProperties())
         {
-            if (prop.PropertyType == typeof(float))
-            {
-                var container = new VisualElement();
-                container.AddToClassList("base-property");
-                container.Add(new Label(prop.DisplayName));
-                var field = new FloatField();
-                field.value = (float)prop.Getter();
-                container.Add(field);
-                customContainer.Add(container);
-                //RegisterEventsforInput(field);
-                cleanupActions.Add(FieldBindingUtils.BindCustomFieldWithHistory(
-                     field, provider, prop.Name,
-                     () => prop.Getter(),           // getter
-                     val => prop.Setter(val),       // setter
-                     _undoRedoManager, _UIStatusManager));
+            var (container, field) = PropertyFieldFactory.CreateField(prop);
+            customContainer.Add(container);
 
-                //RegisterEventsforInput(field);
+            cleanupActions.Add(FieldBindingUtils.BindCustomFieldWithHistory(
+                field, provider, prop.Name,
+                () => prop.Getter(),
+                val => prop.Setter(val),
+                _undoRedoManager, _UIStatusManager));
 
-            }
-            else if (prop.PropertyType == typeof(bool))
-            {
-                var container = new VisualElement();
-                container.AddToClassList("base-bool-property");
-                container.Add(new Label(prop.DisplayName));
-                var field = new Toggle();
-                field.value = (bool)prop.Getter();
-                container.Add(field);
-                customContainer.Add(container);
-                RegisterEventsforInput(field);
-                cleanupActions.Add(FieldBindingUtils.BindCustomFieldWithHistory(
-                        field, provider, prop.Name,
-                        () => prop.Getter(),
-                        val => prop.Setter(val),
-                        _undoRedoManager, _UIStatusManager));
-            }
-            else if (prop.PropertyType == typeof(int))
-            {
-                var container = new VisualElement();
-                container.AddToClassList("base-property");
-                container.Add(new Label(prop.DisplayName));
-                var field = new IntegerField();
-                field.value = (int)prop.Getter();
-                container.Add(field);
-                customContainer.Add(container);
-
-                cleanupActions.Add(FieldBindingUtils.BindCustomFieldWithHistory(
-                   field, provider, prop.Name,
-                   () => prop.Getter(),
-                   val => prop.Setter(val),
-                   _undoRedoManager, _UIStatusManager));
-                RegisterEventsforInput(field);
-            }
-            else if (prop.PropertyType == typeof(string))
-            {
-                var container = new VisualElement();
-                container.AddToClassList("base-property");
-                container.Add(new Label(prop.DisplayName));
-                var field = new TextField();
-                field.value = (string)prop.Getter();
-                container.Add(field);
-                customContainer.Add(container);
-                RegisterEventsforInput(field);
-                cleanupActions.Add(FieldBindingUtils.BindCustomFieldWithHistory(
-                        field, provider, prop.Name,
-                        () => prop.Getter(),
-                        val => prop.Setter(val),
-                        _undoRedoManager, _UIStatusManager));
-            }
-            else if (prop.PropertyType == typeof(Color))
-            {
-                //var container = new VisualElement();
-                ////container.AddToClassList("base-property");
-                //container.AddToClassList("unity-base-field__aligned");
-                //container.Add(new Label(prop.DisplayName));
-                //var field = new Assets.UI.CustomElements.ColorPicker.ColorField();
-                //var colorPopup = root.Q<ColorPopup>("color-popup");
-                //field.ColorPopup = colorPopup;
-                //field.ResetButtonPressed += () => field.value = Color.white;
-                //field.value = (Color)prop.Getter();
-                //container.Add(field);
-                //customContainer.Add(container);
-                //RegisterEventsforInput(field);
-                //cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(field, provider, prop.Name, _undoRedoManager, _UIStatusManager, () =>
-                //{
-                //    prop.Setter(field.value);
-                //}));
-            }
         }
     }
 

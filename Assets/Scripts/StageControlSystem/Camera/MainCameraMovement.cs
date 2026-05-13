@@ -10,19 +10,42 @@ using UnityEngine.InputSystem;
 public class MainCameraMovement : MonoBehaviour
 {
     [Header("Движение")]
-    [SerializeField] private float movementSpeed = 10f;
+    [SerializeField] private float baseMovementSpeed = 10f;
+    [SerializeField] private float minMovementSpeed = 0.1f;
+    [SerializeField] private float maxMovementSpeed = 100f;
+    [SerializeField] private float speedChangeMultiplier = 1.5f;
 
     [Header("Мышь")]
-    [SerializeField] private float mouseSensitivity = 20f;
-    //[SerializeField] private float minPitch = -89f;
-    //[SerializeField] private float maxPitch = 89f;
+    [SerializeField] private float mouseSensitivity = 3f;
 
     [Header("Перспектива")]
     [SerializeField] private float buttonRotationSpeedDegPerSec = 360f;
 
+    [Header("Орбита")]
+    [SerializeField] private float orbitSensitivity = 5f;
+
+    [Header("Зум")]
+    [SerializeField] private float zoomSpeed = 10f;
+    [SerializeField] private float minDistance = 0.1f;
+    [SerializeField] private float maxDistance = 1000f;
+
+    [Header("Ускорение на Shift")]
+    [SerializeField] private float shiftSpeedMultiplier = 5f;
+    [SerializeField] private float accelerationTime = 0.15f;   
+    [SerializeField] private float decelerationTime = 0.3f;
+
     [Header("Камера")]
     [SerializeField] private Camera mainCamera;
     [SerializeField] private float orthographicSize = 10f;
+
+    private float currentMovementSpeed;
+
+    private float currentSpeedMultiplier = 1f;
+    private float speedVelocity = 0f;
+
+
+    private Vector3 orbitPoint;
+    private bool isOrbiting = false;
 
     private UIStatusManager _uiStatusManager;
     private EventBus _eventBus;
@@ -44,7 +67,7 @@ public class MainCameraMovement : MonoBehaviour
         pitch = NormalizeAngle(e.x);
         yaw = NormalizeAngle(e.y);
         targetEulerAngles = new Vector3(pitch, yaw, 0f);
-
+        currentMovementSpeed = baseMovementSpeed;
         transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
     }
 
@@ -58,12 +81,20 @@ public class MainCameraMovement : MonoBehaviour
         RotateToView(singal.Rotation);
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
-        if(!_uiStatusManager.isInputMode)
-            HandleMovement();
-        if(!_uiStatusManager.isPointerOverUI)
+        if (!_uiStatusManager.isPointerOverUI)
+        {
             HandleMouseRotation();
+            HandleOrbitRotation();
+            HandleZoom();
+            HandleSpeedChange();
+        }
+
+        if (!_uiStatusManager.isInputMode)
+            HandleMovement();
+
+        HandleShiftAcceleration();
         HandleButtonRotation();
     }
 
@@ -74,38 +105,142 @@ public class MainCameraMovement : MonoBehaviour
         if (Input.GetKey(KeyCode.S)) input += Vector3.back;
         if (Input.GetKey(KeyCode.A)) input += Vector3.left;
         if (Input.GetKey(KeyCode.D)) input += Vector3.right;
+        if (Input.GetKey(KeyCode.E)) input += Vector3.up;
+        if (Input.GetKey(KeyCode.Q)) input += Vector3.down;
 
         if (input != Vector3.zero)
         {
             input.Normalize();
 
-            Vector3 move =
-                transform.forward * input.z +
-                transform.right * input.x;
+            Vector3 move = transform.forward * input.z +
+                          transform.right * input.x +
+                          Vector3.up * input.y;
 
-            transform.position += move * movementSpeed * Time.deltaTime;
+            float finalSpeed = currentMovementSpeed * currentSpeedMultiplier;
+            transform.position += move * finalSpeed * Time.deltaTime;
         }
     }
+    private void HandleShiftAcceleration()
+    {
+        float targetMultiplier = 1f;
 
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+        {
+            targetMultiplier = shiftSpeedMultiplier;
+        }
+
+        float smoothTime = targetMultiplier > currentSpeedMultiplier ? accelerationTime : decelerationTime;
+        currentSpeedMultiplier = Mathf.SmoothDamp(
+            currentSpeedMultiplier,
+            targetMultiplier,
+            ref speedVelocity,
+            smoothTime
+        );
+    }
     private void HandleMouseRotation()
     {
         //if (EventSystem.current.IsPointerOverGameObject()) return;
-        if (Input.GetMouseButton(1))
+        if (!Input.GetMouseButton(1))
+            return;
+
+        if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
+            return;
+
+        //float mx = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime * 60f;
+        //float my = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime * 60f;
+        float mx = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float my = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+        yaw += mx;
+        pitch -= my;
+        //pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+
+        Quaternion q = Quaternion.Euler(pitch, yaw, 0f);
+        transform.rotation = q;
+
+        isButtonRotating = false;
+
+        targetEulerAngles = new Vector3(pitch, yaw, 0f);
+
+    }
+    private void HandleOrbitRotation()
+    {
+        if (!Input.GetMouseButton(0))
         {
-            float mx = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime * 60f; 
-            float my = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime * 60f;
-
-            yaw += mx;
-            pitch -= my;
-            //pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
-
-            Quaternion q = Quaternion.Euler(pitch, yaw, 0f);
-            transform.rotation = q;
-
-            isButtonRotating = false;
-
-            targetEulerAngles = new Vector3(pitch, yaw, 0f);
+            isOrbiting = false;
+            return;
         }
+
+        if (!Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
+            return;
+
+        if (!isOrbiting)
+        {
+            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                orbitPoint = hit.point;
+            }
+            else
+            {
+                orbitPoint = ray.GetPoint(10f);
+            }
+            isOrbiting = true;
+        }
+
+        float mx = Input.GetAxis("Mouse X") * orbitSensitivity;
+        float my = Input.GetAxis("Mouse Y") * orbitSensitivity;
+
+        transform.RotateAround(orbitPoint, Vector3.up, mx);
+        transform.RotateAround(orbitPoint, transform.right, -my);
+
+        Vector3 e = transform.eulerAngles;
+        pitch = NormalizeAngle(e.x);
+        yaw = NormalizeAngle(e.y);
+        targetEulerAngles = new Vector3(pitch, yaw, 0f);
+        isButtonRotating = false;
+    }
+
+    private void HandleZoom()
+    {
+        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+            return;
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (Mathf.Approximately(scroll, 0f))
+            return;
+
+        if (orthographicMode)
+        {
+            mainCamera.orthographicSize -= scroll * zoomSpeed;
+            mainCamera.orthographicSize = Mathf.Max(0.1f, mainCamera.orthographicSize);
+        }
+        else
+        {
+            Vector3 zoomDirection = transform.forward * scroll * zoomSpeed;
+
+            if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
+            {
+                zoomDirection *= 3f;
+            }
+
+            transform.position += zoomDirection;
+        }
+    }
+    private void HandleSpeedChange()
+    {
+        if (!Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl))
+            return;
+
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (Mathf.Approximately(scroll, 0f))
+            return;
+
+        if (scroll > 0)
+            currentMovementSpeed *= speedChangeMultiplier;
+        else
+            currentMovementSpeed /= speedChangeMultiplier;
+
+        currentMovementSpeed = Mathf.Clamp(currentMovementSpeed, minMovementSpeed, maxMovementSpeed);
     }
 
     private void HandleButtonRotation()
@@ -156,5 +291,10 @@ public class MainCameraMovement : MonoBehaviour
         if (a > 180f) a -= 360f;
         if (a <= -180f) a += 360f;
         return a;
+    }
+    public void FocusOnObject(Vector3 targetPosition, float distance = 5f)
+    {
+        Vector3 direction = transform.forward;
+        transform.position = targetPosition - direction * distance;
     }
 }
