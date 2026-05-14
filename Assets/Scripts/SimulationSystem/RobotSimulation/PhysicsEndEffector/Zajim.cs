@@ -36,7 +36,7 @@ public class Zajim : MonoBehaviour
             if((z1Col==true) && (z2Col == true))
             {
                 //if ((z1Collision == z2Collision) && (z1Collision.transform.tag == "Деталь"))
-                if ((z1Collision == z2Collision) && (z1Collision.gameObject.GetComponent<IPropertyProvider>() is WorkpiecePropertyProvider))
+                if ((z1Collision == z2Collision) && (z1Collision.gameObject.layer == LayerMask.NameToLayer("Detail")))
                 {
                     ZObj = z1Collision;
                     z1Collision.transform.parent = Base.gameObject.transform;

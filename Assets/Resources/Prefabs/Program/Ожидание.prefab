@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7502902788341369173}
   - component: {fileID: 5273658522469289645}
   - component: {fileID: 6480607946107601204}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: "\u041E\u0436\u0438\u0434\u0430\u043D\u0438\u0435"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -59,4 +59,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7742d586cf5107e419d3284213fceab3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaitPropertyProvider
-  Notification: {fileID: 0}

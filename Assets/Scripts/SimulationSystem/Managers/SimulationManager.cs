@@ -5,6 +5,7 @@ using Assets.Scripts.CustomEventBus.Signals.Robot;
 using Assets.Scripts.CustomEventBus.Signals.Simulation;
 using Assets.Scripts.CustomServiceManager;
 using System;
+using System.Timers;
 using UnityEngine;
 
 public class SimulationManager : MonoBehaviour,IService
@@ -13,6 +14,7 @@ public class SimulationManager : MonoBehaviour,IService
     private SIM_STAT SimulationStat = SIM_STAT.STOP; //статус симуляции в наст. время
     private MODE SimulationMode = MODE.NONE;
     private MODE oldSimulationMode = MODE.NONE;
+    private TimerSimulation TimeSim = new TimerSimulation();
     void Start()
     {
         _eventBus = ServiceManager.Current.Get<EventBus>();
@@ -21,6 +23,13 @@ public class SimulationManager : MonoBehaviour,IService
         _eventBus.Subscribe<PauseSimulationSignal>(PauseSim);
         _eventBus.Subscribe<StopSimulationSignal>(StopSim); 
 
+    }
+    private void FixedUpdate()
+    {
+        if(SimulationStat == SIM_STAT.PLAY)
+        { 
+            TimeSim.UpdateTimerSim();
+        }
     }
     public void Init() { }
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
@@ -49,7 +58,8 @@ public class SimulationManager : MonoBehaviour,IService
                 ChangeMode(MODE.NONE);
                 SimulationStat = SIM_STAT.PLAY;
                 _eventBus.Invoke(new StartProgramm());
-                
+                TimeSim.ResetTimer();
+
             }
             catch (Exception ex)
             {
@@ -73,6 +83,7 @@ public class SimulationManager : MonoBehaviour,IService
             SimulationStat = SIM_STAT.STOP;
             _eventBus.Invoke(new StopProgramm());
             ChangeOldMode();
+            TimeSim.ResetTimer();
         }
     }
     private void ChangeMode(MODE mode)
@@ -95,7 +106,14 @@ public class SimulationManager : MonoBehaviour,IService
         (MODE, MODE) modes = (SimulationMode, oldSimulationMode);
         return modes;
     }
-
+    public (int Hours, int Minute, int Seconds) GetTimeSimulation()
+    {
+        return TimeSim.GetTime();
+    }
+    public float GetTimeSimulationFloat()
+    {
+        return TimeSim.GetFloat();
+    }
 }
 
 public enum SIM_STAT
