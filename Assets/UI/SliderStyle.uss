@@ -1,0 +1,95 @@
+.unity-scroll-view__horizontal-scroller #unity-tracker {
+    height: 16px;
+    padding: 0;
+    margin: 0;
+    background-color: #34495e;
+    border-color: #2c3e50;
+}
+.unity-scroll-view__vertical-scroller #unity-tracker {
+    width: 16px;
+    padding: 0;
+    margin: 0;
+    background-color: #34495e;
+    border-color: #2c3e50;
+}
+
+#unity-dragger-button {
+     padding: 0;
+     margin: 0;
+     height: 16px;
+     border-color: #2c3e50;
+}
+
+
+#unity-low-button, #unity-high-button {
+    height: 16px;
+    width: 16px;
+    padding: 0;
+    margin: 0;
+    background-color: #4a6486;
+    color: #FFFFFF;
+     border-color: #2c3e50;
+}
+.unity-scroll-view__horizontal-scroller #unity-slider {
+    padding: 0;
+    margin: 0 16px;
+}
+.unity-scroll-view__vertical-scroller #unity-slider {
+    padding: 0;
+    margin: 16px 0;
+    max-width: 16px;
+}
+/* Для вертикального Scroller - ширина */
+.unity-scroll-view__vertical-scroller {
+    max-width: 16px !important;
+    width: 16px !important;
+    min-width: 16px !important;
+    background-color: #2c3e50 !important;
+}
+
+/* Для горизонтального Scroller - высота */
+.unity-scroll-view__horizontal-scroller {
+    max-height: 16px !important;
+    height: 16px !important;
+    min-height: 16px !important;
+    background-color: #2c3e50 !important;
+}
+
+/* Или общие стили для обоих Scroller */
+.unity-scroll-view__vertical-scroller,
+.unity-scroll-view__horizontal-scroller {
+    background-color: #2c3e50 !important;
+    border: 1px solid #1a252f !important;
+}
+
+/* Конкретно для вертикального */
+.unity-scroll-view__vertical-scroller {
+    width: 16px !important;
+    min-width: 16px !important;
+    max-width: 16px !important;
+}
+
+/* Конкретно для горизонтального */
+.unity-scroll-view__horizontal-scroller {
+    height: 16px !important;
+    min-height: 16px !important;
+    max-height: 16px !important;
+}
+
+.unity-scroll-view__vertical-scroller .unity-base-slider__input {
+    max-width: 16px;
+}
+
+.unity-scroll-view__horizontal-scroller #unity-dragger {
+    background-color: #4a6486;
+    height: 14px;
+    margin-top: -2px;
+}
+.unity-scroll-view__vertical-scroller #unity-dragger {
+    background-color: #4a6486;
+    width: 14px;
+    margin-left: -2px;
+}
+#unity-dragger:hover {
+    background-color: #5d7ca6 !important;
+}

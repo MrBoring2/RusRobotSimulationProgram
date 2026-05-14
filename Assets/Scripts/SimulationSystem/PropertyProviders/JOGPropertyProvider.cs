@@ -28,7 +28,7 @@ namespace Assets.Scripts.Providers
         }
         private RobotPropertyProvider _robotPropertyProvider;
 
-        
+
         private Vector3 rotationEuler;
         public Vector3 Rotation
         {
@@ -50,10 +50,10 @@ namespace Assets.Scripts.Providers
         public Vector3 Position { get => transform.localPosition; set => transform.localPosition = value; }
         public Quaternion LocalRotationQ { get => transform.localRotation; set => transform.localRotation = value; }
         public Vector3 GlobalPosition { get => transform.position; set => transform.position = value; }
-        public Quaternion GlobalRotationQ{ get => transform.rotation; set => transform.rotation = value; }
+        public Quaternion GlobalRotationQ { get => transform.rotation; set => transform.rotation = value; }
         public Vector3 LocalPosition { get; set; }
         public RobotPropertyProvider RobotPropertyProvider => _robotPropertyProvider;
-        
+
         public bool IsReadondly { get; set; }
         public string Name { get => gameObject.name; set { gameObject.name = value; } }
         public Vector3 Scale { get => transform.localScale; set => transform.localScale = value; }
@@ -61,7 +61,12 @@ namespace Assets.Scripts.Providers
         public bool DisplayPosition { get => displayPosition; set => displayPosition = value; }
         public bool DisplayRotation { get => displayRotation; set => displayRotation = value; }
         public bool DisplayScale { get => displayScale; set => displayScale = value; }
-
+        public float J1Angle { get => _robotPropertyProvider.J1Angle; set => _robotPropertyProvider.J1Angle = value; }
+        public float J2Angle { get => _robotPropertyProvider.J2Angle; set => _robotPropertyProvider.J2Angle = value; }
+        public float J3Angle { get => _robotPropertyProvider.J3Angle; set => _robotPropertyProvider.J2Angle = value; }
+        public float J4Angle { get => _robotPropertyProvider.J4Angle; set => _robotPropertyProvider.J4Angle = value; }
+        public float J5Angle { get => _robotPropertyProvider.J5Angle; set => _robotPropertyProvider.J5Angle = value; }
+        public float J6Angle { get => _robotPropertyProvider.J6Angle; set => _robotPropertyProvider.J6Angle = value; }
         public bool NameReadOnly { get; set; }
 
         public bool ShowVisual = true;
@@ -70,7 +75,7 @@ namespace Assets.Scripts.Providers
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private Mesh sphereMesh;
-       
+
         public Quaternion RotationQ
         {
             get => transform.rotation;
@@ -94,7 +99,7 @@ namespace Assets.Scripts.Providers
             };
         }
 
-        public  List<CustomProperty> GetCustomProperties()
+        public List<CustomProperty> GetCustomProperties()
         {
             var list = new List<CustomProperty>()
             {
@@ -118,12 +123,48 @@ namespace Assets.Scripts.Providers
                 typeof(bool),
                 () => VerificationAngles,
                 val => VerificationAngles = (bool)val
-                )
+                ),
+                new CustomProperty("J1Angle",
+                "Ось 1",
+                typeof(float),
+                () => J1Angle,
+                val =>J1Angle = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f)),
+                new CustomProperty("J2Angle",
+                "Ось 2",
+                typeof(float),
+                () => J1Angle,
+                val =>J2Angle = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f)),
+                new CustomProperty("J3Angle",
+                "Ось 3",
+                typeof(float),
+                () => J3Angle,
+                val =>J3Angle = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f)),
+                new CustomProperty("J4Angle",
+                "Ось 4",
+                typeof(float),
+                () => J4Angle,
+                val =>J4Angle = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f)),
+                new CustomProperty("J5Angle",
+                "Ось 5",
+                typeof(float),
+                () => J5Angle,
+                val =>J5Angle = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f)),
+                new CustomProperty("J6Angle",
+                "Ось 6",
+                typeof(float),
+                () => J6Angle,
+                val =>J6Angle = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f))
             };
-                
+
             return list;
         }
-        
+
 
         public void RestoreCustomState(ProviderSaveData data)
         {
