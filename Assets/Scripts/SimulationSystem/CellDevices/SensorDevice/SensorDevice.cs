@@ -66,7 +66,7 @@ public class SensorDevice : CellDeviceBase
             DetectObjectCollider.bounds.center,
             DetectObjectCollider.bounds.extents,
             DetectObjectCollider.transform.rotation,
-            ~LayerMask.GetMask("SensorDevice"),
+            LayerMask.GetMask("Detail"),
             QueryTriggerInteraction.Collide
         );
         _propertyProvider.IsActive = colliders.Length > 0;

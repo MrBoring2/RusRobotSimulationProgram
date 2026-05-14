@@ -1782,6 +1782,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 5526725236091910, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: z1Collision
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5526725236091910, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: z2Collision
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 338621209258235640, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.48005
@@ -1831,6 +1839,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3764513646930620522, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: _gripperNumber
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 3784784265109912282, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: J2Angle
       value: 90
@@ -1867,6 +1879,10 @@ PrefabInstance:
       propertyPath: _forwarKinObj
       value: 
       objectReference: {fileID: 1159832441}
+    - target: {fileID: 4929092817794012301, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5891610491103318822, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.7071068
@@ -1906,6 +1922,10 @@ PrefabInstance:
     - target: {fileID: 6036321671259928659, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 7730210830136159495, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: _gripperNumber
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2289,6 +2309,14 @@ PrefabInstance:
     - target: {fileID: 3209837568296697311, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
       propertyPath: m_Name
       value: Sensor
+      objectReference: {fileID: 0}
+    - target: {fileID: 5559284482513697292, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8133932464723847193, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8647271295263513477, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
       propertyPath: m_LocalPosition.x

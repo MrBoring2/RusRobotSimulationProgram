@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.Robot;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
@@ -12,19 +12,17 @@ using System.Collections.Specialized;
 using System.Linq;
 using UnityEngine;
 
-public class SensorPropertyProvider : BasePropertyProvider
+public class ConvPropertyProvider : BasePropertyProvider
 {
-    public bool InvertSignal = false;//нормально открытый или нормально зыкратый датчик
 
     public string NameSignal = "";
-    public bool IsActive = false;
-    [Header("Detection Settings")]
-    [SerializeField] public float DetectionLength = 0.05f;
-    [SerializeField] public float DetectionHeight = 0.01f;
-    [Header("Visual Settings")]
-    [SerializeField] public Color OnColor = Color.green;
-    [SerializeField] public bool _showVisualization = true;
-    [SerializeField] public Material _visualizationMaterial;
+    [Header("Settings")]
+    [SerializeField] 
+    public float Speed = 0.05f;
+    public Vector3 Vector = Vector3.forward;
+
+    //test
+    public bool isAct = false;
 
     private void Start()
     {

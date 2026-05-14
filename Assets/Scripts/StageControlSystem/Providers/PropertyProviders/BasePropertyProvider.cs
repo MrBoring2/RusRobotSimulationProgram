@@ -46,7 +46,7 @@ namespace Assets.Scripts.Providers
         public bool DisplayRotation { get => displayRotation; set => displayRotation = value; }
         public bool DisplayScale { get => displayScale; set => displayScale = value; }
         public bool NameReadOnly { get => nameReadOnly; set => nameReadOnly = value;  }
-        public NotificationSystemManager Notification;
+        protected NotificationSystemManager Notification;
 
         private void Awake()
         {
