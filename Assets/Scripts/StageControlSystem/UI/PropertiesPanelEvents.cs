@@ -459,14 +459,34 @@ public class PropertiesPanelEvents : MonoBehaviour
 
         foreach (var prop in provider.GetCustomProperties())
         {
-            var (container, field) = PropertyFieldFactory.CreateField(prop);
+            var container = PropertyFieldFactory.CreateField(prop, out var setValue, out var getValue, out var fieldElement);
             customContainer.Add(container);
-
-            cleanupActions.Add(FieldBindingUtils.BindCustomFieldWithHistory(
-                field, provider, prop.Name,
-                () => prop.Getter(),
-                val => prop.Setter(val),
-                _undoRedoManager, _UIStatusManager));
+            if (fieldElement is FloatField floatField)
+            {
+                var slider = container.Q<Slider>();
+                if (slider != null)
+                {
+                    var floatFieldInSlider = container.Q<FloatField>();
+                    slider.RegisterCallback<BlurEvent>(_ => prop.Setter(floatFieldInSlider.value));
+                }
+                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(floatField, provider, prop.Name,
+                    _undoRedoManager, _UIStatusManager, () => prop.Setter(floatField.value)));
+            }
+            else if (fieldElement is IntegerField intField)
+            {
+                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(intField, provider, prop.Name,
+                    _undoRedoManager, _UIStatusManager, () => prop.Setter(intField.value)));
+            }
+            else if (fieldElement is Toggle toggle)
+            {
+                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(toggle, provider, prop.Name,
+                    _undoRedoManager, _UIStatusManager, () => prop.Setter(toggle.value)));
+            }
+            else if (fieldElement is TextField textField)
+            {
+                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(textField, provider, prop.Name,
+                    _undoRedoManager, _UIStatusManager, () => prop.Setter(textField.value)));
+            }
 
         }
     }
