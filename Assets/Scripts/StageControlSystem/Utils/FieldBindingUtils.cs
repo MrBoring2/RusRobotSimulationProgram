@@ -122,13 +122,13 @@ namespace Assets.Scripts.Models
             };
         }
         public static Action BindCustomFieldWithHistory<T>(
-    BaseField<T> field,
-    object target,
-    string propertyName,
-    Func<object> getter,
-    Action<object> setter,
-    UndoRedoManager undoRedoManager,
-    UIStatusManager uIStatusManager)
+        BaseField<T> field,
+        object target,
+        string propertyName,
+        Func<object> getter,
+        Action<object> setter,
+        UndoRedoManager undoRedoManager,
+        UIStatusManager uIStatusManager)
         {
             if (target == null || field == null || getter == null || setter == null)
                 return () => { };
@@ -157,12 +157,13 @@ namespace Assets.Scripts.Models
                     return;
                 }
 
-                setter(GetFieldValue(field));  // Применяем значение
-                var currentValue = getter();   // Читаем результат
+                // БЕРЕМ ЗНАЧЕНИЕ НАПРЯМУЮ ИЗ ПОЛЯ
+                var fieldValue = field.value;
+                setter(fieldValue);
+                var currentValue = getter();
 
                 if (!Equals(oldValue, currentValue))
                 {
-                    // Создаём команду с кастомными делегатами
                     var command = new CustomPropertyChangeCommand(
                         target, propertyName, oldValue, currentValue, setter, getter);
                     undoRedoManager.Execute(command);
@@ -172,12 +173,14 @@ namespace Assets.Scripts.Models
                 field.focusable = false;
                 uIStatusManager.SetInputMode(false);
             };
+
             Action flushAction = () =>
             {
                 if (isFocused && field != null && target != null)
                 {
-                    setter(GetFieldValue(field));  // Применяем значение
-                    var currentValue = getter();   // Читаем результат
+                    var fieldValue = field.value;
+                    setter(fieldValue);
+                    var currentValue = getter();
 
                     if (!Equals(oldValue, currentValue))
                     {
@@ -190,6 +193,7 @@ namespace Assets.Scripts.Models
                     uIStatusManager.SetInputMode(false);
                 }
             };
+
             _pendingFlushActions.Add(flushAction);
             field.RegisterCallback(focusHandler);
             field.RegisterCallback(blurHandler);
@@ -198,6 +202,7 @@ namespace Assets.Scripts.Models
 
             return () =>
             {
+                _pendingFlushActions.Remove(flushAction);
                 field.UnregisterCallback(focusHandler);
                 field.UnregisterCallback(blurHandler);
                 field.UnregisterCallback(mouseEnterHandler);

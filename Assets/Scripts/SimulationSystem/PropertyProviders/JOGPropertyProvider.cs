@@ -134,7 +134,7 @@ namespace Assets.Scripts.Providers
                 "Ось 2",
                 typeof(float),
                 () => J1Angle,
-                val =>J2Angle = (float)val)
+                val => J2Angle = (float)val)
                 .WithAttribute(new RangeAttribute(0f, 360f)),
                 new CustomProperty("J3Angle",
                 "Ось 3",

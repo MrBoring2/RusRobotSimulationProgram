@@ -2,6 +2,7 @@
 using Assets.UI.CustomElements;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -10,168 +11,63 @@ namespace Assets.Scripts.StageControlSystem.Utils
 {
     public static class PropertyFieldFactory
     {
-
-        public delegate (VisualElement container, BaseField<object> field) FieldCreator(
-            CustomProperty property,
-            object currentValue);
-
-        private static Dictionary<Type, FieldCreator> _creators = new()
-        {
-
-            [typeof(float)] = (prop, val) =>
-            {
-                var container = new VisualElement();
-                container.AddToClassList("base-property");
-                container.Add(new Label(prop.DisplayName));
-
-                var field = new FloatField();
-                field.value = (float)val;
-                container.Add(field);
-                return (container, ToBaseField(field));
-            },
-
-
-            [typeof(int)] = (prop, val) =>
-            {
-                var container = new VisualElement();
-                container.AddToClassList("base-property");
-                container.Add(new Label(prop.DisplayName));
-
-                var field = new IntegerField();
-                field.value = (int)val;
-                container.Add(field);
-                return (container, ToBaseField(field));
-            },
-
-        
-            [typeof(bool)] = (prop, val) =>
-            {
-                var container = new VisualElement();
-                container.AddToClassList("base-bool-property");
-                container.Add(new Label(prop.DisplayName));
-
-                var field = new Toggle();
-                field.value = (bool)val;
-                container.Add(field);
-                return (container, ToBaseField(field));
-            },
-
-     
-            [typeof(string)] = (prop, val) =>
-            {
-                var container = new VisualElement();
-                container.AddToClassList("base-property");
-                container.Add(new Label(prop.DisplayName));
-
-                var field = new TextField();
-                field.value = (string)val;
-                container.Add(field);
-                return (container, ToBaseField(field));
-            },
-
-        
-            //[typeof(Vector3)] = (prop, val) =>
-            //{
-            //    var v = (Vector3)val;
-            //    var container = new VisualElement();
-            //    container.AddToClassList("base-property");
-            //    container.Add(new Label(prop.DisplayName));
-
-            //    var row = new VisualElement();
-            //    row.style.flexDirection = FlexDirection.Row;
-
-            //    var xField = new FloatField { value = v.x };
-            //    var yField = new FloatField { value = v.y };
-            //    var zField = new FloatField { value = v.z };
-
-            //    row.Add(xField);
-            //    row.Add(yField);
-            //    row.Add(zField);
-            //    container.Add(row);
-
-            //    // Создаём составное поле
-            //    var compoundField = new Vector3CompoundField(xField, yField, zField);
-            //    return (container, compoundField);
-            //},
-
-          
-            [typeof(Enum)] = (prop, val) =>
-            {
-                var container = new VisualElement();
-                container.AddToClassList("base-property");
-                container.Add(new Label(prop.DisplayName));
-
-                var field = new EnumField((Enum)val);
-                container.Add(field);
-                return (container, ToBaseField(field));
-            },
-
-           
-            //[typeof(Color)] = (prop, val) =>
-            //{
-            //    var container = new VisualElement();
-            //    container.AddToClassList("base-property");
-            //    container.Add(new Label(prop.DisplayName));
-
-            //    // Используй свой ColorField или стандартный
-            //    var field = new UnityEditor.UIElements.ColorField();
-            //    field.value = (Color)val;
-            //    container.Add(field);
-            //    return (container, ToBaseField(field));
-            //}
-        };
-
-        // Регистрация новых типов извне
-        public static void RegisterCreator(Type type, FieldCreator creator)
-        {
-            _creators[type] = creator;
-        }
-
-        // Создание элемента по типу свойства
-        public static (VisualElement container, BaseField<object> field) CreateField(CustomProperty property)
+        public static VisualElement CreateField(CustomProperty property, out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
         {
             var type = property.PropertyType;
             var currentValue = property.Getter();
-            Debug.Log($"[FACTORY] Property: {property.Name}, Type: {type}, Value: {currentValue}");
+
+            if (property.TryGetAttribute<DropdownOptionsAttribute>(out var dropdownAttr))
+                return CreateDropdownField(property, dropdownAttr.Options.ToArray(), dropdownAttr.Values.ToArray(), currentValue, out setValue, out getValue, out fieldElement);
+
             if (type == typeof(float) && property.TryGetAttribute<RangeAttribute>(out var rangeAttr))
-            {
-                Debug.Log($"[FACTORY] RangeAttribute найден! min={rangeAttr.min}, max={rangeAttr.max}");
-                return CreateSliderField(property, (float)currentValue, rangeAttr.min, rangeAttr.max);
-            }
-            // Прямой поиск
-            
+                return CreateSliderField(property, (float)currentValue, rangeAttr.min, rangeAttr.max, out setValue, out getValue, out fieldElement);
 
-            // Enum — проверяем базовый тип
-            if (type.IsEnum && _creators.TryGetValue(typeof(Enum), out var enumCreator))
-                return enumCreator(property, currentValue);
+            if (type == typeof(float))
+                return CreateFloatField(property, (float)currentValue, out setValue, out getValue, out fieldElement);
 
-            // Слайдер для float с атрибутом Range
-            if (_creators.TryGetValue(type, out var creator))
-                return creator(property, currentValue);
+            if (type == typeof(int))
+                return CreateIntField(property, (int)currentValue, out setValue, out getValue, out fieldElement);
 
-            return _creators[typeof(string)](property, currentValue?.ToString() ?? "");
+            if (type == typeof(bool))
+                return CreateBoolField(property, (bool)currentValue, out setValue, out getValue, out fieldElement);
+
+            if (type == typeof(string))
+                return CreateStringField(property, (string)currentValue, out setValue, out getValue, out fieldElement);
+
+            if (type.IsEnum)
+                return CreateEnumField(property, (Enum)currentValue, out setValue, out getValue, out fieldElement);
+
+            // Fallback
+            return CreateStringField(property, currentValue?.ToString() ?? "", out setValue, out getValue, out fieldElement);
         }
 
-        // Слайдер + числовое поле
-        private static (VisualElement, BaseField<object>) CreateSliderField(
-            CustomProperty property, float current, float min, float max)
+        private static VisualElement CreateSliderField(CustomProperty prop, float current, float min, float max,
+            out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
         {
             var container = new VisualElement();
             container.AddToClassList("base-property");
-            container.Add(new Label(property.DisplayName));
+            container.Add(new Label(prop.DisplayName));
 
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
 
-            var slider = new Slider(min, max);
-            slider.value = current;
-            slider.style.flexGrow = 1;
+            var slider = new Slider(min, max) { value = current, style = { flexGrow = 1 } };
+            var floatField = new FloatField() { value = current, style = { width = 60 } };
+            slider.RegisterCallback<NavigationSubmitEvent>(evt =>
+            {
+                slider.Blur();
+            });
+            //slider.RegisterCallback<KeyDownEvent>(evt =>
+            //{
+            //    if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
+            //    {
+            //        slider.Blur();
+                    
+            //        slider.RemoveFromClassList("unity-base-slider--movable");
+            //        container.Focus();
+            //    }
+            //});
 
-            var floatField = new FloatField();
-            floatField.value = current;
-            floatField.style.width = 60;
-
-            // Синхронизация
             slider.RegisterValueChangedCallback(evt => floatField.SetValueWithoutNotify(evt.newValue));
             floatField.RegisterValueChangedCallback(evt => slider.SetValueWithoutNotify(evt.newValue));
 
@@ -179,13 +75,103 @@ namespace Assets.Scripts.StageControlSystem.Utils
             row.Add(floatField);
             container.Add(row);
 
-            return (container, new SliderCompoundField(slider, floatField));
+            setValue = val => { floatField.value = (float)val; slider.value = (float)val; };
+            getValue = () => floatField.value;
+            fieldElement = floatField;
+            return container;
         }
 
-        // Вспомогательные методы
-        private static BaseField<object> ToBaseField<T>(BaseField<T> field)
+        private static VisualElement CreateFloatField(CustomProperty prop, float current,
+            out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
         {
-            return new TypedBaseFieldWrapper<T>(field);
+            var container = new VisualElement();
+            container.AddToClassList("base-property");
+            container.Add(new Label(prop.DisplayName));
+            var field = new FloatField { value = current };
+            container.Add(field);
+            setValue = val => field.value = (float)val;
+            getValue = () => field.value;
+            fieldElement = field;
+            return container;
+        }
+
+        private static VisualElement CreateIntField(CustomProperty prop, int current,
+            out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("base-property");
+            container.Add(new Label(prop.DisplayName));
+            var field = new IntegerField { value = current };
+            container.Add(field);
+            setValue = val => field.value = (int)val;
+            getValue = () => field.value;
+            fieldElement = field;
+            return container;
+        }
+
+        private static VisualElement CreateBoolField(CustomProperty prop, bool current,
+            out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("base-bool-property");
+            container.Add(new Label(prop.DisplayName));
+            var field = new Toggle { value = current };
+            container.Add(field);
+            setValue = val => field.value = (bool)val;
+            getValue = () => field.value;
+            fieldElement = field;
+            return container;
+        }
+
+        private static VisualElement CreateStringField(CustomProperty prop, string current,
+            out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("base-property");
+            container.Add(new Label(prop.DisplayName));
+            var field = new TextField { value = current };
+            container.Add(field);
+            setValue = val => field.value = (string)val;
+            getValue = () => field.value;
+            fieldElement = field;
+            return container;
+        }
+
+        private static VisualElement CreateEnumField(CustomProperty prop, Enum current,
+            out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("base-property");
+            container.Add(new Label(prop.DisplayName));
+            var field = new EnumField(current);
+            container.Add(field);
+            setValue = val => field.value = (Enum)val;
+            getValue = () => field.value;
+            fieldElement = field;
+            return container;
+        }
+        private static VisualElement CreateDropdownField(CustomProperty prop, string[] options, object[] values, object current,
+    out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("base-property");
+            container.Add(new Label(prop.DisplayName));
+
+            var dropdown = new DropdownField(options.ToList(), 0);
+            var currentStr = current?.ToString() ?? "";
+            var index = Array.FindIndex(values, v => v?.ToString() == currentStr);
+            if (index >= 0) dropdown.index = index;
+
+            container.Add(dropdown);
+
+            setValue = val =>
+            {
+                var idx = Array.FindIndex(values, v => v?.ToString() == val?.ToString());
+                if (idx >= 0) dropdown.index = idx;
+            };
+            getValue = () => values[dropdown.index];
+            fieldElement = dropdown;
+            return container;
         }
     }
 }
