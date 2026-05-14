@@ -32,10 +32,11 @@ public class LogicSignalBus : MonoBehaviour, IService
         signalsDict.Clear();
         intDataDict.Clear();
         CopyIntDataDict.Clear();
-        CopyIntDataDict.Clear();
-        BufIntDataDict.Clear();
+        CopySignalsDict.Clear();
+        BufSignalsDict.Clear();
         BufIntDataDict.Clear();
     }
+    
     private void ConvertDictionatyToList()
     {
         boolSignals.Clear();
@@ -85,12 +86,14 @@ public class LogicSignalBus : MonoBehaviour, IService
     //////////////////////////// Методы для работы с копиями словарей
     public void CreateSignalCadr()
     {
+        CopyIntDataDict.Clear();
         CopySignalsDict.Clear();
+        BufSignalsDict.Clear();
+        BufIntDataDict.Clear();
         foreach (var kvp in signalsDict)
         {
             CopySignalsDict.Add(kvp.Key, kvp.Value);
         }
-        CopyIntDataDict.Clear();
         foreach (var kvp in intDataDict)
         {
             CopyIntDataDict.Add(kvp.Key, kvp.Value);
