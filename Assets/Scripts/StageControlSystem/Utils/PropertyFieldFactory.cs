@@ -2,6 +2,7 @@
 using Assets.UI.CustomElements;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -14,6 +15,9 @@ namespace Assets.Scripts.StageControlSystem.Utils
         {
             var type = property.PropertyType;
             var currentValue = property.Getter();
+
+            if (property.TryGetAttribute<DropdownOptionsAttribute>(out var dropdownAttr))
+                return CreateDropdownField(property, dropdownAttr.Options.ToArray(), dropdownAttr.Values.ToArray(), currentValue, out setValue, out getValue, out fieldElement);
 
             if (type == typeof(float) && property.TryGetAttribute<RangeAttribute>(out var rangeAttr))
                 return CreateSliderField(property, (float)currentValue, rangeAttr.min, rangeAttr.max, out setValue, out getValue, out fieldElement);
@@ -144,6 +148,29 @@ namespace Assets.Scripts.StageControlSystem.Utils
             setValue = val => field.value = (Enum)val;
             getValue = () => field.value;
             fieldElement = field;
+            return container;
+        }
+        private static VisualElement CreateDropdownField(CustomProperty prop, string[] options, object[] values, object current,
+    out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("base-property");
+            container.Add(new Label(prop.DisplayName));
+
+            var dropdown = new DropdownField(options.ToList(), 0);
+            var currentStr = current?.ToString() ?? "";
+            var index = Array.FindIndex(values, v => v?.ToString() == currentStr);
+            if (index >= 0) dropdown.index = index;
+
+            container.Add(dropdown);
+
+            setValue = val =>
+            {
+                var idx = Array.FindIndex(values, v => v?.ToString() == val?.ToString());
+                if (idx >= 0) dropdown.index = idx;
+            };
+            getValue = () => values[dropdown.index];
+            fieldElement = dropdown;
             return container;
         }
     }

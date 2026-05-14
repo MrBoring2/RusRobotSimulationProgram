@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.Models;
+using Assets.Scripts.StageControlSystem.Utils;
 using NUnit.Framework.Internal;
 using System;
 using System.Collections.Generic;
@@ -53,11 +54,19 @@ namespace Assets.Scripts.Providers
                 POINTTYPE.LinearPoint => new List<CustomProperty>()
                 {
 
-                    new CustomProperty("PointType",
+                   new CustomProperty("PointType",
                     "ТИП ТОЧКИ",
                     typeof(string),
                     () => PointType.ToString(),
-                    val => PointType = (POINTTYPE)Enum.Parse(typeof(POINTTYPE), (string)val)),
+                    val => {
+                        var str = (string)val;
+                        if (str == "Линейная точка") PointType = POINTTYPE.LinearPoint;
+                        else if (str == "Точка к точке") PointType = POINTTYPE.PointToPoint;
+                    })
+                    .WithAttribute(new DropdownOptionsAttribute(
+                        new[] { "Линейная точка", "Точка к точке" },
+                        new[] { "LinearPoint", "PointToPoint" }
+                    )),
                     new CustomProperty(
                     "ConfigPoint",
                     "Конфигурация",
@@ -102,7 +111,15 @@ namespace Assets.Scripts.Providers
                         "ТИП ТОЧКИ",
                         typeof(string),
                         () => PointType.ToString(),
-                        val => PointType = (POINTTYPE)Enum.Parse(typeof(POINTTYPE), (string)val)),
+                        val => {
+                            var str = (string)val;
+                            if (str == "Линейная точка") PointType = POINTTYPE.LinearPoint;
+                            else if (str == "Точка к точке") PointType = POINTTYPE.PointToPoint;
+                        })
+                        .WithAttribute(new DropdownOptionsAttribute(
+                            new[] { "Линейная точка", "Точка к точке" },
+                            new[] { "LinearPoint", "PointToPoint" }
+                        )),
                         new CustomProperty("SpeedPercent",
                         "Скорость %",
                         typeof(float),

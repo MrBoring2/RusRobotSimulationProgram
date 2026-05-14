@@ -472,6 +472,14 @@ public class PropertiesPanelEvents : MonoBehaviour
                 cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(floatField, provider, prop.Name,
                     _undoRedoManager, _UIStatusManager, () => prop.Setter(floatField.value)));
             }
+            else if (fieldElement is DropdownField dropdown)
+            {
+                dropdown.RegisterCallback<MouseEnterEvent>(_ => _UIStatusManager?.SetPointerOverUI(true));
+                dropdown.RegisterCallback<MouseLeaveEvent>(_ => _UIStatusManager?.SetPointerOverUI(false));
+                dropdown.RegisterCallback<BlurEvent>(_ => _UIStatusManager?.SetPointerOverUI(false));
+                cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(dropdown, provider, prop.Name,
+                    _undoRedoManager, _UIStatusManager, () => prop.Setter(dropdown.value)));
+            }
             else if (fieldElement is IntegerField intField)
             {
                 cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(intField, provider, prop.Name,
