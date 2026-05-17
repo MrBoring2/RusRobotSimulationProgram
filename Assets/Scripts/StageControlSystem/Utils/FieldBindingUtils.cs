@@ -1,6 +1,7 @@
 ﻿using Assets.Scripts.Managers;
 using Assets.Scripts.StageControlSystem.Models;
 using Assets.Scripts.SystemManager;
+using Assets.UI.CustomElements;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -232,6 +233,47 @@ namespace Assets.Scripts.Models
         //{
         //    return BindFieldWithHistory<int>(field, target, propertyName, applyImmediately);
         //}
+        public static Action BindDropdownWithHistory(
+              CustomDropdown dropdown,
+              object target,
+              string propertyName,
+              UndoRedoManager undoRedoManager,
+              UIStatusManager uIStatusManager,
+              Action applyImmediately)
+        {
+            if (target == null || dropdown == null)
+                return () => { };
 
+            object oldValue = null;
+            bool isFocused = false;
+
+            dropdown.RegisterCallback<FocusEvent>(_ =>
+            {
+                isFocused = true;
+                oldValue = dropdown.value;
+                uIStatusManager.SetInputMode(true);
+            });
+
+            dropdown.RegisterCallback<BlurEvent>(_ =>
+            {
+                applyImmediately?.Invoke();
+                if (isFocused)
+                {
+                    var currentValue = dropdown.value;
+                    if (!Equals(oldValue, currentValue))
+                    {
+                        var command = new CustomPropertyChangeCommand(
+                            target, propertyName, oldValue, currentValue,
+                            val => dropdown.value = val,
+                            () => dropdown.value);
+                        undoRedoManager.Execute(command);
+                    }
+                }
+                isFocused = false;
+                uIStatusManager.SetInputMode(false);
+            });
+
+            return () => { };
+        }
     }
 }

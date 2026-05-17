@@ -1,4 +1,6 @@
-﻿using Assets.Scripts.Models;
+﻿using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using Assets.Scripts.Models;
 using Assets.UI.CustomElements;
 using System;
 using System.Collections.Generic;
@@ -17,16 +19,18 @@ namespace Assets.Scripts.UI
         private TextField varNameTextBox;
         private TextField varValueTextBox;
         private StringPopupField typesList;
+        private UIStatusManager _uiStatusManager;
         private string selectedType;
 
         protected override void Start()
         {
             base.Start();
-
         }
 
         protected override void OnBeforeShow(ModalParameters parameters)
         {
+            _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
+
             if (messageLabel != null)
             {
                 string message = parameters.Get("message", "Инициализация переменной");
@@ -79,9 +83,25 @@ namespace Assets.Scripts.UI
             {
                 varName = p.newValue;
             });
+            varNameTextBox.RegisterCallback<FocusEvent>((e) =>
+            {
+                _uiStatusManager.SetInputMode(true);
+            });
+            varNameTextBox.RegisterCallback<BlurEvent>((e) =>
+            {
+                _uiStatusManager.SetInputMode(false);
+            });
             varValueTextBox.RegisterCallback<ChangeEvent<string>>(p =>
             {
                 varValue = p.newValue;
+            });
+            varValueTextBox.RegisterCallback<FocusEvent>((e) =>
+            {
+                _uiStatusManager.SetInputMode(true);
+            });
+            varValueTextBox.RegisterCallback<BlurEvent>((e) =>
+            {
+                _uiStatusManager.SetInputMode(false);
             });
             typesList.RegisterCallback<ChangeEvent<string>>(p =>
             {

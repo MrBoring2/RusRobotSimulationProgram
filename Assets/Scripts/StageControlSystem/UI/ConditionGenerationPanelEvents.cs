@@ -3,6 +3,7 @@ using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomEventBus.Signals.ObjectsLibrary;
 using Assets.Scripts.CustomEventBus.Signals.PLC;
 using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using NUnit.Framework;
 using System;
@@ -19,6 +20,7 @@ namespace Assets.Scripts.UI
         private string currentParentObjectId = null;
         private Button confirmButton;
         private TextField textBox;
+        private UIStatusManager _uiStatusManager;
 
         protected override void Start()
         {
@@ -28,6 +30,7 @@ namespace Assets.Scripts.UI
 
         protected override void OnBeforeShow(ModalParameters parameters)
         {
+            _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
             currentParentObjectId = parameters.Get("currentParentObjectId", "");
             expression = parameters.Get("expression", "");
             textBox.SetValueWithoutNotify(expression);
@@ -53,6 +56,14 @@ namespace Assets.Scripts.UI
             textBox.RegisterCallback<ChangeEvent<string>>(p =>
             {
                 expression = p.newValue;
+            });
+            textBox.RegisterCallback<FocusEvent>((e) =>
+            {
+                _uiStatusManager.SetInputMode(true);
+            });
+            textBox.RegisterCallback<BlurEvent>((e) =>
+            {
+                _uiStatusManager.SetInputMode(false);
             });
             confirmButton.clicked += () => { ConfirmCondition(); };
         }

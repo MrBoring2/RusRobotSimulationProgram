@@ -62,7 +62,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
             //    if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
             //    {
             //        slider.Blur();
-                    
+
             //        slider.RemoveFromClassList("unity-base-slider--movable");
             //        container.Focus();
             //    }
@@ -151,7 +151,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
             return container;
         }
         private static VisualElement CreateDropdownField(CustomProperty prop, string[] options, object[] values, object current,
-    out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
+   out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
         {
             var container = new VisualElement();
             container.AddToClassList("base-property");

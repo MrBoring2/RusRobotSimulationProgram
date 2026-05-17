@@ -22,11 +22,14 @@ public class ObjectsLibraryEvents : BaseModalWindow
     protected override void Start()
     {
         base.Start();
-        categories.Add("General", "Общее");
-        categories.Add("Primitive", "Примитивы");
-        categories.Add("Workpieces", "Детали");
+    
         categories.Add("Robot", "Манипуляторы");
         categories.Add("PLC", "ПЛК");
+        categories.Add("Movement", "Перемещение");
+        categories.Add("Workpieces", "Детали");
+        categories.Add("Detectors", "Датчики");
+        categories.Add("Primitive", "Примитивы");     
+        categories.Add("General", "Общее");
         foreach (var category in categories.Keys)
         {
             GameObject[] prefabs = Resources.LoadAll<GameObject>($"Prefabs/{category}");

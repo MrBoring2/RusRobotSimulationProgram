@@ -22,7 +22,7 @@ public class CameraPanController : MonoBehaviour
 
     private void Update()
     {
-        if (_uiStatusManager.isPointerOverUI)
+        if (!_uiStatusManager.CheckIsOnUI())
             return;
 
         if (_sceneManipulatorModeManager.Mode != SceneManipulatorMode.Drag)

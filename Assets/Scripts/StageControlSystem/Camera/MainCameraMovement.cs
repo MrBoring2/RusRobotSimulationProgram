@@ -83,7 +83,7 @@ public class MainCameraMovement : MonoBehaviour
 
     private void Update()
     {
-        if (!_uiStatusManager.isPointerOverUI)
+        if (!_uiStatusManager.CheckIsOnUI())
         {
             HandleMouseRotation();
             HandleOrbitRotation();

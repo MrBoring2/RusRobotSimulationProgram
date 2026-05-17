@@ -19,6 +19,7 @@ namespace Assets.Scripts.UI
         private TextField varValueTextBox;
         private string varValue;
         private SceneObjectsManager _sceneObjectManager;
+        private UIStatusManager _uiStatusManager;
         private Variable selectedVariable;
         private string selectedOperation;
 
@@ -31,6 +32,7 @@ namespace Assets.Scripts.UI
         protected override void OnBeforeShow(ModalParameters parameters)
         {
             _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
+            _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
 
             if (messageLabel != null)
             {
@@ -80,6 +82,14 @@ namespace Assets.Scripts.UI
             varValueTextBox.RegisterCallback<ChangeEvent<string>>(p =>
             {
                 varValue = p.newValue;
+            });
+            varValueTextBox.RegisterCallback<FocusEvent>((e) =>
+            {
+                _uiStatusManager.SetInputMode(true);
+            });
+            varValueTextBox.RegisterCallback<BlurEvent>((e) =>
+            {
+                _uiStatusManager.SetInputMode(false);
             });
             operationsList.RegisterCallback<ChangeEvent<string>>(p =>
             {

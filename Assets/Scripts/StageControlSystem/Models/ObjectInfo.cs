@@ -17,7 +17,9 @@ public enum ObjectType
     WaitCommand,
     Node,
     Workpiece,
-    PLC
+    PLC,
+    Movement,
+    Detectors
 }
 
 [System.Serializable]

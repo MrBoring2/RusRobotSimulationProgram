@@ -735,6 +735,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             root.Remove(contextMenu);
 
         contextMenu = new VisualElement();
+        contextMenu.name = "context-menu";
         contextMenu.AddToClassList("context-menu-hierarchy-container");
         contextMenu.style.position = Position.Absolute;
         contextMenu.style.left = position.x;
