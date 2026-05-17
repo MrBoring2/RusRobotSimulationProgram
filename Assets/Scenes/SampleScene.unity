@@ -731,6 +731,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7239799140904041943, guid: fe5e380f25c8c384ba6a37b528033178, type: 3}
+      propertyPath: isAct
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -830,9 +834,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74246852c5251e045aaf1b9ca74b86e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainCameraMovement
-  movementSpeed: 10
+  baseMovementSpeed: 10
+  minMovementSpeed: 0.1
+  maxMovementSpeed: 100
+  speedChangeMultiplier: 1.5
   mouseSensitivity: 10
   buttonRotationSpeedDegPerSec: 500
+  orbitSensitivity: 5
+  zoomSpeed: 10
+  minDistance: 0.1
+  maxDistance: 1000
+  shiftSpeedMultiplier: 5
+  accelerationTime: 0.15
+  decelerationTime: 0.3
   mainCamera: {fileID: 330585545}
   orthographicSize: 3
 --- !u!114 &468208930
@@ -1843,6 +1857,14 @@ PrefabInstance:
       propertyPath: 'thetha.Array.data[2]'
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3838661304952370115, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 80.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3838661304952370115, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4249141246246613869, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: kin
       value: 
@@ -1867,6 +1889,14 @@ PrefabInstance:
       propertyPath: _forwarKinObj
       value: 
       objectReference: {fileID: 1159832441}
+    - target: {fileID: 5271978783601138195, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 115.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 5271978783601138195, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0
+      objectReference: {fileID: 0}
     - target: {fileID: 5891610491103318822, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.7071068
@@ -2290,17 +2320,29 @@ PrefabInstance:
       propertyPath: m_Name
       value: Sensor
       objectReference: {fileID: 0}
+    - target: {fileID: 5027335590700143128, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
+      propertyPath: IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5027335590700143128, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
+      propertyPath: InvertSignal
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8133932464723847193, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8647271295263513477, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.51496
+      value: 0.027
       objectReference: {fileID: 0}
     - target: {fileID: 8647271295263513477, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.24166
+      value: 0.617
       objectReference: {fileID: 0}
     - target: {fileID: 8647271295263513477, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 5.89231
+      value: 1.094
       objectReference: {fileID: 0}
     - target: {fileID: 8647271295263513477, guid: cc145b44f6b044d4e91818cd9c50657f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3161,6 +3203,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -2878714860608318775, guid: 18121624862c1a348bb5a295103db7e0, type: 3}
+      propertyPath: spawnClick
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: -2878714860608318775, guid: 18121624862c1a348bb5a295103db7e0, type: 3}
       propertyPath: detailsList.Array.size
       value: 2

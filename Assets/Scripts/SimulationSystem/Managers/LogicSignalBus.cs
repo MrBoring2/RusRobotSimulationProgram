@@ -82,6 +82,16 @@ public class LogicSignalBus : MonoBehaviour, IService
     {
         return intDataDict.ContainsKey(DataName) ? intDataDict[DataName] : 0;
     }
+    public Dictionary<string, bool> GetSignals()
+    {
+
+        return signalsDict;
+    }
+    public Dictionary<string, int> GetIntData()
+    {
+
+        return intDataDict;
+    }
 
     //////////////////////////// Методы для работы с копиями словарей
     public void CreateSignalCadr()
