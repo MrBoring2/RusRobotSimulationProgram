@@ -293,8 +293,8 @@ namespace Assets.Scripts.SimulationSystem.PLC
 
             try
             {
-                var boolVars = ServiceManager.Current.Get<LogicSignalBus>().GetCopySignals();
-                var intVars = ServiceManager.Current.Get<LogicSignalBus>().GetCopyIntData();
+                var boolVars = ServiceManager.Current.Get<LogicSignalBus>().GetSignals();
+                var intVars = ServiceManager.Current.Get<LogicSignalBus>().GetIntData();
 
                 return BooleanExpressionParser.Evaluate(ConditionString, boolVars, intVars);
             }
@@ -321,7 +321,8 @@ namespace Assets.Scripts.SimulationSystem.PLC
         }
         public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)
         {
-            ServiceManager.Current.Get<LogicSignalBus>().SetCopySignal(SignalName, ValueToSet);
+            // ServiceManager.Current.Get<LogicSignalBus>().SetCopySignal(SignalName, ValueToSet);
+            ServiceManager.Current.Get<LogicSignalBus>().SetSignal(SignalName, ValueToSet);
             return false;
         }
     }
@@ -341,7 +342,8 @@ namespace Assets.Scripts.SimulationSystem.PLC
         }
         public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)
         {
-            ServiceManager.Current.Get<LogicSignalBus>().SetCopyIntData(DataName, ValueToSet);
+            //ServiceManager.Current.Get<LogicSignalBus>().SetCopyIntData(DataName, ValueToSet);
+            ServiceManager.Current.Get<LogicSignalBus>().SetIntData(DataName, ValueToSet);
             return false;
         }
     }
@@ -357,7 +359,8 @@ namespace Assets.Scripts.SimulationSystem.PLC
         public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)
         {
             var LSB = ServiceManager.Current.Get<LogicSignalBus>();
-            LSB.SetCopyIntData(DataName, LSB.GetCopyIntData(DataName) + ValueToSet);
+            //LSB.SetCopyIntData(DataName, LSB.GetCopyIntData(DataName) + ValueToSet);
+            LSB.SetIntData(DataName, LSB.GetIntData(DataName) + ValueToSet);
             return false;
         }
     }

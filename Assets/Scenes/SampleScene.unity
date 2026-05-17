@@ -1740,6 +1740,14 @@ PrefabInstance:
       propertyPath: 'thetha.Array.data[2]'
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3838661304952370115, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 80.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3838661304952370115, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4249141246246613869, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: kin
       value: 
@@ -1764,6 +1772,14 @@ PrefabInstance:
       propertyPath: _forwarKinObj
       value: 
       objectReference: {fileID: 1159832441}
+    - target: {fileID: 5271978783601138195, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 115.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 5271978783601138195, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0
+      objectReference: {fileID: 0}
     - target: {fileID: 5891610491103318822, guid: 74949132a00ea1b4fb9f16547a672c91, type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.7071068
