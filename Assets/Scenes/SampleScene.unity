@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 21706618}
   - component: {fileID: 21706622}
   - component: {fileID: 21706623}
+  - component: {fileID: 21706624}
   m_Layer: 0
   m_Name: ModalWindows
   m_TagString: Untagged
@@ -234,6 +235,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.VariableSetPanelEvents
   windowId: variable-set-window
   windowUXML: {fileID: 9197481963319205126, guid: 303e106358139994c80a1674418cc5d2, type: 3}
+  UIBlocker: {fileID: 1239946562}
+  UIDocument: {fileID: 1239946556}
+--- !u!114 &21706624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 21706617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64203e2b65f06ef4e82dfefda5925273, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.StageControlSystem.UI.ColorPockerPanelEvent
+  windowId: color-picker-window
+  windowUXML: {fileID: 9197481963319205126, guid: 35225aa8f5dcd124dbcf742d89244407, type: 3}
   UIBlocker: {fileID: 1239946562}
   UIDocument: {fileID: 1239946556}
 --- !u!1 &152640449

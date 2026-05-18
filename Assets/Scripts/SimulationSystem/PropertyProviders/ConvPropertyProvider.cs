@@ -15,41 +15,60 @@ using UnityEngine;
 public class ConvPropertyProvider : BasePropertyProvider
 {
 
-    public string NameSignal = "";
+    public string NameSignal { get; set; } = "";
     [Header("Settings")]
-    [SerializeField] 
-    public float Speed = 0.05f;
+    public float Speed { get; set; } = 0.05f;
     public Vector3 Vector = Vector3.forward;
 
     //test
     public bool isAct = false;
 
-    private void Start()
+    private void Awake()
     {
-
+        displayScale = false;
     }
-
-
-
-    //------------------------------------------------------------------------------------------------------------------------//
-
     public override ProviderSaveData CaptureCustomState()
     {
         return new ProviderSaveData
         {
-            ProviderType = nameof(RobotPropertyProvider),
+            ProviderType = nameof(SensorPropertyProvider),
+            FloatValues = {
+                    ["Speed"] = Speed,
+                },
+            StringValues =
+            {
+                ["NameSignal"] = NameSignal,
+            }
         };
     }
 
     public override List<CustomProperty> GetCustomProperties()
     {
-        return null;
+        var list = new List<CustomProperty>()
+            {
+            new CustomProperty(
+                "NameSignal",
+                "Название сигнала",
+                typeof(string),
+                () => NameSignal,
+                val => NameSignal = val.ToString()
+                ),
+                new CustomProperty(
+                "Speed",
+                "Скорость",
+                typeof(float),
+                () => Speed,
+                val => Speed = (float)val
+                )
+        };
+        return list;
     }
 
     public override void RestoreCustomState(ProviderSaveData data)
     {
-
+        if (data.StringValues.TryGetValue("NameSignal", out var v1))
+            NameSignal = v1;
+        if (data.FloatValues.TryGetValue("Speed", out var v2))
+            Speed = v2;
     }
-
-
 }

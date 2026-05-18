@@ -1,5 +1,9 @@
-﻿using Assets.Scripts.Models;
+﻿using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using Assets.Scripts.Models;
+using Assets.Scripts.StageControlSystem.Models;
 using Assets.UI.CustomElements;
+using Assets.UI.CustomElements.ColorField;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,8 +40,12 @@ namespace Assets.Scripts.StageControlSystem.Utils
 
             if (type.IsEnum)
                 return CreateEnumField(property, (Enum)currentValue, out setValue, out getValue, out fieldElement);
+            
+            if (type == typeof(Color))
+            {
+                return CreateColorField(property, (Color)(currentValue ?? Color.white), out setValue, out getValue, out fieldElement);
+            }
 
-            // Fallback
             return CreateStringField(property, currentValue?.ToString() ?? "", out setValue, out getValue, out fieldElement);
         }
 
@@ -171,6 +179,58 @@ namespace Assets.Scripts.StageControlSystem.Utils
             };
             getValue = () => values[dropdown.index];
             fieldElement = dropdown;
+            return container;
+        }
+        public static VisualElement CreateColorField(
+            CustomProperty property,
+            Color currentColor,
+            out Action<object> setValue,
+            out Func<object> getValue,
+            out VisualElement fieldElement)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("base-property");
+            container.Add(new Label(property.DisplayName));
+
+            var colorField = new ColorFieldElement();
+            colorField.CurrentColor = currentColor;
+            container.Add(colorField);
+
+            Color capturedColor = currentColor;
+            var modalWindowService = ServiceManager.Current.Get<ModalWindowServiceManager>();
+            // При клике открываем окно
+            colorField.OnClicked += (field) =>
+            {
+                var parameters = new ModalParameters();
+                parameters.Set("initialColor", capturedColor);
+
+                modalWindowService.ShowWindow<ColorPickerResult>(
+                    "color-picker-window",
+                    "Выбор цвета",
+                    parameters,
+                    (result) =>
+                    {
+                        if (result != null && result.IsApplied)
+                        {
+                            capturedColor = result.Color;
+                            colorField.CurrentColor = capturedColor;
+                            property.Setter(capturedColor);
+                        }
+                    });
+            };
+
+            setValue = val =>
+            {
+                if (val is Color color)
+                {
+                    capturedColor = color;
+                    colorField.CurrentColor = color;
+                }
+            };
+
+            getValue = () => capturedColor;
+            fieldElement = colorField;
+
             return container;
         }
     }

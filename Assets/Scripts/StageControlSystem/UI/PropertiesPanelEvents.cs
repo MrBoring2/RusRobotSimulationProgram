@@ -8,6 +8,7 @@ using Assets.Scripts.StageControlSystem.Models;
 using Assets.Scripts.StageControlSystem.Utils;
 using Assets.Scripts.SystemManager;
 using Assets.UI.CustomElements;
+using Assets.UI.CustomElements.ColorField;
 using Assets.UI.CustomElements.ColorPicker;
 using System;
 using System.Collections.Generic;
@@ -514,6 +515,14 @@ public class PropertiesPanelEvents : MonoBehaviour
             {
                 cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(textField, provider, prop.Name,
                     _undoRedoManager, _UIStatusManager, () => prop.Setter(textField.value)));
+            }
+            else if (fieldElement is ColorFieldElement colorField) 
+            {
+                cleanupActions.Add(FieldBindingUtils.BindColorFieldWithHistory(
+                    colorField, provider, prop.Name,
+                    getter: () => getValue(),
+                    setter: val => prop.Setter(val),
+                    _undoRedoManager, _UIStatusManager));
             }
 
         }
