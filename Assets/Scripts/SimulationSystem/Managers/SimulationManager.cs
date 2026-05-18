@@ -50,11 +50,7 @@ public class SimulationManager : MonoBehaviour,IService
 
     private void StartSim(StartSimulationSignal s)
     {
-<<<<<<< HEAD
-        if(SimulationStat == SIM_STAT.STOP)
-=======
         if (SimulationStat == SIM_STAT.STOP)
->>>>>>> bae0897b78280c5d03b67034ab0586b6780ad693
         {
             try
             {
@@ -71,13 +67,8 @@ public class SimulationManager : MonoBehaviour,IService
             }
 
         }
-<<<<<<< HEAD
-        if(SimulationStat == SIM_STAT.PAUSE)
-        { 
-=======
         if (SimulationStat == SIM_STAT.PAUSE)
         {
->>>>>>> bae0897b78280c5d03b67034ab0586b6780ad693
             SimulationStat = SIM_STAT.PLAY;
         }
     }
