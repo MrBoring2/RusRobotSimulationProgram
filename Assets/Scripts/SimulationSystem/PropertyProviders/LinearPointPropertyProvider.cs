@@ -65,7 +65,8 @@ namespace Assets.Scripts.Providers
                     })
                     .WithAttribute(new DropdownOptionsAttribute(
                         new[] { "Линейная точка", "Точка к точке" },
-                        new[] { "LinearPoint", "PointToPoint" }
+                        new[] { "LinearPoint", "PointToPoint" },
+                        "Name"
                     )),
                     new CustomProperty(
                     "ConfigPoint",
@@ -118,7 +119,8 @@ namespace Assets.Scripts.Providers
                         })
                         .WithAttribute(new DropdownOptionsAttribute(
                             new[] { "Линейная точка", "Точка к точке" },
-                            new[] { "LinearPoint", "PointToPoint" }
+                            new[] { "LinearPoint", "PointToPoint" },
+                            "Name"
                         )),
                         new CustomProperty("SpeedPercent",
                         "Скорость %",

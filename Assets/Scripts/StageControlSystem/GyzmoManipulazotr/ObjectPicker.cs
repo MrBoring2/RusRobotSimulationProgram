@@ -15,6 +15,7 @@ using static UnityEngine.Rendering.VirtualTexturing.Debugging;
 
 public class ObjectPicker : MonoBehaviour
 {
+    public UIDocument root;
     public GyzmoManupulator manipulator;
     private AxisHandle currentHandle;
     //[SerializeField] private UIBlocker uIBlocker;
@@ -141,7 +142,7 @@ public class ObjectPicker : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         int manipLayerMask = LayerMask.GetMask("Manipulator");
 
-        if (Input.GetMouseButtonDown(0) && !_uiStatusManager.isPointerOverUI)
+        if (Input.GetMouseButtonDown(0) && !_uiStatusManager.CheckIsOnUI())
         {
             // Клик по манипулятору
             if (Physics.Raycast(ray, out RaycastHit hitHandle, Mathf.Infinity, manipLayerMask))

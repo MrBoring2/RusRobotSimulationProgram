@@ -7,6 +7,8 @@ using Assets.Scripts.Models;
 using Assets.Scripts.StageControlSystem.Models;
 using Assets.Scripts.StageControlSystem.Utils;
 using Assets.Scripts.SystemManager;
+using Assets.UI.CustomElements;
+using Assets.UI.CustomElements.ColorField;
 using Assets.UI.CustomElements.ColorPicker;
 using System;
 using System.Collections.Generic;
@@ -474,9 +476,28 @@ public class PropertiesPanelEvents : MonoBehaviour
             }
             else if (fieldElement is DropdownField dropdown)
             {
-                dropdown.RegisterCallback<MouseEnterEvent>(_ => _UIStatusManager?.SetPointerOverUI(true));
-                dropdown.RegisterCallback<MouseLeaveEvent>(_ => _UIStatusManager?.SetPointerOverUI(false));
-                dropdown.RegisterCallback<BlurEvent>(_ => _UIStatusManager?.SetPointerOverUI(false));
+
+                dropdown.RegisterCallback<MouseDownEvent>(evt =>
+                {
+                    _UIStatusManager?.SetInputMode(true);
+                    _UIStatusManager?.SetPointerOverUI(true);
+                });
+
+                dropdown.RegisterValueChangedCallback(evt =>
+                {
+                    _UIStatusManager?.SetInputMode(false);
+                    _UIStatusManager?.SetPointerOverUI(false);
+                    prop.Setter(evt.newValue);
+                });
+                //dropdown.RegisterCallback<BlurEvent>(_ =>
+                //{
+                //    if (isDropdownOpen)
+                //    {
+                //        isDropdownOpen = false;
+                //        _UIStatusManager?.SetPointerOverUI(false);
+                //    }
+                //});
+                //dropdown.RegisterCallback<BlurEvent>(_ => _UIStatusManager?.SetPointerOverUI(false));
                 cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(dropdown, provider, prop.Name,
                     _undoRedoManager, _UIStatusManager, () => prop.Setter(dropdown.value)));
             }
@@ -494,6 +515,14 @@ public class PropertiesPanelEvents : MonoBehaviour
             {
                 cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(textField, provider, prop.Name,
                     _undoRedoManager, _UIStatusManager, () => prop.Setter(textField.value)));
+            }
+            else if (fieldElement is ColorFieldElement colorField) 
+            {
+                cleanupActions.Add(FieldBindingUtils.BindColorFieldWithHistory(
+                    colorField, provider, prop.Name,
+                    getter: () => getValue(),
+                    setter: val => prop.Setter(val),
+                    _undoRedoManager, _UIStatusManager));
             }
 
         }

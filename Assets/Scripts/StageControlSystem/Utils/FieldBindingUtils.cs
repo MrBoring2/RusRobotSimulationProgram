@@ -1,6 +1,8 @@
 ﻿using Assets.Scripts.Managers;
 using Assets.Scripts.StageControlSystem.Models;
 using Assets.Scripts.SystemManager;
+using Assets.UI.CustomElements;
+using Assets.UI.CustomElements.ColorField;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -232,6 +234,117 @@ namespace Assets.Scripts.Models
         //{
         //    return BindFieldWithHistory<int>(field, target, propertyName, applyImmediately);
         //}
+        public static Action BindDropdownWithHistory(
+              CustomDropdown dropdown,
+              object target,
+              string propertyName,
+              UndoRedoManager undoRedoManager,
+              UIStatusManager uIStatusManager,
+              Action applyImmediately)
+        {
+            if (target == null || dropdown == null)
+                return () => { };
 
+            object oldValue = null;
+            bool isFocused = false;
+
+            dropdown.RegisterCallback<FocusEvent>(_ =>
+            {
+                isFocused = true;
+                oldValue = dropdown.value;
+                uIStatusManager.SetInputMode(true);
+            });
+
+            dropdown.RegisterCallback<BlurEvent>(_ =>
+            {
+                applyImmediately?.Invoke();
+                if (isFocused)
+                {
+                    var currentValue = dropdown.value;
+                    if (!Equals(oldValue, currentValue))
+                    {
+                        var command = new CustomPropertyChangeCommand(
+                            target, propertyName, oldValue, currentValue,
+                            val => dropdown.value = val,
+                            () => dropdown.value);
+                        undoRedoManager.Execute(command);
+                    }
+                }
+                isFocused = false;
+                uIStatusManager.SetInputMode(false);
+            });
+
+            return () => { };
+        }
+        public static Action BindColorFieldWithHistory(
+    ColorFieldElement colorField,
+    object target,
+    string propertyName,
+    Func<object> getter,
+    Action<object> setter,
+    UndoRedoManager undoRedoManager,
+    UIStatusManager uIStatusManager)
+        {
+            if (target == null || colorField == null || getter == null || setter == null)
+                return () => { };
+
+            object oldValue = null;
+            bool isFocused = false;
+
+            // При получении фокуса — запоминаем старое значение
+            EventCallback<FocusEvent> focusHandler = _ =>
+            {
+                isFocused = true;
+                oldValue = getter();
+                uIStatusManager.SetInputMode(true);
+            };
+
+            // При потере фокуса — если изменилось, создаём команду
+            EventCallback<BlurEvent> blurHandler = _ =>
+            {
+                if (!isFocused) return;
+
+                var currentValue = getter();
+                if (!Equals(oldValue, currentValue))
+                {
+                    var command = new CustomPropertyChangeCommand(
+                        target, propertyName, oldValue, currentValue, setter, getter);
+                    undoRedoManager.Execute(command);
+                }
+
+                isFocused = false;
+                uIStatusManager.SetInputMode(false);
+            };
+
+            // Flush action для принудительного сохранения
+            Action flushAction = () =>
+            {
+                if (isFocused && colorField != null && target != null)
+                {
+                    var currentValue = getter();
+                    if (!Equals(oldValue, currentValue))
+                    {
+                        var command = new CustomPropertyChangeCommand(
+                            target, propertyName, oldValue, currentValue, setter, getter);
+                        undoRedoManager.Execute(command);
+                    }
+
+                    isFocused = false;
+                    uIStatusManager.SetInputMode(false);
+                }
+            };
+
+            _pendingFlushActions.Add(flushAction);
+            colorField.RegisterCallback(focusHandler);
+            colorField.RegisterCallback(blurHandler);
+
+            return () =>
+            {
+                _pendingFlushActions.Remove(flushAction);
+                colorField.UnregisterCallback(focusHandler);
+                colorField.UnregisterCallback(blurHandler);
+            };
+        }
     }
+
 }

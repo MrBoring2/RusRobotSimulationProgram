@@ -1,0 +1,78 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="modal-window-container" style="flex-direction: column; padding: 16px; background-color: rgb(40,40,40); border-radius: 10px; width: 300px;">
+
+        <ui:Label text="Выбор цвета" style="color: white; font-size: 15px; unity-font-style: bold; margin-bottom: 10px;" />
+
+        <!-- Hue -->
+        <ui:Slider name="hue-slider"
+           low-value="0"
+           high-value="360"
+           value="0"
+           direction="Horizontal"
+           style="height: 14px; margin-bottom: 8px;" />
+
+        <!-- SV Picker -->
+        <ui:VisualElement name="sv-picker" style="height: 150px; border-width: 1px; border-color: rgb(80,80,80); margin-bottom: 10px;" />
+
+        <!-- R -->
+        <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 4px;">
+            <ui:Label text="R" style="color: rgb(255,100,100); width: 16px; font-size: 12px;" />
+            <ui:Slider name="r-slider"
+           low-value="0"
+           high-value="255"
+           value="255"
+           direction="Horizontal"
+           style="flex-grow: 1; margin-left: 4px; margin-right: 6px;" />
+
+            <ui:TextField name="r-input" value="255" style="width: 40px;" />
+        </ui:VisualElement>
+
+        <!-- G -->
+        <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 4px;">
+            <ui:Label text="G" style="color: rgb(100,255,100); width: 16px; font-size: 12px;" />
+           <ui:Slider name="g-slider"
+           low-value="0"
+           high-value="255"
+           value="255"
+           direction="Horizontal"
+           style="flex-grow: 1; margin-left: 4px; margin-right: 6px;" />
+
+            <ui:TextField name="g-input" value="255" style="width: 40px;" />
+        </ui:VisualElement>
+
+        <!-- B -->
+        <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 4px;">
+            <ui:Label text="B" style="color: rgb(100,100,255); width: 16px; font-size: 12px;" />
+            <ui:Slider name="b-slider"
+           low-value="0"
+           high-value="255"
+           value="255"
+           direction="Horizontal"
+           style="flex-grow: 1; margin-left: 4px; margin-right: 6px;" />
+            <ui:TextField name="b-input" value="255" style="width: 40px;" />
+        </ui:VisualElement>
+
+        <!-- Alpha -->
+        <!-- <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 10px;">
+            <ui:Label text="A" style="color: rgb(180,180,180); width: 16px; font-size: 12px;" />
+           <ui:Slider name="alpha-slider"
+           low-value="0"
+           high-value="255"
+           value="255"
+           direction="Horizontal"
+           style="flex-grow: 1; margin-left: 4px; margin-right: 6px;" />
+        </ui:VisualElement> -->
+
+        <!-- Preview + HEX -->
+        <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 14px;">
+            <ui:VisualElement name="preview-swatch" style="width: 44px; height: 28px; border-radius: 4px; border-width: 1px; border-color: rgb(100,100,100); background-color: rgb(255,255,255); margin-right: 10px;" />
+            <ui:TextField name="hex-input" value="#FFFFFFFF" style="flex-grow: 1;" />
+        </ui:VisualElement>
+
+        <ui:VisualElement style="flex-direction: row; justify-content: flex-end;">
+            <ui:Button name="cancel-btn" text="Отмена" style="margin-right: 8px; height: 30px;" />
+            <ui:Button name="apply-btn" text="Применить" style="height: 30px; background-color: rgb(60,120,220); color: white;" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

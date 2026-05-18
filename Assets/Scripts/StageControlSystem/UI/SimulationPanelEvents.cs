@@ -18,6 +18,7 @@ namespace Assets.Scripts.UI
         private VisualElement root;
         private EventBus _eventBus;
         private SimulationManager _simulationManager;
+        private Label _simulationLabel;
         public TooltipEvents tooltipEvents;
         private void Start()
         {
@@ -26,11 +27,18 @@ namespace Assets.Scripts.UI
             root = GetComponent<UIDocument>().rootVisualElement;
             _startSimulationButton = root.Q<Button>("start-simulation-button");
             _pauseSimulationButton = root.Q<Button>("pause-simulation-button");
+            _simulationLabel = root.Q<Label>("simulation-timer");
             RegisterEvents();
             tooltipEvents.RegisterTooltip(_startSimulationButton, "Начать симуляцию");
             tooltipEvents.RegisterTooltip(_pauseSimulationButton, "Поставить симуляцию на паузу");
             SetStartIcon(false);
             _pauseSimulationButton.SetEnabled(false);
+        }
+
+        private void FixedUpdate()
+        {
+            var a = _simulationManager.GetTimeSimulation();
+            _simulationLabel.text = $"{a.Hours:D2}:{a.Minute:D2}:{a.Seconds:D2}";
         }
 
         private void RegisterEvents()

@@ -304,7 +304,14 @@ public class HierarchyPanelEvents : MonoBehaviour
                 break;
             case ObjectType.Static:
                 break;
-            case ObjectType.Dynamic:
+            case ObjectType.Movement:
+                texture = Resources.Load<Texture2D>("Icons/icon_movement");
+                break;
+            case ObjectType.PLC:
+                texture = Resources.Load<Texture2D>("Icons/icon_plc");
+                break;
+            case ObjectType.Detectors:
+                texture = Resources.Load<Texture2D>("Icons/icon_detector");
                 break;
             //case ObjectType.Program:
             //    texture = Resources.Load<Texture2D>("Icons/icon_program");
@@ -735,6 +742,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             root.Remove(contextMenu);
 
         contextMenu = new VisualElement();
+        contextMenu.name = "context-menu";
         contextMenu.AddToClassList("context-menu-hierarchy-container");
         contextMenu.style.position = Position.Absolute;
         contextMenu.style.left = position.x;

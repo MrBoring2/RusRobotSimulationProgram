@@ -14,10 +14,9 @@ using UnityEngine;
 
 public class SensorPropertyProvider : BasePropertyProvider
 {
-    public bool InvertSignal = false;//нормально открытый или нормально зыкратый датчик
-
-    public string NameSignal = "";
-    public bool IsActive = false;
+    public bool InvertSignal { get; set; } = false;
+    public string NameSignal { get; set; } = "";
+    public bool IsActive { get; set; } = false;
     [Header("Detection Settings")]
     [SerializeField] public float DetectionLength = 0.05f;
     [SerializeField] public float DetectionHeight = 0.01f;
@@ -26,32 +25,59 @@ public class SensorPropertyProvider : BasePropertyProvider
     [SerializeField] public bool _showVisualization = true;
     [SerializeField] public Material _visualizationMaterial;
 
-    private void Start()
-    {
-
-    }
-
-
-
-    //------------------------------------------------------------------------------------------------------------------------//
-
     public override ProviderSaveData CaptureCustomState()
     {
         return new ProviderSaveData
         {
-            ProviderType = nameof(RobotPropertyProvider),
+            ProviderType = nameof(SensorPropertyProvider),
+            BoolValues = {
+                    ["EndEffectorOn"] = InvertSignal,
+                    ["IsActive"] = IsActive
+                },
+            StringValues =
+            {
+                ["NameSignal"] = NameSignal,
+            }
+            
         };
     }
 
     public override List<CustomProperty> GetCustomProperties()
     {
-        return null;
+        var list = new List<CustomProperty>()
+            {   
+            new CustomProperty(
+                "NameSignal",
+                "Название сигнала",
+                typeof(string),
+                () => NameSignal,
+                val => NameSignal = val.ToString()
+                ),
+                new CustomProperty(
+                "IsActive",
+                "Активен",
+                typeof(bool),
+                () => IsActive,
+                val => IsActive = (bool)val
+                ),
+                new CustomProperty(
+                "InvertSignal",
+                "Инвертировать сигнал",
+                typeof(bool),
+                () => InvertSignal,
+                val => InvertSignal = (bool)val
+                ),
+        };
+        return list;
     }
 
     public override void RestoreCustomState(ProviderSaveData data)
     {
-
+        if (data.StringValues.TryGetValue("NameSignal", out var v1))
+            NameSignal = v1;
+        if (data.BoolValues.TryGetValue("IsActive", out var v2))
+            IsActive = v2;
+        if (data.BoolValues.TryGetValue("VerificationAngles", out var v3))
+            InvertSignal = v3;
     }
-
-
 }
