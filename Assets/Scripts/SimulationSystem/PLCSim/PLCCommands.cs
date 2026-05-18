@@ -181,12 +181,12 @@ namespace Assets.Scripts.SimulationSystem.PLC
     /// <summary>
     /// блок работы с роботом
     /// </summary>
-    public class PLCCommandBlockRobotsTask : PLCProgrammElement
+    public class PLCBlockRobotsTask : PLCProgrammElement
     {
         public string RobotID { get; set; }
         public List<PLCProgrammElement> ProgrammElements { get; set; } = new List<PLCProgrammElement>();
 
-        public PLCCommandBlockRobotsTask(string id, string robotID) : base(id)
+        public PLCBlockRobotsTask(string id, string robotID) : base(id)
         {
             RobotID = robotID;
         }
@@ -364,10 +364,10 @@ namespace Assets.Scripts.SimulationSystem.PLC
             return false;
         }
     }
-    public class PLCCommandLogicBlock : PLCProgrammElement
+    public class PLCBlockLogic : PLCProgrammElement
     {
         public List<PLCProgrammElement> ProgrammElements { get; set; } = new List<PLCProgrammElement>();
-        public PLCCommandLogicBlock(string id) : base(id)
+        public PLCBlockLogic(string id) : base(id)
         {
         }
         public override bool Execute(RobotController RC, Dictionary<string, List<RobotProgrammElement>> RobotsProgramm)

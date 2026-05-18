@@ -36,12 +36,12 @@ public class PLCSimulation : MonoBehaviour
 
     
     PLCBlockInit Init;
-    List<PLCCommandBlockRobotsTask> RobotsBlocks;
-    PLCCommandLogicBlock LogicBlock;
+    List<PLCBlockRobotsTask> RobotsBlocks;
+    PLCBlockLogic LogicBlock;
     //--Запуск симуляции--
     void StartSim(StartProgramm s)
     {
-        (PLCBlockInit Init, List<PLCCommandBlockRobotsTask> RobotsBlocks, PLCCommandLogicBlock LogicBlocks) PLC = PLCDataConverter.Convert(_sceneObjectsManager.PLCData);
+        (PLCBlockInit Init, List<PLCBlockRobotsTask> RobotsBlocks, PLCBlockLogic LogicBlocks) PLC = PLCDataConverter.Convert(_sceneObjectsManager.PLCData);
         Init = PLC.Init;
         RobotsBlocks = PLC.RobotsBlocks;
         LogicBlock = PLC.LogicBlocks;
@@ -80,7 +80,7 @@ public class PLCSimulation : MonoBehaviour
     }
     
     //--Выполнение блока работы с роботом--
-    public async Awaitable ExecuteRobotBlock(PLCCommandBlockRobotsTask BlockRobotTasks)
+    public async Awaitable ExecuteRobotBlock(PLCBlockRobotsTask BlockRobotTasks)
     {
         string robotID = BlockRobotTasks.RobotID;
         var RC = GetRobotById(robotID).RobotController;
@@ -114,7 +114,7 @@ public class PLCSimulation : MonoBehaviour
         // Ничего не найдено
         return null;
     }
-    public async Awaitable ExecuteCycleBlock(PLCCommandLogicBlock block)
+    public async Awaitable ExecuteCycleBlock(PLCBlockLogic block)
     {
         if (block.ProgrammElements == null) return;
             foreach (var element in block.ProgrammElements)
@@ -132,11 +132,11 @@ public class PLCSimulation : MonoBehaviour
 
 public static class PLCDataConverter
 {
-    public static (PLCBlockInit Init, List<PLCCommandBlockRobotsTask> RobotsBlocks, PLCCommandLogicBlock LogicBlocks) Convert(PLCData data)
+    public static (PLCBlockInit Init, List<PLCBlockRobotsTask> RobotsBlocks, PLCBlockLogic LogicBlocks) Convert(PLCData data)
     {
-        (PLCBlockInit Init, List<PLCCommandBlockRobotsTask> RobotsBlocks, PLCCommandLogicBlock LogicBlocks) result = new();
+        (PLCBlockInit Init, List<PLCBlockRobotsTask> RobotsBlocks, PLCBlockLogic LogicBlocks) result = new();
 
-        result.RobotsBlocks = new List<PLCCommandBlockRobotsTask>();
+        result.RobotsBlocks = new List<PLCBlockRobotsTask>();
 
         if (data == null) return result;
 
@@ -152,7 +152,7 @@ public static class PLCDataConverter
         // Robot blocks
         foreach (var rb in data.RobotCommandsBlockItems ?? new List<PLCRobotBlock>())
         {
-            var block = new PLCCommandBlockRobotsTask(rb.RobotId, rb.RobotId)
+            var block = new PLCBlockRobotsTask(rb.RobotId, rb.RobotId)
             {
                 ProgrammElements = ParsePLCBaseList(rb?.ConditionsList)
             };
@@ -160,7 +160,7 @@ public static class PLCDataConverter
         }
 
         // Logic blocks (верхний уровень)\
-        PLCCommandLogicBlock LogicBlock = new("2");
+        PLCBlockLogic LogicBlock = new("2");
         foreach (var b in data.LogicBlockItems ?? new List<PLCBase>())
         {
             var parsed = ParsePLCBase(b);

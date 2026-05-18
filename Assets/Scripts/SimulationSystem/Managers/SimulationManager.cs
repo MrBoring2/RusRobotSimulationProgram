@@ -12,8 +12,8 @@ public class SimulationManager : MonoBehaviour,IService
 {
     private EventBus _eventBus;
     private SIM_STAT SimulationStat = SIM_STAT.STOP; //статус симуляции в наст. время
-    private MODE SimulationMode = MODE.NONE;
-    private MODE oldSimulationMode = MODE.NONE;
+    private MODE SimulationMode = MODE.PROGRAM_MODE;
+    private MODE oldSimulationMode = MODE.PROGRAM_MODE;
     private TimerSimulation TimeSim = new TimerSimulation();
     void Start()
     {
@@ -44,18 +44,18 @@ public class SimulationManager : MonoBehaviour,IService
         }
         else
         {
-            ChangeMode(MODE.NONE);
+            ChangeMode(MODE.PROGRAM_MODE);
         }
     }
 
     private void StartSim(StartSimulationSignal s)
     {
-        if(SimulationStat != SIM_STAT.PLAY)
+        if(SimulationStat == SIM_STAT.STOP)
         {
             try
             {
                 _eventBus.Invoke(new Init());
-                ChangeMode(MODE.NONE);
+                ChangeMode(MODE.PROGRAM_MODE);
                 SimulationStat = SIM_STAT.PLAY;
                 _eventBus.Invoke(new StartProgramm());
                 TimeSim.ResetTimer();
@@ -66,6 +66,10 @@ public class SimulationManager : MonoBehaviour,IService
                 Debug.LogError($"Ошибка запуска симуляции: {ex}");
             }
 
+        }
+        if(SimulationStat == SIM_STAT.PAUSE)
+        { 
+            SimulationStat = SIM_STAT.PLAY;
         }
     }
     private void PauseSim(PauseSimulationSignal s)
@@ -126,5 +130,5 @@ public enum MODE
 {
     JOG_MODE,
     ANGLES_MODE,
-    NONE
+    PROGRAM_MODE
 }

@@ -1,17 +1,14 @@
 ﻿using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
-using Assets.Scripts.CustomEventBus.Signals.Robot;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
 using Assets.Scripts.Providers.PropertyProviders;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Scripts.SimulationSystem.RobotSimulation
@@ -319,41 +316,41 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         /// <summary>
         /// расчет параметров равноускоренного движения, трапеция и треугольник
         /// </summary>
-        /// <param name="LinearSpeed"></param>
-        /// <param name="LinAcceler"></param>
-        /// <param name="LinBrake"></param>
-        /// <param name="distance"></param>
+        /// <param name="Speed"></param>
+        /// <param name="Acceler"></param>
+        /// <param name="Brake"></param>
+        /// <param name="angle"></param>
         public (float tAcсeler, float sAcсeler, float tBrake, float sBrake, float tLinear, float sLinear, float vMax, int DirectRoteate, bool isTriangularProfile)
-            Сalc(float LinearSpeed, float LinAcceler, float LinBrake, float distance, int direct)
+            Сalc(float Speed, float Acceler, float Brake, float angle, int direct)
         {
-            float tAcсeler = LinearSpeed / LinAcceler;
-            float tBrake = LinearSpeed / LinBrake;
-            float sAcсeler = (LinAcceler * tAcсeler * tAcсeler) / 2;
-            float sBrake = (LinBrake * tBrake * tBrake) / 2;
+            float tAcсeler = Speed / Acceler;
+            float tBrake = Speed / Brake;
+            float sAcсeler = (Acceler * tAcсeler * tAcсeler) / 2;
+            float sBrake = (Brake * tBrake * tBrake) / 2;
             float sLinear = 0;
             float tLinear = 0;
-            float vMax = LinearSpeed;
+            float vMax = Speed;
             int DirectRoteate = direct;
             bool isTriangularProfile = false;
             //трангулярная скорость
-            if ((sAcсeler + sBrake) > Mathf.Abs(distance))
+            if ((sAcсeler + sBrake) > Mathf.Abs(angle))
             {
                 isTriangularProfile = true;
-                vMax = Mathf.Sqrt(Mathf.Abs(distance) / ((1 / (2 * LinAcceler)) + (1 / (2 * LinBrake))));
-                if (Mathf.Abs(distance) <= 1e-6f)
+                vMax = Mathf.Sqrt(Mathf.Abs(angle) / ((1 / (2 * Acceler)) + (1 / (2 * Brake))));
+                if (Mathf.Abs(angle) <= 1e-6f)
                 {
                     vMax = 0f;
                 }
-                tAcсeler = vMax / LinAcceler;
-                tBrake = vMax / LinBrake;
-                sAcсeler = (LinAcceler * tAcсeler * tAcсeler) / 2;
-                sBrake = (LinBrake * tBrake * tBrake) / 2;
+                tAcсeler = vMax / Acceler;
+                tBrake = vMax / Brake;
+                sAcсeler = (Acceler * tAcсeler * tAcсeler) / 2;
+                sBrake = (Brake * tBrake * tBrake) / 2;
             }
             //трапецивидная скорость
             else
             {
-                sLinear = Mathf.Abs(distance) - (sAcсeler + sBrake);
-                tLinear = sLinear / LinearSpeed;
+                sLinear = Mathf.Abs(angle) - (sAcсeler + sBrake);
+                tLinear = sLinear / Speed;
             }
             return (tAcсeler, sAcсeler, tBrake, sBrake, tLinear, sLinear, vMax, DirectRoteate, isTriangularProfile);
         }
