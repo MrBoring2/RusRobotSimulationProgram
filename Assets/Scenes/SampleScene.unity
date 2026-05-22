@@ -744,6 +744,9 @@ MonoBehaviour:
   direction: {x: 0, y: 0, z: 1}
   planeNormal: {x: 0, y: 0, z: 0}
   manipulator: {fileID: 1068335000}
+  highlightMultiplier: 2
+  normalAlpha: 0.5
+  highlightAlpha: 1
 --- !u!1 &468208927
 GameObject:
   m_ObjectHideFlags: 0
@@ -1095,6 +1098,9 @@ MonoBehaviour:
   direction: {x: 1, y: 0, z: 0}
   planeNormal: {x: 0, y: 0, z: 0}
   manipulator: {fileID: 1068335000}
+  highlightMultiplier: 2
+  normalAlpha: 0.5
+  highlightAlpha: 1
 --- !u!1 &645784140
 GameObject:
   m_ObjectHideFlags: 0
@@ -1700,7 +1706,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6728728365230234436}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1280a927e7d8a014c8eaa685aa472150, type: 3}
+  m_Script: {fileID: 11500000, guid: c4a790a7407aa9c46b9c69980cf984b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GyzmoManupulator
   angleTextPrefab: {fileID: 1032703446}
@@ -1708,7 +1714,7 @@ MonoBehaviour:
   rotateHandlesGroup: {fileID: 1547631922}
   cam: {fileID: 330585545}
   gizmoScaleKoeficient: 0.4
-  gizmoRoot: {fileID: 0}
+  gizmoRoot: {fileID: 8542470662968175446}
   gizmoRootStartRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &1146492960 stripped
 GameObject:

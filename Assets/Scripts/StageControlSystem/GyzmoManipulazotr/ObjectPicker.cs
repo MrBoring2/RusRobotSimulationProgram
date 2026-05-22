@@ -66,6 +66,7 @@ public class ObjectPicker : MonoBehaviour
     /// </summary>
     private void Update()
     {
+        if (manipulator == null) return;
         // В режиме JOG манипулятор полностью отключается
         if (_manipulatorModeManager.Mode == SceneManipulatorMode.JOG)
         {
