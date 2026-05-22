@@ -105,7 +105,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
             if (dist > 2)
             {
                 gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
-                angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
+                //angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
             }
             else
             {

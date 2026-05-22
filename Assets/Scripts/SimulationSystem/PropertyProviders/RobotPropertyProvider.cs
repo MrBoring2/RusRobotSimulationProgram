@@ -25,8 +25,6 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float[] ChangeAngles = new float[6] { 0, 0, 0, 0, 0, 0 };
     //=================== ПАРАМЕТРЫ ===================
 
-
-
     /// <summary>
     /// Углы обновляемы кажды кадр
     /// </summary>

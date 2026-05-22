@@ -54,11 +54,16 @@ public class PLCSimulation : MonoBehaviour
         {
             cmd.Execute();
         }
+
         //ServiceManager.Current.Get<LogicSignalBus>().CadrToActiveSignal();
-        while (_simManager.GetStatusSim() == SIM_STAT.PLAY)
+        while (true)
         {
-           // ServiceManager.Current.Get<LogicSignalBus>().CreateSignalCadr();
             if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+            while (_simManager.GetStatusSim() == SIM_STAT.PAUSE)
+            {
+                if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                await Awaitable.FixedUpdateAsync();
+            }
             
             // Логика ПЛК
             await PLC();

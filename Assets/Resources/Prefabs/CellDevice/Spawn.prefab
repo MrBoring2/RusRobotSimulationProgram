@@ -13,7 +13,8 @@ GameObject:
   - component: {fileID: 8487530549168537190}
   m_Layer: 0
   m_Name: Cylinder
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -103,7 +104,7 @@ GameObject:
   - component: {fileID: -2878714860608318775}
   m_Layer: 0
   m_Name: Spawn
-  m_TagString: Untagged
+  m_TagString: SceneObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

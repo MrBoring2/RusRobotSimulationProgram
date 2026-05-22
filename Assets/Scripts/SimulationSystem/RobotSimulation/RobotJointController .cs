@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class RobotJointController  : MonoBehaviour
+public class RobotJointController : MonoBehaviour
 {
     public GameObject J1;
     public GameObject J2;
@@ -18,7 +18,6 @@ public class RobotJointController  : MonoBehaviour
     {
         _propertyProvider = gameObject.GetComponent<RobotPropertyProvider>();
     }
-    
     void FixedUpdate()
     {
         J1.transform.localRotation = Quaternion.AngleAxis(_propertyProvider.J1Angle, new Vector3(0, 1, 0));

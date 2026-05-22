@@ -599,7 +599,11 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             Programm = BuildProgramm(ID);    
         }
         //--Мгновенное перемещение к переданной точке
-        private void TeleportToPoint(PickCommandSignal s)
+        private async void TeleportToPoint(PickCommandSignal s)
+        {
+            await _TeleportToPoint(s);
+        }
+        private async Awaitable _TeleportToPoint(PickCommandSignal s)
         {
             if (_simManager.GetStatusSim() == SIM_STAT.STOP)
             {

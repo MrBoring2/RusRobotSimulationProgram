@@ -4,6 +4,7 @@ using Assets.Scripts.CustomEventBus.Signals.Manipulator;
 using Assets.Scripts.CustomEventBus.Signals.Robot;
 using Assets.Scripts.CustomEventBus.Signals.Simulation;
 using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
 using System;
 using System.Timers;
 using UnityEngine;
@@ -11,21 +12,30 @@ using UnityEngine;
 public class SimulationManager : MonoBehaviour,IService
 {
     private EventBus _eventBus;
+    private NotificationSystemManager _notification;
+    //========= СТАТУСЫ =========//
     private SIM_STAT SimulationStat = SIM_STAT.STOP; //статус симуляции в наст. время
-    private MODE SimulationMode = MODE.PROGRAM_MODE;
+    private MODE SimulationMode = MODE.PROGRAM_MODE; // режим симуляции робота
     private MODE oldSimulationMode = MODE.PROGRAM_MODE;
-    private TimerSimulation TimeSim = new TimerSimulation();
+    private TimerSimulation TimeSim = new TimerSimulation(); //таймер симуляции
+    //========= ПАРАМЕТРЫ =========//
+    private bool AlarmJointCollision = true;
+    private bool AlarmEndEffectorCollicion = true;
+    private bool PauseSimInCol = true;
     void Start()
     {
-        _eventBus = ServiceManager.Current.Get<EventBus>();
-        _eventBus.Subscribe<StartSimulationSignal>(StartSim);
-        _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
-        _eventBus.Subscribe<PauseSimulationSignal>(PauseSim);
-        _eventBus.Subscribe<StopSimulationSignal>(StopSim); 
+        _notification = ServiceManager.Current.Get<NotificationSystemManager>();
+        _eventBus = ServiceManager.Current.Get<EventBus>();//шина событий
+        _eventBus.Subscribe<StartSimulationSignal>(StartSim);//подписка на событие интерфейса (старт симуляции)
+        _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode); //подписка на событие интерфейса (изменение режима управления роботом)
+        _eventBus.Subscribe<PauseSimulationSignal>(PauseSim);//подписка на событие интерфейса (пауза симуляции)
+        _eventBus.Subscribe<StopSimulationSignal>(StopSim);//подписка на событие интерфейса (стоп симуляции)
+        _eventBus.Subscribe<SystemPauseSim>(SystemPauseSimulation);//подписка на события (пауза симуляции при обнаружении коллизии)
 
     }
     private void FixedUpdate()
     {
+        //работа таймера
         if(SimulationStat == SIM_STAT.PLAY)
         { 
             TimeSim.UpdateTimerSim();
@@ -34,11 +44,11 @@ public class SimulationManager : MonoBehaviour,IService
     public void Init() { }
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
     {
-        if (signal.Mode == Assets.Scripts.Managers.SceneManipulatorMode.JOG)
+        if (signal.Mode == SceneManipulatorMode.JOG)
         {
             ChangeMode(MODE.JOG_MODE);
         }
-        else if(signal.Mode == Assets.Scripts.Managers.SceneManipulatorMode.Rotation)
+        else if(signal.Mode == SceneManipulatorMode.Rotation)
         {
             ChangeMode(MODE.ANGLES_MODE);
         }
@@ -59,6 +69,7 @@ public class SimulationManager : MonoBehaviour,IService
                 SimulationStat = SIM_STAT.PLAY;
                 _eventBus.Invoke(new StartProgramm());
                 TimeSim.ResetTimer();
+                _notification.ShowInfo("Симуляция запущена");
 
             }
             catch (Exception ex)
@@ -67,17 +78,20 @@ public class SimulationManager : MonoBehaviour,IService
             }
 
         }
-        if (SimulationStat == SIM_STAT.PAUSE)
+        else if (SimulationStat == SIM_STAT.PAUSE)
         {
             SimulationStat = SIM_STAT.PLAY;
+            _notification.ShowInfo("Симуляция продолжается");
         }
     }
     private void PauseSim(PauseSimulationSignal s)
     {
+        
         if(SimulationStat != SIM_STAT.PAUSE)
         {
             SimulationStat = SIM_STAT.PAUSE;
             _eventBus.Invoke(new PauseProgramm());
+            _notification.ShowInfo("Симуляция приостановлена пользователем");
         }
     }
     private void StopSim(StopSimulationSignal s)
@@ -88,6 +102,16 @@ public class SimulationManager : MonoBehaviour,IService
             _eventBus.Invoke(new StopProgramm());
             ChangeOldMode();
             TimeSim.ResetTimer();
+            _notification.ShowInfo("Симуляция остановлена пользователем");
+        }
+    }
+    private void SystemPauseSimulation(SystemPauseSim s)
+    {
+        if (SimulationStat != SIM_STAT.PAUSE)
+        {
+            SimulationStat = SIM_STAT.PAUSE;
+            _eventBus.Invoke(new PauseProgramm());
+            _notification.ShowInfo(s.info);
         }
     }
     private void ChangeMode(MODE mode)
@@ -117,6 +141,34 @@ public class SimulationManager : MonoBehaviour,IService
     public float GetTimeSimulationFloat()
     {
         return TimeSim.GetFloat();
+    }
+    /// <summary>
+    /// вкл/выкл уведомление о коллизиях с осями робота
+    /// </summary>
+    /// <param name="b"></param>
+    public void SetAlarmJointCollision(bool b)
+    {
+       AlarmJointCollision = b;
+    }
+    /// <summary>
+    /// вкл/выкл уведомление о коллизиях с захватом робота
+    /// </summary>
+    /// <param name="b"></param>
+    public void SetAlarmEndEffectorCollicion(bool b)
+    {
+        AlarmEndEffectorCollicion = b;
+    }
+    public void SetPauseSimInCol(bool b)
+    {
+        PauseSimInCol = b;
+    }
+    /// <summary>
+    /// получение параметров симуляции
+    /// </summary>
+    /// <returns></returns>
+    public (bool AlarmJointColStatus, bool AlarmEndEffectorColStatus, bool PauseSimInCol) GetSimulationParam()
+    {
+        return (AlarmJointCollision, AlarmEndEffectorCollicion, PauseSimInCol);
     }
 }
 

@@ -1,101 +1,161 @@
-using Assets.Scripts.Providers.PropertyProviders;
+using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-
-public class Zajim : MonoBehaviour
+public class SimpleGripper : MonoBehaviour
 {
-    [SerializeField]
-    public GameObject z1;
-    public GameObject z2;
-    public GameObject Base;
-    private Rigidbody z1R;
-    private Rigidbody z2R;
-    public bool zajat = false;
-    public bool z1Col = false;
-    public bool z2Col = false;
-    public GameObject z1Collision;
-    public GameObject z2Collision;
-    private GameObject ZObj = null;
-    private Vector3 z1Pos;
-    private Vector3 z2Pos;
-    
     public RobotPropertyProvider _propertyProvider;
-   
-    void Start()
-    {
-        
-        z1R = z1.GetComponent<Rigidbody>();
-        z2R = z2.GetComponent<Rigidbody>();
-        z1Pos = z1.transform.localPosition;
-        z2Pos = z2.transform.localPosition;
-    }
 
+    public GameObject _leftFinger;
+    private MeshRenderer leftFingerRender;
+    public GameObject _rightFinger;
+    private MeshRenderer rightFingerRender;
+    private Rigidbody leftFingerRigid;
+    private Rigidbody rightFingerRigid;
+    private GameObject Detail;
+    bool detailInGrip = false;
+
+    private EventBus _eventBus;
+    private NotificationSystemManager _notification;
+
+    public List<string> TestList = new();
+
+    private Dictionary<GameObject, List<GameObject>> collisionObjects = new();
+    private Dictionary<string, List<string>> stringCollisionObjects = new();
+
+    public float openPosition = 0f;      // раскрыто
+    public float closePosition = 50f;  // сжато
+    public float speed = 1;          // сила
+
+    private void Start()
+    {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
+        leftFingerRigid = _leftFinger.GetComponent<Rigidbody>();
+        rightFingerRigid = _rightFinger.GetComponent<Rigidbody>();
+        leftFingerRender = leftFingerRigid.GetComponent<MeshRenderer>();
+        rightFingerRender = rightFingerRigid.GetComponent<MeshRenderer>();
+        _eventBus.Subscribe<RobotCollisionEvent>(EnterCollision);
+        _eventBus.Subscribe<RobotCollisionExitEvent>(ExitCollision);
+        collisionObjects.Add(_leftFinger, new List<GameObject>());
+        collisionObjects.Add(_rightFinger, new List<GameObject>());
+        _notification = ServiceManager.Current.Get<NotificationSystemManager>();
+    }
+    void EnterCollision(RobotCollisionEvent s)
+    {
+        if(s.Object == _leftFinger || s.Object == _rightFinger)
+        {
+            if (!collisionObjects[s.Object].Contains(s.CollidedObject))
+            {
+                collisionObjects[s.Object].Add(s.CollidedObject);
+                //_notification.ShowWarning("Обнаружена коллизия", $"({s.Object.name}) соприкасается с объектом({s.CollidedObject.name})");
+                UpdateTestList();
+            }
+        }
+        
+    }
+    void ExitCollision(RobotCollisionExitEvent s)
+    {
+        if(s.Object == _leftFinger || s.Object == _rightFinger)
+        {
+            if (collisionObjects[s.Object].Count > 0)
+            {
+                if (collisionObjects[s.Object].Contains(s.CollidedObject))
+                {   
+                    collisionObjects[s.Object].Remove(s.CollidedObject);
+                   // _notification.ShowInfo("Коллизия устранена", $"({s.Object.name}) больше ни с чем не соприкасается");
+                    UpdateTestList();
+
+                }
+            }
+        }
+        
+    }
     void FixedUpdate()
     {
-        if (_propertyProvider.EndEffectorOn && !zajat) //
-        {
-            if((z1Col==true) && (z2Col == true))
-            {
-                //if ((z1Collision == z2Collision) && (z1Collision.transform.tag == "Деталь"))
-                if ((z1Collision == z2Collision) && (z1Collision.gameObject.layer == LayerMask.NameToLayer("Detail")))
-                {
-                    ZObj = z1Collision;
-                    z1Collision.transform.parent = Base.gameObject.transform;
-                    z1Collision.GetComponent<Rigidbody>().isKinematic = true;
-                    zajat = true;
-                }
-            }
-            
-            else
-            {
-                z1R.transform.localPosition += new Vector3(1, 0, 0) * _propertyProvider.SpeedEffector;
-                z2R.transform.localPosition += new Vector3(-1, 0, 0) * _propertyProvider.SpeedEffector;
-            }
-            
-        }
+        bool grip = _propertyProvider.EndEffectorOn;
+
+        Vector3 leftDir = leftFingerRigid.transform.parent.TransformDirection(Vector3.right);
+        Vector3 rightDir = rightFingerRigid.transform.parent.TransformDirection(Vector3.right);
+
+        float leftPos = leftFingerRigid.transform.localPosition.x;
+        float rightPos = rightFingerRigid.transform.localPosition.x;
         
-        else if (!_propertyProvider.EndEffectorOn)
+        if (grip)
         {
-            z1Col = false;
-            z2Col = false;
-            z1Collision = null;
-            z2Collision = null;
-            if ((ZObj != null) && zajat)
+            if (!detailInGrip)
             {
-                zajat = false;
-                ZObj.transform.parent = null;
-                ZObj.GetComponent<Rigidbody>().isKinematic = false;
-                ZObj = null;
-                z1Collision = null;
-                z2Collision = null;
-                
-            }
-            if (z1Pos.x < z1.transform.localPosition.x)
-            {
-                if(Mathf.Abs(z1Pos.x - z1.transform.localPosition.x) < _propertyProvider.SpeedEffector && Mathf.Abs(z1Pos.x - z1.transform.localPosition.x) !=0)
+                foreach (var obj in collisionObjects[_leftFinger])
                 {
-                    z1R.transform.localPosition += new Vector3(-1, 0, 0) * Mathf.Abs(z1Pos.x - z1.transform.localPosition.x);
+                    if (obj.layer == LayerMask.NameToLayer("Detail"))
+                    {
+                        if (collisionObjects[_rightFinger].Contains(obj))
+                        {
+                            detailInGrip = true;
+                            Detail = obj;
+                        }
+                    }
+                }
+                // СЖИМАЕМ - только если не доехали до границы
+                if (leftPos < closePosition && !detailInGrip)
+                    leftFingerRigid.transform.localPosition += new Vector3(speed, 0, 0);
+                if (detailInGrip)
+                {
+                    Detail.GetComponent<Rigidbody>().isKinematic = true;
+                    Detail.transform.parent = gameObject.transform;
                 }
                 else
-                {
-                    z1R.transform.localPosition += new Vector3(-1, 0, 0) * _propertyProvider.SpeedEffector;
-                }
-                
-            }
-            if (z2Pos.x > z2.transform.localPosition.x)
-            {
-                if (Mathf.Abs(z2Pos.x - z2.transform.localPosition.x) < _propertyProvider.SpeedEffector && Mathf.Abs(z2Pos.x - z2.transform.localPosition.x) !=0)
-                {
-                    z2R.transform.localPosition += new Vector3(1, 0, 0) * Mathf.Abs(z2Pos.x - z2.transform.localPosition.x);
-                }
+                    StopFinger(leftFingerRigid);
+
+                if (rightPos < closePosition && !detailInGrip)
+                    rightFingerRigid.transform.localPosition += new Vector3(speed, 0, 0);
                 else
-                {
-                    z2R.transform.localPosition += new Vector3(1, 0, 0) * _propertyProvider.SpeedEffector;
-                }
-                
+                    StopFinger(rightFingerRigid);
             }
-            
-            
             
         }
+        else
+        {
+            if (detailInGrip)
+            {
+                if(Detail != null && Detail.activeInHierarchy == true)
+                {
+                    Detail.GetComponent<Rigidbody>().isKinematic = false;
+                    Detail.transform.parent = null;
+                    detailInGrip = false;
+                }
+                else
+                {
+                    detailInGrip = false;
+                }
+                
+            }
+            // РАЗЖИМАЕМ - только если не доехали до границы
+            if (leftPos > openPosition)
+                leftFingerRigid.transform.localPosition += new Vector3(-speed, 0, 0);
+            else
+                StopFinger(leftFingerRigid);
+
+            if (rightPos > openPosition)
+                rightFingerRigid.transform.localPosition += new Vector3(-speed, 0, 0);
+            else
+                StopFinger(rightFingerRigid);
+        }
+    }
+    public void UpdateTestList()
+    {
+        TestList.Clear();
+        foreach (var kvp in collisionObjects)
+        {
+            foreach (var objInCol in kvp.Value)
+            {
+                TestList.Add(kvp.Key.name + " collides with " + objInCol.name);
+            }
+        }
+    }
+    void StopFinger(Rigidbody finger)
+    {
+
     }
 }

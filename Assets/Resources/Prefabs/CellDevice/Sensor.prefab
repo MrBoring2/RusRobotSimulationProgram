@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6640486327037396434}
   - component: {fileID: 1872019285518834390}
   - component: {fileID: 8133932464723847193}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: DetectObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -67,7 +67,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 44f1cfcbefeccd549a286f45f1ae8f3a, type: 2}
+  - {fileID: 2100000, guid: 7e2f6d0f02d3f654185daa9ea73c0b8e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -106,7 +106,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -123,9 +123,9 @@ GameObject:
   - component: {fileID: 8647271295263513477}
   - component: {fileID: 5973368843420997083}
   - component: {fileID: 5027335590700143128}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: Sensor
-  m_TagString: Untagged
+  m_TagString: SceneObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -175,9 +175,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 126e2703470d7794c892af9154c18a0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SensorPropertyProvider
-  InvertSignal: 0
-  NameSignal: 
-  IsActive: 0
   DetectionLength: 0.05
   DetectionHeight: 0.01
   OnColor: {r: 0, g: 1, b: 0, a: 1}
@@ -196,9 +193,10 @@ GameObject:
   - component: {fileID: 3725053644065118686}
   - component: {fileID: 1886275206192095374}
   - component: {fileID: 1765342831642179322}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: led
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -324,9 +322,10 @@ GameObject:
   - component: {fileID: 2462729160925531059}
   - component: {fileID: 7193742132639431111}
   - component: {fileID: 5559284482513697292}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: Mesh
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7239799140904041943}
   m_Layer: 0
   m_Name: Conv
-  m_TagString: Untagged
+  m_TagString: SceneObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -63,8 +63,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 902ced341ba7c54479b0e1acf26dca64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConvPropertyProvider
-  NameSignal: 
-  Speed: 0.05
   Vector: {x: 0, y: 0, z: 1}
   isAct: 0
 --- !u!1 &562670363130499080
@@ -81,7 +79,8 @@ GameObject:
   - component: {fileID: 3014281341922198171}
   m_Layer: 0
   m_Name: left
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -417,7 +416,8 @@ GameObject:
   - component: {fileID: 4712457778265659076}
   m_Layer: 0
   m_Name: right
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1198,7 +1198,8 @@ GameObject:
   - component: {fileID: 2494812643423847425}
   m_Layer: 0
   m_Name: Lenta
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1232,7 +1233,8 @@ GameObject:
   - component: {fileID: 6540204060946801951}
   m_Layer: 0
   m_Name: Ypor
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1385,7 +1387,8 @@ GameObject:
   - component: {fileID: 485570708678153113}
   m_Layer: 0
   m_Name: Bortiki
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1599,7 +1602,8 @@ GameObject:
   - component: {fileID: 7293490954587312683}
   m_Layer: 0
   m_Name: endLenta1
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1690,7 +1694,8 @@ GameObject:
   - component: {fileID: 9154645717823124889}
   m_Layer: 0
   m_Name: Lenta
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1801,7 +1806,8 @@ GameObject:
   - component: {fileID: 7407313061029588799}
   m_Layer: 0
   m_Name: endLenta2
-  m_TagString: Untagged
+  m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
+    \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
