@@ -4,37 +4,68 @@ using Assets.Scripts.CustomEventBus.Signals.Lines;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Models;
-using Assets.Scripts.Providers;
-using Assets.Scripts.Providers.PropertyProviders;
 using Assets.Scripts.Utils;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Runtime.Serialization;
 using UnityEngine;
 
 namespace Assets.Scripts.Managers
 {
+    /// <summary>
+    /// Главный менеджер для управления объектами на сцене.
+    /// Отвечает за создание, удаление, перемещение и иерархию всех объектов и команд.
+    /// </summary>
     public class SceneObjectsManager : MonoBehaviour, IService
     {
         private EventBus _eventBus;
         private NotificationSystemManager _notificationSystemManager;
+        /// <summary>
+        /// OrderedDictionary хранит все объекты сцены с доступом по ID.
+        /// Сохраняет порядок объектов, важный для иерархии и сериализации.
+        /// Ключ: string (ID объекта), Значение: SceneObject
+        /// </summary>
+        public OrderedDictionary Items { get; private set; } = new OrderedDictionary();
+        /// <summary>
+        /// Контейнер для хранения команд роботов (программы, подпрограммы, команды).
+        /// </summary>
+        public CommandsContainer Commands { get; private set; } = new CommandsContainer();
+        /// <summary>
+        /// Данные ПЛК (программируемого логического контроллера).
+        /// Содержит информацию о блоках команд роботов.
+        /// </summary>
+        public PLCData PLCData { get; private set; } = new PLCData();
+        /// <summary>
+        /// Инициализация менеджера объектов сцены.
+        /// Получает необходимые сервисы и инициализирует существующие объекты.
+        /// </summary>
         public void Init()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
             _notificationSystemManager = ServiceManager.Current.Get<NotificationSystemManager>();
             InitExistedObjects();
         }
-
-        public OrderedDictionary Items { get; private set; } = new OrderedDictionary();
-        public CommandsContainer Commands { get; private set; } = new CommandsContainer();
-        public PLCData PLCData { get; private set; } = new PLCData();
+        /// <summary>
+        /// Устанавливает данные ПЛК.
+        /// </summary>
+        /// <param name="data">Новые данные ПЛК</param>
         public void SetPLCData(PLCData data)
         {
             PLCData = data;
         }
 
+        /// <summary>
+        /// Создает новый объект на сцене.
+        /// </summary>
+        /// <param name="prefab">Префаб создаваемого объекта</param>
+        /// <param name="position">Позиция в мировом пространстве</param>
+        /// <param name="rotation">Вращение</param>
+        /// <param name="type">Тип создаваемого объекта</param>
+        /// <param name="id">Уникальный ID (если null, генерируется новый)</param>
+        /// <param name="parentId">ID родительского объекта (может быть null)</param>
+        /// <returns>Созданный SceneObject или null в случае ошибки</returns>
         public SceneObject Create(GameObject prefab, Vector3 position, Quaternion rotation, ObjectType type, string id = null, string parentId = null)
         {
             SceneObject sceneObj = null;
@@ -46,9 +77,6 @@ namespace Assets.Scripts.Managers
                     parent = ((SceneObject)Items[parentId])?.Reference;
                     if (parent == null) return null;
                 }
-
-
-
                 var obj = Instantiate(prefab, position, rotation, parent?.transform);
                 obj.name = prefab.name;
                 var objectMaker = obj.GetComponent<SceneObjectMarker>();
@@ -62,11 +90,6 @@ namespace Assets.Scripts.Managers
                         case ObjectType.Unknown:
                             sceneObj = new SceneObject(id, objectMaker.type, obj, parentId);
                             break;
-                        //case ObjectType.LinearMoveCommand:
-                        //case ObjectType.StateEndEffectorCommand:
-                        //case ObjectType.WaitCommand:
-                        //    sceneObj = new CommandObject(id, objectMaker.type, obj, parentId);
-                        //    break;
                         case ObjectType.Node:
                         case ObjectType.Primitive:
                         case ObjectType.Static:
@@ -76,9 +99,6 @@ namespace Assets.Scripts.Managers
                         case ObjectType.Workpiece:
                             sceneObj = new DynamicObject(id, objectMaker.type, obj, parentId);
                             break;
-                        //case ObjectType.Program:
-                        //    sceneObj = new RobotProgramObject(id, objectMaker.type, obj, parentId);
-                        //    break;
                         case ObjectType.Robot:
                             sceneObj = new RobotObject(id, objectMaker.type, obj, parentId);
                             if (!Items.Contains(id))
@@ -114,6 +134,17 @@ namespace Assets.Scripts.Managers
             return sceneObj;
         }
 
+        /// <summary>
+        /// Создает объект команду.
+        /// Отдельный метод, так как команды имеют иную логику иерархии.
+        /// </summary>
+        /// <param name="prefab">Префаб команды</param>
+        /// <param name="position">Позиция</param>
+        /// <param name="rotation">Вращение</param>
+        /// <param name="type">Тип команды</param>
+        /// <param name="id">ID команды</param>
+        /// <param name="parentId">ID родителя (программы или подпрограммы)</param>
+        /// <returns>Созданный SceneObject или null</returns>
         public SceneObject CreateCommand(GameObject prefab, Vector3 position, Quaternion rotation, ObjectType type, string id = null, string parentId = null)
         {
             SceneObject sceneObj = null;
@@ -171,6 +202,10 @@ namespace Assets.Scripts.Managers
             return sceneObj;
         }
 
+        /// <summary>
+        /// Удаляет объект со сцены по его ID.
+        /// </summary>
+        /// <param name="id">ID удаляемого объекта</param>
         public void Remove(string id)
         {
             if (!string.IsNullOrEmpty(id))
@@ -186,44 +221,23 @@ namespace Assets.Scripts.Managers
             }
         }
 
-        //public IReadOnlyDictionary<string, SceneObject> GetGameObjectsDictionary()
-        //{
-        //    return Items;
-        //}
-        private RobotProgrammElement ConvertToRobotProgrammElement(SceneObject obj)
-        {
-            RobotProgrammElement elem = null;
-            if (obj.Type == ObjectType.LinearMoveCommand)
-            {
-                elem = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
-            }
-            else if (obj.Type == ObjectType.StateEndEffectorCommand)
-            {
-                elem = new ComandSetStateEndEffector(obj.Reference.GetComponent<StateEndEffectorPropertyProvider>(), ENUM_COMMANDS.CHANGE_STATE_ENDEFFECTOR, obj.Id);
-            }
-            else if (obj.Type == ObjectType.WaitCommand)
-            {
-                elem = new CommandWait(obj.Reference.GetComponent<WaitPropertyProvider>(), ENUM_COMMANDS.WAIT, obj.Id);
-            }
-            else if (obj.Type == ObjectType.Program)
-            {
-                // Рекурсивно получаем дочерние элементы для подпрограммы
-                //List<RobotProgrammElement> subItems = BuildTreeInternal(obj.Id);
-
-                //var subProgram = new SubProgramm(subItems ?? new List<RobotProgrammElement>(), ENUM_COMMANDS.SUBPROGRAMM, obj.Id);
-                //programm.Add(subProgram);
-            }
-            return elem;
-        }
+        /// <summary>
+        /// Получает объект по ID.
+        /// </summary>
+        /// <param name="id">ID объекта</param>
+        /// <returns>SceneObject или null</returns>
         public SceneObject GetById(string id)
         {
-            // Добавьте проверку на null и пустую строку
             if (string.IsNullOrEmpty(id))
                 return null;
 
             return Items.Contains(id) ? (SceneObject)Items[id] : null;
         }
 
+        /// <summary>
+        /// Получает все игровые объекты на сцене.
+        /// </summary>
+        /// <returns>Массив GameObject</returns>
         public GameObject[] GetGameObjectsList2()
         {
             var objects = GameObject.FindGameObjectsWithTag("SceneObject");
@@ -232,9 +246,13 @@ namespace Assets.Scripts.Managers
             return objects;
         }
 
+        /// <summary>
+        /// Получает список всех SceneObject.
+        /// </summary>
+        /// <param name="getOnlyActive">Если true, возвращает только активные объекты</param>
+        /// <returns>Список SceneObject</returns>
         public List<SceneObject> GetGameObjectsList(bool getOnlyActive = true)
         {
-
             if (getOnlyActive)
             {
                 var b = Items.Values.Cast<SceneObject>().ToList();
@@ -245,10 +263,12 @@ namespace Assets.Scripts.Managers
             {
                 return Items.Values.Cast<SceneObject>().ToList();
             }
-
         }
 
-
+        /// <summary>
+        /// Полностью очищает сцену от всех объектов.
+        /// </summary>
+        /// <param name="spawnFloor">Создать ли пол после очистки</param>
 
         public void ClearScene(bool spawnFloor = true)
         {
@@ -274,9 +294,14 @@ namespace Assets.Scripts.Managers
             _eventBus.Invoke(new LoadObjectsSignal(Items.Values.Cast<SceneObject>().ToList()));
         }
 
+        /// <summary>
+        /// Восстанавливает сохраненные объекты на сцене.
+        /// Выполняется в 3 прохода для корректного восстановления иерархии.
+        /// </summary>
+        /// <param name="data">Список информации об объектах</param>
+        /// <param name="commandsData">Данные о командах роботов</param>
         public void SpawnRestoredObjects(List<ObjectInfo> data, CommandsContainerData commandsData)
         {
-            // ПРОХОД 1: Создаём все объекты БЕЗ родительских связей
             var createdObjects = new Dictionary<string, SceneObject>();
 
             foreach (var item in data)
@@ -288,7 +313,6 @@ namespace Assets.Scripts.Managers
                     continue;
                 }
 
-                // Создаём объект без parentId (сначала без родителя)
                 var instance = Create(prefab, item.Position.ToVector3(), item.Rotation.ToQuaternion(),
                                       item.ObjectType, item.Id, null);
 
@@ -309,7 +333,6 @@ namespace Assets.Scripts.Managers
                 createdObjects[item.Id] = instance;
             }
 
-            // ПРОХОД 2: Устанавливаем родительские связи
             foreach (var item in data)
             {
                 if (!string.IsNullOrEmpty(item.ParentId) && createdObjects.TryGetValue(item.ParentId, out var parent))
@@ -322,7 +345,6 @@ namespace Assets.Scripts.Managers
                 }
             }
 
-            // ПРОХОД 3: Восстанавливаем команды в CommandsContainer
             if (commandsData != null)
             {
                 foreach (var robotData in commandsData.RobotsCommands)
@@ -332,7 +354,6 @@ namespace Assets.Scripts.Managers
 
                     foreach (var programData in robotData.Programs)
                     {
-                        // Программа не в data! Создаём с нуля
                         var programPrefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
                         if (programPrefab == null) continue;
 
@@ -341,13 +362,12 @@ namespace Assets.Scripts.Managers
 
                         if (program == null) continue;
 
-                        // Восстанавливаем команды
                         foreach (var cmdSaveData in programData.Commands)
                         {
                             var cmdPrefab = Resources.Load<GameObject>(cmdSaveData.SourcePath);
                             if (cmdPrefab == null) continue;
 
-                            var cmd = CreateCommand(cmdPrefab, Vector3.zero, Quaternion.identity,
+                            var cmd = CreateCommand(cmdPrefab, cmdSaveData.Position.ToVector3(), cmdSaveData.Rotation.ToQuaternion(),
                                     cmdSaveData.CommandType, cmdSaveData.Id, program.Id) as CommandObject;
 
                             if (cmd != null)
@@ -362,19 +382,10 @@ namespace Assets.Scripts.Managers
             }
             _eventBus.Invoke(new LoadObjectsSignal(GetGameObjectsList()));
         }
-        //private IPropertyProvider GetProvider(GameObject obj, string type)
-        //{
-        //    return type switch
-        //    {
-        //        nameof(PrimitivePropertyProvider) => obj.AddComponent<PrimitivePropertyProvider>(),
-        //        nameof(RobotPropertyProvider) => obj.AddComponent<RobotPropertyProvider>(),
-        //        nameof(LinearPointPropertyProvider) => obj.AddComponent<LinearPointPropertyProvider>(),
-        //        nameof(StateEndEffectorPropertyProvider) => obj.AddComponent<StateEndEffectorPropertyProvider>(),
-        //        nameof(RobotProgramPropertyProvider) => obj.AddComponent<RobotProgramPropertyProvider>(),
-        //        nameof(WaitPropertyProvider) => obj.AddComponent<WaitPropertyProvider>(),
-        //        _ => null
-        //    };
-        //}
+
+        /// <summary>
+        /// Инициализирует уже существующие на сцене объекты при старте.
+        /// </summary>
         private void InitExistedObjects()
         {
 
@@ -389,7 +400,6 @@ namespace Assets.Scripts.Managers
                     {
                         sceneObj.Reference.GetComponent<IPropertyProvider>().Id = id;
                         Items.Add(id, sceneObj);
-                        //Items[id] = sceneObj; 
                     }
                 }
             }
@@ -403,6 +413,14 @@ namespace Assets.Scripts.Managers
 
             _eventBus.Invoke(new LoadObjectsSignal(Items.Values.Cast<SceneObject>().ToList()));
         }
+
+        /// <summary>
+        /// Изменяет порядок объекта в иерархии (родителя и индекс).
+        /// </summary>
+        /// <param name="objectId">ID перемещаемого объекта</param>
+        /// <param name="newParentId">ID нового родителя</param>
+        /// <param name="insertIndex">Индекс вставки в списке дочерних объектов</param>
+        /// <returns>Успех операции</returns>
         public bool ChangeObjectOrder(string objectId, string newParentId, int? insertIndex)
         {
             if (!Items.Contains(objectId))
@@ -411,35 +429,32 @@ namespace Assets.Scripts.Managers
             var sceneObject = (SceneObject)Items[objectId];
             var oldParentId = sceneObject.ParentId;
 
-            // Если родитель не изменился и индекс тот же - ничего не делаем
             if (oldParentId == newParentId &&
                 GetSiblingIndex(objectId, oldParentId) == insertIndex)
                 return true;
 
-            // Сохраняем старый индекс для коррекции
             int oldSiblingIndex = GetSiblingIndex(objectId, oldParentId);
 
-            // 1. Обновляем ParentId объекта
             sceneObject.SetParent(newParentId);
 
-            // 2. Обновляем Transform иерархию
             UpdateTransformParent(sceneObject, newParentId);
 
-            // 3. Перемещаем в OrderedDictionary
             bool success = MoveInOrderedDictionary(objectId, newParentId, insertIndex, oldParentId, oldSiblingIndex);
 
-            // 4. Обновляем порядок в Transform (SetSiblingIndex)
             if (success)
             {
                 UpdateTransformSiblingIndex(sceneObject, newParentId, insertIndex);
             }
 
-            // Отправляем сигнал об обновлении
             _eventBus.Invoke(new UpdateHierarchySignal());
             _eventBus.Invoke(new UpdateLineDrawer());
 
             return success;
         }
+
+        /// <summary>
+        /// Обновляет Transform родителя для объекта.
+        /// </summary>
         private void UpdateTransformParent(SceneObject sceneObject, string newParentId)
         {
             GameObject newParent = null;
@@ -452,20 +467,20 @@ namespace Assets.Scripts.Managers
             sceneObject.Reference.transform.SetParent(newParent?.transform, false);
         }
 
+        /// <summary>
+        /// Перемещает объект в OrderedDictionary (сохраняя порядок иерархии).
+        /// </summary>
         private bool MoveInOrderedDictionary(string objectId, string newParentId, int? insertIndex, string oldParentId, int oldSiblingIndex)
         {
             var sceneObject = (SceneObject)Items[objectId];
 
-            // Удаляем объект из текущей позиции
             var oldIndex = OrderedDictionaryExtensions.IndexOf(Items, objectId);
             if (oldIndex == -1) return false;
 
             Items.RemoveAt(oldIndex);
 
-            // Определяем новую позицию для вставки
             int newIndex = CalculateNewDictionaryIndex(objectId, newParentId, insertIndex, oldParentId, oldSiblingIndex);
 
-            // Вставляем на новую позицию
             if (newIndex >= 0 && newIndex <= Items.Count)
             {
                 Items.Insert(newIndex, objectId, sceneObject);
@@ -478,14 +493,15 @@ namespace Assets.Scripts.Managers
             return true;
         }
 
+        /// <summary>
+        /// Вычисляет новый индекс в словаре на основе родителя и позиции.
+        /// </summary>
         private int CalculateNewDictionaryIndex(string objectId, string newParentId, int? insertIndex, string oldParentId, int oldSiblingIndex)
         {
-            // Вариант 1: Перемещение в корень
             if (string.IsNullOrEmpty(newParentId))
             {
                 if (insertIndex.HasValue)
                 {
-                    // Находим индекс среди корневых объектов
                     var rootObjects = GetDirectChildren(null);
                     if (insertIndex.Value >= 0 && insertIndex.Value < rootObjects.Count)
                     {
@@ -493,20 +509,14 @@ namespace Assets.Scripts.Managers
                         return OrderedDictionaryExtensions.IndexOf(Items, targetRoot.Id);
                     }
                 }
-                // Если индекс не указан или вне диапазона - в конец
                 return Items.Count;
             }
 
-            // Вариант 2: Перемещение внутрь другого объекта
-            // Находим родителя в словаре
             int parentIndex = OrderedDictionaryExtensions.IndexOf(Items, newParentId);
             if (parentIndex == -1) return Items.Count;
 
-            // Получаем детей нового родителя (уже без перемещаемого объекта, если он был там же)
             var children = GetDirectChildren(newParentId);
 
-            // Если перемещаем вниз по списку внутри того же родителя,
-            // нужно учесть что мы временно удалили объект из списка детей
             if (oldParentId == newParentId && insertIndex.HasValue && insertIndex.Value > oldSiblingIndex)
             {
                 insertIndex--;
@@ -514,7 +524,6 @@ namespace Assets.Scripts.Managers
 
             if (insertIndex.HasValue && insertIndex.Value >= 0)
             {
-                // Вставляем на конкретную позицию среди детей
                 if (insertIndex.Value < children.Count)
                 {
                     var targetChild = children[insertIndex.Value];
@@ -522,8 +531,6 @@ namespace Assets.Scripts.Managers
                 }
                 else
                 {
-                    // Вставляем после всех детей этого родителя
-                    // Находим последнего ребенка в OrderedDictionary
                     int lastChildIndex = parentIndex;
                     foreach (var child in children)
                     {
@@ -536,7 +543,6 @@ namespace Assets.Scripts.Managers
             }
             else
             {
-                // Вставляем в конец детей
                 int lastChildIndex = parentIndex;
                 foreach (var child in children)
                 {
@@ -548,6 +554,9 @@ namespace Assets.Scripts.Managers
             }
         }
 
+        /// <summary>
+        /// Обновляет индекс в Transform родителя (с задержкой в 1 кадр).
+        /// </summary>
         private void UpdateTransformSiblingIndex(SceneObject sceneObject, string parentId, int? insertIndex)
         {
             if (string.IsNullOrEmpty(parentId)) return;
@@ -555,15 +564,17 @@ namespace Assets.Scripts.Managers
             var parentObj = ((SceneObject)Items[parentId])?.Reference;
             if (parentObj == null) return;
 
-            // Ждем один кадр для обновления Transform иерархии
             StartCoroutine(SetSiblingIndexDelayed(sceneObject.Reference.transform, parentObj.transform, insertIndex ?? 0));
         }
 
-        private System.Collections.IEnumerator SetSiblingIndexDelayed(Transform child, Transform parent, int index)
+        /// <summary>
+        /// Корoutine для установки sibling index с задержкой.
+        /// Необходима для корректной работы после изменений иерархии.
+        /// </summary>
+        private IEnumerator SetSiblingIndexDelayed(Transform child, Transform parent, int index)
         {
-            yield return null; // Ждем обновления Transform
+            yield return null;
 
-            // Корректируем индекс, если он больше количества детей
             if (index >= parent.childCount)
             {
                 index = parent.childCount - 1;
@@ -574,32 +585,12 @@ namespace Assets.Scripts.Managers
                 child.SetSiblingIndex(index);
             }
         }
-        private void UpdateTransformOrder(SceneObject sceneObject, string parentId, int? insertIndex)
-        {
-            GameObject parentObj = null;
-            if (!string.IsNullOrEmpty(parentId))
-            {
-                parentObj = ((SceneObject)Items[parentId])?.Reference;
-            }
 
-            if (parentObj != null)
-            {
-                sceneObject.Reference.transform.SetParent(parentObj.transform, false);
-            }
-            else
-            {
-                sceneObject.Reference.transform.SetParent(null, false);
-            }
-
-            // Устанавливаем порядок среди детей
-            if (parentObj != null && insertIndex.HasValue)
-            {
-                int childCount = parentObj.transform.childCount;
-                int targetIndex = Mathf.Clamp(insertIndex.Value, 0, childCount - 1);
-                sceneObject.Reference.transform.SetSiblingIndex(targetIndex);
-            }
-        }
-
+        /// <summary>
+        /// Получает прямых дочерних объектов для указанного родителя.
+        /// </summary>
+        /// <param name="parentId">ID родителя (null для корневых объектов)</param>
+        /// <returns>Список дочерних объектов, отсортированных по индексу</returns>
         public List<SceneObject> GetDirectChildren(string parentId)
         {
             var children = Items.Values
@@ -607,7 +598,6 @@ namespace Assets.Scripts.Managers
                 .Where(o => o.ParentId == parentId)
                 .ToList();
 
-            // Сортируем по фактическому порядку в Transform иерархии
             children.Sort((a, b) =>
             {
                 int indexA = GetSiblingIndex(a.Id, parentId);
@@ -618,6 +608,12 @@ namespace Assets.Scripts.Managers
             return children;
         }
 
+        /// <summary>
+        /// Получает индекс объекта в иерархии родителя.
+        /// </summary>
+        /// <param name="objectId">ID объекта</param>
+        /// <param name="parentId">ID родителя</param>
+        /// <returns>Индекс объекта</returns>
         public int GetSiblingIndex(string objectId, string parentId)
         {
             var parent = !string.IsNullOrEmpty(parentId) ?
@@ -635,9 +631,6 @@ namespace Assets.Scripts.Managers
                     }
                 }
             }
-
-            // Если родителя нет или объект не найден среди детей,
-            // ищем среди корневых объектов
             var rootObjects = GetGameObjectsList()
                 .Where(o => string.IsNullOrEmpty(o.ParentId))
                 .ToList();

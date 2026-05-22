@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Managers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,7 +26,74 @@ namespace Assets.Scripts.GyzmoManipulazotr
         private Vector3 dragStartPos;
         private Vector3 dragStartMouseWorld;
         private Plane dragPlane;
+        [SerializeField] private float highlightMultiplier = 2f;
+        [SerializeField] private float normalAlpha = 0.5f;
+        [SerializeField] private float highlightAlpha = 1f;
+        private UIStatusManager _uIStatusManager;
+        private Material material;
+        private Color originalColor;
+        private Color highlightedColor;
+        private void Start()
+        {
+            InitializeHighlight();
+            _uIStatusManager = ServiceManager.Current.Get<UIStatusManager>();
+        }
+        private void InitializeHighlight()
+        {
+            var renderer = GetComponent<Renderer>();
+            material = renderer.material;
+            originalColor = material.GetColor("_Color");
+            highlightedColor = new Color(
+                Mathf.Clamp01(originalColor.r * highlightMultiplier),
+                Mathf.Clamp01(originalColor.g * highlightMultiplier),
+                Mathf.Clamp01(originalColor.b * highlightMultiplier),
+                originalColor.a
+            );
+            SetNormal();
+        }
+        void Update()
+        {
+            if (dragging)
+            {
+                SetHighlighted();
+                return;
+            }
+            if (_uIStatusManager.AnyHandleDragging)
+            {
+                SetNormal();
+                return;
+            }
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
 
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("Manipulator")))
+            {
+                if (hit.collider.gameObject == gameObject)
+                    SetHighlighted();
+                else
+                    SetNormal();
+            }
+            else
+            {
+                SetNormal();
+            }
+        }
+        void SetHighlighted()
+        {
+            material.SetColor("_Color", highlightedColor);
+            material.SetFloat("_AlphaMultiplier", 2.0f);
+            material.renderQueue = 4000;
+            material.SetInt("_ZWrite", 1);
+
+        }
+
+        void SetNormal()
+        {
+            material.SetColor("_Color", originalColor);
+            material.SetFloat("_AlphaMultiplier", 0.5f);
+            material.renderQueue = 3000;
+            material.SetInt("_ZWrite", 0);
+        }
         public void StartDrag()
         {
             dragging = true;
@@ -41,6 +110,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
             }
 
             manipulator.CurrentManipulatorMode.OnHandleDown(this);
+            _uIStatusManager.SetHandleDragging(true);
         }
 
         public void UpdateDrag()
@@ -69,6 +139,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
             }
             dragging = false;
             manipulator.NotifyDragEnd();
+            _uIStatusManager.SetHandleDragging(false);
         }
 
         private Plane GetOptimalDragPlane()

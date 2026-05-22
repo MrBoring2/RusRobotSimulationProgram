@@ -34,11 +34,13 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J4Angle { get; set; } = 0;
     public float J5Angle { get; set; } = 0;
     public float J6Angle { get; set; } = 0;
-    public float[] GetAnglesAnim()
-    {
-        return new float[] { J1Angle, J2Angle, J3Angle, J4Angle, J5Angle, J6Angle };
-    }
 
+    public float J1AngleUI { get => ChangeAngles[0]; set => ChangeAngles[0] = value; }
+    public float J2AngleUI { get => ChangeAngles[1]; set => ChangeAngles[1] = value; }
+    public float J3AngleUI { get => ChangeAngles[2]; set => ChangeAngles[2] = value; }
+    public float J4AngleUI { get => ChangeAngles[3]; set => ChangeAngles[3] = value; }
+    public float J5AngleUI { get => ChangeAngles[4]; set => ChangeAngles[4] = value; }
+    public float J6AngleUI { get => ChangeAngles[5]; set => ChangeAngles[5] = value; }
     /// <summary>
     /// Параметры звеньев робота
     /// </summary>
@@ -107,14 +109,74 @@ public class RobotPropertyProvider : BasePropertyProvider
                 {
                     if(AngleBrake.UpdateFromString((string)val) != 0) Notification.ShowError(" Убедитесь, что вы ввели 6 чисел, разделенных запятыми, и что все числа положительные (J1, J2, J3, J4, J5, J6).");
                 }),
-           
+            new CustomProperty("J1AngleUI",
+                "Ось 1",
+                typeof(float),
+                () => J1AngleUI,
+                val =>J1AngleUI = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f)),
+                new CustomProperty("J2AngleUI",
+                "Ось 2",
+                typeof(float),
+                () => J2AngleUI,
+                val => J2AngleUI = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f)),
+                new CustomProperty("J3AngleUI",
+                "Ось 3",
+                typeof(float),
+                () => J3AngleUI,
+                val =>J3AngleUI = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f)),
+                new CustomProperty("J4AngleUI",
+                "Ось 4",
+                typeof(float),
+                () => J4AngleUI,
+                val =>J4AngleUI = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f)),
+                new CustomProperty("J5AngleUI",
+                "Ось 5",
+                typeof(float),
+                () => J5AngleUI,
+                val =>J5AngleUI = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f)),
+                new CustomProperty("J6AngleUI",
+                "Ось 6",
+                typeof(float),
+                () => J6AngleUI,
+                val => J6AngleUI = (float)val)
+                .WithAttribute(new RangeAttribute(0f, 360f))
+
         };
     }
 
     public override void RestoreCustomState(ProviderSaveData data)
     {
-
+        if (data.StringValues.TryGetValue("AnglesSpeedLimit", out var v1))
+        {
+            AnglesSpeedLimit = new();
+            AnglesSpeedLimit.UpdateFromString((string)v1);
+        }
+        if (data.StringValues.TryGetValue("AngleAcceler", out var v2))
+        {
+            AngleAcceler = new();
+            AngleAcceler.UpdateFromString((string)v2);
+        }
+        if (data.StringValues.TryGetValue("AngleBrake", out var v3))
+        {
+            AngleBrake = new();
+            AngleBrake.UpdateFromString((string)v3);
+        }
+        if (data.FloatValues.TryGetValue("J1AngleUI", out var v4))
+            J1AngleUI = v4;
+        if (data.FloatValues.TryGetValue("J2AngleUI", out var v5))
+            J2AngleUI = v5;
+        if (data.FloatValues.TryGetValue("J3AngleUI", out var v6))
+            J3AngleUI = v6;
+        if (data.FloatValues.TryGetValue("J4AngleUI", out var v7))
+            J4AngleUI = v7;
+        if (data.FloatValues.TryGetValue("J5AngleUI", out var v8))
+            J5AngleUI = v8;
+        if (data.FloatValues.TryGetValue("J6AngleUI", out var v9))
+            J6AngleUI = v9;
     }
-
-
 }

@@ -1,10 +1,8 @@
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using System.Collections.Generic;
-using System.Windows.Forms;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static UnityEngine.Rendering.DebugUI;
 
 public class UIBlocker : MonoBehaviour
 {

@@ -14,7 +14,9 @@ using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
 using Assets.Scripts.Providers.PropertyProviders;
+using Assets.Scripts.StageControlSystem.Models;
 using Assets.UI.CustomElements;
+using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -203,7 +205,7 @@ namespace Assets.Scripts.UI
         }
         private void OnCommandUndoned(UndoneCommandSignal signal)
         {
-            if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand)
+            if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand || signal.Command is AddPLCCommandCommand || signal.Command is RemovePLCCommandCommand)
             {
                 UpdateHierarchy();
                 UpdateTitle();
@@ -214,7 +216,7 @@ namespace Assets.Scripts.UI
 
         private void OnCommandExecuted(ExecuteCommandSignal signal)
         {
-            if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand)
+            if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand || signal.Command is AddPLCCommandCommand || signal.Command is RemovePLCCommandCommand)
             {
                 UpdateHierarchy();
                 UpdateTitle();
@@ -1542,8 +1544,9 @@ namespace Assets.Scripts.UI
 
             if (itemToAdd is PLCInitVariable s)
             {
-                var logicBlockItems = _sceneObjectManager.PLCData.InitBlockItems;
-                logicBlockItems.Add(s);
+                var list = _sceneObjectManager.PLCData.InitBlockItems;
+                var command = new AddPLCCommandCommand(itemToAdd, list);
+                _undoRedoManager.Execute(command);
             }
 
             else if (itemToAdd is PLCStartProgram || itemToAdd is PLCSetVariable || itemToAdd is PLCBlockCondition || itemToAdd is PLCCondition)
@@ -1553,39 +1556,45 @@ namespace Assets.Scripts.UI
                     .FirstOrDefault(x => x.RobotId == parentId);
                 if (robotBlock != null)
                 {
-                    robotBlock.ConditionsList.Add(itemToAdd);
+                    var command = new AddPLCCommandCommand(itemToAdd, robotBlock.ConditionsList);
+                    _undoRedoManager.Execute(command);
                     UpdateHierarchy();
                     return;
                 }
                 if (parentId == "logic_block")
                 {
-                    _sceneObjectManager.PLCData.LogicBlockItems.Add(itemToAdd);
+                    var command = new AddPLCCommandCommand(itemToAdd, _sceneObjectManager.PLCData.LogicBlockItems);
+                    _undoRedoManager.Execute(command);
                     UpdateHierarchy();
                     return;
                 }
-                // 2. Проверяем в блоке логики
-                var logicParent = _sceneObjectManager.PLCData.LogicBlockItems
-                    .FirstOrDefault(x => x is PLCBlockCondition && ((PLCBlockCondition)x).Id == parentId);
-                if (logicParent is PLCBlockCondition block)
-                {
-                    block.IfCondition.Content.Add(itemToAdd);
-                    UpdateHierarchy();
-                    return;
-                }
+                //// 2. Проверяем в блоке логики
+                //var logicParent = _sceneObjectManager.PLCData.LogicBlockItems
+                //    .FirstOrDefault(x => x is PLCBlockCondition && ((PLCBlockCondition)x).Id == parentId);
+                //if (logicParent is PLCBlockCondition block)
+                //{
+                //    block.IfCondition.Content.Add(itemToAdd);
+                //    UpdateHierarchy();
+                //    return;
+                //}
 
                 // 3. Рекурсивно ищем в условиях роботов
                 foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
                 {
-                    if (TryAddToContent(rb.ConditionsList, parentId, itemToAdd))
+                    if (TryAddToContent(rb.ConditionsList, parentId, itemToAdd, out var list))
                     {
+                        var command = new AddPLCCommandCommand(itemToAdd, list);
+                        _undoRedoManager.Execute(command);
                         UpdateHierarchy();
                         return;
                     }
                 }
 
-                // 4. Рекурсивно ищем в блоке логики
-                if (TryAddToContent(_sceneObjectManager.PLCData.LogicBlockItems, parentId, itemToAdd))
+                // Рекурсивный поиск в логике
+                if (TryAddToContent(_sceneObjectManager.PLCData.LogicBlockItems, parentId, itemToAdd, out var list2))
                 {
+                    var command = new AddPLCCommandCommand(itemToAdd, list2);
+                    _undoRedoManager.Execute(command);
                     UpdateHierarchy();
                     return;
                 }
@@ -1597,49 +1606,45 @@ namespace Assets.Scripts.UI
         /// <summary>
         /// Рекурсивный поиск и добавление элемента в Content нужного блока
         /// </summary>
-        private bool TryAddToContent(List<PLCBase> items, string parentId, PLCBase itemToAdd)
+        private bool TryAddToContent(List<PLCBase> items, string parentId, PLCBase itemToAdd, out IList targetList)
         {
+            targetList = null;
+
             foreach (var item in items)
             {
                 if (item is PLCBlockCondition block)
                 {
-                    // Проверяем IF блок
                     if (block.IfCondition.Id == parentId)
                     {
-                        block.IfCondition.Content.Add(itemToAdd);
+                        targetList = block.IfCondition.Content;
                         return true;
                     }
 
-                    // Проверяем ELSE IF блоки
                     foreach (var elif in block.ElifConditions)
                     {
                         if (elif.Id == parentId)
                         {
-                            elif.Content.Add(itemToAdd);
+                            targetList = elif.Content;
                             return true;
                         }
                     }
 
-                    // Проверяем ELSE блок
                     if (block.ElseConndition != null && block.ElseConndition.Id == parentId)
                     {
-                        block.ElseConndition.Content.Add(itemToAdd);
+                        targetList = block.ElseConndition.Content;
                         return true;
                     }
 
-                    // Рекурсивно ищем в IF блоке
-                    if (TryAddToContent(block.IfCondition.Content, parentId, itemToAdd))
+                    if (TryAddToContent(block.IfCondition.Content, parentId, itemToAdd, out targetList))
                         return true;
 
-                    // Рекурсивно ищем в ELSE IF блоках
                     foreach (var elif in block.ElifConditions)
                     {
-                        if (TryAddToContent(elif.Content, parentId, itemToAdd))
+                        if (TryAddToContent(elif.Content, parentId, itemToAdd, out targetList))
                             return true;
                     }
 
-                    // Рекурсивно ищем в ELSE блоке
-                    if (block.ElseConndition != null && TryAddToContent(block.ElseConndition.Content, parentId, itemToAdd))
+                    if (block.ElseConndition != null && TryAddToContent(block.ElseConndition.Content, parentId, itemToAdd, out targetList))
                         return true;
                 }
             }
@@ -1699,17 +1704,37 @@ namespace Assets.Scripts.UI
 
         private void DeletePLCCommand(string commandId)
         {
-            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
+            // Init блок
+            var initList = _sceneObjectManager.PLCData.InitBlockItems;
+            for (int i = 0; i < initList.Count; i++)
             {
-                if (RemoveCommandFromList(rb.ConditionsList, commandId))
+                if (initList[i].Id == commandId)
                 {
+                    var cmd = initList[i];
+                    var command = new RemovePLCCommandCommand(cmd, initList);
+                    _undoRedoManager.Execute(command);
                     UpdateHierarchy();
                     return;
                 }
             }
 
-            if (RemoveCommandFromList(_sceneObjectManager.PLCData.LogicBlockItems, commandId))
+            // RobotCommands
+            foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
             {
+                if (RemoveCommandFromList(rb.ConditionsList, commandId, out var cmd, out var list))
+                {
+                    var command = new RemovePLCCommandCommand(cmd, list);
+                    _undoRedoManager.Execute(command);
+                    UpdateHierarchy();
+                    return;
+                }
+            }
+
+            // Logic
+            if (RemoveCommandFromList(_sceneObjectManager.PLCData.LogicBlockItems, commandId, out var cmd2, out var list2))
+            {
+                var command = new RemovePLCCommandCommand(cmd2, list2);
+                _undoRedoManager.Execute(command);
                 UpdateHierarchy();
                 return;
             }
@@ -1736,6 +1761,38 @@ namespace Assets.Scripts.UI
                         if (RemoveCommandFromList(elif.Content, commandId)) return true;
                     }
                     if (block.ElseConndition != null && RemoveCommandFromList(block.ElseConndition.Content, commandId)) return true;
+                }
+            }
+            return false;
+        }
+
+        // Новый метод с out-параметрами для DeletePLCCommand
+        private bool RemoveCommandFromList(List<PLCBase> items, string commandId, out PLCCommand removedCmd, out List<PLCBase> sourceList)
+        {
+            removedCmd = null;
+            sourceList = null;
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] is PLCCommand cmd && cmd.Id == commandId)
+                {
+                    removedCmd = cmd;
+                    sourceList = items;
+                    items.RemoveAt(i);
+                    return true;
+                }
+            }
+
+            foreach (var item in items)
+            {
+                if (item is PLCBlockCondition block)
+                {
+                    if (RemoveCommandFromList(block.IfCondition.Content, commandId, out removedCmd, out sourceList)) return true;
+                    foreach (var elif in block.ElifConditions)
+                    {
+                        if (RemoveCommandFromList(elif.Content, commandId, out removedCmd, out sourceList)) return true;
+                    }
+                    if (block.ElseConndition != null && RemoveCommandFromList(block.ElseConndition.Content, commandId, out removedCmd, out sourceList)) return true;
                 }
             }
             return false;
@@ -1930,7 +1987,11 @@ namespace Assets.Scripts.UI
                     expandedFoldouts[foldout.userData.ToString()] = isExpanded;
                 }
             };
-            foldout.SetExpanded(expandedFoldouts.TryGetValue(foldout.userData.ToString(), out bool d));
+
+            if (expandedFoldouts.TryGetValue(foldout.userData?.ToString() ?? "", out bool savedState))
+            {
+                foldout.SetExpanded(savedState);
+            }
         }
 
         /// <summary>
@@ -2575,13 +2636,19 @@ namespace Assets.Scripts.UI
             // Для PLC команд
             if (currentDragData.UserData is PLCCommand draggedPLCCommand)
             {
-                if (targetElement.name == "plc-command" && IsInsideInitBlock(targetElement))
+                bool isFromInit = draggedPLCCommand is PLCInitVariable;
+                bool targetIsInit = IsInsideInitBlock(targetElement) || targetElement.name == "plc-init-block";
+                if (isFromInit)
                 {
-                    // В init блоке можно перемещать только выше/ниже
-                    if (targetElement.userData?.ToString() == draggedPLCCommand.Id) return false;
-                    if (!(draggedPLCCommand is PLCInitVariable)) return false;
-                    return true;
+                    if (!targetIsInit) return false;
+                    if (targetElement.name == "plc-command")
+                    {
+                        if (targetElement.userData?.ToString() == draggedPLCCommand.Id) return false;
+                        return true;
+                    }
+                    return false;
                 }
+                if (targetIsInit) return false;
                 if (targetElement.name == "plc-condition-block")
                 {
                     // Проверяем что в том же роботе

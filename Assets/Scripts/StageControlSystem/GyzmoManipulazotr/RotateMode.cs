@@ -19,7 +19,7 @@ public class RotateMode : IManipulatorMode
     }
 
     // Вызывается при выборе объекта
-    public void OnObjectSelected(Transform t, GyzmoManupulator m)
+    public void OnObjectSelected(Transform t, GizmoManupulator m)
     {
         targetTransform = t;
         if (m != null)

@@ -489,6 +489,7 @@ public class PropertiesPanelEvents : MonoBehaviour
                     _UIStatusManager?.SetPointerOverUI(false);
                     prop.Setter(evt.newValue);
                 });
+
                 //dropdown.RegisterCallback<BlurEvent>(_ =>
                 //{
                 //    if (isDropdownOpen)
@@ -508,6 +509,7 @@ public class PropertiesPanelEvents : MonoBehaviour
             }
             else if (fieldElement is Toggle toggle)
             {
+                toggle.RegisterValueChangedCallback(evt => prop.Setter(evt.newValue));
                 cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(toggle, provider, prop.Name,
                     _undoRedoManager, _UIStatusManager, () => prop.Setter(toggle.value)));
             }

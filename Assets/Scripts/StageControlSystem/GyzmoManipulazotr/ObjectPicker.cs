@@ -1,5 +1,4 @@
 ﻿using Assets.Scripts.CustomEventBus;
-using Assets.Scripts.CustomEventBus.Signals.Manipulator;
 using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
@@ -7,20 +6,30 @@ using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
-using Assets.Scripts.SystemManager;
 using System;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static UnityEngine.Rendering.VirtualTexturing.Debugging;
 
+/// <summary>
+/// Компонент для выбора объектов на сцене с помощью мыши.
+/// Отвечает за пикинг объектов, управление манипулятором (гиджмо) и обработку пользовательского ввода.
+/// Интегрируется с системами Undo/Redo и PropertyProvider.
+/// </summary>
 public class ObjectPicker : MonoBehaviour
 {
     public UIDocument root;
-    public GyzmoManupulator manipulator;
+    /// <summary>
+    /// Гизмо-манипулятор для перемещения/вращения объектов.
+    /// </summary>
+    public GizmoManupulator manipulator;
+    /// <summary>
+    /// Текущая активная рукоятка манипулятора (ось, за которую тянет пользователь).
+    /// </summary>
     private AxisHandle currentHandle;
-    //[SerializeField] private UIBlocker uIBlocker;
-    //public PropertiesPanelEvents propertiesPanel;
     private UIStatusManager _uiStatusManager;
+    /// <summary>
+    /// Провайдер свойств текущего выбранного объекта.
+    /// </summary>
     private IPropertyProvider currentProvider;
     private Vector3 startPos;
     private Vector3 startRot;
@@ -28,7 +37,11 @@ public class ObjectPicker : MonoBehaviour
     private SceneObjectsManager _sceneObjectsManager;
     private UndoRedoManager _undoRedoManager;
     private SceneManipulatorModeManager _manipulatorModeManager;
-    //public bool IsDraggingManipulator => currentHandle != null;
+
+    /// <summary>
+    /// Инициализация компонента при старте.
+    /// Подписывается на события, получает необходимые сервисы, настраивает манипулятор.
+    /// </summary>
     private void Start()
     {
         _eventBus = ServiceManager.Current.Get<EventBus>();
@@ -48,80 +61,12 @@ public class ObjectPicker : MonoBehaviour
             manipulator.OnDragStart += Manipulator_OnDragStart;
         }
     }
-
-    private void OnExecuteCommand(ExecuteCommandSignal signal)
-    {
-        if (signal.Command is IDestructiveCommand)
-        {
-            UnpickObject();
-        }
-    }
-
-    private void OnUndoneCommand(UndoneCommandSignal signal)
-    {
-        if (signal.Command is IDestructiveCommand)
-        {
-            UnpickObject();
-        }
-    }
-
-    private void OnUnpickObject(UnpickObjectSignal signal)
-    {
-        UnpickObject();
-    }
-
-    private void OnPickObject(PickObjectSignal signal)
-    {
-        PickObject(signal.Object.Reference);
-       
-    }
-
-    private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
-    {
-
-    }
-
-    private void Manipulator_OnDragStart(Transform obj)
-    {
-        startPos = obj.position;
-        startRot = obj.eulerAngles;
-    }
-
-    private void Manipulator_OnDragEnd(Transform obj)
-    {
-        if (transform == null) return;
-        Vector3 endPos = obj.position;
-        Vector3 endRot = obj.eulerAngles;
-        if (currentProvider != null)
-        {
-            if (startPos != endPos)
-            {
-                _undoRedoManager.Execute(
-                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.LocalPosition), startPos, endPos)
-                );
-            }
-
-            if (startRot != endRot)
-            {
-                _undoRedoManager.Execute(
-                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Rotation), startRot, endRot)
-                );
-            }
-        }
-
-    }
-
-    private void HandleTransformChanged(Transform transform)
-    {
-        if (transform == null) return;
-
-        if (currentProvider != null)
-            _eventBus.Invoke(new PropertiesTransformUpdateSignal());
-        //propertiesPanel.UpdateTransform(currentProvider);
-    }
-
+    /// <summary>
+    /// Обработка ввода пользователя и выбор объектов каждый кадр.
+    /// </summary>
     private void Update()
     {
+        // В режиме JOG манипулятор полностью отключается
         if (_manipulatorModeManager.Mode == SceneManipulatorMode.JOG)
         {
             manipulator.gameObject.SetActive(false);
@@ -133,6 +78,8 @@ public class ObjectPicker : MonoBehaviour
             if (manipulator.Target != null)
                 manipulator.gameObject.SetActive(true);
         }
+
+        // В режиме камеры нельзя взаимодействовать с объектами
         if (manipulator.CameraModeActive)
         {
             if (currentHandle != null) UnpickObject();
@@ -142,12 +89,12 @@ public class ObjectPicker : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         int manipLayerMask = LayerMask.GetMask("Manipulator");
 
+        // Нажатие левой кнопки мыши
         if (Input.GetMouseButtonDown(0) && !_uiStatusManager.CheckIsOnUI())
         {
-            // Клик по манипулятору
+            // Попытка захватить рукоятку манипулятора
             if (Physics.Raycast(ray, out RaycastHit hitHandle, Mathf.Infinity, manipLayerMask))
             {
-                //Debug.Log(hitHandle.transform.gameObject.name);
                 AxisHandle handle = hitHandle.collider.GetComponent<AxisHandle>();
                 if (handle != null)
                 {
@@ -155,53 +102,48 @@ public class ObjectPicker : MonoBehaviour
                     currentHandle.StartDrag();
                 }
             }
-            // Клик по объекту сцены
             else
             {
-                // ИСПРАВЛЕНИЕ: Используем RaycastAll вместо Raycast
+                // Если не рукоятка - пытаемся выбрать объект на сцене
                 RaycastHit[] hits = Physics.RaycastAll(ray, Mathf.Infinity);
 
                 if (hits.Length > 0)
                 {
-                    // Сортируем по расстоянию (от ближнего к дальнему)
                     Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
-                    // Ищем первый объект с IPropertyProvider
                     foreach (RaycastHit hit in hits)
                     {
-                        // Проверяем, есть ли IPropertyProvider на этом объекте
+                        // Ищем компонент IPropertyProvider на объекте или его родителе
                         IPropertyProvider provider = hit.collider.GetComponentInParent<IPropertyProvider>();
                         if (provider != null)
                         {
-                            // Получаем Transform с провайдером
                             Transform providerTransform = (provider as MonoBehaviour)?.transform;
 
                             if (providerTransform != null)
                             {
                                 currentProvider = provider;
-                                //var a = _sceneObjectsManager.GetById(currentProvider.Id);
                                 _eventBus.Invoke(new SelectObjectInScene(currentProvider.Id));
                                 _eventBus.Invoke(new ChangePropertiesProviderSignal(provider));
-                                //propertiesPanel.ShowPanel();
-                                //propertiesPanel.ShowProperties(provider);
                                 PickObject(providerTransform.gameObject);
-                                break; // Выходим после нахождения первого подходящего объекта
+                                break;
                             }
                         }
                     }
                 }
                 else
                 {
-                    if(!_uiStatusManager.isPointerOverUI)
+                    // Если кликнули в пустоту - снимаем выделение
+                    if (!_uiStatusManager.isPointerOverUI)
                         manipulator.Detach();
                 }
             }
         }
 
+        // Обновление позиции при зажатой кнопке
         if (Input.GetMouseButton(0) && currentHandle != null)
             currentHandle.UpdateDrag();
 
-        // Отпускание
+        // Отпускание рукоятки
         if (Input.GetMouseButtonUp(0) && currentHandle != null)
         {
             currentHandle.EndDrag();
@@ -209,18 +151,120 @@ public class ObjectPicker : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Обработчик выполнения команды.
+    /// Если команда деструктивная (удаление объекта) - снимаем выделение.
+    /// </summary>
+    /// <param name="signal">Сигнал о выполнении команды</param>
+    private void OnExecuteCommand(ExecuteCommandSignal signal)
+    {
+        if (signal.Command is IDestructiveCommand)
+        {
+            UnpickObject();
+        }
+    }
+
+    /// <summary>
+    /// Обработчик отмены команды.
+    /// Если команда деструктивная - снимаем выделение.
+    /// </summary>
+    /// <param name="signal">Сигнал об отмене команды</param>
+    private void OnUndoneCommand(UndoneCommandSignal signal)
+    {
+        if (signal.Command is IDestructiveCommand)
+        {
+            UnpickObject();
+        }
+    }
+
+    /// <summary>
+    /// Обработчик сигнала снятия выделения.
+    /// </summary>
+    /// <param name="signal">Сигнал снятия выделения</param>
+    private void OnUnpickObject(UnpickObjectSignal signal)
+    {
+        UnpickObject();
+    }
+
+    /// <summary>
+    /// Обработчик сигнала выбора объекта.
+    /// </summary>
+    /// <param name="signal">Сигнал с данными об объекте</param>
+    private void OnPickObject(PickObjectSignal signal)
+    {
+        PickObject(signal.Object.Reference); 
+    }
+
+    /// <summary>
+    /// Обработчик начала перетаскивания объекта.
+    /// Сохраняет начальные позицию и поворот для Undo/Redo.
+    /// </summary>
+    /// <param name="obj">Transform перемещаемого объекта</param>
+    private void Manipulator_OnDragStart(Transform obj)
+    {
+        startPos = obj.position;
+        startRot = obj.eulerAngles;
+    }
+
+    /// <summary>
+    /// Обработчик окончания перетаскивания объекта.
+    /// Создает команды Undo/Redo для изменений позиции и поворота.
+    /// </summary>
+    /// <param name="obj">Transform перемещенного объекта</param>
+    private void Manipulator_OnDragEnd(Transform obj)
+    {
+        if (transform == null) return;
+        Vector3 endPos = obj.position;
+        Vector3 endRot = obj.eulerAngles;
+        if (currentProvider != null)
+        {
+            // Если позиция изменилась - создаем команду для Undo/Redo
+            if (startPos != endPos)
+            {
+                _undoRedoManager.Execute(
+                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.LocalPosition), startPos, endPos)
+                );
+            }
+            // Если позиция изменилась - создаем команду для Undo/Redo
+            if (startRot != endRot)
+            {
+                _undoRedoManager.Execute(
+                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Rotation), startRot, endRot)
+                );
+            }
+        }
+
+    }
+
+    /// <summary>
+    /// Обработчик изменения трансформации объекта.
+    /// Уведомляет подписчиков об обновлении свойств объекта.
+    /// </summary>
+    /// <param name="transform">Transform измененного объекта</param>
+    private void HandleTransformChanged(Transform transform)
+    {
+        if (transform == null) return;
+
+        if (currentProvider != null)
+            _eventBus.Invoke(new PropertiesTransformUpdateSignal());
+    }
+
+    /// <summary>
+    /// Выбирает объект на сцене и активирует манипулятор.
+    /// </summary>
+    /// <param name="gameObject">GameObject для выбора</param>
     public void PickObject(GameObject gameObject)
     {
         manipulator.gameObject.SetActive(true);
         IPropertyProvider provider = null;
         GameObject target = gameObject;
 
-        // Ищем провайдер на самом объекте
         if (!target.TryGetComponent<IPropertyProvider>(out provider))
         {
             Debug.LogWarning($"На объекте {target.name} нет IPropertyProvider");
             return;
         }
+        // Поиск SceneObject для определения типа
         SceneObject obj;
         var marker = gameObject.GetComponent<SceneObjectMarker>();
         if(marker.type == ObjectType.LinearMoveCommand)
@@ -231,6 +275,7 @@ public class ObjectPicker : MonoBehaviour
         {
             obj = _sceneObjectsManager.GetById(provider.Id);
         }
+        // Если найден объект-команда - уведомляем о выборе команды
         if (obj != null)
         {
             if (obj.Type == ObjectType.LinearMoveCommand)
@@ -239,6 +284,7 @@ public class ObjectPicker : MonoBehaviour
             }
         }
         currentProvider = provider;
+        // Прикрепляем манипулятор к объекту (с учетом типа объекта)
         if (obj.Type == ObjectType.Node)
         {
             manipulator.AttachNode(gameObject.transform);
@@ -246,19 +292,23 @@ public class ObjectPicker : MonoBehaviour
         else
         {
             manipulator.Attach(gameObject.transform);
-        }
-       
-        
+        }    
     }
+
+    /// <summary>
+    /// Снимает выделение с текущего объекта.
+    /// </summary>
     public void UnpickObject()
     {
         manipulator.Detach();
     }
 
+    /// <summary>
+    /// Возвращает текущий режим манипулятора.
+    /// </summary>
+    /// <returns>Текущий режим (Move/Rotate)</returns>
     public IManipulatorMode GetManipulatorMode()
     {
         return manipulator.CurrentManipulatorMode;
     }
 }
-
-

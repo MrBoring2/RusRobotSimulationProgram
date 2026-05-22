@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 public class MoveMode : IManipulatorMode
 {
-    public void OnObjectSelected(Transform target, GyzmoManupulator manipulator) { }
+    public void OnObjectSelected(Transform target, GizmoManupulator manipulator) { }
 
     public void OnHandleDown(AxisHandle handle) { }
 

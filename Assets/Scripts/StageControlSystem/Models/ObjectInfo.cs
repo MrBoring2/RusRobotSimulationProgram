@@ -91,6 +91,8 @@ public class RobotCommandsData
 public class ProgramData
 {
     public string ProgramId;
+    public SerializableTransform Position;
+    public SerializableQuaternion Rotation;
     public List<CommandSaveData> Commands = new List<CommandSaveData>();
 }
 
@@ -102,6 +104,8 @@ public class CommandSaveData
     public string SourcePath;
     public ObjectType CommandType;
     public ProviderSaveData ProviderData;
+    public SerializableTransform Position;
+    public SerializableQuaternion Rotation;
 }
 
 [System.Serializable]

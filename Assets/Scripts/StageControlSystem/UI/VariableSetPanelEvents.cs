@@ -2,12 +2,9 @@
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using Assets.UI.CustomElements;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine.UIElements;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace Assets.Scripts.UI
 {

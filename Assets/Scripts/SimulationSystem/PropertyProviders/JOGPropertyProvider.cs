@@ -124,42 +124,7 @@ namespace Assets.Scripts.Providers
                 () => VerificationAngles,
                 val => VerificationAngles = (bool)val
                 ),
-                new CustomProperty("J1Angle",
-                "Ось 1",
-                typeof(float),
-                () => J1Angle,
-                val =>J1Angle = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f)),
-                new CustomProperty("J2Angle",
-                "Ось 2",
-                typeof(float),
-                () => J1Angle,
-                val => J2Angle = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f)),
-                new CustomProperty("J3Angle",
-                "Ось 3",
-                typeof(float),
-                () => J3Angle,
-                val =>J3Angle = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f)),
-                new CustomProperty("J4Angle",
-                "Ось 4",
-                typeof(float),
-                () => J4Angle,
-                val =>J4Angle = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f)),
-                new CustomProperty("J5Angle",
-                "Ось 5",
-                typeof(float),
-                () => J5Angle,
-                val =>J5Angle = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f)),
-                new CustomProperty("J6Angle",
-                "Ось 6",
-                typeof(float),
-                () => J6Angle,
-                val =>J6Angle = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f))
+                
             };
 
             return list;

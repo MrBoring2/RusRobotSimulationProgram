@@ -1012,7 +1012,9 @@ public class HierarchyPanelEvents : MonoBehaviour
         MainHierarchyItem.ClearContent(true);
         elementCache.Clear();
         var rootObjects = _sceneObjectManager.GetGameObjectsList()
-                              .Where(o => string.IsNullOrEmpty(o.ParentId));
+                              .Where(o => string.IsNullOrEmpty(o.ParentId) && o.Type != ObjectType.Program &&
+                              o.Type != ObjectType.LinearMoveCommand && o.Type != ObjectType.StateEndEffectorCommand &&
+                              o.Type != ObjectType.WaitCommand);
 
         foreach (var item in rootObjects)
         {
