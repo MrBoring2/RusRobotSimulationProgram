@@ -42,6 +42,8 @@ public class BinarySaveLoadProvider : ISaveLoadProvider
             {
                 var programData = new ProgramData();
                 programData.ProgramId = program.Id;
+                programData.Position = new SerializableTransform(program.Reference.transform.localPosition);
+                programData.Rotation = new SerializableQuaternion(program.Reference.transform.localRotation);
 
                 foreach (var cmd in program.Items)
                 {
@@ -54,6 +56,8 @@ public class BinarySaveLoadProvider : ISaveLoadProvider
                         Name = cmdProvider.Name,
                         CommandType = cmd.Type,
                         SourcePath = cmdMarker.sourcePath,
+                        Position = new SerializableTransform(cmdProvider.LocalPosition), 
+                        Rotation = new SerializableQuaternion(Quaternion.Euler(cmdProvider.Rotation)),
                         ProviderData = cmdProvider.CaptureCustomState()
                     };
                     programData.Commands.Add(cmdSaveData);

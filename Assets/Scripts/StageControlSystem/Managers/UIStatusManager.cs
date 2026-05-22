@@ -23,6 +23,7 @@ namespace Assets.Scripts.Managers
         public bool isPointerOverUI { get; private set; }
         public bool isInputMode { get; private set; }
         private EventBus _eventBus;
+        public bool AnyHandleDragging { get; private set; } = false;
         public void Init()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
@@ -67,7 +68,10 @@ namespace Assets.Scripts.Managers
             }
             return false;
         }
-
+        public void SetHandleDragging(bool isDragging)
+        {
+            AnyHandleDragging = isDragging;
+        }
         public void SetInputMode(bool isInputMode)
         {
             this.isInputMode = isInputMode;

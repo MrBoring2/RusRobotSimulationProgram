@@ -40,7 +40,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
 
             if (type.IsEnum)
                 return CreateEnumField(property, (Enum)currentValue, out setValue, out getValue, out fieldElement);
-            
+
             if (type == typeof(Color))
             {
                 return CreateColorField(property, (Color)(currentValue ?? Color.white), out setValue, out getValue, out fieldElement);
@@ -53,6 +53,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
             out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
         {
             var container = new VisualElement();
+            container.AddToClassList("custom-slider");
             container.AddToClassList("base-property");
             container.Add(new Label(prop.DisplayName));
 
@@ -76,7 +77,11 @@ namespace Assets.Scripts.StageControlSystem.Utils
             //    }
             //});
 
-            slider.RegisterValueChangedCallback(evt => floatField.SetValueWithoutNotify(evt.newValue));
+            slider.RegisterValueChangedCallback(evt =>
+            {
+                floatField.SetValueWithoutNotify(evt.newValue);
+                prop.Setter(evt.newValue);
+            });
             floatField.RegisterValueChangedCallback(evt => slider.SetValueWithoutNotify(evt.newValue));
 
             row.Add(slider);
@@ -86,6 +91,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
             setValue = val => { floatField.value = (float)val; slider.value = (float)val; };
             getValue = () => floatField.value;
             fieldElement = floatField;
+            fieldElement.name = "slider-field";
             return container;
         }
 
@@ -162,10 +168,12 @@ namespace Assets.Scripts.StageControlSystem.Utils
    out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
         {
             var container = new VisualElement();
+       
             container.AddToClassList("base-property");
             container.Add(new Label(prop.DisplayName));
 
             var dropdown = new DropdownField(options.ToList(), 0);
+            dropdown.AddToClassList("custom-dropdown");
             var currentStr = current?.ToString() ?? "";
             var index = Array.FindIndex(values, v => v?.ToString() == currentStr);
             if (index >= 0) dropdown.index = index;

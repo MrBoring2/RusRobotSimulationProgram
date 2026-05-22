@@ -347,7 +347,7 @@ namespace Assets.Scripts.Managers
                             var cmdPrefab = Resources.Load<GameObject>(cmdSaveData.SourcePath);
                             if (cmdPrefab == null) continue;
 
-                            var cmd = CreateCommand(cmdPrefab, Vector3.zero, Quaternion.identity,
+                            var cmd = CreateCommand(cmdPrefab, cmdSaveData.Position.ToVector3(), cmdSaveData.Rotation.ToQuaternion(),
                                     cmdSaveData.CommandType, cmdSaveData.Id, program.Id) as CommandObject;
 
                             if (cmd != null)
