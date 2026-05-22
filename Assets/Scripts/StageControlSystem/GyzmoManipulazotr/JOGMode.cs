@@ -138,7 +138,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
             else
                 cursorAngleText.color = Color.white;
         }
-        public void OnObjectSelected(Transform target, GyzmoManupulator manupulator)
+        public void OnObjectSelected(Transform target, GizmoManupulator manupulator)
         {
             targetTransform = target;
             if (manupulator != null)

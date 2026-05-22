@@ -1,18 +1,18 @@
 ﻿using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomServiceManager;
-using Assets.Scripts.Models;
 using SFB;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Scripts.Managers
 {
+    /// <summary>
+    /// Менеджер сохранения и загрузки сцены.
+    /// Отвечает за сохранение состояния сцены в файл и восстановление из файла.
+    /// Использует провайдер сохранения (например, BinarySaveLoadProvider) для фактической сериализации.
+    /// Реализует интерфейс IService для интеграции с ServiceManager.
+    /// </summary>
     public class SaveLoadManager: MonoBehaviour, IService
     {
         private string savePath = "";
@@ -20,6 +20,10 @@ namespace Assets.Scripts.Managers
         private EventBus _eventBus;
         private UndoRedoManager _undoRedoManager;
         private SceneObjectsManager _sceneObjectManager;
+        /// <summary>
+        /// Инициализация менеджера сохранения/загрузки.
+        /// Создает провайдер сохранения и получает необходимые сервисы.
+        /// </summary>
         public void Init()
         {
             saveLoadProvider = new BinarySaveLoadProvider();
@@ -27,10 +31,19 @@ namespace Assets.Scripts.Managers
             _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
         }
+        /// <summary>
+        /// Устанавливает путь для сохранения (если путь уже известен).
+        /// </summary>
+        /// <param name="path">Путь к файлу сохранения</param>
         public void SetSavePath(string path)
         {
             savePath = path;
         }
+
+        /// <summary>
+        /// Загружает сцену из файла.
+        /// Открывает диалог выбора файла и загружает выбранную сцену.
+        /// </summary>
         public void LoadScene()
         {
             var extentionsList = new[]
@@ -39,6 +52,12 @@ namespace Assets.Scripts.Managers
             };
             StandaloneFileBrowser.OpenFilePanelAsync("Выберите файл", "", extentionsList, false, OnSceneFileSelected);
         }
+
+        /// <summary>
+        /// Сохраняет текущую сцену в файл.
+        /// Если путь сохранения уже установлен - сохраняет без диалога.
+        /// Иначе открывает диалог выбора места сохранения.
+        /// </summary>
         public void SaveScene()
         {
             if (!string.IsNullOrEmpty(savePath))
@@ -65,7 +84,11 @@ namespace Assets.Scripts.Managers
                               _sceneObjectManager.PLCData);
             });
         }
-
+        /// <summary>
+        /// Обработчик выбора файла в диалоге загрузки.
+        /// Выполняет загрузку и восстановление сцены из выбранного файла.
+        /// </summary>
+        /// <param name="paths">Массив выбранных путей (обычно один файл)</param>
         private void OnSceneFileSelected(string[] paths)
         {
             if (paths == null || paths.Length == 0)
@@ -88,12 +111,7 @@ namespace Assets.Scripts.Managers
                 {
                     _sceneObjectManager.SetPLCData(loaded.PLCData);
                 }
-                // hierarchyPanelEvents.LoadHierarchy();
                 _sceneObjectManager.SpawnRestoredObjects(loaded.objectsData, loaded.CommandsData);
-                //foreach (var data in loaded.objectsData)
-                //{
-                //    SpawnRestoredObject(data);
-                //}
                 
                 _eventBus.Invoke(new LoadObjectsSignal(_sceneObjectManager.GetGameObjectsList()));
             }
@@ -102,15 +120,13 @@ namespace Assets.Scripts.Managers
                 _undoRedoManager.EndExternalOperation();
             }
         }
-
+        /// <summary>
+        /// Очищает сцену.
+        /// </summary>
+        /// <param name="spawnFloor">Создать ли пол после очистки</param>
         public void ClearScene(bool spawnFloor = true)
         {
-            //var itemsToDelete = new List<GameObject>(hierarchyPanelEvents.Items.Select(item => item.Reference));
             _sceneObjectManager.ClearScene(spawnFloor);
-            //foreach (var gameObject in _sceneObjectManager.GetGameObjectsList())
-            //{
-            //    _sceneObjectManager.Remove(gameObject.Id);
-            //}
         }
     }
 }

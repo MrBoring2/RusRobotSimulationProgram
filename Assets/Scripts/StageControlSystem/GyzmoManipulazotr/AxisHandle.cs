@@ -10,7 +10,7 @@ public class AxisHandle : MonoBehaviour
     public HandleType type;
     public Vector3 direction;    
     public Vector3 planeNormal;  
-    public GyzmoManupulator manipulator;
+    public GizmoManupulator manipulator;
 
     private bool dragging;
     private Vector3 dragStartPos;

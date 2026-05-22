@@ -8,17 +8,32 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+/// <summary>
+/// Режим системы координат для гиджмо (манипулятора).
+/// Local - локальные оси выбранного объекта.
+/// Global - глобальные оси мира.
+/// </summary>
 public enum AxisMode
 {
     Local,
     Global
 }
 
-public class GyzmoManupulator : MonoBehaviour
+/// <summary>
+/// Главный класс манипулятора (гизмо) для перемещения/вращения объектов в 3D пространстве.
+/// Реализует визуальные контроллеры (стрелки, кольца) для трансформации объектов.
+/// Поддерживает разные режимы: Move, Rotate, Drag.
+/// </summary>
+public class GizmoManupulator : MonoBehaviour
 {
+    /// <summary>
+    /// Префаб текстового поля для отображения угла поворота (при вращении).
+    /// </summary>
     public TextMeshPro angleTextPrefab;
+    /// <summary>
+    /// Текущий целевой объект, которым управляет манипулятор.
+    /// </summary>
     private Transform _targer;
-    // public Transform Target { get; private set; }
     public Transform Target
     { 
         get => _targer;
@@ -27,16 +42,20 @@ public class GyzmoManupulator : MonoBehaviour
             _targer = value;
         }
     }
+    /// <summary>
+    /// Текущий режим манипулятора (Move/Rotate).
+    /// </summary>
     public IManipulatorMode CurrentManipulatorMode { get; private set; }
+    /// <summary>
+    /// Текущий режим системы координат (Local/Global).
+    /// </summary>
     public AxisMode? CurrentAxisMode => _axisModeManager?.Mode;
     public bool CameraModeActive { get; private set; } = false;
     public GameObject moveHandlesGroup;
     public GameObject rotateHandlesGroup;
     private SceneManipulatorModeManager _manipulatorModeManager;
-
     public Camera cam;
     public float gizmoScaleKoeficient = 0.1f;
-
     public Transform gizmoRoot;
     [HideInInspector] public Quaternion gizmoRootStartRotation;
     public event Action<Transform> OnTargetTransformChanged;
@@ -46,21 +65,37 @@ public class GyzmoManupulator : MonoBehaviour
     private AxisModeManager _axisModeManager;
     public SceneManipulatorMode CurrentSceneMode => _manipulatorModeManager.Mode;
 
+    /// <summary>
+    /// Уведомляет подписчиков об изменении трансформации целевого объекта.
+    /// </summary>
     public void NotifyTransformChanged()
     {
         if (Target != null)
             OnTargetTransformChanged?.Invoke(Target);
     }
+
+    /// <summary>
+    /// Уведомляет подписчиков о начале перетаскивания гиджмо.
+    /// </summary>
     public void NotifyStartDrag()
     {
         if (Target != null)
             OnDragStart?.Invoke(Target);
     }
+
+    /// <summary>
+    /// Уведомляет подписчиков об окончании перетаскивания гиджмо.
+    /// </summary>
     public void NotifyDragEnd()
     {
         if (Target != null)
             OnDragEnd?.Invoke(Target);
     }
+
+    /// <summary>
+    /// Вызывается при создании компонента.
+    /// Создает корневой объект для гиджмо и настраивает иерархию.
+    /// </summary>
     private void Awake()
     {
         gizmoRoot = new GameObject("GizmoRoot").transform;
@@ -70,6 +105,10 @@ public class GyzmoManupulator : MonoBehaviour
         rotateHandlesGroup.transform.SetParent(gizmoRoot, true);
     }
 
+    /// <summary>
+    /// Вызывается при старте компонента.
+    /// Инициализирует сервисы, подписывается на события и настраивает начальное состояние.
+    /// </summary>
     private void Start()
     {
         _eventBus = ServiceManager.Current.Get<EventBus>();
@@ -85,29 +124,10 @@ public class GyzmoManupulator : MonoBehaviour
         SetAxisMode(AxisMode.Global);
     }
 
-    private void OnSetAxisMode(SetAxisModeSignal signal)
-    {
-        SetAxisMode(signal.Mode);
-    }
-
-    private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
-    {
-        SetManipulatorMode(signal.Mode);
-
-        //CurrentManipulatorMode = ;
-    }
-    private bool IsNode(Transform t)
-    {
-        if (t.TryGetComponent<IPropertyProvider>(out var provider))
-        {
-            var obj = ServiceManager.Current
-                .Get<SceneObjectsManager>()
-                .GetById(provider.Id);
-
-            return obj != null && obj.Type == ObjectType.Node;
-        }
-        return false;
-    }
+    /// <summary>
+    /// Вызывается каждый кадр.
+    /// Обновляет позицию и масштаб гиджмо в зависимости от целевого объекта.
+    /// </summary>
     private void Update()
     {
         if (Target != null)
@@ -132,6 +152,47 @@ public class GyzmoManupulator : MonoBehaviour
         UpdateHandlesOrientation();
     }
 
+    /// <summary>
+    /// Обработчик сигнала смены режима осей.
+    /// </summary>
+    /// <param name="signal">Сигнал с новым режимом</param>
+    private void OnSetAxisMode(SetAxisModeSignal signal)
+    {
+        SetAxisMode(signal.Mode);
+    }
+
+    /// <summary>
+    /// Обработчик сигнала смены режима манипулятора.
+    /// </summary>
+    /// <param name="signal">Сигнал с новым режимом</param>
+    private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
+    {
+        SetManipulatorMode(signal.Mode);
+    }
+
+    /// <summary>
+    /// Проверяет, является ли объект узлом (Node).
+    /// Узлы имеют особое поведение - гизмо центрируется по геометрическому центру.
+    /// </summary>
+    /// <param name="t">Transform проверяемого объекта</param>
+    /// <returns>True, если объект является узлом</returns>
+    private bool IsNode(Transform t)
+    {
+        if (t.TryGetComponent<IPropertyProvider>(out var provider))
+        {
+            var obj = ServiceManager.Current
+                .Get<SceneObjectsManager>()
+                .GetById(provider.Id);
+
+            return obj != null && obj.Type == ObjectType.Node;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Прикрепляет манипулятор к указанному объекту.
+    /// </summary>
+    /// <param name="t">Transform целевого объекта</param>
     public void Attach(Transform t)
     {
         Target = t;
@@ -139,6 +200,11 @@ public class GyzmoManupulator : MonoBehaviour
 
         CurrentManipulatorMode?.OnObjectSelected(Target, this);
     }
+
+    /// <summary>
+    /// Прикрепляет манипулятор к узлу с центрированием по геометрическому центру.
+    /// </summary>
+    /// <param name="nodeRoot">Корневой Transform узла</param>
     public void AttachNode(Transform nodeRoot)
     {
         Target = nodeRoot;
@@ -148,6 +214,12 @@ public class GyzmoManupulator : MonoBehaviour
 
         CurrentManipulatorMode?.OnObjectSelected(Target, this);
     }
+
+    /// <summary>
+    /// Вычисляет геометрический центр объекта на основе всех его Renderer'ов.
+    /// </summary>
+    /// <param name="root">Корневой объект</param>
+    /// <returns>Центр ограничивающего бокса всех визуальных компонентов</returns>
     public Vector3 CalculateGeometricCenter(Transform root)
     {
         Renderer[] renderers = root.GetComponentsInChildren<Renderer>();
@@ -165,18 +237,28 @@ public class GyzmoManupulator : MonoBehaviour
         return bounds.center;
     }
 
+    /// <summary>
+    /// Открепляет манипулятор от текущего объекта.
+    /// </summary>
     public void Detach()
     {
         Target = null;
         gameObject.SetActive(false);
     }
 
-
+    /// <summary>
+    /// Устанавливает режим манипулятора в режим камеры.
+    /// </summary>
     public void SetManipulatorModeCamera()
     {
         SetManipulatorMode(SceneManipulatorMode.Drag);
         CameraModeActive = true;
     }
+
+    /// <summary>
+    /// Устанавливает режим манипулятора (Move, Rotate и т.д.).
+    /// </summary>
+    /// <param name="mode">Новый режим манипуляции</param>
     public void SetManipulatorMode(SceneManipulatorMode mode)
     {
         IManipulatorMode manipulatorMode = null;
@@ -190,7 +272,7 @@ public class GyzmoManupulator : MonoBehaviour
                 break;
             case SceneManipulatorMode.Rotation:
                 var rotateMode = new RotateMode();
-                rotateMode.cursorAngleText = angleTextPrefab; // angleTextPrefab — это уже TextMeshProUGUI на Canvas
+                rotateMode.cursorAngleText = angleTextPrefab;
                 rotateMode.cursorAngleText.gameObject.SetActive(false);
                 manipulatorMode = rotateMode;
                 break;
@@ -211,51 +293,44 @@ public class GyzmoManupulator : MonoBehaviour
             manipulatorMode.OnObjectSelected(Target, this);
     }
 
+    /// <summary>
+    /// Устанавливает режим системы координат (Local/Global).
+    /// </summary>
+    /// <param name="mode">Новый режим осей</param>
     public void SetAxisMode(AxisMode mode)
     {
-        //if (_axisModeManager.Mode == mode) return;
-        //if (CurrentAxisMode == mode) return;
-
-        //CurrentAxisMode = mode;
-
         if (Target == null) return;
 
         if (mode == AxisMode.Local)
         {
-            // локальные оси сразу повторяют объект
             gizmoRoot.rotation = Target.rotation;
         }
         else
         {
-            // глобальные оси: сразу выставляем мировую ориентацию
             gizmoRoot.rotation = Quaternion.identity;
-            gizmoRootStartRotation = gizmoRoot.rotation; // сохраняем стартовую мировую ориентацию для RotateMode
+            gizmoRootStartRotation = gizmoRoot.rotation;
         }
     }
 
+    /// <summary>
+    /// Обновляет ориентацию визуальных элементов гиджмо.
+    /// Учитывает текущий режим осей и начальное вращение.
+    /// </summary>
     private void UpdateHandlesOrientation()
     {
         if (Target == null) return;
 
-        //if (CurrentAxisMode == AxisMode.Local)
         if (_axisModeManager.Mode == AxisMode.Local)
         {
             gizmoRoot.rotation = Target.rotation;
-            // привязка moveHandles и plane к локальной системе объекта
             moveHandlesGroup.transform.localRotation = Quaternion.identity;
         }
         else
         {
-            // глобальный: сохраняем начальное вращение и не сбрасываем каждую итерацию
-            // только если ещё не сохранено
             if (gizmoRootStartRotation == Quaternion.identity)
                 gizmoRootStartRotation = gizmoRoot.rotation;
 
-            //gizmoRoot.rotation = gizmoRootStartRotation;
-
-            // привязка moveHandles и plane к глобальной системе
             moveHandlesGroup.transform.rotation = Quaternion.identity;
-            // не трогаем rotation, оставляем его под контролем RotateMode
         }
     }
 }
