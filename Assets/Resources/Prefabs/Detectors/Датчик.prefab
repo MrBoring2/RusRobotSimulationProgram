@@ -123,6 +123,7 @@ GameObject:
   - component: {fileID: 8647271295263513477}
   - component: {fileID: 5973368843420997083}
   - component: {fileID: 5027335590700143128}
+  - component: {fileID: 2113735018453541689}
   m_Layer: 0
   m_Name: "\u0414\u0430\u0442\u0447\u0438\u043A"
   m_TagString: SceneObject
@@ -180,6 +181,20 @@ MonoBehaviour:
   OnColor: {r: 0, g: 1, b: 0, a: 1}
   _showVisualization: 1
   _visualizationMaterial: {fileID: 0}
+--- !u!114 &2113735018453541689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3209837568296697311}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6128efd719aa587459e64f4f9b065df7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
+  type: 13
+  sourcePath: "Prefabs/Detectors/\u0414\u0430\u0442\u0447\u0438\u043A"
 --- !u!1 &8643859793018620491
 GameObject:
   m_ObjectHideFlags: 0
