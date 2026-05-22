@@ -25,8 +25,6 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float[] ChangeAngles = new float[6] { 0, 0, 0, 0, 0, 0 };
     //=================== ПАРАМЕТРЫ ===================
 
-
-
     /// <summary>
     /// Углы обновляемы кажды кадр
     /// </summary>
@@ -36,7 +34,10 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J4Angle { get; set; } = 0;
     public float J5Angle { get; set; } = 0;
     public float J6Angle { get; set; } = 0;
-
+    public float[] GetAnglesAnim()
+    {
+        return new float[] { J1Angle, J2Angle, J3Angle, J4Angle, J5Angle, J6Angle };
+    }
 
     /// <summary>
     /// Параметры звеньев робота

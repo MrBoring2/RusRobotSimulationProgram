@@ -11,13 +11,13 @@ public class SensorDevice : CellDeviceBase
     public GameObject MeshSensor;
     public GameObject LedSensor;
 
-
     private void Start()
     {
         base.Start();
         _propertyProvider = GetComponent<SensorPropertyProvider>();
         DetectObjectCollider = DetectObject.GetComponent<Collider>();
         DetectObjectmeshRenderer = DetectObject.GetComponent<MeshRenderer>();
+        DetectObject.GetComponent<Collider>().isTrigger = true;
     }
 
     void UpdateVisualization()
@@ -65,11 +65,21 @@ public class SensorDevice : CellDeviceBase
         Collider[] colliders = Physics.OverlapBox(
             DetectObjectCollider.bounds.center,
             DetectObjectCollider.bounds.extents,
-            DetectObjectCollider.transform.rotation,
-            LayerMask.GetMask("Detail"),
-            QueryTriggerInteraction.Collide
+            DetectObjectCollider.transform.rotation
         );
-        _propertyProvider.IsActive = colliders.Length > 0;
+        bool detected = false;
+        foreach (var collider in colliders)
+        {
+            GameObject go = collider.gameObject;
+            if (go == MeshSensor ||
+                go == LedSensor ||
+                go == this.gameObject)
+                continue;
+            if (collider.isTrigger) continue; //Игнорируем триггеры
+            detected = true;
+        }
+        _propertyProvider.IsActive = detected;
+
     }
 
     void UpdateSignal()
