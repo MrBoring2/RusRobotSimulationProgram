@@ -36,7 +36,7 @@ public class RobotCollisionController : MonoBehaviour
     public List<string> TestList = new();
 
     private Dictionary<GameObject, List<GameObject>> collisionObjects = new();
-    private Dictionary<string, List<string>> stringCollisionObjects = new();
+    public Dictionary<string, List<string>> stringCollisionObjects = new();
     
     private EventBus _eventBus;
     private NotificationSystemManager _notification;

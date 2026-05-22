@@ -53,6 +53,9 @@ public class RobotPropertyProvider : BasePropertyProvider
 
     //JOG
     public JOGPropertyProvider JOGpoint;
+    //Коллизии
+    public RobotCollisionController RCC;
+    private Dictionary<string, List<string>> stringCollisionObjects = new();
     //объект находящийся всегда в захвате для расчте прямой кинематики
     public ForwarKinObj _forwarKinObj;
     /// <summary>
@@ -67,6 +70,8 @@ public class RobotPropertyProvider : BasePropertyProvider
     {
         base.Start();
         RobotController = GetComponent<RobotController>();
+        RCC = gameObject.GetComponent<RobotCollisionController>();
+        stringCollisionObjects = RCC.stringCollisionObjects;
         displayScale = false;
     }
 
