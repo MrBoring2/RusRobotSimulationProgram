@@ -19,9 +19,9 @@ public class SimulationManager : MonoBehaviour,IService
     private MODE oldSimulationMode = MODE.PROGRAM_MODE;
     private TimerSimulation TimeSim = new TimerSimulation(); //таймер симуляции
     //========= ПАРАМЕТРЫ =========//
-    private bool AlarmJointCollision = true;
-    private bool AlarmEndEffectorCollicion = true;
-    private bool PauseSimInCol = true;
+    public bool AlarmJointCollision = false;
+    public bool AlarmEndEffectorCollicion = true;
+    public bool PauseSimInCol = true;
     void Start()
     {
         _notification = ServiceManager.Current.Get<NotificationSystemManager>();

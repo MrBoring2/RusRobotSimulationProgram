@@ -14,7 +14,6 @@ public class RobotPropertyProvider : BasePropertyProvider
 
     //=================== ПАРАМЕТРЫ ===================
     public bool EndEffectorOn { get; set; }
-    public float SpeedEffector = 0.5f;
     //ogranicheniya anglesSpeed
     public Angles AnglesSpeedLimit { get; set; } = new(90, 60, 60, 120, 96, 210);
     public Angles AngleAcceler { get; set; } = new(155, 145, 185, 310, 270, 465);
@@ -45,7 +44,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     /// Параметры звеньев робота
     /// </summary>
     public RP RP = new(450, -350, 0, 447, 1150, 1350, 500);
-
+    public float[] AnglesLimit = new[] {-175f,175f,-140f,-20f, -60f, 170f, -360f, 360f, -105f, 105f, -360f, 360f }; 
     public float[] thetha = { 0, 0, 0, 0, 0, 0 };
     public float[] old_thetha = { 0, 90, 90, 0, -90, 0 };
     public float[] step_thetha = { 0, 0, 0, 0, 0, 0 };
@@ -55,7 +54,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     public JOGPropertyProvider JOGpoint;
     //Коллизии
     public RobotCollisionController RCC;
-    private Dictionary<string, List<string>> stringCollisionObjects = new();
+    public Dictionary<string, List<string>> stringCollisionObjects = new();
     //объект находящийся всегда в захвате для расчте прямой кинематики
     public ForwarKinObj _forwarKinObj;
     /// <summary>
@@ -119,37 +118,37 @@ public class RobotPropertyProvider : BasePropertyProvider
                 typeof(float),
                 () => J1AngleUI,
                 val =>J1AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f)),
+                .WithAttribute(new RangeAttribute(AnglesLimit[0], AnglesLimit[1])),
                 new CustomProperty("J2AngleUI",
                 "Ось 2",
                 typeof(float),
                 () => J2AngleUI,
                 val => J2AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f)),
+                .WithAttribute(new RangeAttribute( AnglesLimit[2],  AnglesLimit[3])),
                 new CustomProperty("J3AngleUI",
                 "Ось 3",
                 typeof(float),
                 () => J3AngleUI,
                 val =>J3AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f)),
+                .WithAttribute(new RangeAttribute( AnglesLimit[4],  AnglesLimit[5])),
                 new CustomProperty("J4AngleUI",
                 "Ось 4",
                 typeof(float),
                 () => J4AngleUI,
                 val =>J4AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f)),
+                .WithAttribute(new RangeAttribute( AnglesLimit[6],  AnglesLimit[7])),
                 new CustomProperty("J5AngleUI",
                 "Ось 5",
                 typeof(float),
                 () => J5AngleUI,
                 val =>J5AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f)),
+                .WithAttribute(new RangeAttribute( AnglesLimit[8],  AnglesLimit[9])),
                 new CustomProperty("J6AngleUI",
                 "Ось 6",
                 typeof(float),
                 () => J6AngleUI,
                 val => J6AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute(0f, 360f))
+                .WithAttribute(new RangeAttribute( AnglesLimit[10],  AnglesLimit[11]))
 
         };
     }

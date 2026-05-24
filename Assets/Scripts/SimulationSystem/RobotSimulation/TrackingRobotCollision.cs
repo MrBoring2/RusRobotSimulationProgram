@@ -8,26 +8,27 @@ public class TrackingRobotCollision : MonoBehaviour
     private EventBus _eventBus;
 
     private List<GameObject> collisionObjects = new();
-    public int collisionCount = 0;
+    private void Awake()
+    {
+        _eventBus = ServiceManager.Current.Get<EventBus>();
+    }
     void Start()
     {
-         _eventBus = ServiceManager.Current.Get<EventBus>();
+         
     }
-    void OnCollisionEnter(Collision collision)
+    void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.CompareTag("SceneObject") || collision.gameObject.CompareTag("Составные части робота"))
+        if (other.gameObject.CompareTag("SceneObject") || other.gameObject.CompareTag("Составные части робота"))
         {
-            _eventBus.Invoke(new RobotCollisionEvent(gameObject, collision.gameObject));
-            collisionObjects.Add(collision.gameObject);
-            collisionCount++;
+            _eventBus.Invoke(new RobotCollisionEvent(gameObject, other.gameObject));
+            collisionObjects.Add(other.gameObject);
         }
     }
 
-    void OnCollisionExit(Collision collision)
+    void OnTriggerExit(Collider other)
     {
-        _eventBus.Invoke(new RobotCollisionExitEvent(gameObject, collision.gameObject));
-        collisionObjects.Remove(collision.gameObject);
-        collisionCount--;
+        _eventBus.Invoke(new RobotCollisionExitEvent(gameObject, other.gameObject));
+        collisionObjects.Remove(other.gameObject);
     }
     private void FixedUpdate()
     {
@@ -44,7 +45,6 @@ public class TrackingRobotCollision : MonoBehaviour
     {
         _eventBus.Invoke(new RobotCollisionExitEvent(gameObject, obj.gameObject));
         collisionObjects.Remove(obj);
-        collisionCount--;
     }
 }
 

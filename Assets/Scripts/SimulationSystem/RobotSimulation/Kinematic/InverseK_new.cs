@@ -173,91 +173,91 @@ public class InverseK_new : MonoBehaviour
         }
         return Angles;
     }
-    public float[] CheckLimit(float[] ang)
+    public float[] CheckLimit(float[] ang, float[] AL)
     {
         Angles Ang = new(ang[0], ang[1], ang[2], ang[3], ang[4], ang[5]);
-        CheckLimit(Ang);
+        CheckLimit(Ang, AL);
         return new float[] {Ang.thetha1, Ang.thetha2, Ang.thetha3, Ang.thetha4, Ang.thetha5, Ang.thetha6};
     }
     /// <summary>
     /// ограничение углов в соответствии с техническими характеристиками робота
     /// </summary>
     /// <param name="ang"></param>
-    public bool CheckLimit(Angles ang)
+    public bool CheckLimit(Angles ang, float[] AL)
     {
         bool InLimit = false;
-        if (ang.thetha1 < -175)
+        if (ang.thetha1 < AL[0])
         {
-            ang.thetha1 = -175;
+            ang.thetha1 = AL[0];
             UnityEngine.Debug.LogWarning("ОГР А1");
             InLimit = true;
         }
-        if (ang.thetha1 > 175)
+        if (ang.thetha1 > AL[1])
         {
-            ang.thetha1 = 175;
+            ang.thetha1 = AL[1];
             UnityEngine.Debug.LogWarning("ОГР А1");
             InLimit = true;
         }
-        if (ang.thetha2 > -20)
+        if (ang.thetha2 < AL[2])
         {
-            ang.thetha2 = -20;
+            ang.thetha2 = AL[2];
             UnityEngine.Debug.LogWarning("ОГР А2");
             InLimit = true;
         }
-        if (ang.thetha2 < -140)
+        if (ang.thetha2 > AL[3])
         {
-            ang.thetha2 = -140;
+            ang.thetha2 = AL[3];
             UnityEngine.Debug.LogWarning("ОГР А2");
             InLimit = true;
         }
-        if (ang.thetha3 > 170)
+        if (ang.thetha3 < AL[4])
         {
-            ang.thetha3 = 170;
+            ang.thetha3 = AL[4];
             UnityEngine.Debug.LogWarning("ОГР А3");
             InLimit = true;
         }
-        if (ang.thetha3 < -60)
+        if (ang.thetha3 > AL[5])
         {
-            ang.thetha3 = -60;
+            ang.thetha3 = AL[5];
             UnityEngine.Debug.LogWarning("ОГР А3");
             InLimit = true;
         }
-        /*if (ang.thetha4 < -180)
+        if (ang.thetha4 < AL[6])
         {
-            ang.thetha4 = -180;
+            ang.thetha4 = AL[6];
             UnityEngine.Debug.LogWarning("ОГР А4");
-        InLimit = true;
+            InLimit = true;
         }
-        if (ang.thetha4 > 180)
+        if (ang.thetha4 > AL[7])
         {
-            ang.thetha4 = 180;
+            ang.thetha4 = AL[7];
             UnityEngine.Debug.LogWarning("ОГР А4");
-        InLimit = true;
-        }*/
-        if (ang.thetha5 < -105)
+            InLimit = true;
+        }
+        if (ang.thetha5 < AL[8])
         {
-            ang.thetha5 = -105;
+            ang.thetha5 = AL[8];
             UnityEngine.Debug.LogWarning("ОГР А5");
             InLimit = true;
         }
-        if (ang.thetha5 > 105)
+        if (ang.thetha5 > AL[9])
         {
-            ang.thetha5 = 105;
+            ang.thetha5 = AL[9];
             UnityEngine.Debug.LogWarning("ОГР А5");
             InLimit = true;
         }
-        /*if (ang.thetha6 < -180)
+        if (ang.thetha6 < AL[10])
         {
-            ang.thetha6 = -180;
+            ang.thetha6 = AL[10];
             UnityEngine.Debug.LogWarning("ОГР А6");
-        InLimit = true;
+            InLimit = true;
         }
-        if (ang.thetha6 > 180)
+        if (ang.thetha6 > AL[11])
         {
-            ang.thetha6 = 180;
+            ang.thetha6 = AL[11];
             UnityEngine.Debug.LogWarning("ОГР А6");
-        InLimit = true;
-        }*/
+            InLimit = true;
+        }
         return InLimit;
     }
     /// <summary>
