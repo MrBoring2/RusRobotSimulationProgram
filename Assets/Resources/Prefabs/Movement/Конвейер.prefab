@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1312286132852547010}
   - component: {fileID: 5710620964481233779}
   - component: {fileID: 7239799140904041943}
+  - component: {fileID: 7452993618651780445}
   m_Layer: 0
   m_Name: "\u041A\u043E\u043D\u0432\u0435\u0439\u0435\u0440"
   m_TagString: SceneObject
@@ -65,6 +66,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConvPropertyProvider
   Vector: {x: 0, y: 0, z: 1}
   isAct: 0
+--- !u!114 &7452993618651780445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 350337018619919839}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6128efd719aa587459e64f4f9b065df7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
+  type: 12
+  sourcePath: "Prefabs/Movement/\u041A\u043E\u043D\u0432\u0435\u0439\u0435\u0440"
 --- !u!1 &562670363130499080
 GameObject:
   m_ObjectHideFlags: 0
