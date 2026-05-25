@@ -14,19 +14,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.835182
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.000000004478551
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.52492696
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       propertyPath: m_LocalRotation.x
@@ -38,7 +38,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: -5770634479784780433, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       propertyPath: m_Name
@@ -66,7 +66,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 287b2c2b29976444baf5bfc97f90a2e8, type: 2}
     - target: {fileID: 919132149155446097, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       propertyPath: m_Name
-      value: "\u0437\u0430\u0431\u043E\u0440"
+      value: "\u0417\u0430\u0431\u043E\u0440"
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -74,6 +74,12 @@ PrefabInstance:
     - {fileID: -8700617353114198275, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7501545784298635424}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3647577138917212347}
     - targetCorrespondingSourceObject: {fileID: -5770634479784780433, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5215192715654734049}
@@ -111,6 +117,37 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 6915116930832517723, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
+--- !u!1 &6724146063140848518 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}
+  m_PrefabInstance: {fileID: 5877653699430923991}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7501545784298635424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6724146063140848518}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8001565fa34ecd44380d5c8ea4ec6bb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.StageControlSystem.Providers.PropertyProviders.StaticPropertyProvider
+--- !u!114 &3647577138917212347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6724146063140848518}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6128efd719aa587459e64f4f9b065df7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
+  type: 14
+  sourcePath: "Prefabs/Environment/\u0417\u0430\u0431\u043E\u0440"
 --- !u!1 &9113887504097452984 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -5770634479784780433, guid: 2fe26bc0a2c708d489d4ad3cb5227431, type: 3}

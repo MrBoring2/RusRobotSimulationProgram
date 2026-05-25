@@ -19,7 +19,9 @@ public enum ObjectType
     Workpiece,
     PLC,
     Movement,
-    Detectors
+    Detectors,
+    Environment,
+    Work
 }
 
 [System.Serializable]

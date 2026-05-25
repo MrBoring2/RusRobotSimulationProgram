@@ -28,6 +28,8 @@ public class ObjectsLibraryEvents : BaseModalWindow
         categories.Add("Movement", "Перемещение");
         categories.Add("Workpieces", "Детали");
         categories.Add("Detectors", "Датчики");
+        categories.Add("Work", "Рабочие элементы");
+        categories.Add("Environment", "Окружение");
         categories.Add("Primitive", "Примитивы");     
         categories.Add("General", "Общее");
         foreach (var category in categories.Keys)

@@ -17,7 +17,7 @@ public class AxisHandle : MonoBehaviour
     private Vector3 dragStartMouseWorld;
     private Plane dragPlane;
     [SerializeField] private float highlightMultiplier = 2f;
-    [SerializeField] private float normalAlpha = 0.5f;
+    [SerializeField] private float normalAlpha = 1f;
     [SerializeField] private float highlightAlpha = 1f;
     private Material material;
     private Color originalColor;
@@ -82,7 +82,7 @@ public class AxisHandle : MonoBehaviour
     void SetNormal()
     {
         material.SetColor("_Color", originalColor);
-        material.SetFloat("_AlphaMultiplier", 0.5f);
+        material.SetFloat("_AlphaMultiplier", 0.8f);
         material.renderQueue = 3000;
         material.SetInt("_ZWrite", 0);
     }

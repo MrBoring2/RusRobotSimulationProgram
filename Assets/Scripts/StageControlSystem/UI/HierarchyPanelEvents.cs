@@ -325,6 +325,12 @@ public class HierarchyPanelEvents : MonoBehaviour
             case ObjectType.Workpiece:
                 texture = Resources.Load<Texture2D>("Icons/icon_workpiece");
                 break;
+            case ObjectType.Work:
+                texture = Resources.Load<Texture2D>("Icons/icon_work");
+                break;
+            case ObjectType.Environment:
+                texture = Resources.Load<Texture2D>("Icons/icon_environment");
+                break;
             default:
                 break;
         }

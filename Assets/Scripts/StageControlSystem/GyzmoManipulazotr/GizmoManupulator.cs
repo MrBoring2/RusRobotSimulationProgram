@@ -4,6 +4,7 @@ using Assets.Scripts.CustomEventBus.Signals.Manipulator;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -42,6 +43,8 @@ public class GizmoManupulator : MonoBehaviour
             _targer = value;
         }
     }
+    private Dictionary<Transform, Quaternion> _handlesOriginalRotation = new Dictionary<Transform, Quaternion>();
+    private Dictionary<Transform, Vector3> _handlesOriginalPosition = new Dictionary<Transform, Vector3>();
     /// <summary>
     /// Текущий режим манипулятора (Move/Rotate).
     /// </summary>
@@ -318,19 +321,160 @@ public class GizmoManupulator : MonoBehaviour
     /// </summary>
     private void UpdateHandlesOrientation()
     {
-        if (Target == null) return;
+        if (Target == null || cam == null) return;
 
         if (_axisModeManager.Mode == AxisMode.Local)
         {
             gizmoRoot.rotation = Target.rotation;
-            moveHandlesGroup.transform.localRotation = Quaternion.identity;
         }
         else
         {
-            if (gizmoRootStartRotation == Quaternion.identity)
-                gizmoRootStartRotation = gizmoRoot.rotation;
+            gizmoRoot.rotation = Quaternion.identity;
+            gizmoRootStartRotation = gizmoRoot.rotation;
+        }
 
-            moveHandlesGroup.transform.rotation = Quaternion.identity;
+        foreach (Transform handle in moveHandlesGroup.transform)
+        {
+            AxisHandle axisHandle = handle.GetComponent<AxisHandle>();
+            if (axisHandle == null) continue;
+            if (axisHandle.type == HandleType.Plane) continue;
+
+            if (!_handlesOriginalRotation.ContainsKey(handle))
+            {
+                _handlesOriginalRotation[handle] = handle.localRotation;
+            }
+
+            handle.localRotation = _handlesOriginalRotation[handle];
+
+            Vector3 axisWorldDirection;
+            if (_axisModeManager.Mode == AxisMode.Local && Target != null)
+            {
+                axisWorldDirection = Target.TransformDirection(axisHandle.direction.normalized);
+            }
+            else
+            {
+                axisWorldDirection = axisHandle.direction.normalized;
+            }
+
+            Vector3 handleToCamera = (cam.transform.position - handle.position).normalized;
+
+            float dotProduct = Vector3.Dot(handleToCamera, axisWorldDirection);
+
+            if (dotProduct < 0)
+            {
+                Vector3 rotationAxis;
+
+                if (Mathf.Abs(axisWorldDirection.x) < 0.9f)
+                    rotationAxis = Vector3.Cross(axisWorldDirection, Vector3.right).normalized;
+                else if (Mathf.Abs(axisWorldDirection.y) < 0.9f)
+                    rotationAxis = Vector3.Cross(axisWorldDirection, Vector3.up).normalized;
+                else
+                    rotationAxis = Vector3.Cross(axisWorldDirection, Vector3.forward).normalized;
+
+                handle.Rotate(rotationAxis * 180f, Space.World);
+            }
+        }
+
+        foreach (Transform handle in moveHandlesGroup.transform)
+        {
+            AxisHandle axisHandle = handle.GetComponent<AxisHandle>();
+            if (axisHandle == null) continue;
+            if (axisHandle.type != HandleType.Plane) continue;
+
+            if (!_handlesOriginalRotation.ContainsKey(handle))
+            {
+                _handlesOriginalRotation[handle] = handle.localRotation;
+                _handlesOriginalPosition[handle] = handle.localPosition;
+            }
+
+            handle.localRotation = _handlesOriginalRotation[handle];
+            handle.localPosition = _handlesOriginalPosition[handle];
+
+            Transform arrow1 = null;
+            Transform arrow2 = null;
+
+            foreach (Transform arrow in moveHandlesGroup.transform)
+            {
+                AxisHandle arrowHandle = arrow.GetComponent<AxisHandle>();
+                if (arrowHandle == null || arrowHandle.type == HandleType.Plane) continue;
+
+                if (Vector3.Dot(arrowHandle.direction.normalized, axisHandle.planeNormal.normalized) < 0.1f)
+                {
+                    if (arrow1 == null)
+                        arrow1 = arrow;
+                    else if (arrow2 == null)
+                        arrow2 = arrow;
+                }
+            }
+
+            if (arrow1 != null && arrow2 != null)
+            {
+                Vector3 dir1, dir2;
+                if (_axisModeManager.Mode == AxisMode.Local && Target != null)
+                {
+                    dir1 = Target.TransformDirection(arrow1.GetComponent<AxisHandle>().direction.normalized);
+                    dir2 = Target.TransformDirection(arrow2.GetComponent<AxisHandle>().direction.normalized);
+                }
+                else
+                {
+                    dir1 = arrow1.GetComponent<AxisHandle>().direction.normalized;
+                    dir2 = arrow2.GetComponent<AxisHandle>().direction.normalized;
+                }
+
+                Vector3 arrow1Forward = arrow1.forward;
+                Vector3 arrow2Forward = arrow2.forward;
+
+                float dot1 = Vector3.Dot(arrow1Forward, dir1);
+                float dot2 = Vector3.Dot(arrow2Forward, dir2);
+
+                if (dot1 < 0) dir1 = -dir1;
+                if (dot2 < 0) dir2 = -dir2;
+
+                Vector3 midDirection = (dir1 + dir2).normalized;
+                float originalDistance = _handlesOriginalPosition[handle].magnitude;
+                handle.position = gizmoRoot.position + midDirection * originalDistance;
+            }
+
+            Vector3 axisWorldDirection;
+            if (_axisModeManager.Mode == AxisMode.Local && Target != null)
+            {
+                axisWorldDirection = Target.TransformDirection(axisHandle.planeNormal.normalized);
+            }
+            else
+            {
+                axisWorldDirection = axisHandle.planeNormal.normalized;
+            }
+
+            Vector3 handleToCamera = (cam.transform.position - handle.position).normalized;
+            float dotProduct = Vector3.Dot(handleToCamera, axisWorldDirection);
+
+            if (dotProduct < 0)
+            {
+                handle.Rotate(Vector3.forward * 180f, Space.Self);
+            }
+        }
+    }
+    private void AdjustHandleTowardsCamera(Transform handleTransform, Vector3 camDirection)
+    {
+        AxisHandle axisHandle = handleTransform.GetComponent<AxisHandle>();
+        if (axisHandle == null) return;
+
+        // Вычисляем мировое направление оси ручки
+        Vector3 axisWorldDirection;
+        if (_axisModeManager.Mode == AxisMode.Local && Target != null)
+        {
+            axisWorldDirection = Target.TransformDirection(axisHandle.direction.normalized);
+        }
+        else
+        {
+            axisWorldDirection = axisHandle.direction.normalized;
+        }
+
+        float dotProduct = Vector3.Dot(camDirection, axisWorldDirection);
+
+        if (dotProduct < 0)
+        {
+            handleTransform.rotation = Quaternion.AngleAxis(180f, axisWorldDirection) * handleTransform.rotation;
         }
     }
 }
