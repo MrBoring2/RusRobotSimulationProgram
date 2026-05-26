@@ -1,0 +1,33 @@
+.close-button {
+    background-color: rgb(52, 152, 219);
+    color: white;
+    border-radius: 4px;
+    padding: 6px 20px;
+    font-size: 14px;
+}
+
+.close-button:hover {
+    background-color: rgb(41, 128, 185);
+}
+
+.part-header {
+    color: rgb(241, 196, 15);
+    font-size: 14px;
+    unity-font-style: bold;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.collision-item {
+    color: white;
+    font-size: 13px;
+    margin-bottom: 2px;
+    padding-left: 12px;
+}
+
+.separator {
+    height: 1px;
+    background-color: rgb(19, 32, 46);
+    margin-top: 4px;
+    margin-bottom: 4px;
+}

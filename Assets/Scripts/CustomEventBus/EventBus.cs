@@ -1,6 +1,7 @@
 ﻿using Assets.Scripts.CustomServiceManager;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.Scripts.CustomEventBus
 {
@@ -49,7 +50,7 @@ namespace Assets.Scripts.CustomEventBus
             }
             else
             {
-                throw new InvalidOperationException($"События {key} не существует");
+                Debug.LogWarning($"События {key} не существует");
             }
         }
         /// <summary>

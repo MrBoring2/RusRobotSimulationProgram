@@ -526,6 +526,10 @@ public class PropertiesPanelEvents : MonoBehaviour
                     setter: val => prop.Setter(val),
                     _undoRedoManager, _UIStatusManager));
             }
+            else if (fieldElement is ButtonPropertyElement buttonField)
+            {
+               
+            }
 
         }
     }

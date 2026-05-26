@@ -3,6 +3,7 @@ using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
 using Assets.Scripts.SimulationSystem.RobotSimulation;
+using Assets.Scripts.StageControlSystem.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,6 +24,9 @@ public class RobotPropertyProvider : BasePropertyProvider
     /// </summary>
     public float[] ChangeAngles = new float[6] { 0, 0, 0, 0, 0, 0 };
     //=================== ПАРАМЕТРЫ ===================
+
+    //окно
+    private RobotCollisionInfoPanelEvents _collisionWindow;
 
     /// <summary>
     /// Углы обновляемы кажды кадр
@@ -75,7 +79,13 @@ public class RobotPropertyProvider : BasePropertyProvider
     }
 
     //------------------------------------------------------------------------------------------------------------------------//
-
+    void Update()
+    {
+        if (_collisionWindow != null && _collisionWindow.IsVisible)
+        {
+            _collisionWindow.UpdateCollisionData(RCC.stringCollisionObjects);
+        }
+    }
     public override ProviderSaveData CaptureCustomState()
     {
         return new ProviderSaveData
@@ -148,11 +158,24 @@ public class RobotPropertyProvider : BasePropertyProvider
                 typeof(float),
                 () => J6AngleUI,
                 val => J6AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute( AnglesLimit[10],  AnglesLimit[11]))
+                .WithAttribute(new RangeAttribute( AnglesLimit[10],  AnglesLimit[11])),
+                new ButtonProperty("ShowCollisions", "Коллизии", "Показать коллизии", () => ShowCollisionWindow())
 
         };
     }
+    public void ShowCollisionWindow()
+    {
+        var modalService = ServiceManager.Current.Get<ModalWindowServiceManager>();
+        var parameters = new ModalParameters();
+        parameters.Set("collisionData", stringCollisionObjects);
 
+        modalService.ShowWindow<object>(
+            "robot-collision-info-window",
+            "Коллизии робота",
+            parameters,
+            null);
+        _collisionWindow = modalService.GetWindow<RobotCollisionInfoPanelEvents>("robot-collision-info-window");
+    }
     public override void RestoreCustomState(ProviderSaveData data)
     {
         if (data.StringValues.TryGetValue("AnglesSpeedLimit", out var v1))

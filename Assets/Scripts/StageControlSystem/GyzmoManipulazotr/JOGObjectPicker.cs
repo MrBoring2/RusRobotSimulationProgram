@@ -117,6 +117,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
                 // Активируем новый манипулятор
                 _currentActiveManipulator.gameObject.SetActive(true);
             }
+
         }
         private void HandleTransformChanged(Transform transform)
         {

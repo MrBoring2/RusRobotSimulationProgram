@@ -40,4 +40,17 @@ namespace Assets.Scripts.Models
             return false;
         }
     }
+
+    public class ButtonProperty : CustomProperty
+    {
+        public Action OnClick { get; set; }
+        public string ButtonText { get; set; }
+
+        public ButtonProperty(string name, string displayName, string buttonText, Action onClick)
+            : base(name, displayName, typeof(object), () => null, val => { })
+        {
+            ButtonText = buttonText;
+            OnClick = onClick;
+        }
+    }
 }

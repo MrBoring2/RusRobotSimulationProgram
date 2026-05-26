@@ -406,7 +406,6 @@ public class GizmoManupulator : MonoBehaviour
                         arrow2 = arrow;
                 }
             }
-
             if (arrow1 != null && arrow2 != null)
             {
                 Vector3 dir1, dir2;
@@ -431,8 +430,13 @@ public class GizmoManupulator : MonoBehaviour
                 if (dot2 < 0) dir2 = -dir2;
 
                 Vector3 midDirection = (dir1 + dir2).normalized;
+
+                // Берём изначальную ЛОКАЛЬНУЮ дистанцию и умножаем на текущий scale gizmoRoot
                 float originalDistance = _handlesOriginalPosition[handle].magnitude;
-                handle.position = gizmoRoot.position + midDirection * originalDistance;
+                float currentScale = gizmoRoot.localScale.x; // scale одинаковый по всем осям
+                float scaledDistance = originalDistance * currentScale;
+
+                handle.position = gizmoRoot.position + midDirection * scaledDistance;
             }
 
             Vector3 axisWorldDirection;

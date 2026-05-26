@@ -82,5 +82,12 @@ namespace Assets.Scripts.Managers
                     window.Hide();
             }
         }
+
+        public T GetWindow<T>(string windowId) where T : class, IModalWindow
+        {
+            if (registeredWindows.TryGetValue(windowId, out var window))
+                return window as T;
+            return null;
+        }
     }
 }

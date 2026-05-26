@@ -17,13 +17,26 @@ namespace Assets.Scripts.Providers
         public bool VerificationAngles { get; set; }
         private bool EndEffectorOn
         {
-            get => _robotPropertyProvider.EndEffectorOn;
-            set => _robotPropertyProvider.EndEffectorOn = value;
+            get
+            {
+                if (_robotPropertyProvider == null)
+                    _robotPropertyProvider = transform.parent?.GetComponent<RobotPropertyProvider>();
+
+                return _robotPropertyProvider != null ? _robotPropertyProvider.EndEffectorOn : false;
+            }
+            set
+            {
+                if (_robotPropertyProvider == null)
+                    _robotPropertyProvider = transform.parent?.GetComponent<RobotPropertyProvider>();
+
+                if (_robotPropertyProvider != null)
+                    _robotPropertyProvider.EndEffectorOn = value;
+            }
         }
 
         public string Id
         {
-            get => _robotPropertyProvider.Id;
+            get => _robotPropertyProvider?.Id;
             set => _robotPropertyProvider.Id = value;
         }
         private RobotPropertyProvider _robotPropertyProvider;
@@ -84,10 +97,10 @@ namespace Assets.Scripts.Providers
 
         private void Awake()
         {
-            _robotPropertyProvider = transform.parent.GetComponent<RobotPropertyProvider>();
+            if (_robotPropertyProvider == null)
+                _robotPropertyProvider = transform.parent?.GetComponent<RobotPropertyProvider>();
             displayScale = false;
         }
-
         public ProviderSaveData CaptureCustomState()
         {
             return new ProviderSaveData

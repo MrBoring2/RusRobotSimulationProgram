@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/RobotCollisionInfoPanelStyles.uss?fileID=7433441132597879392&amp;guid=0d9ceb4d320201945a45441688db70d2&amp;type=3#RobotCollisionInfoPanelStyles"/>
+    <ui:VisualElement name="modal-window-container" style="flex-direction: column; background-color: rgb(52, 73, 94); padding: 10px; position: absolute; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); border-width: 1px; border-color: rgb(19, 32, 46); width: 400px; max-height: 500px;">
+        <ui:Label text="Коллизии робота" style="unity-font-style: bold; font-size: 16px; margin-bottom: 8px; color: rgb(255, 255, 255);"/>
+        <ui:Label name="no-collisions-label" text="Коллизий не обнаружено" style="color: rgb(46, 204, 113); font-size: 14px; display: none; margin-bottom: 8px;"/>
+        <ui:ScrollView name="collision-scroll-view" style="flex-grow: 1; margin-bottom: 8px; max-height: 350px;"/>
+        <ui:VisualElement style="flex-direction: row; justify-content: center; margin-top: 8px;">
+            <ui:Button name="close-btn" text="Закрыть" class="close-button"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

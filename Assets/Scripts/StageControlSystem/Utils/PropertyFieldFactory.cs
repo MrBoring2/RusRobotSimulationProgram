@@ -46,6 +46,10 @@ namespace Assets.Scripts.StageControlSystem.Utils
                 return CreateColorField(property, (Color)(currentValue ?? Color.white), out setValue, out getValue, out fieldElement);
             }
 
+            if (property is ButtonProperty buttonProp)
+            {
+                return CreateButtonField(buttonProp, out setValue, out getValue, out fieldElement);
+            }
             return CreateStringField(property, currentValue?.ToString() ?? "", out setValue, out getValue, out fieldElement);
         }
 
@@ -94,7 +98,27 @@ namespace Assets.Scripts.StageControlSystem.Utils
             fieldElement.name = "slider-field";
             return container;
         }
+        private static VisualElement CreateButtonField(
+    ButtonProperty property,
+    out Action<object> setValue,
+    out Func<object> getValue,
+    out VisualElement fieldElement)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("base-property");
+            container.Add(new Label(property.DisplayName));
 
+            var button = new Button();
+            button.text = property.ButtonText;
+            button.clicked += () => property.OnClick?.Invoke();
+            container.Add(button);
+
+            setValue = val => { };
+            getValue = () => null;
+            fieldElement = button;
+
+            return container;
+        }
         private static VisualElement CreateFloatField(CustomProperty prop, float current,
             out Action<object> setValue, out Func<object> getValue, out VisualElement fieldElement)
         {

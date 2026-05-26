@@ -16,4 +16,15 @@ namespace Assets.Scripts.StageControlSystem.Utils
             DisplayProperty = displayProperty;
         }
     }
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+    public class ButtonActionAttribute : Attribute
+    {
+        public string ButtonText { get; }
+        public Action Action { get; }
+
+        public ButtonActionAttribute(string buttonText)
+        {
+            ButtonText = buttonText;
+        }
+    }
 }
