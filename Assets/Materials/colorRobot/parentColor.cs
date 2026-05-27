@@ -16,7 +16,7 @@ public class ParentColorController : MonoBehaviour
     void Start()
     {
         MR = gameObject.GetComponent<MeshRenderer>();
-        OldCol = MR.sharedMaterial.color;
+        OldCol = MR.material.color;
         if (applyOnStart)
         {
            
@@ -25,10 +25,10 @@ public class ParentColorController : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        if (OldCol != MR.sharedMaterial.color)
+        if (OldCol != MR.material.color)
         {
             ApplyColorToAll();
-            OldCol = MR.sharedMaterial.color; ;
+            OldCol = MR.material.color; ;
 
         }
     }
@@ -53,10 +53,10 @@ public class ParentColorController : MonoBehaviour
         // Применяем цвет
         foreach (var renderer in childRenderers)
         {
-            renderer.sharedMaterial.color = MR.sharedMaterial.color;
+            renderer.material.color = MR.material.color;
         }
 
-        Debug.Log($"Цвет применен к {childRenderers.Count} объектам");
+
     }
 
     // Для изменения цвета в реальном времени в редакторе

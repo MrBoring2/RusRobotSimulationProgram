@@ -38,9 +38,15 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J5Angle { get; set; } = 0;
     public float J6Angle { get; set; } = 0;
 
-    public float J1AngleUI { get => ChangeAngles[0]; set => ChangeAngles[0] = value; }
+    /*public float J1AngleUI { get => ChangeAngles[0]; set => ChangeAngles[0] = value; }
     public float J2AngleUI { get => ChangeAngles[1]; set => ChangeAngles[1] = value; }
     public float J3AngleUI { get => ChangeAngles[2]; set => ChangeAngles[2] = value; }
+    public float J4AngleUI { get => ChangeAngles[3]; set => ChangeAngles[3] = value; }
+    public float J5AngleUI { get => ChangeAngles[4]; set => ChangeAngles[4] = value; }
+    public float J6AngleUI { get => ChangeAngles[5]; set => ChangeAngles[5] = value; }*/
+    public float J1AngleUI { get => ChangeAngles[0]; set => ChangeAngles[0] = value; }
+    public float J2AngleUI { get => ChangeAngles[1]+90; set => ChangeAngles[1] = value-90; }
+    public float J3AngleUI { get => ChangeAngles[2]-90; set => ChangeAngles[2] = value+90; }
     public float J4AngleUI { get => ChangeAngles[3]; set => ChangeAngles[3] = value; }
     public float J5AngleUI { get => ChangeAngles[4]; set => ChangeAngles[4] = value; }
     public float J6AngleUI { get => ChangeAngles[5]; set => ChangeAngles[5] = value; }
@@ -52,7 +58,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float[] thetha = { 0, 0, 0, 0, 0, 0 };
     public float[] old_thetha = { 0, 90, 90, 0, -90, 0 };
     public float[] step_thetha = { 0, 0, 0, 0, 0, 0 };
-
+    public float[] AnglesLimitUI = new[] { -175f, 175f, -50f, 60f, -150f, 80f, -360f, 360f, -105f, 105f, -360f, 360f };
 
     //JOG
     public JOGPropertyProvider JOGpoint;
@@ -62,7 +68,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     //объект находящийся всегда в захвате для расчте прямой кинематики
     public ForwarKinObj _forwarKinObj;
     /// <summary>
-    /// получить текущую позицию захвата, которая обновляется при каждом кадре, и которая используется для расчета прямой кинематики
+    /// получить текущую позицию захвата, которая обновляется при каждом кадре, и которая используется для расчета прямой кинематики МИРОВАЯ
     /// </summary>
     /// <returns></returns>
     public Point GetActualPosEffector()

@@ -163,7 +163,12 @@ public class InverseK_new : MonoBehaviour
         {
             for (int j = 0;j < 6; j++)
             {
-                if(j == 1)
+                if (j == 0)
+                {
+                    Angles[i].SetThetha(j, Angles[i].GetThetha(j) * 180 / Mathf.PI);
+                    Angles[i].SetThetha(j, NormalizeTo180(Angles[i].GetThetha(j)));
+                }
+                else if(j == 1)
                 {
                     Angles[i].SetThetha(j, Angles[i].GetThetha(j) * 180 / Mathf.PI - 90);
                 }
@@ -173,6 +178,14 @@ public class InverseK_new : MonoBehaviour
         }
         return Angles;
     }
+    float NormalizeTo180(float angleDeg)
+    {
+        angleDeg = angleDeg % 360;
+        if (angleDeg > 180) angleDeg -= 360;
+        if (angleDeg < -180) angleDeg += 360;
+        return angleDeg;
+    }
+
     public float[] CheckLimit(float[] ang, float[] AL)
     {
         Angles Ang = new(ang[0], ang[1], ang[2], ang[3], ang[4], ang[5]);
@@ -274,13 +287,18 @@ public class InverseK_new : MonoBehaviour
         int config = 0;
         for (int i = 0; i < 8; i++)
         {
-            if (Angl.Diff(angles[i]) < 0.001f)
+            if (Angl.Diff(angles[i]) < 0.01f)
             {
                 config = i;
-                break;
+                return config;
             }
         }
+        UnityEngine.Debug.LogWarning("конфиг не найден");
         return config;
+    }
+    public int CheckConfig(Angles Angl, RP RP, Point point)
+    {
+        return CheckConfig(Angl, RP, point.Position, point.Rotation);
     }
     /// <summary>
     /// проверка на выход за пределы расчетов (NaN) при невозможности достижения заданной позиции эффектора
