@@ -333,65 +333,24 @@ public class GizmoManupulator : MonoBehaviour
             gizmoRootStartRotation = gizmoRoot.rotation;
         }
 
-        foreach (Transform handle in moveHandlesGroup.transform)
-        {
-            AxisHandle axisHandle = handle.GetComponent<AxisHandle>();
-            if (axisHandle == null) continue;
-            if (axisHandle.type == HandleType.Plane) continue;
+        Vector3 toCamera = (cam.transform.position - gizmoRoot.position).normalized;
+        float currentScale = gizmoRoot.localScale.x;
 
-            if (!_handlesOriginalRotation.ContainsKey(handle))
-            {
-                _handlesOriginalRotation[handle] = handle.localRotation;
-            }
-
-            handle.localRotation = _handlesOriginalRotation[handle];
-
-            Vector3 axisWorldDirection;
-            if (_axisModeManager.Mode == AxisMode.Local && Target != null)
-            {
-                axisWorldDirection = Target.TransformDirection(axisHandle.direction.normalized);
-            }
-            else
-            {
-                axisWorldDirection = axisHandle.direction.normalized;
-            }
-
-            Vector3 handleToCamera = (cam.transform.position - handle.position).normalized;
-
-            float dotProduct = Vector3.Dot(handleToCamera, axisWorldDirection);
-
-            if (dotProduct < 0)
-            {
-                Vector3 rotationAxis;
-
-                if (Mathf.Abs(axisWorldDirection.x) < 0.9f)
-                    rotationAxis = Vector3.Cross(axisWorldDirection, Vector3.right).normalized;
-                else if (Mathf.Abs(axisWorldDirection.y) < 0.9f)
-                    rotationAxis = Vector3.Cross(axisWorldDirection, Vector3.up).normalized;
-                else
-                    rotationAxis = Vector3.Cross(axisWorldDirection, Vector3.forward).normalized;
-
-                handle.Rotate(rotationAxis * 180f, Space.World);
-            }
-        }
-
+        // ПЛОСКОСТИ — вычисляем позиции на основе виртуальных направлений стрелок
         foreach (Transform handle in moveHandlesGroup.transform)
         {
             AxisHandle axisHandle = handle.GetComponent<AxisHandle>();
             if (axisHandle == null) continue;
             if (axisHandle.type != HandleType.Plane) continue;
 
-            if (!_handlesOriginalRotation.ContainsKey(handle))
+            if (!_handlesOriginalPosition.ContainsKey(handle))
             {
-                _handlesOriginalRotation[handle] = handle.localRotation;
                 _handlesOriginalPosition[handle] = handle.localPosition;
             }
 
-            handle.localRotation = _handlesOriginalRotation[handle];
-            handle.localPosition = _handlesOriginalPosition[handle];
-
-            Transform arrow1 = null;
-            Transform arrow2 = null;
+            // Находим две соответствующие оси для этой плоскости
+            Vector3 axis1Dir = Vector3.zero;
+            Vector3 axis2Dir = Vector3.zero;
 
             foreach (Transform arrow in moveHandlesGroup.transform)
             {
@@ -400,61 +359,30 @@ public class GizmoManupulator : MonoBehaviour
 
                 if (Vector3.Dot(arrowHandle.direction.normalized, axisHandle.planeNormal.normalized) < 0.1f)
                 {
-                    if (arrow1 == null)
-                        arrow1 = arrow;
-                    else if (arrow2 == null)
-                        arrow2 = arrow;
+                    Vector3 dir;
+                    if (_axisModeManager.Mode == AxisMode.Local && Target != null)
+                        dir = Target.TransformDirection(arrowHandle.direction.normalized);
+                    else
+                        dir = arrowHandle.direction.normalized;
+
+                    // ВИРТУАЛЬНЫЙ разворот: если камера с другой стороны — инвертируем
+                    float dotCamera = Vector3.Dot(toCamera, dir);
+                    if (dotCamera < 0) dir = -dir;
+
+                    if (axis1Dir == Vector3.zero)
+                        axis1Dir = dir;
+                    else
+                        axis2Dir = dir;
                 }
             }
-            if (arrow1 != null && arrow2 != null)
+
+            if (axis1Dir != Vector3.zero && axis2Dir != Vector3.zero)
             {
-                Vector3 dir1, dir2;
-                if (_axisModeManager.Mode == AxisMode.Local && Target != null)
-                {
-                    dir1 = Target.TransformDirection(arrow1.GetComponent<AxisHandle>().direction.normalized);
-                    dir2 = Target.TransformDirection(arrow2.GetComponent<AxisHandle>().direction.normalized);
-                }
-                else
-                {
-                    dir1 = arrow1.GetComponent<AxisHandle>().direction.normalized;
-                    dir2 = arrow2.GetComponent<AxisHandle>().direction.normalized;
-                }
-
-                Vector3 arrow1Forward = arrow1.forward;
-                Vector3 arrow2Forward = arrow2.forward;
-
-                float dot1 = Vector3.Dot(arrow1Forward, dir1);
-                float dot2 = Vector3.Dot(arrow2Forward, dir2);
-
-                if (dot1 < 0) dir1 = -dir1;
-                if (dot2 < 0) dir2 = -dir2;
-
-                Vector3 midDirection = (dir1 + dir2).normalized;
-
-                // Берём изначальную ЛОКАЛЬНУЮ дистанцию и умножаем на текущий scale gizmoRoot
+                Vector3 midDirection = (axis1Dir + axis2Dir).normalized;
                 float originalDistance = _handlesOriginalPosition[handle].magnitude;
-                float currentScale = gizmoRoot.localScale.x; // scale одинаковый по всем осям
                 float scaledDistance = originalDistance * currentScale;
 
                 handle.position = gizmoRoot.position + midDirection * scaledDistance;
-            }
-
-            Vector3 axisWorldDirection;
-            if (_axisModeManager.Mode == AxisMode.Local && Target != null)
-            {
-                axisWorldDirection = Target.TransformDirection(axisHandle.planeNormal.normalized);
-            }
-            else
-            {
-                axisWorldDirection = axisHandle.planeNormal.normalized;
-            }
-
-            Vector3 handleToCamera = (cam.transform.position - handle.position).normalized;
-            float dotProduct = Vector3.Dot(handleToCamera, axisWorldDirection);
-
-            if (dotProduct < 0)
-            {
-                handle.Rotate(Vector3.forward * 180f, Space.Self);
             }
         }
     }
