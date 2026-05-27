@@ -30,7 +30,7 @@ namespace Assets.Scripts.SystemManager
         private Dictionary<string, RobotPropertyProvider> robots = new Dictionary<string, RobotPropertyProvider>();
         //private Dictionary<string, RobotCommand> allCommands = new Dictionary<string, RobotCommand>();
         private Dictionary<string, RobotProgramPropertyProvider> programs = new Dictionary<string, RobotProgramPropertyProvider>();
-        private Dictionary<string, LinearPointPropertyProvider> points = new Dictionary<string, LinearPointPropertyProvider>();
+        private Dictionary<string, PointPropertyProvider> points = new Dictionary<string, PointPropertyProvider>();
 
         //public string RegisterCommand(RobotCommand command)
         //{

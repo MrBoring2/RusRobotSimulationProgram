@@ -23,8 +23,8 @@ namespace Assets.Scripts.Models
     }
     public class CommandMove : RobotProgrammElement
     {
-        private LinearPointPropertyProvider Point { get; set; }
-        public CommandMove(LinearPointPropertyProvider p, ENUM_COMMANDS tc, string id) : base(id)
+        private PointPropertyProvider Point { get; set; }
+        public CommandMove(PointPropertyProvider p, ENUM_COMMANDS tc, string id) : base(id)
         {
             Point = p;
             TypeComand = tc;

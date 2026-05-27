@@ -127,7 +127,7 @@ namespace Assets.Scripts.UI
             if (signal.PropertyProvider != null)
             {
                 ObjectType type = ObjectType.Unknown;
-                if (signal.PropertyProvider is LinearPointPropertyProvider ||
+                if (signal.PropertyProvider is PointPropertyProvider ||
                     signal.PropertyProvider is WaitPropertyProvider ||
                     signal.PropertyProvider is StateEndEffectorPropertyProvider ||
                     signal.PropertyProvider is RobotProgramPropertyProvider)

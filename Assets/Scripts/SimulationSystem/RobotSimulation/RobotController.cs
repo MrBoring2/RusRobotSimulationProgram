@@ -43,7 +43,8 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         public AnimationCurve SpeedCurve;
         private InverseK_new InvKin;
 
-
+        Awaitable setJogAsync;
+        Awaitable setAngleAsync;
 
         void Start()
         {
@@ -85,7 +86,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             stopwatch.Stop();
             UnityEngine.Debug.Log($"10000 точек IKCalc выполнился за: {(double)stopwatch.ElapsedMilliseconds / Stopwatch.Frequency} с или {stopwatch.ElapsedTicks} тиков ");
             */
-            SetJogMove();
+             _ = SetJogMove();
         }
         private void Update()
         {
@@ -123,7 +124,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             await Awaitable.FixedUpdateAsync();
             _propertyProvider.EndEffectorOn = cmd.Get();
         }
-        public async Awaitable RobotSetLinMove(LinearPointPropertyProvider point)
+        public async Awaitable RobotSetLinMove(PointPropertyProvider point)
         {
             UnityEngine.Debug.LogError("Линейное движение: Старт ");
 
@@ -364,7 +365,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             return (tAcсeler, sAcсeler, tBrake, sBrake, tLinear, sLinear, vMax, DirectRoteate, isTriangularProfile);
         }
 
-        public async Awaitable RobotSetPTPMove(LinearPointPropertyProvider point)
+        public async Awaitable RobotSetPTPMove(PointPropertyProvider point)
         {
             //параметры движения
             Angles AngleAcceler = _propertyProvider.AngleAcceler;
@@ -464,21 +465,19 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         }
         //=================================== КОМАНДЫ ===================================//
         //--Задать позицию ДЖОГа
+        
         public async Awaitable SetJogMove()
         {
-            await _SetJogMove();
+            if (setJogAsync != null && !setJogAsync.IsCompleted) return;
+            setJogAsync = _SetJogMove();
+            await setJogAsync;
+            setJogAsync = null;
         }
         public async Awaitable _SetJogMove()
         {
-            if (inProgressAsync) return;
             if (oldJOGposition != _propertyProvider.JOGpoint.LPosition || oldJOGrotation != _propertyProvider.JOGpoint.LRotationQ || OldConfigPoint != _propertyProvider.JOGpoint.ConfigPoint)
             {
-                inProgressAsync = true;
-                //if (endAnglesMove)
-                //{
-                //    _propertyProvider.JOGpoint.ConfigPoint = InvKin.CheckConfig(new Angles(_propertyProvider.ChangeAngles), _propertyProvider.RP, _propertyProvider.JOGpoint.Position, _propertyProvider.JOGpoint.LocalRotationQ);
-                //    endAnglesMove = false;
-                //}
+
                 angles = InvKin.IKCalc(_propertyProvider.RP, _propertyProvider.JOGpoint.LPosition, _propertyProvider.JOGpoint.LRotationQ);
                 bool InLimit = false;
                 if (_propertyProvider.JOGpoint.VerificationAngles) 
@@ -503,27 +502,27 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                     //Notification.ShowWarning("Точка вне зоны досягаемости");
                     _propertyProvider.JOGpoint.LPosition = oldJOGposition;
                     _propertyProvider.JOGpoint.LRotationQ = oldJOGrotation;
-                    inProgressAsync = false;
                     return;
                 }
                 oldJOGposition = _propertyProvider.JOGpoint.LPosition;
                 oldJOGrotation = _propertyProvider.JOGpoint.LRotationQ;
                 OldConfigPoint = _propertyProvider.JOGpoint.ConfigPoint;
                 _eventBus.Invoke(new ChangePropertiesProviderSignal(_propertyProvider.JOGpoint));
-                inProgressAsync = false;
             }
 
         }
+        
         public async Awaitable SetAngleMove()
         {
-            await _SetAngleMove();
+            if (setAngleAsync != null && !setAngleAsync.IsCompleted) return;
+            setAngleAsync =  _SetAngleMove();
+            await setAngleAsync;
+            setAngleAsync = null;
         }
         public async Awaitable _SetAngleMove()
         {
-            if (inProgressAsync) return;
             if (!oldAngles.SequenceEqual(_propertyProvider.ChangeAngles))
             {
-                inProgressAsync = true;
                 _propertyProvider.ChangeAngles = InvKin.CheckLimit(_propertyProvider.ChangeAngles, _propertyProvider.AnglesLimit); //углы
                 ModifyRobot(_propertyProvider, _propertyProvider.ChangeAngles);
                 await Awaitable.NextFrameAsync();
@@ -536,7 +535,6 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
                 _propertyProvider.ChangeAngles.CopyTo(oldAngles, 0);
                 endAnglesMove = true;
-                inProgressAsync = false;
             }
         }
         //--Выполнить подпрограмму (задачу)--
@@ -603,7 +601,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         {
             if (obj.Type == ObjectType.LinearMoveCommand)
             {
-                var command = new CommandMove(obj.Reference.GetComponent<LinearPointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
+                var command = new CommandMove(obj.Reference.GetComponent<PointPropertyProvider>(), ENUM_COMMANDS.MOVE_LIN, obj.Id);
                 programm.Add(command);
             }
             else if (obj.Type == ObjectType.StateEndEffectorCommand)
@@ -635,15 +633,15 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                     if (s.Point.Type == ObjectType.LinearMoveCommand)
                     {
 
-                        LinearPointPropertyProvider LPPP = (LinearPointPropertyProvider)s.Point.PropertyProvider;
+                        PointPropertyProvider LPPP = (PointPropertyProvider)s.Point.PropertyProvider;
                         angles = InvKin.IKCalc(_propertyProvider.RP, GetPositionInfo(LPPP));
                         //Выбор конфигурации точки
-                        InvKin.CheckLimit(angles[LPPP.ConfigPoint], _propertyProvider.AnglesLimit);
+                        //InvKin.CheckLimit(angles[LPPP.ConfigPoint], _propertyProvider.AnglesLimit);
                         if (InvKin.checkIsNaN(angles[LPPP.ConfigPoint]))
                         {
                             ModifyRobot(_propertyProvider, angles[LPPP.ConfigPoint].GetFloats());
                             _propertyProvider.JOGpoint.LPosition = GetPositionInfo(LPPP).Position;
-                            _propertyProvider.JOGpoint.GlobalRotationQ = GetPositionInfo(LPPP).Rotation;
+                            _propertyProvider.JOGpoint.LRotationQ = GetPositionInfo(LPPP).Rotation;
 
                         }
                         else
@@ -656,7 +654,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             }
         }
         //--Получить позицию точки--
-        public Point GetPositionInfo(LinearPointPropertyProvider p)
+        public Point GetPositionInfo(PointPropertyProvider p)
         {
             //Speed = p.LinearSpeed;
             return new Point { Position = _propertyProvider.transform.InverseTransformPoint(p.Position), Rotation = p.transform.localRotation};

@@ -11,7 +11,7 @@ namespace Assets.Scripts.Models
     internal class AddWaypointCommand : ICommand, IDestructiveCommand
     {
         private RobotProgramPropertyProvider path;
-        private LinearPointPropertyProvider point;
+        private PointPropertyProvider point;
         public AddWaypointCommand(RobotProgramPropertyProvider path)
         {
             this.path = path;
@@ -20,7 +20,7 @@ namespace Assets.Scripts.Models
         public void Execute()
         {
             var go = new GameObject("Waypoint");
-            point = go.AddComponent<LinearPointPropertyProvider>();
+            point = go.AddComponent<PointPropertyProvider>();
             //point.Owner = path;
             //path.AddPoint(point);
         }

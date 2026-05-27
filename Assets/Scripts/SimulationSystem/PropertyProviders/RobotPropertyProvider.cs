@@ -15,9 +15,11 @@ public class RobotPropertyProvider : BasePropertyProvider
 
     //=================== ПАРАМЕТРЫ ===================
     public bool EndEffectorOn { get; set; }
-    //ogranicheniya anglesSpeed
+    //Ограничение скорости осей
     public Angles AnglesSpeedLimit { get; set; } = new(90, 60, 60, 120, 96, 210);
+    //Ограничение ускорения осей
     public Angles AngleAcceler { get; set; } = new(155, 145, 185, 310, 270, 465);
+    //Ограничение торможения осей
     public Angles AngleBrake { get; set; } = new(155, 145, 185, 310, 270, 465);
     /// <summary>
     /// Углы которые можно менять из интерфейса
@@ -38,12 +40,9 @@ public class RobotPropertyProvider : BasePropertyProvider
     public float J5Angle { get; set; } = 0;
     public float J6Angle { get; set; } = 0;
 
-    /*public float J1AngleUI { get => ChangeAngles[0]; set => ChangeAngles[0] = value; }
-    public float J2AngleUI { get => ChangeAngles[1]; set => ChangeAngles[1] = value; }
-    public float J3AngleUI { get => ChangeAngles[2]; set => ChangeAngles[2] = value; }
-    public float J4AngleUI { get => ChangeAngles[3]; set => ChangeAngles[3] = value; }
-    public float J5AngleUI { get => ChangeAngles[4]; set => ChangeAngles[4] = value; }
-    public float J6AngleUI { get => ChangeAngles[5]; set => ChangeAngles[5] = value; }*/
+    /// <summary>
+    /// Углы для работы с UI
+    /// </summary>
     public float J1AngleUI { get => ChangeAngles[0]; set => ChangeAngles[0] = value; }
     public float J2AngleUI { get => ChangeAngles[1]+90; set => ChangeAngles[1] = value-90; }
     public float J3AngleUI { get => ChangeAngles[2]-90; set => ChangeAngles[2] = value+90; }
@@ -53,7 +52,7 @@ public class RobotPropertyProvider : BasePropertyProvider
     /// <summary>
     /// Параметры звеньев робота
     /// </summary>
-    public RP RP = new(450, -350, 0, 447, 1150, 1350, 500);
+    public RP RP = new(450, -350, 0, 447, 1150, 1350, 715);
     public float[] AnglesLimit = new[] {-175f,175f,-140f,-20f, -60f, 170f, -360f, 360f, -105f, 105f, -360f, 360f }; 
     public float[] thetha = { 0, 0, 0, 0, 0, 0 };
     public float[] old_thetha = { 0, 90, 90, 0, -90, 0 };
@@ -129,42 +128,6 @@ public class RobotPropertyProvider : BasePropertyProvider
                 {
                     if(AngleBrake.UpdateFromString((string)val) != 0) Notification.ShowError(" Убедитесь, что вы ввели 6 чисел, разделенных запятыми, и что все числа положительные (J1, J2, J3, J4, J5, J6).");
                 }),
-            new CustomProperty("J1AngleUI",
-                "Ось 1",
-                typeof(float),
-                () => J1AngleUI,
-                val =>J1AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute(AnglesLimit[0], AnglesLimit[1])),
-                new CustomProperty("J2AngleUI",
-                "Ось 2",
-                typeof(float),
-                () => J2AngleUI,
-                val => J2AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute( AnglesLimit[2],  AnglesLimit[3])),
-                new CustomProperty("J3AngleUI",
-                "Ось 3",
-                typeof(float),
-                () => J3AngleUI,
-                val =>J3AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute( AnglesLimit[4],  AnglesLimit[5])),
-                new CustomProperty("J4AngleUI",
-                "Ось 4",
-                typeof(float),
-                () => J4AngleUI,
-                val =>J4AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute( AnglesLimit[6],  AnglesLimit[7])),
-                new CustomProperty("J5AngleUI",
-                "Ось 5",
-                typeof(float),
-                () => J5AngleUI,
-                val =>J5AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute( AnglesLimit[8],  AnglesLimit[9])),
-                new CustomProperty("J6AngleUI",
-                "Ось 6",
-                typeof(float),
-                () => J6AngleUI,
-                val => J6AngleUI = (float)val)
-                .WithAttribute(new RangeAttribute( AnglesLimit[10],  AnglesLimit[11])),
                 new ButtonProperty("ShowCollisions", "Коллизии", "Показать коллизии", () => ShowCollisionWindow())
 
         };

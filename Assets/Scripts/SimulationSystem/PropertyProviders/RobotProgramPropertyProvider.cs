@@ -20,7 +20,7 @@ namespace Assets.Scripts.Providers
         {
             return new ProviderSaveData
             {
-                ProviderType = nameof(LinearPointPropertyProvider)
+                ProviderType = nameof(PointPropertyProvider)
             };
         }
 

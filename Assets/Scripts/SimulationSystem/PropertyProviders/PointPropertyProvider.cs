@@ -12,7 +12,7 @@ using UnityEngine.UIElements;
 
 namespace Assets.Scripts.Providers
 {
-    public class LinearPointPropertyProvider : BasePropertyProvider
+    public class PointPropertyProvider : BasePropertyProvider
     {
         //=================== ПАРАМЕТРЫ ===================
 
@@ -27,18 +27,20 @@ namespace Assets.Scripts.Providers
         //точка-точка точка
         public float SpeedPercent { get; set; } = 50;
         public int ConfigPoint { get; set; } = 0;
-
+        public Angles Angles { get; set; } = new();
         //===========================================//
+
+        //Параметры визуала
         public bool ShowVisual = true;
         public Material material;
         public float PointSize = 0.3f;
-        //===========================================//
+        
         
         public override ProviderSaveData CaptureCustomState()
         {
             return new ProviderSaveData
             {
-                ProviderType = nameof(LinearPointPropertyProvider),
+                ProviderType = nameof(PointPropertyProvider),
                 FloatValues =
                 {
                     ["Speed"] = LinearSpeed,
