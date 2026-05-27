@@ -166,55 +166,27 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
             gizmoRoot.rotation = Target.rotation;
 
-            // СТРЕЛКИ
-            foreach (Transform handle in moveHandlesGroup.transform)
-            {
-                AxisHandleJOG axisHandle = handle.GetComponent<AxisHandleJOG>();
-                if (axisHandle == null) continue;
-                if (axisHandle.directionType == HandleType.Plane) continue;
+            Vector3 toCamera = (cam.transform.position - gizmoRoot.position).normalized;
+            float currentScale = gizmoRoot.localScale.x;
 
-                if (!_handlesOriginalRotation.ContainsKey(handle))
-                {
-                    _handlesOriginalRotation[handle] = handle.localRotation;
-                }
-
-                // Всегда начинаем с изначального rotation
-                handle.localRotation = _handlesOriginalRotation[handle];
-
-                Vector3 axisWorldDirection = Target.TransformDirection(axisHandle.direction.normalized);
-                Vector3 toCamera = (cam.transform.position - gizmoRoot.position).normalized;
-                float dotProduct = Vector3.Dot(toCamera, axisWorldDirection);
-
-                if (dotProduct < 0)
-                {
-                    // Поворачиваем на 180° вокруг СВОЕЙ ЛОКАЛЬНОЙ оси
-                    if (Mathf.Abs(axisHandle.direction.x) > 0.9f)
-                        handle.Rotate(Vector3.up * 180f, Space.Self);
-                    else if (Mathf.Abs(axisHandle.direction.y) > 0.9f)
-                        handle.Rotate(Vector3.right * 180f, Space.Self);
-                    else
-                        handle.Rotate(Vector3.right * 180f, Space.Self);
-                }
-            }
-
-            // ПЛОСКОСТИ — всё остальное без изменений
+            // ПЛОСКОСТИ — виртуальные направления стрелок
             foreach (Transform handle in moveHandlesGroup.transform)
             {
                 AxisHandleJOG axisHandle = handle.GetComponent<AxisHandleJOG>();
                 if (axisHandle == null) continue;
                 if (axisHandle.directionType != HandleType.Plane) continue;
 
-                if (!_handlesOriginalRotation.ContainsKey(handle))
+                if (!_handlesOriginalPosition.ContainsKey(handle))
                 {
-                    _handlesOriginalRotation[handle] = handle.localRotation;
                     _handlesOriginalPosition[handle] = handle.localPosition;
+                    _handlesOriginalRotation[handle] = handle.localRotation;
                 }
 
                 handle.localRotation = _handlesOriginalRotation[handle];
-                handle.localPosition = _handlesOriginalPosition[handle];
 
-                Transform arrow1 = null;
-                Transform arrow2 = null;
+                // Находим две оси для этой плоскости
+                Vector3 axis1Dir = Vector3.zero;
+                Vector3 axis2Dir = Vector3.zero;
 
                 foreach (Transform arrow in moveHandlesGroup.transform)
                 {
@@ -223,40 +195,26 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
                     if (Vector3.Dot(arrowHandle.direction.normalized, axisHandle.planeNormal.normalized) < 0.1f)
                     {
-                        if (arrow1 == null) arrow1 = arrow;
-                        else if (arrow2 == null) arrow2 = arrow;
+                        Vector3 dir = Target.TransformDirection(arrowHandle.direction.normalized);
+
+                        // Виртуальный разворот: если камера с другой стороны — инвертируем
+                        float dotCamera = Vector3.Dot(toCamera, dir);
+                        if (dotCamera < 0) dir = -dir;
+
+                        if (axis1Dir == Vector3.zero)
+                            axis1Dir = dir;
+                        else
+                            axis2Dir = dir;
                     }
                 }
 
-                if (arrow1 != null && arrow2 != null)
+                if (axis1Dir != Vector3.zero && axis2Dir != Vector3.zero)
                 {
-                    Vector3 dir1 = Target.TransformDirection(arrow1.GetComponent<AxisHandleJOG>().direction.normalized);
-                    Vector3 dir2 = Target.TransformDirection(arrow2.GetComponent<AxisHandleJOG>().direction.normalized);
-
-                    Vector3 arrow1Forward = arrow1.forward;
-                    Vector3 arrow2Forward = arrow2.forward;
-
-                    float dot1 = Vector3.Dot(arrow1Forward, dir1);
-                    float dot2 = Vector3.Dot(arrow2Forward, dir2);
-
-                    if (dot1 < 0) dir1 = -dir1;
-                    if (dot2 < 0) dir2 = -dir2;
-
-                    Vector3 midDirection = (dir1 + dir2).normalized;
+                    Vector3 midDirection = (axis1Dir + axis2Dir).normalized;
                     float originalDistance = _handlesOriginalPosition[handle].magnitude;
-                    float currentScale = gizmoRoot.localScale.x;
                     float scaledDistance = originalDistance * currentScale;
 
                     handle.position = gizmoRoot.position + midDirection * scaledDistance;
-                }
-
-                Vector3 planeWorldNormal = Target.TransformDirection(axisHandle.planeNormal.normalized);
-                Vector3 toCamera = (cam.transform.position - gizmoRoot.position).normalized;
-                float dotProduct = Vector3.Dot(toCamera, planeWorldNormal);
-
-                if (dotProduct < 0)
-                {
-                    handle.Rotate(Vector3.forward * 180f, Space.Self);
                 }
             }
         }
