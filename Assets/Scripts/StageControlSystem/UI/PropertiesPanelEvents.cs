@@ -477,7 +477,7 @@ public class PropertiesPanelEvents : MonoBehaviour
             j5angle.Q<Slider>().value = (current as JOGPropertyProvider).J5Angle;
             j6angle.Q<Slider>().value = (current as JOGPropertyProvider).J6Angle;
             var jogPoint = propertiesPanel?.Q<VisualElement>("ConfigPoint");
-            jogPoint.Q<IntegerField>().value = (current as JOGPropertyProvider).ConfigPoint;
+            jogPoint.Q<IntegerField>().value = (current as JOGPropertyProvider).ConfigPoint+1;
         }
         if(current is PointPropertyProvider)
         {
