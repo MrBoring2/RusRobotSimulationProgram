@@ -1320,9 +1320,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb098a1122864fa4f9cbf08717699ef4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimulationManager
-  AlarmJointCollision: 1
-  AlarmEndEffectorCollicion: 1
-  PauseSimInCol: 1
+  AlarmJointCollision: 0
+  AlarmEndEffectorCollicion: 0
+  PauseSimInCol: 0
+  CheckSpeed: 0
 --- !u!1 &680451399
 GameObject:
   m_ObjectHideFlags: 0

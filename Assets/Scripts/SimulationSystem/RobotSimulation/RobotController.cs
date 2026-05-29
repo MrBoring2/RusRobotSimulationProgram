@@ -441,7 +441,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 }
             }
 
-            while (CurrentAngles.Diff(EndAngles) > 0.01f)
+            while (CurrentAngles.Diff(EndAngles) > 0.01f && CurrentTimeMove < LongTime)
             {
                 if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
                 while (_simManager.GetStatusSim() == SIM_STAT.PAUSE)
