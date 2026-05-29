@@ -126,9 +126,9 @@ namespace Assets.Scripts.Providers
                 new CustomProperty(
                 "ConfigPoint",
                 "Конфигурация",
-                typeof(string),
-                () => (ConfigPoint+1).ToString(),
-                val => ConfigPoint = int.Parse((string)val)-1
+                typeof(int),
+                () => (ConfigPoint+1),
+                val => ConfigPoint = (int)val-1
                 ),
                 new CustomProperty(
                 "VerificationAngles",
@@ -165,7 +165,7 @@ namespace Assets.Scripts.Providers
                 "Ось 5",
                 typeof(float),
                 () => J5Angle,
-                val =>J5Angle = (float)val)
+                val => J5Angle = (float)val)
                 .WithAttribute(new RangeAttribute( _robotPropertyProvider.AnglesLimitUI[8],  _robotPropertyProvider.AnglesLimitUI[9])),
                 new CustomProperty("J6Angle",
                 "Ось 6",
@@ -185,7 +185,7 @@ namespace Assets.Scripts.Providers
             if (data.BoolValues.TryGetValue("EndEffectorOn", out var v1))
                 EndEffectorOn = v1;
             if (data.FloatValues.TryGetValue("ConfigPoint", out var v2))
-                ConfigPoint = int.Parse(((float)v2).ToString());
+                ConfigPoint = (int)v2;
             if (data.BoolValues.TryGetValue("VerificationAngles", out var v3))
                 VerificationAngles = (bool)v3;
         }
