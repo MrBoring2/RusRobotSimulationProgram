@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.Windows;
+using static UnityEngine.Rendering.STP;
 
 public class PropertiesPanelEvents : MonoBehaviour
 {
@@ -90,7 +91,7 @@ public class PropertiesPanelEvents : MonoBehaviour
 
     private void OnAnglesChanged(ChangeAnglesJOGSignal signal)
     {
-        UpdateJointsJOG();
+        UpdateJointsJOG(signal.Robot);
     }
 
     private void OnToggleProperties(TogglePropertiesSignal signal)
@@ -459,21 +460,31 @@ public class PropertiesPanelEvents : MonoBehaviour
         scaleZ.SetValueWithoutNotify(current.Scale.z);
     }
 
-    private void UpdateJointsJOG()
+    private void UpdateJointsJOG(RobotPropertyProvider robot)
     {
-        if (!(current is JOGPropertyProvider)) return;
-        var j1angle = propertiesPanel?.Q<VisualElement>("J1Angle");
-        var j2angle = propertiesPanel?.Q<VisualElement>("J2Angle");
-        var j3angle = propertiesPanel?.Q<VisualElement>("J3Angle");
-        var j4angle = propertiesPanel?.Q<VisualElement>("J4Angle");
-        var j5angle = propertiesPanel?.Q<VisualElement>("J5Angle");
-        var j6angle = propertiesPanel?.Q<VisualElement>("J6Angle");
-        j1angle.Q<Slider>().value = (current as JOGPropertyProvider).J1Angle;
-        j2angle.Q<Slider>().value = (current as JOGPropertyProvider).J2Angle;
-        j3angle.Q<Slider>().value = (current as JOGPropertyProvider).J3Angle;
-        j4angle.Q<Slider>().value = (current as JOGPropertyProvider).J4Angle;
-        j5angle.Q<Slider>().value = (current as JOGPropertyProvider).J5Angle;
-        j6angle.Q<Slider>().value = (current as JOGPropertyProvider).J6Angle;
+        if (current is JOGPropertyProvider)
+        {
+            var j1angle = propertiesPanel?.Q<VisualElement>("J1Angle");
+            var j2angle = propertiesPanel?.Q<VisualElement>("J2Angle");
+            var j3angle = propertiesPanel?.Q<VisualElement>("J3Angle");
+            var j4angle = propertiesPanel?.Q<VisualElement>("J4Angle");
+            var j5angle = propertiesPanel?.Q<VisualElement>("J5Angle");
+            var j6angle = propertiesPanel?.Q<VisualElement>("J6Angle");
+            j1angle.Q<Slider>().value = (current as JOGPropertyProvider).J1Angle;
+            j2angle.Q<Slider>().value = (current as JOGPropertyProvider).J2Angle;
+            j3angle.Q<Slider>().value = (current as JOGPropertyProvider).J3Angle;
+            j4angle.Q<Slider>().value = (current as JOGPropertyProvider).J4Angle;
+            j5angle.Q<Slider>().value = (current as JOGPropertyProvider).J5Angle;
+            j6angle.Q<Slider>().value = (current as JOGPropertyProvider).J6Angle;
+            var jogPoint = propertiesPanel?.Q<VisualElement>("ConfigPoint");
+            jogPoint.Q<FloatField>().value = (current as JOGPropertyProvider).ConfigPoint;
+        }
+        if(current is PointPropertyProvider)
+        {
+            var config = robot.JOGpoint.ConfigPoint;
+            var jogPoint = propertiesPanel?.Q<VisualElement>("ConfigPoint");
+            jogPoint.Q<FloatField>().value = config;
+        }  
     }
 
     private void BuildCustomProperties(IPropertyProvider provider)

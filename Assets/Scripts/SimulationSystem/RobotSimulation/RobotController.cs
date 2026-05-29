@@ -568,7 +568,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 oldJOGrotation = _propertyProvider.JOGpoint.LRotationQ;
                 OldConfigPoint = _propertyProvider.JOGpoint.ConfigPoint;
 
-                _eventBus.Invoke(new ChangeAnglesJOGSignal());
+                _eventBus.Invoke(new ChangeAnglesJOGSignal(_propertyProvider));
             }
 
         }

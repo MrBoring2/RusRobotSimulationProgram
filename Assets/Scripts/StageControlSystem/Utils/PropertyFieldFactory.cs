@@ -108,7 +108,6 @@ namespace Assets.Scripts.StageControlSystem.Utils
             var container = new VisualElement();
             container.AddToClassList("base-property");
             container.Add(new Label(property.DisplayName));
-
             var button = new Button();
             button.text = property.ButtonText;
             button.clicked += () => property.OnClick?.Invoke();
@@ -126,6 +125,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
             var container = new VisualElement();
             container.AddToClassList("base-property");
             container.Add(new Label(prop.DisplayName));
+            container.name = prop.Name;
             var field = new FloatField { value = current };
             container.Add(field);
             setValue = val => field.value = (float)val;
@@ -140,6 +140,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
             var container = new VisualElement();
             container.AddToClassList("base-property");
             container.Add(new Label(prop.DisplayName));
+            container.name = prop.Name;
             var field = new IntegerField { value = current };
             container.Add(field);
             setValue = val => field.value = (int)val;
@@ -154,6 +155,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
             var container = new VisualElement();
             container.AddToClassList("base-bool-property");
             container.Add(new Label(prop.DisplayName));
+            container.name = prop.Name;
             var field = new Toggle { value = current };
             container.Add(field);
             setValue = val => field.value = (bool)val;
@@ -168,6 +170,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
             var container = new VisualElement();
             container.AddToClassList("base-property");
             container.Add(new Label(prop.DisplayName));
+            container.name = prop.Name;
             var field = new TextField { value = current };
             container.Add(field);
             setValue = val => field.value = (string)val;
@@ -182,6 +185,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
             var container = new VisualElement();
             container.AddToClassList("base-property");
             container.Add(new Label(prop.DisplayName));
+            container.name = prop.Name;
             var field = new EnumField(current);
             container.Add(field);
             setValue = val => field.value = (Enum)val;
@@ -196,7 +200,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
        
             container.AddToClassList("base-property");
             container.Add(new Label(prop.DisplayName));
-
+            container.name = prop.Name;
             var dropdown = new DropdownField(options.ToList(), 0);
             dropdown.AddToClassList("custom-dropdown");
             var currentStr = current?.ToString() ?? "";

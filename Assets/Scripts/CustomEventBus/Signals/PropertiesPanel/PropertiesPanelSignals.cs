@@ -25,7 +25,12 @@ namespace Assets.Scripts.CustomEventBus.Signals.PropertiesPanel
     }
     public class ChangeAnglesJOGSignal
     {
+        public readonly RobotPropertyProvider Robot;
 
+        public ChangeAnglesJOGSignal(RobotPropertyProvider robot)
+        {
+            Robot = robot;
+        }
     }
     //public class HidePropertiesSignal
     //{
