@@ -23,6 +23,10 @@ namespace Assets.Scripts.CustomEventBus.Signals.PropertiesPanel
     {
 
     }
+    public class ChangeAnglesJOGSignal
+    {
+
+    }
     //public class HidePropertiesSignal
     //{
 

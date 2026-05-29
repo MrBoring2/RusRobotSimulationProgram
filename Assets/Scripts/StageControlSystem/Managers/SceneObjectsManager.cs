@@ -4,6 +4,7 @@ using Assets.Scripts.CustomEventBus.Signals.Lines;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Models;
+using Assets.Scripts.Providers;
 using Assets.Scripts.Utils;
 using System;
 using System.Collections;
@@ -193,6 +194,12 @@ namespace Assets.Scripts.Managers
                         sceneObj.Type == ObjectType.StateEndEffectorCommand)
                     {
                         var robot = GetById(Commands.GetSubProgram(parentId).ParentId);
+                        if (sceneObj.Type == ObjectType.LinearMoveCommand)
+                        {
+                            var jog = (robot.PropertyProvider as RobotPropertyProvider).JOGpoint;
+                            var prov = sceneObj.PropertyProvider as PointPropertyProvider;
+                            prov.ConfigPoint = jog.ConfigPoint;
+                        }
                         Commands.AddCommand(robot.Id, parentId, sceneObj as CommandObject);
                     }
                     _eventBus.Invoke<AddSceneObjectSignal>(new AddSceneObjectSignal(sceneObj));

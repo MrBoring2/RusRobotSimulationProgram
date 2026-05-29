@@ -54,7 +54,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             _eventBus.Subscribe<PickCommandSignal>(TeleportToPoint);
             _eventBus.Subscribe<Init>(ControllerResetState);
             _propertyProvider = GetComponent<RobotPropertyProvider>();
-            _propertyProvider.JOGpoint.LPosition = new Vector3(1, 1, 1);
+            _propertyProvider.JOGpoint.LocalPosition = new Vector3(1, 1, 1);
             _propertyProvider.JOGpoint.Rotation = new Vector3(180, 0, 0);
             ///////////
             //Vector3[] testData = new Vector3[10000];
@@ -128,7 +128,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         {
             UnityEngine.Debug.LogError("Линейное движение: Старт ");
 
-            Point Start = new(_propertyProvider.JOGpoint.LPosition, _propertyProvider.JOGpoint.LRotationQ);
+            Point Start = new(_propertyProvider.JOGpoint.LocalPosition, _propertyProvider.JOGpoint.LRotationQ);
             Point End = new(GetPositionInfo(point).Position, GetPositionInfo(point).Rotation);
 
             Point wayPoint = new(Start.Position, Start.Rotation);
@@ -475,10 +475,10 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         }
         public async Awaitable _SetJogMove()
         {
-            if (oldJOGposition != _propertyProvider.JOGpoint.LPosition || oldJOGrotation != _propertyProvider.JOGpoint.LRotationQ || OldConfigPoint != _propertyProvider.JOGpoint.ConfigPoint)
+            if (oldJOGposition != _propertyProvider.JOGpoint.LocalPosition || oldJOGrotation != _propertyProvider.JOGpoint.LRotationQ || OldConfigPoint != _propertyProvider.JOGpoint.ConfigPoint)
             {
 
-                angles = InvKin.IKCalc(_propertyProvider.RP, _propertyProvider.JOGpoint.LPosition, _propertyProvider.JOGpoint.LRotationQ);
+                angles = InvKin.IKCalc(_propertyProvider.RP, _propertyProvider.JOGpoint.LocalPosition, _propertyProvider.JOGpoint.LRotationQ);
                 bool InLimit = false;
                 if (_propertyProvider.JOGpoint.VerificationAngles) 
                 {
@@ -500,14 +500,15 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 else
                 {
                     //Notification.ShowWarning("Точка вне зоны досягаемости");
-                    _propertyProvider.JOGpoint.LPosition = oldJOGposition;
+                    _propertyProvider.JOGpoint.LocalPosition = oldJOGposition;
                     _propertyProvider.JOGpoint.LRotationQ = oldJOGrotation;
                     return;
                 }
-                oldJOGposition = _propertyProvider.JOGpoint.LPosition;
+                oldJOGposition = _propertyProvider.JOGpoint.LocalPosition;
                 oldJOGrotation = _propertyProvider.JOGpoint.LRotationQ;
                 OldConfigPoint = _propertyProvider.JOGpoint.ConfigPoint;
-                _eventBus.Invoke(new ChangePropertiesProviderSignal(_propertyProvider.JOGpoint));
+
+                _eventBus.Invoke(new ChangeAnglesJOGSignal());
             }
 
         }
@@ -530,7 +531,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 position.Position = transform.InverseTransformPoint(_propertyProvider.GetActualPosEffector().Position);
                 position.Rotation = Quaternion.Inverse(transform.rotation) * _propertyProvider.GetActualPosEffector().Rotation;
                 _propertyProvider.JOGpoint.ConfigPoint = OldConfigPoint = InvKin.CheckConfig(new Angles(_propertyProvider.J1Angle, _propertyProvider.J2Angle, _propertyProvider.J3Angle, _propertyProvider.J4Angle, _propertyProvider.J5Angle, _propertyProvider.J6Angle), _propertyProvider.RP, position);
-                _propertyProvider.JOGpoint.LPosition = oldJOGposition = position.Position;
+                _propertyProvider.JOGpoint.LocalPosition = oldJOGposition = position.Position;
                 _propertyProvider.JOGpoint.LRotationQ = oldJOGrotation = position.Rotation;
 
                 _propertyProvider.ChangeAngles.CopyTo(oldAngles, 0);
@@ -640,7 +641,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                         if (InvKin.checkIsNaN(angles[LPPP.ConfigPoint]))
                         {
                             ModifyRobot(_propertyProvider, angles[LPPP.ConfigPoint].GetFloats());
-                            _propertyProvider.JOGpoint.LPosition = GetPositionInfo(LPPP).Position;
+                            _propertyProvider.JOGpoint.LocalPosition = GetPositionInfo(LPPP).Position;
                             _propertyProvider.JOGpoint.LRotationQ = GetPositionInfo(LPPP).Rotation;
 
                         }
@@ -671,7 +672,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         /// <param name="point"></param>
         public void SetJogPosition(Point point)
         {
-            _propertyProvider.JOGpoint.LPosition = point.Position;
+            _propertyProvider.JOGpoint.LocalPosition = point.Position;
             _propertyProvider.JOGpoint.LRotationQ = point.Rotation;
         }
         /// <summary>

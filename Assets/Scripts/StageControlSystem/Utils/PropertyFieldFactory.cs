@@ -59,6 +59,7 @@ namespace Assets.Scripts.StageControlSystem.Utils
             var container = new VisualElement();
             container.AddToClassList("custom-slider");
             container.AddToClassList("base-property");
+            container.name = prop.Name;
             container.Add(new Label(prop.DisplayName));
 
             var row = new VisualElement();
