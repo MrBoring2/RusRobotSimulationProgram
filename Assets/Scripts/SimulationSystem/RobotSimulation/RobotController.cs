@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.UIElements;
@@ -26,7 +27,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         NotificationSystemManager Notification;
 
         Angles[] angles;
-
+        
         //оптимизация
         Vector3 oldJOGposition = Vector3.zero;
         Quaternion oldJOGrotation = Quaternion.identity;
@@ -45,7 +46,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
         Awaitable setJogAsync;
         Awaitable setAngleAsync;
-
+        PointPropertyProvider OldPoint;
         void Start()
         {
             Notification = ServiceManager.Current.Get<NotificationSystemManager>();
@@ -56,58 +57,16 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             _propertyProvider = GetComponent<RobotPropertyProvider>();
             _propertyProvider.JOGpoint.LocalPosition = new Vector3(1, 1, 1);
             _propertyProvider.JOGpoint.Rotation = new Vector3(180, 0, 0);
-            ///////////
-            //Vector3[] testData = new Vector3[10000];
-            //HashSet<Vector3> uniquePoints = new HashSet<Vector3>();
-
-            //System.Random random = new System.Random();
-
-            //for (int i = 0; i < 10000; i++)
-            //{
-            //    Vector3 newPoint;
-            //    do
-            //    {
-            //        float x = 1f + (float)random.NextDouble();
-            //        float y = 1f + (float)random.NextDouble();
-            //        float z = 1f + (float)random.NextDouble();
-            //        newPoint = new Vector3(x, y, z);
-            //    }
-            //    while (uniquePoints.Contains(newPoint));
-
-            //    uniquePoints.Add(newPoint);
-            //    testData[i] = newPoint;
-            //}
-            //////
-            /*Stopwatch stopwatch = Stopwatch.StartNew();
-            for (int i = 0; i < 10000; i++)
-            {
-                InvKin.IKCalc(_propertyProvider.RP, testData[i], Quaternion.identity);
-            }
-            stopwatch.Stop();
-            UnityEngine.Debug.Log($"10000 точек IKCalc выполнился за: {(double)stopwatch.ElapsedMilliseconds / Stopwatch.Frequency} с или {stopwatch.ElapsedTicks} тиков ");
-            */
              _ = SetJogMove();
         }
         private void Update()
         {
             
-            /*if (_simManager.GetModeSim() == (MODE.JOG_MODE, MODE.ANGLES_MODE) && needUpdateConf)
-            {
-                int config = InvKin.CheckConfig(new Angles(_propertyProvider.ChangeAngles) ,_propertyProvider.RP, _propertyProvider.JOGpoint.Position, _propertyProvider.JOGpoint.LocalRotationQ);
-
-                _propertyProvider.JOGpoint.ConfigPoint = config;
-                needUpdateConf = false;
-            }*/
             if (_simManager.GetModeSim().SimulationMode == MODE.JOG_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
             {
                  _ = SetJogMove();
                 _ = SetAngleMove();
             }
-            /*else if (_simManager.GetModeSim().SimulationMode == MODE.ANGLES_MODE && _simManager.GetStatusSim() == SIM_STAT.STOP)
-            {
-                
-                needUpdateConf = true;
-            }*/
         }
         //=================================== КОМАНДЫ ===================================//
         public async Awaitable RobotSetWait(WaitPropertyProvider cmd)
@@ -126,6 +85,18 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         }
         public async Awaitable RobotSetLinMove(PointPropertyProvider point)
         {
+            if(OldPoint == null)
+            {
+                _eventBus.Invoke(new SystemPauseSim($"Движение робота должно начинаться с движения Точка-Точка"));
+            }
+            else
+            {
+                if (point.PointType == POINTTYPE.LinearPoint && OldPoint.ConfigPoint != point.ConfigPoint)
+                {
+                    _eventBus.Invoke(new SystemPauseSim($"Неверная конфигурация точки({point.name})"));
+                }
+            }
+            
             UnityEngine.Debug.LogError("Линейное движение: Старт ");
 
             Point Start = new(_propertyProvider.JOGpoint.LocalPosition, _propertyProvider.JOGpoint.LRotationQ);
@@ -307,10 +278,13 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                     }
                 }
                 
+
                 angles = InvKin.IKCalc(_propertyProvider.RP, wayPoint.Position, wayPoint.Rotation);
-                
-                
-                InvKin.CheckLimit(angles[point.ConfigPoint], _propertyProvider.AnglesLimit);
+
+                if (InvKin.CheckLimit(angles[point.ConfigPoint], _propertyProvider.AnglesLimit))
+                {
+                    _eventBus.Invoke(new SystemPauseSim("Линейное движение невозможно, ось достигла предела"));
+                }
                 if (InvKin.checkIsNaN(angles[point.ConfigPoint]))
                 {
                     ModifyRobot(_propertyProvider, angles[point.ConfigPoint].GetFloats());
@@ -381,6 +355,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 }
 
             }
+            OldPoint = point;
             return;
         }
         /// <summary>
@@ -466,7 +441,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 }
             }
 
-            while (CurrentAngles.Diff(EndAngles) > 0.001f)
+            while (CurrentAngles.Diff(EndAngles) > 0.01f)
             {
                 if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
                 while (_simManager.GetStatusSim() == SIM_STAT.PAUSE)
@@ -520,7 +495,9 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 _propertyProvider.J5Angle = CurrentAngles.thetha5;
                 _propertyProvider.J6Angle = CurrentAngles.thetha6;
                 SetJogPosition(GetPositionInfo(_propertyProvider._forwarKinObj.Pos));
+                _propertyProvider.JOGpoint.ConfigPoint = point.ConfigPoint;
             }
+            OldPoint = point;
 
         }
         //=================================== КОМАНДЫ ===================================//
@@ -703,6 +680,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                             ModifyRobot(_propertyProvider, angles[LPPP.ConfigPoint].GetFloats());
                             _propertyProvider.JOGpoint.LocalPosition = GetPositionInfo(LPPP).Position;
                             _propertyProvider.JOGpoint.LRotationQ = GetPositionInfo(LPPP).Rotation;
+                            _propertyProvider.JOGpoint.ConfigPoint = LPPP.ConfigPoint;
 
                         }
                         else
