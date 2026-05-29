@@ -4,6 +4,7 @@ using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
+using Assets.Scripts.Providers;
 using Assets.Scripts.StageControlSystem.Models;
 using Assets.Scripts.StageControlSystem.Utils;
 using Assets.Scripts.SystemManager;
@@ -44,6 +45,7 @@ public class PropertiesPanelEvents : MonoBehaviour
     {
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<PropertiesTransformUpdateSignal>(OnTransformChanged);
+        _eventBus.Subscribe<ChangeAnglesJOGSignal>(OnAnglesChanged);
         _eventBus.Subscribe<ChangePropertiesProviderSignal>(OnChangePropertiesProvider);
         _eventBus.Subscribe<TogglePropertiesSignal>(OnToggleProperties);
         _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
@@ -54,27 +56,27 @@ public class PropertiesPanelEvents : MonoBehaviour
         root = GetComponent<UIDocument>().rootVisualElement;
         propertiesPanel = root.Q<VisualElement>("properties-container");
         TogglePanel();
-        commonContainer = root.Q("base-properties-container");
-        customContainer = root.Q("custom-properties-container");
+        commonContainer = propertiesPanel.Q("base-properties-container");
+        customContainer = propertiesPanel.Q("custom-properties-container");
 
-        posX = root.Q<FloatField>("position-x");
-        posY = root.Q<FloatField>("position-y");
-        posZ = root.Q<FloatField>("position-z");
+        posX = propertiesPanel.Q<FloatField>("position-x");
+        posY = propertiesPanel.Q<FloatField>("position-y");
+        posZ = propertiesPanel.Q<FloatField>("position-z");
 
-        rotX = root.Q<FloatField>("rotation-x");
-        rotY = root.Q<FloatField>("rotation-y");
-        rotZ = root.Q<FloatField>("rotation-z");
+        rotX = propertiesPanel.Q<FloatField>("rotation-x");
+        rotY = propertiesPanel.Q<FloatField>("rotation-y");
+        rotZ = propertiesPanel.Q<FloatField>("rotation-z");
 
-        scaleX = root.Q<FloatField>("scale-x");
-        scaleY = root.Q<FloatField>("scale-y");
-        scaleZ = root.Q<FloatField>("scale-z");
+        scaleX = propertiesPanel.Q<FloatField>("scale-x");
+        scaleY = propertiesPanel.Q<FloatField>("scale-y");
+        scaleZ = propertiesPanel.Q<FloatField>("scale-z");
 
-        name = root.Q<TextField>("name");
+        name = propertiesPanel.Q<TextField>("name");
 
-        namePropertyContainer = root.Q<VisualElement>("name-property-container");
-        positionPropertyContainer = root.Q<VisualElement>("position-property-container");
-        rotationPropertyContainer = root.Q<VisualElement>("rotation-property-container");
-        scalePropertyContainer = root.Q<VisualElement>("scale-property-container");
+        namePropertyContainer = propertiesPanel.Q<VisualElement>("name-property-container");
+        positionPropertyContainer = propertiesPanel.Q<VisualElement>("position-property-container");
+        rotationPropertyContainer = propertiesPanel.Q<VisualElement>("rotation-property-container");
+        scalePropertyContainer = propertiesPanel.Q<VisualElement>("scale-property-container");
 
         RegisterButtons();
         RegisterInputs();
@@ -86,7 +88,10 @@ public class PropertiesPanelEvents : MonoBehaviour
         //UndoRedoManager.Instance.OnCommandUndone += OnUndoRedoPerformed;
     }
 
-
+    private void OnAnglesChanged(ChangeAnglesJOGSignal signal)
+    {
+        UpdateJointsJOG();
+    }
 
     private void OnToggleProperties(TogglePropertiesSignal signal)
     {
@@ -452,6 +457,23 @@ public class PropertiesPanelEvents : MonoBehaviour
         scaleX.SetValueWithoutNotify(current.Scale.x);
         scaleY.SetValueWithoutNotify(current.Scale.y);
         scaleZ.SetValueWithoutNotify(current.Scale.z);
+    }
+
+    private void UpdateJointsJOG()
+    {
+        if (!(current is JOGPropertyProvider)) return;
+        var j1angle = propertiesPanel?.Q<VisualElement>("J1Angle");
+        var j2angle = propertiesPanel?.Q<VisualElement>("J2Angle");
+        var j3angle = propertiesPanel?.Q<VisualElement>("J3Angle");
+        var j4angle = propertiesPanel?.Q<VisualElement>("J4Angle");
+        var j5angle = propertiesPanel?.Q<VisualElement>("J5Angle");
+        var j6angle = propertiesPanel?.Q<VisualElement>("J6Angle");
+        j1angle.Q<Slider>().value = (current as JOGPropertyProvider).J1Angle;
+        j2angle.Q<Slider>().value = (current as JOGPropertyProvider).J2Angle;
+        j3angle.Q<Slider>().value = (current as JOGPropertyProvider).J3Angle;
+        j4angle.Q<Slider>().value = (current as JOGPropertyProvider).J4Angle;
+        j5angle.Q<Slider>().value = (current as JOGPropertyProvider).J5Angle;
+        j6angle.Q<Slider>().value = (current as JOGPropertyProvider).J6Angle;
     }
 
     private void BuildCustomProperties(IPropertyProvider provider)
