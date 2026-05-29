@@ -573,6 +573,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
                 _propertyProvider.ChangeAngles.CopyTo(oldAngles, 0);
                 endAnglesMove = true;
+                _eventBus.Invoke(new ChangeAnglesJOGSignal(_propertyProvider));
             }
         }
         //--Выполнить подпрограмму (задачу)--
