@@ -32,6 +32,15 @@ namespace Assets.Scripts.CustomEventBus.Signals.PropertiesPanel
             Robot = robot;
         }
     }
+    public class ChangeConfigJOGSignal
+    {
+        public readonly RobotPropertyProvider Robot;
+
+        public ChangeConfigJOGSignal(RobotPropertyProvider robot)
+        {
+            Robot = robot;
+        }
+    }
     //public class HidePropertiesSignal
     //{
 

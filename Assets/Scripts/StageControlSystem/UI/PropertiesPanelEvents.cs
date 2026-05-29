@@ -47,6 +47,7 @@ public class PropertiesPanelEvents : MonoBehaviour
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<PropertiesTransformUpdateSignal>(OnTransformChanged);
         _eventBus.Subscribe<ChangeAnglesJOGSignal>(OnAnglesChanged);
+        _eventBus.Subscribe<ChangeConfigJOGSignal>(OnConfigJOGChanged);
         _eventBus.Subscribe<ChangePropertiesProviderSignal>(OnChangePropertiesProvider);
         _eventBus.Subscribe<TogglePropertiesSignal>(OnToggleProperties);
         _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
@@ -88,6 +89,12 @@ public class PropertiesPanelEvents : MonoBehaviour
         //UndoRedoManager.Instance.OnCommandExecuted += OnUndoRedoPerformed;
         //UndoRedoManager.Instance.OnCommandUndone += OnUndoRedoPerformed;
     }
+
+    private void OnConfigJOGChanged(ChangeConfigJOGSignal signal)
+    {
+        UpdateConfigJOG(signal.Robot);
+    }
+
 
     private void OnAnglesChanged(ChangeAnglesJOGSignal signal)
     {
@@ -476,17 +483,25 @@ public class PropertiesPanelEvents : MonoBehaviour
             j4angle.Q<Slider>().value = (current as JOGPropertyProvider).J4Angle;
             j5angle.Q<Slider>().value = (current as JOGPropertyProvider).J5Angle;
             j6angle.Q<Slider>().value = (current as JOGPropertyProvider).J6Angle;
-            var jogPoint = propertiesPanel?.Q<VisualElement>("ConfigPoint");
-            jogPoint.Q<IntegerField>().value = (current as JOGPropertyProvider).ConfigPoint+1;
+            
         }
-        if(current is PointPropertyProvider)
+         
+    }
+
+    private void UpdateConfigJOG(RobotPropertyProvider robot)
+    {
+        if (current is JOGPropertyProvider)
+        {
+            var jogPoint = propertiesPanel?.Q<VisualElement>("ConfigPoint");
+            jogPoint.Q<IntegerField>().value = (current as JOGPropertyProvider).ConfigPoint + 1;
+        }
+        if (current is PointPropertyProvider)
         {
             var config = robot.JOGpoint.ConfigPoint;
             var jogPoint = propertiesPanel?.Q<VisualElement>("ConfigPoint");
-            jogPoint.Q<FloatField>().value = config;
-        }  
+            jogPoint.Q<IntegerField>().value = config;
+        }
     }
-
     private void BuildCustomProperties(IPropertyProvider provider)
     {
         customContainer.Clear();
