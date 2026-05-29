@@ -13,7 +13,6 @@ public class RobotJointController : MonoBehaviour
     public GameObject J6;
 
     private RobotPropertyProvider _propertyProvider;
-
     private void Start()
     {
         _propertyProvider = gameObject.GetComponent<RobotPropertyProvider>();

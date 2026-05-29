@@ -155,7 +155,7 @@ public class RobotCollisionController : MonoBehaviour
     private void PauseSim()
     {
         if(_SimManager.GetStatusSim() == SIM_STAT.PLAY && _SimManager.GetSimulationParam().PauseSimInCol)
-            _eventBus.Invoke(new SystemPauseSim { info = "Обнаружена коллизия" });
+            _eventBus.Invoke(new SystemPauseSim("Обнаружена коллизия"));
 
     }
     /// <summary>
@@ -181,4 +181,8 @@ public class  CollisionDictionaryUpdated
 public class SystemPauseSim
 {
     public string info;
+    public SystemPauseSim(string info)
+    {
+        this.info = info;
+    }
 }

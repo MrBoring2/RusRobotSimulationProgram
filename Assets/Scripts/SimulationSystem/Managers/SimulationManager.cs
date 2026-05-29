@@ -22,6 +22,7 @@ public class SimulationManager : MonoBehaviour,IService
     public bool AlarmJointCollision = false;
     public bool AlarmEndEffectorCollicion = true;
     public bool PauseSimInCol = true;
+    public bool CheckSpeed = false;
     void Start()
     {
         _notification = ServiceManager.Current.Get<NotificationSystemManager>();
@@ -111,7 +112,8 @@ public class SimulationManager : MonoBehaviour,IService
         {
             SimulationStat = SIM_STAT.PAUSE;
             _eventBus.Invoke(new PauseProgramm());
-            _notification.ShowInfo(s.info);
+            _notification.ShowWarning("Симуляция приостановлена программно");
+            _notification.ShowWarning(s.info);
         }
     }
     private void ChangeMode(MODE mode)
@@ -162,13 +164,17 @@ public class SimulationManager : MonoBehaviour,IService
     {
         PauseSimInCol = b;
     }
+    public void SetCheckSpeed(bool b)
+    {
+        CheckSpeed = b;
+    }
     /// <summary>
     /// получение параметров симуляции
     /// </summary>
     /// <returns></returns>
-    public (bool AlarmJointColStatus, bool AlarmEndEffectorColStatus, bool PauseSimInCol) GetSimulationParam()
+    public (bool AlarmJointColStatus, bool AlarmEndEffectorColStatus, bool PauseSimInCol, bool CheckSpeed) GetSimulationParam()
     {
-        return (AlarmJointCollision, AlarmEndEffectorCollicion, PauseSimInCol);
+        return (AlarmJointCollision, AlarmEndEffectorCollicion, PauseSimInCol, CheckSpeed);
     }
 }
 

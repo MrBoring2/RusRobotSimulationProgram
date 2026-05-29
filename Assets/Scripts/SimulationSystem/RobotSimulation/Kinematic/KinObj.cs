@@ -3,7 +3,7 @@ using UnityEngine.UIElements;
 
 public class Angles
 {
-    public float[] angs = new float[6];
+    private float[] angs = new float[6];
     public float thetha1
     {
         get => angs[0]; set => angs[0] = value;
@@ -88,6 +88,13 @@ public class Angles
                 
             }
         return max;
+    }
+    public void Setfloat(float[] thetha)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            angs[i] = thetha[i];
+        }
     }
     public Angles PercentAngles(float Percent)
     {

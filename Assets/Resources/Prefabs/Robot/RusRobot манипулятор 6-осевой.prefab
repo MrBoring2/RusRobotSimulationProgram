@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 747421553748431270}
   - component: {fileID: 6821840396015809573}
   m_Layer: 0
-  m_Name: "\u043A2Trig"
+  m_Name: "\u041B\u0435\u0432\u044B\u0439 \u043F\u0430\u043B\u0435\u0446 \u0437\u0430\u0445\u0432\u0430\u0442\u0430"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -949,7 +949,7 @@ GameObject:
   - component: {fileID: 6295833876183305902}
   - component: {fileID: 458474613559639545}
   m_Layer: 11
-  m_Name: "\u04101 (1)"
+  m_Name: "\u041E\u0441\u044C \u04101"
   m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
     \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
@@ -1573,7 +1573,7 @@ GameObject:
   - component: {fileID: 1661579401721802398}
   - component: {fileID: 6630760733923740608}
   m_Layer: 11
-  m_Name: "\u04105 (1)"
+  m_Name: "\u041E\u0441\u044C \u04105"
   m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
     \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
@@ -2138,7 +2138,7 @@ GameObject:
   - component: {fileID: 2715710527338178728}
   - component: {fileID: 4755326137106622681}
   m_Layer: 0
-  m_Name: k1Trig
+  m_Name: "\u041F\u0440\u0430\u0432\u044B\u0439 \u043F\u0430\u043B\u0435\u0446 \u0437\u0430\u0445\u0432\u0430\u0442\u0430"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2364,7 +2364,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2629808362086658229}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -2967,7 +2967,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2927507976825921963}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -3250,9 +3250,9 @@ MonoBehaviour:
   EndEffector: {fileID: 5531334247128954415}
   EndEffectorRenderer: {fileID: 204913490487973615}
   LeftFingerTrig: {fileID: 77197840644160739}
-  LeftFingerRenderer: {fileID: 9131787288246231911}
+  LeftFingerRenderer: {fileID: 7105617511208175163}
   RightFingerTrig: {fileID: 2394812537947748484}
-  RightFingerRenderer: {fileID: 7105617511208175163}
+  RightFingerRenderer: {fileID: 9131787288246231911}
   TestList: []
 --- !u!1 &3137455119182969186
 GameObject:
@@ -3337,7 +3337,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3225177184005296462}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -3848,7 +3848,7 @@ GameObject:
   - component: {fileID: 4544165413368365509}
   - component: {fileID: 7324591906740333152}
   m_Layer: 11
-  m_Name: "\u04104 (1)"
+  m_Name: "\u041E\u0441\u044C \u04104"
   m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
     \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
@@ -4037,7 +4037,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3878615015764855468}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -4227,7 +4227,7 @@ GameObject:
   - component: {fileID: 4272743595194718766}
   - component: {fileID: 6345267365253721852}
   m_Layer: 11
-  m_Name: "\u04103 (1)"
+  m_Name: "\u041E\u0441\u044C \u04103"
   m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
     \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
@@ -4434,7 +4434,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9c6aac97f839f084196000e1f2918ab4, type: 2}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4804,7 +4804,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5163712824129722115}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -4915,7 +4915,7 @@ GameObject:
   - component: {fileID: 9085805371836259158}
   - component: {fileID: 6325388805043758559}
   m_Layer: 11
-  m_Name: "\u041A\u0440\u043F\u0443\u0441 \u0437\u0430\u0445\u0432\u0430\u0442\u0430"
+  m_Name: "\u041A\u043E\u0440\u043F\u0443\u0441 \u0437\u0430\u0445\u0432\u0430\u0442\u0430"
   m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
     \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
@@ -5300,7 +5300,7 @@ GameObject:
   - component: {fileID: 1084814266176735252}
   - component: {fileID: 4843436039768645813}
   m_Layer: 11
-  m_Name: "\u04106 (1)"
+  m_Name: "\u041E\u0441\u044C \u04106"
   m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
     \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
@@ -5869,7 +5869,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6826610038471610265}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -6329,7 +6329,7 @@ GameObject:
   - component: {fileID: 4116628783722321149}
   - component: {fileID: 8797781684739246092}
   m_Layer: 11
-  m_Name: "\u04102 (1)"
+  m_Name: "\u041E\u0441\u044C \u04102"
   m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
     \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}
@@ -6610,7 +6610,7 @@ GameObject:
   - component: {fileID: 4766062070685730105}
   - component: {fileID: 4600106739235496166}
   m_Layer: 11
-  m_Name: "\u04103_4 (1)"
+  m_Name: "\u041E\u0441\u044C \u04103"
   m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
     \u0440\u043E\u0431\u043E\u0442\u0430"
   m_Icon: {fileID: 0}

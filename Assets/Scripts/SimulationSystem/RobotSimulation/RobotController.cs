@@ -137,7 +137,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             Quaternion rotateDirect;
             bool isTriangularProfile = false;
             bool onlyRotate = false;
-            //временные
+            //получение парамтеров двжижения
             float LinAcceler = point.LinAcceler;
             float LinBrake = point.LinBrake;
             float AngleAcceler = point.AngleAcceler;
@@ -145,7 +145,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             float AngleSpeed = point.AngleSpeed;
             float LinearSpeed = point.LinearSpeed;
             float vMax = 0;
-            //временные
+            //получение парамтеров двжижения
             float currentTimeMove = 0;
             float currentWay = 0;
             float Angle = 0;
@@ -157,6 +157,16 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             float sLinear = 0;
             float tLinear = 0;
 
+                // === Для расчёта скорости и ускорения ===
+            float[] previousAngles = new float[6];
+            float[] previousVelocities = new float[6] {0,0,0,0,0,0 };
+
+            float[] CurrentAngles  = new float[6];
+            float[] AngularVelocities  = new float[6];   // град/сек
+            float[] AngularAccelerations  = new float[6]; // град/сек²
+            CurrentAngles = InvKin.IK(_propertyProvider.RP, Start.Position, Start.Rotation)[point.ConfigPoint].GetFloats();
+            Array.Copy(CurrentAngles, previousAngles, 6);
+            float dt = 0;
             //равноускоренное вращение
             if (Vector3.Distance(End.Position, Start.Position) < 0.01)
             {
@@ -212,12 +222,13 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
             while (Vector3.Distance(End.Position, wayPoint.Position) > 0.01 || (Quaternion.Angle(wayPoint.Rotation, End.Rotation) > 0.01))
             {
-                if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
+                
                 while (_simManager.GetStatusSim() == SIM_STAT.PAUSE)
                 {
                     if(_simManager.GetStatusSim() == SIM_STAT.STOP) return;
                     await Awaitable.FixedUpdateAsync();
                 }
+                if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 //трапеция
                 if (!isTriangularProfile && !onlyRotate)
@@ -298,21 +309,70 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 
                 angles = InvKin.IKCalc(_propertyProvider.RP, wayPoint.Position, wayPoint.Rotation);
                 
-
-                //Выбор конфигурации точки
+                
                 InvKin.CheckLimit(angles[point.ConfigPoint], _propertyProvider.AnglesLimit);
                 if (InvKin.checkIsNaN(angles[point.ConfigPoint]))
                 {
-                    /*stopwatch.Stop();
-                    long freq = Stopwatch.Frequency;
-                    UnityEngine.Debug.Log($"Метод IKCalc выполнился за: {(double)stopwatch.ElapsedMilliseconds/freq} с");
-                    UnityEngine.Debug.Log($"Или в тиках: {stopwatch.ElapsedTicks}");*/
                     ModifyRobot(_propertyProvider, angles[point.ConfigPoint].GetFloats());
                     SetJogPosition(wayPoint);
 
+                    //расчет фактической сокрости, ускорения осей
+                     dt += Time.deltaTime;
+
+                    if (dt > 0.1 && _simManager.GetSimulationParam().CheckSpeed)
+                    {
+                        for (int i = 0; i < 6; i++)
+                        {
+                            CurrentAngles[i] = angles[point.ConfigPoint].GetThetha(i);
+                        }
+                        for (int i = 0; i < 6; i++)
+                        {
+                            float deltaAngle = Mathf.DeltaAngle(previousAngles[i], CurrentAngles[i]);
+                            AngularVelocities[i] = deltaAngle / dt;
+
+                            // Угловое ускорение
+                            AngularAccelerations[i] = (AngularVelocities[i] - previousVelocities[i]) / dt;
+
+                            // Обновляем предыдущие значения
+                            previousAngles[i] = CurrentAngles[i];
+                            previousVelocities[i] = AngularVelocities[i];
+                        }
+                        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                        sb.AppendLine("=== Robot Joints Velocity & Acceleration ===");
+                        for (int i = 0; i < 6; i++)
+                        {
+                            sb.AppendLine($"J{i + 1}:  " +
+                                         $"Angle = {CurrentAngles[i]:F1}° | " +
+                                         $"Vel = {AngularVelocities[i]:F2} °/s | " +
+                                         $"Acc = {AngularAccelerations[i]:F2} °/s²");
+                        }
+                        UnityEngine.Debug.Log(sb.ToString());
+                        for (int i = 0; i < 6; i++)
+                        {
+                            if ((currentTimeMove <= tAcсeler) && Mathf.Abs(AngularAccelerations[i]) > _propertyProvider.AngleAcceler.GetThetha(i))
+                            {
+                                _eventBus.Invoke(new SystemPauseSim($"Ось А{i + 1} (Текущая сокрость:{Mathf.Abs(AngularAccelerations[i])}); Ограничение:({_propertyProvider.AngleAcceler.GetThetha(i)})\n Измените парамерты движения к точке {point.Name}"));
+                                break;
+                            }
+                            if ((currentTimeMove > tAcсeler) && Mathf.Abs(AngularAccelerations[i]) > _propertyProvider.AngleBrake.GetThetha(i))
+                            {
+                                _eventBus.Invoke(new SystemPauseSim($"Ось А{i + 1} (Текущее ускорение торможения:{Mathf.Abs(AngularAccelerations[i])}); Ограничение({_propertyProvider.AngleBrake.GetThetha(i)})\n Измените парамерты движения к точке {point.Name}"));
+                                break;
+                            }
+                            if (AngularVelocities[i] > _propertyProvider.AnglesSpeedLimit.GetThetha(i))
+                            {
+                                _eventBus.Invoke(new SystemPauseSim($"Ось A{i + 1} (Текущая скорость:{AngularVelocities[i]}); Ограничение({_propertyProvider.AnglesSpeedLimit.GetThetha(i)})\n Измените парамерты движения к точке {point.Name}"));
+                                break;
+                            }
+
+                        }
+                        
+                        dt = 0;
+                    }
+                    //расчет фактической сокрости, ускорения осей
+
                     currentTimeMove += Time.deltaTime;
                     await Awaitable.FixedUpdateAsync();
-                    //yield return new WaitForSeconds(Time.fixedDeltaTime);
                 }
                 else
                 {
@@ -679,14 +739,24 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         /// </summary>
         /// <param name="_propertyProvider"></param>
         /// <param name="ang"></param>
-        public void ModifyRobot(RobotPropertyProvider _propertyProvider, float[] ang)
+        public float[] ModifyRobot(RobotPropertyProvider _propertyProvider, float[] ang)
         {
+            float[] deltaThetha = new float[6];
+
+            deltaThetha[0] = Mathf.DeltaAngle(_propertyProvider.J1Angle, ang[0]);
+            deltaThetha[1] = Mathf.DeltaAngle(_propertyProvider.J2Angle, ang[1]);
+            deltaThetha[2] = Mathf.DeltaAngle(_propertyProvider.J3Angle, ang[2]);
+            deltaThetha[3] = Mathf.DeltaAngle(_propertyProvider.J4Angle, ang[3]);
+            deltaThetha[4] = Mathf.DeltaAngle(_propertyProvider.J5Angle, ang[4]);
+            deltaThetha[5] = Mathf.DeltaAngle(_propertyProvider.J6Angle, ang[5]);
+
             _propertyProvider.J1Angle = ang[0];
             _propertyProvider.J2Angle = ang[1];
             _propertyProvider.J3Angle = ang[2];
             _propertyProvider.J4Angle = ang[3];
             _propertyProvider.J5Angle = ang[4];
             _propertyProvider.J6Angle = ang[5];
+            return deltaThetha;
         }
        
         void OnDestroy()
