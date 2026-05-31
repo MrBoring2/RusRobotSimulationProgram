@@ -52,23 +52,17 @@ namespace Assets.UI.CodeEditor
             compilationStatus = windowRoot.Q<Label>("compilationStatus");
             cursorPosition = windowRoot.Q<Label>("cursorPosition");
             
-            var openButton = windowRoot.Q<Button>("openButton");
+            var loadButton = windowRoot.Q<Button>("loadButton");
             var saveButton = windowRoot.Q<Button>("saveButton");
-            var saveAsButton = windowRoot.Q<Button>("saveAsButton");
-            var compileButton = windowRoot.Q<Button>("compileButton");
+            var exportButton = windowRoot.Q<Button>("exportButton");
+            var importButton = windowRoot.Q<Button>("importButton");
             var closeButton = windowRoot.Q<Button>("closeButton");
             
-            // Устанавливаем иконки
-            if (openIcon != null) openButton.style.backgroundImage = new StyleBackground(openIcon);
-            if (saveIcon != null) saveButton.style.backgroundImage = new StyleBackground(saveIcon);
-            if (saveAsIcon != null) saveAsButton.style.backgroundImage = new StyleBackground(saveAsIcon);
-            if (compileIcon != null) compileButton.style.backgroundImage = new StyleBackground(compileIcon);
-            
             // Подписываем кнопки
-            openButton.clicked += OpenFile;
-            saveButton.clicked += SaveFile;
-            saveAsButton.clicked += SaveAs;
-            compileButton.clicked += CompileCode;
+            loadButton.clicked += Load;
+            saveButton.clicked += Save;
+            exportButton.clicked += Export;
+            importButton.clicked += Import;
             closeButton.clicked += Close;
             
             // Подписываемся на события редактора
@@ -140,7 +134,7 @@ namespace Assets.UI.CodeEditor
             cursorPosition.text = $"Стр: {line} \nСимв: {column}";
         }
         
-        private void OpenFile()
+        private void Import()
         {
             var extensionsList = new[] { new ExtensionFilter("Текстовый документ", "txt") };
             StandaloneFileBrowser.OpenFilePanelAsync("Выберите файл", "", extensionsList, false, LoadFile);
@@ -178,22 +172,22 @@ namespace Assets.UI.CodeEditor
             compilationStatus.AddToClassList("success-status");
         }
         
-        private void SaveFile()
-        {
-            if (filePaths.Count > lastIndex && !string.IsNullOrEmpty(filePaths[lastIndex]))
-            {
-                File.WriteAllText(filePaths[lastIndex], codeEditor.GetText());
-                compilationStatus.text = $"Сохранено: {Path.GetFileName(filePaths[lastIndex])}";
-                compilationStatus.RemoveFromClassList("error-status");
-                compilationStatus.AddToClassList("success-status");
-            }
-            else
-            {
-                SaveAs();
-            }
-        }
+        //private void SaveFile()
+        //{
+        //    if (filePaths.Count > lastIndex && !string.IsNullOrEmpty(filePaths[lastIndex]))
+        //    {
+        //        File.WriteAllText(filePaths[lastIndex], codeEditor.GetText());
+        //        compilationStatus.text = $"Сохранено: {Path.GetFileName(filePaths[lastIndex])}";
+        //        compilationStatus.RemoveFromClassList("error-status");
+        //        compilationStatus.AddToClassList("success-status");
+        //    }
+        //    else
+        //    {
+        //        Export();
+        //    }
+        //}
         
-        private void SaveAs()
+        private void Export()
         {
             var extensionsList = new[] { new ExtensionFilter("Текстовый документ", "txt") };
             StandaloneFileBrowser.SaveFilePanelAsync("Сохранить как", "", "program", extensionsList, (string path) =>
@@ -225,39 +219,49 @@ namespace Assets.UI.CodeEditor
                 compilationStatus.AddToClassList("success-status");
             });
         }
-        
-        private void CompileCode()
+
+        private void Load()
         {
-            string code = codeEditor.GetText();
-            compilationStatus.text = "Компиляция...";
-            compilationStatus.RemoveFromClassList("error-status");
-            compilationStatus.RemoveFromClassList("success-status");
-            
-            // Здесь вызываем ваш компилятор
-            try
-            {
-                // var result = YourCompiler.Compile(code);
-                // if (result.HasErrors)
-                // {
-                //     compilationStatus.text = $"Ошибка: {result.Errors[0].Message} (строка {result.Errors[0].Line})";
-                //     compilationStatus.AddToClassList("error-status");
-                // }
-                // else
-                // {
-                //     compilationStatus.text = "Компиляция успешна!";
-                //     compilationStatus.AddToClassList("success-status");
-                //     // Отправляем команды роботу через EventBus
-                // }
-                
-                // Временная заглушка
-                compilationStatus.text = "Компиляция: временно отключена (интегрируйте ваш компилятор)";
-            }
-            catch (System.Exception e)
-            {
-                compilationStatus.text = $"Ошибка компиляции: {e.Message}";
-                compilationStatus.AddToClassList("error-status");
-            }
+            compilationStatus.text = "Load is not yet implemented";
         }
+
+        private void Save()
+        {
+            compilationStatus.text = "Save is not yet implemented";
+        }
+        
+        //private void CompileCode()
+        //{
+        //    string code = codeEditor.GetText();
+        //    compilationStatus.text = "Компиляция...";
+        //    compilationStatus.RemoveFromClassList("error-status");
+        //    compilationStatus.RemoveFromClassList("success-status");
+            
+        //    // Здесь вызываем ваш компилятор
+        //    try
+        //    {
+        //        // var result = YourCompiler.Compile(code);
+        //        // if (result.HasErrors)
+        //        // {
+        //        //     compilationStatus.text = $"Ошибка: {result.Errors[0].Message} (строка {result.Errors[0].Line})";
+        //        //     compilationStatus.AddToClassList("error-status");
+        //        // }
+        //        // else
+        //        // {
+        //        //     compilationStatus.text = "Компиляция успешна!";
+        //        //     compilationStatus.AddToClassList("success-status");
+        //        //     // Отправляем команды роботу через EventBus
+        //        // }
+                
+        //        // Временная заглушка
+        //        compilationStatus.text = "Компиляция: временно отключена (интегрируйте ваш компилятор)";
+        //    }
+        //    catch (System.Exception e)
+        //    {
+        //        compilationStatus.text = $"Ошибка компиляции: {e.Message}";
+        //        compilationStatus.AddToClassList("error-status");
+        //    }
+        //}
         
         public void Show()
         {

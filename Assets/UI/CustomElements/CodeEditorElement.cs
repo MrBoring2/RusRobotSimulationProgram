@@ -154,6 +154,7 @@ namespace Assets.UI.CodeEditor
             codeInput.style.minHeight = 500;
             codeInput.style.whiteSpace = WhiteSpace.Normal;
             codeInput.multiline = true;
+            codeInput.selectAllOnFocus = false;
             codeInput.style.unityTextAlign = TextAnchor.UpperLeft;
             codeContainer.Add(codeInput);
         }
@@ -162,8 +163,8 @@ namespace Assets.UI.CodeEditor
         {
             codeInput.RegisterCallback<ChangeEvent<string>>(OnCodeInputChanged);
             codeInput.RegisterCallback<FocusOutEvent>(e => UpdateHighlightingNow());
-            codeInput.RegisterCallback<MouseUpEvent>(e => UpdateCursorPosition());
-            codeInput.RegisterCallback<KeyDownEvent>(e => UpdateCursorPosition());
+            codeInput.RegisterCallback<MouseDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
+            codeInput.RegisterCallback<KeyDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
         }
 
         private void OnCodeInputChanged(ChangeEvent<string> evt)
@@ -256,6 +257,11 @@ namespace Assets.UI.CodeEditor
             }
 
             UpdateHighlightingNow();
+        }
+
+        private void ScheduleCursorUpdate()
+        {
+            schedule.Execute(() => UpdateCursorPosition()).StartingIn(0);
         }
 
         private void UpdateCursorPosition()
@@ -360,7 +366,7 @@ namespace Assets.UI.CodeEditor
                 colorSpans.Add((tokenStart, tokenEnd, color));
             }
 
-            colorSpans.Sort((a, b) => a.start.CompareTo(b.start));
+            //colorSpans.Sort((a, b) => a.start.CompareTo(b.start));
 
             StringBuilder result = new StringBuilder();
             int lastPos = 0;
@@ -370,12 +376,12 @@ namespace Assets.UI.CodeEditor
                 if (span.start > lastPos)
                 {
                     string between = currentText.Substring(lastPos, span.start - lastPos);
-                    result.Append(EscapeRichText(between));
+                    result.Append(between);
                 }
 
                 string textSegment = currentText.Substring(span.start, span.end - span.start);
                 string colorHex = ColorUtility.ToHtmlStringRGB(span.color);
-                result.Append($"<color=#{colorHex}>{EscapeRichText(textSegment)}</color>");
+                result.Append($"<color=#{colorHex}>{textSegment}</color>");
 
                 lastPos = span.end;
             }
@@ -383,7 +389,7 @@ namespace Assets.UI.CodeEditor
             if (lastPos < currentText.Length)
             {
                 string remaining = currentText.Substring(lastPos);
-                result.Append(EscapeRichText(remaining));
+                result.Append(remaining);
             }
 
             return result.ToString();

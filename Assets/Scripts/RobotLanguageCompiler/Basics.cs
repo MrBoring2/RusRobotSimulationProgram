@@ -1,5 +1,71 @@
 ﻿namespace RobotLanguageCompiler
 {
+    public enum RobotTokenType
+    {
+        // Ключевые слова
+        PtpPoint,       // ptp_point
+        LinPoint,       // lin_point
+        Wait,           // wait
+        OpenEffector,   // open_effector
+        CloseEffector,  // close_effector
+
+        // Разделители
+        LeftParen,      // (
+        RightParen,     // )
+        LeftBrace,      // {
+        RightBrace,     // }
+
+        // Прочее
+        Identifier,     // имя подпрограммы или имя точки
+        Number,         // число (для wait)
+        Newline,
+        EndOfFile,
+        Error
+    }
+
+    public enum PLCTokenType
+    {
+        // Ключевые слова секций
+        InitSection,        // #INIT
+        RobotsBlocksSection,// #ROBOTS_BLOCKS
+        LogicSection,       // #LOGIC
+
+        // Ключевые слова
+        Robot,              // robot
+        If,                 // if
+        Elif,               // elif
+        Else,               // else
+        StartProgram,       // start_program
+        Int,                // int
+        Bool,               // bool
+        True,               // true
+        False,              // false
+
+        // Операторы
+        Assign,             // =
+        Increment,          // ++
+        Decrement,          // --
+        Equal,              // ==
+        NotEqual,           // !=
+        Greater,            // >
+        Less,               // <
+        GreaterOrEqual,     // >=
+        LessOrEqual,        // <=
+
+        // Разделители
+        LeftParen,          // (
+        RightParen,         // )
+        LeftBrace,          // {
+        RightBrace,         // }
+
+        // Прочее
+        Identifier,
+        Number,
+        Newline,
+        EndOfFile,
+        Error
+    }
+
     /// <summary>
     /// Типы токенов
     /// </summary>
