@@ -1,6 +1,4 @@
-using RobotLanguageCompiler;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -25,33 +23,9 @@ namespace Assets.UI.CodeEditor
         private int currentCursorLine = 1;
         private int currentCursorColumn = 1;
 
+        private ISyntaxHighlighter currentHighlighter;
+
         private const int MAX_LINE_LENGTH = 75;
-
-        // Цвета для подсветки синтаксиса (светлая тема)
-        private readonly Color keywordColor = new Color(0.0f, 0.0f, 0.8f);
-        private readonly Color operatorColor = new Color(0.8f, 0.4f, 0.0f);
-        private readonly Color numberColor = new Color(0.0f, 0.6f, 0.0f);
-        private readonly Color stringColor = new Color(0.8f, 0.2f, 0.2f);
-        private readonly Color commentColor = new Color(0.2f, 0.5f, 0.2f);
-        private readonly Color identifierColor = Color.black;
-        private readonly Color errorColor = new Color(0.9f, 0.2f, 0.2f);
-
-        private readonly HashSet<TokenType> keywords = new HashSet<TokenType>
-        {
-            TokenType.If, TokenType.Elif, TokenType.Else, TokenType.While,
-            TokenType.Int, TokenType.Bool, TokenType.PtpPoint, TokenType.LinPoint,
-            TokenType.Wait, TokenType.WaitFor, TokenType.Subprogram,
-            TokenType.True, TokenType.False, TokenType.In, TokenType.Out
-        };
-
-        private readonly HashSet<TokenType> operators = new HashSet<TokenType>
-        {
-            TokenType.Assign, TokenType.Plus, TokenType.Minus,
-            TokenType.Multiply, TokenType.Divide, TokenType.Equal,
-            TokenType.NotEqual, TokenType.Greater, TokenType.Less,
-            TokenType.GreaterOrEqual, TokenType.LessOrEqual,
-            TokenType.And, TokenType.Or, TokenType.Not
-        };
 
         public event Action<string> OnTextChanged;
         public event Action<int, int> OnCursorPositionChanged;
@@ -69,18 +43,41 @@ namespace Assets.UI.CodeEditor
             SetText("");
         }
 
+        /// <summary>
+        /// Устанавливает подсветщик синтаксиса для текущего языка
+        /// </summary>
+        public void SetHighlighter(ISyntaxHighlighter highlighter)
+        {
+            currentHighlighter = highlighter;
+            UpdateHighlightingNow();
+        }
+
+        /// <summary>
+        /// Нормализует окончания строк: заменяет \r\n на \n и удаляет одиночные \r
+        /// </summary>
+        private string NormalizeLineEndings(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            // Сначала заменяем \r\n на \n
+            string normalized = text.Replace("\r\n", "\n");
+            // Затем удаляем оставшиеся \r
+            normalized = normalized.Replace("\r", "");
+
+            return normalized;
+        }
+
         private void InitUI()
         {
             style.flexGrow = 1;
             style.backgroundColor = new Color(0.85f, 0.85f, 0.85f);
 
-            // Основной ScrollView
             scrollView = new ScrollView();
             scrollView.style.flexGrow = 1;
             scrollView.mode = ScrollViewMode.Vertical;
             Add(scrollView);
 
-            // Контейнер для строки с номерами и кодом
             var rowContainer = new VisualElement();
             rowContainer.style.flexDirection = FlexDirection.Row;
             rowContainer.style.flexGrow = 1;
@@ -101,7 +98,6 @@ namespace Assets.UI.CodeEditor
             lineNumbersLabel.style.marginBottom = 0;
             lineNumbersLabel.style.marginLeft = 0;
             lineNumbersLabel.style.marginRight = 0;
-
             lineNumbersLabel.style.borderRightWidth = 5;
             lineNumbersLabel.style.borderRightColor = new Color(0.4f, 0.4f, 0.4f);
             lineNumbersLabel.style.fontSize = 16;
@@ -125,7 +121,6 @@ namespace Assets.UI.CodeEditor
             codeHighlight.style.paddingBottom = 5;
             codeHighlight.style.paddingLeft = 7;
             codeHighlight.style.paddingRight = 5;
-
             codeHighlight.style.minHeight = 500;
             codeHighlight.style.whiteSpace = WhiteSpace.Normal;
             codeHighlight.style.unityTextAlign = TextAnchor.UpperLeft;
@@ -146,7 +141,6 @@ namespace Assets.UI.CodeEditor
             codeInput.style.paddingBottom = 5;
             codeInput.style.paddingLeft = 5;
             codeInput.style.paddingRight = 5;
-
             codeInput.style.marginTop = 0;
             codeInput.style.marginBottom = 0;
             codeInput.style.marginLeft = 0;
@@ -171,12 +165,13 @@ namespace Assets.UI.CodeEditor
         {
             string newText = evt.newValue;
 
-            // Ограничиваем длину строк
+            // Нормализуем окончания строк
+            newText = NormalizeLineEndings(newText);
+
             string wrappedText = WrapLines(newText);
 
             if (wrappedText != newText)
             {
-                // Если пришлось обернуть строки, обновляем поле без вызова события
                 int cursorPos = codeInput.cursorIndex;
                 codeInput.SetValueWithoutNotify(wrappedText);
                 codeInput.cursorIndex = Math.Min(cursorPos, wrappedText.Length);
@@ -213,7 +208,6 @@ namespace Assets.UI.CodeEditor
                 }
                 else
                 {
-                    // Разбиваем длинную строку на части
                     for (int j = 0; j < line.Length; j += MAX_LINE_LENGTH)
                     {
                         int length = Math.Min(MAX_LINE_LENGTH, line.Length - j);
@@ -326,9 +320,10 @@ namespace Assets.UI.CodeEditor
                 int selectStart = codeInput.selectIndex;
                 int selectEnd = codeInput.selectIndex;
 
-                var lexer = new Lexer(currentText);
-                var tokens = lexer.Tokenize();
-                string highlightedText = BuildHighlightedText(tokens);
+                string highlightedText = currentHighlighter != null
+                    ? currentHighlighter.GetHighlightedText(currentText)
+                    : currentText;
+
                 codeHighlight.text = highlightedText;
 
                 codeInput.cursorIndex = cursorPos;
@@ -345,108 +340,10 @@ namespace Assets.UI.CodeEditor
             }
         }
 
-        private string BuildHighlightedText(List<Token> tokens)
-        {
-            if (tokens == null || tokens.Count == 0)
-                return EscapeRichText(currentText);
-
-            var colorSpans = new List<(int start, int end, Color color)>();
-
-            foreach (var token in tokens)
-            {
-                if (token.Type == TokenType.Newline || token.Type == TokenType.EndOfFile)
-                    continue;
-
-                int tokenStart = GetTokenPosition(token);
-                if (tokenStart < 0) continue;
-
-                int tokenEnd = tokenStart + token.Value.Length;
-                Color color = GetTokenColor(token);
-
-                colorSpans.Add((tokenStart, tokenEnd, color));
-            }
-
-            //colorSpans.Sort((a, b) => a.start.CompareTo(b.start));
-
-            StringBuilder result = new StringBuilder();
-            int lastPos = 0;
-
-            foreach (var span in colorSpans)
-            {
-                if (span.start > lastPos)
-                {
-                    string between = currentText.Substring(lastPos, span.start - lastPos);
-                    result.Append(between);
-                }
-
-                string textSegment = currentText.Substring(span.start, span.end - span.start);
-                string colorHex = ColorUtility.ToHtmlStringRGB(span.color);
-                result.Append($"<color=#{colorHex}>{textSegment}</color>");
-
-                lastPos = span.end;
-            }
-
-            if (lastPos < currentText.Length)
-            {
-                string remaining = currentText.Substring(lastPos);
-                result.Append(remaining);
-            }
-
-            return result.ToString();
-        }
-
-        private int GetTokenPosition(Token token)
-        {
-            string[] lines = currentText.Split('\n');
-
-            if (token.Line - 1 >= lines.Length)
-                return -1;
-
-            int position = 0;
-            for (int i = 0; i < token.Line - 1; i++)
-            {
-                position += lines[i].Length + 1;
-            }
-
-            position += token.Column - 1;
-
-            return position;
-        }
-
-        private Color GetTokenColor(Token token)
-        {
-            if (token.Type == TokenType.Error)
-                return errorColor;
-
-            if (keywords.Contains(token.Type))
-                return keywordColor;
-
-            if (operators.Contains(token.Type))
-                return operatorColor;
-
-            if (token.Type == TokenType.IntegerLiteral || token.Type == TokenType.FloatLiteral)
-                return numberColor;
-
-            if (token.Type == TokenType.StringLiteral)
-                return stringColor;
-
-            if (token.Type == TokenType.Comment)
-                return commentColor;
-
-            return identifierColor;
-        }
-
-        private string EscapeRichText(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return text;
-
-            return text.Replace("<", "&lt;").Replace(">", "&gt;");
-        }
-
         public void SetText(string text)
         {
-            currentText = text ?? "";
+            // Нормализуем окончания строк при установке текста
+            currentText = NormalizeLineEndings(text ?? "");
             string wrappedText = WrapLines(currentText);
             codeInput.SetValueWithoutNotify(wrappedText);
             if (wrappedText != currentText)
