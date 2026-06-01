@@ -1,0 +1,368 @@
+using System;
+using System.Text;
+using UnityEngine;
+using UnityEngine.UIElements;
+
+namespace Assets.UI.CodeEditor
+{
+    /// <summary>
+    /// Кастомный элемент редактора кода с подсветкой синтаксиса
+    /// </summary>
+    [UxmlElement]
+    public partial class CodeEditorElement : VisualElement
+    {
+        private ScrollView scrollView;
+        private Label lineNumbersLabel;
+        private TextField codeInput;
+        private TextElement codeHighlight;
+
+        private string currentText = "";
+        private bool isHighlightingScheduled = false;
+        private string pendingHighlightText = "";
+
+        private int currentCursorLine = 1;
+        private int currentCursorColumn = 1;
+
+        private ISyntaxHighlighter currentHighlighter;
+
+        private const int MAX_LINE_LENGTH = 75;
+
+        public event Action<string> OnTextChanged;
+        public event Action<int, int> OnCursorPositionChanged;
+
+        public string Text
+        {
+            get => codeInput.text;
+            set => SetText(value);
+        }
+
+        public CodeEditorElement()
+        {
+            InitUI();
+            RegisterCallbacks();
+            SetText("");
+        }
+
+        /// <summary>
+        /// Устанавливает подсветщик синтаксиса для текущего языка
+        /// </summary>
+        public void SetHighlighter(ISyntaxHighlighter highlighter)
+        {
+            currentHighlighter = highlighter;
+            UpdateHighlightingNow();
+        }
+
+        /// <summary>
+        /// Нормализует окончания строк: заменяет \r\n на \n и удаляет одиночные \r
+        /// </summary>
+        private string NormalizeLineEndings(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            // Сначала заменяем \r\n на \n
+            string normalized = text.Replace("\r\n", "\n");
+            // Затем удаляем оставшиеся \r
+            normalized = normalized.Replace("\r", "");
+
+            return normalized;
+        }
+
+        private void InitUI()
+        {
+            style.flexGrow = 1;
+            style.backgroundColor = new Color(0.85f, 0.85f, 0.85f);
+
+            scrollView = new ScrollView();
+            scrollView.style.flexGrow = 1;
+            scrollView.mode = ScrollViewMode.Vertical;
+            Add(scrollView);
+
+            var rowContainer = new VisualElement();
+            rowContainer.style.flexDirection = FlexDirection.Row;
+            rowContainer.style.flexGrow = 1;
+            rowContainer.style.minWidth = 0;
+            scrollView.contentContainer.Add(rowContainer);
+
+            // Номера строк
+            lineNumbersLabel = new Label();
+            lineNumbersLabel.style.width = 50;
+            lineNumbersLabel.style.minWidth = 50;
+            lineNumbersLabel.style.maxWidth = 70;
+            lineNumbersLabel.style.backgroundColor = Color.clear;
+            lineNumbersLabel.style.paddingTop = 5;
+            lineNumbersLabel.style.paddingBottom = 5;
+            lineNumbersLabel.style.paddingLeft = 5;
+            lineNumbersLabel.style.paddingRight = 5;
+            lineNumbersLabel.style.marginTop = 0;
+            lineNumbersLabel.style.marginBottom = 0;
+            lineNumbersLabel.style.marginLeft = 0;
+            lineNumbersLabel.style.marginRight = 0;
+            lineNumbersLabel.style.borderRightWidth = 5;
+            lineNumbersLabel.style.borderRightColor = new Color(0.4f, 0.4f, 0.4f);
+            lineNumbersLabel.style.fontSize = 16;
+            lineNumbersLabel.style.color = new Color(0.3f, 0.3f, 0.3f);
+            lineNumbersLabel.style.whiteSpace = WhiteSpace.Normal;
+            lineNumbersLabel.style.unityTextAlign = TextAnchor.UpperRight;
+            rowContainer.Add(lineNumbersLabel);
+
+            // Контейнер для кода
+            var codeContainer = new VisualElement();
+            codeContainer.style.flexGrow = 1;
+            codeContainer.style.minWidth = 0;
+            rowContainer.Add(codeContainer);
+
+            // Подсвеченный текст (верхний слой)
+            codeHighlight = new TextElement();
+            codeHighlight.style.fontSize = 16;
+            codeHighlight.style.color = Color.black;
+            codeHighlight.style.backgroundColor = Color.clear;
+            codeHighlight.style.paddingTop = 5;
+            codeHighlight.style.paddingBottom = 5;
+            codeHighlight.style.paddingLeft = 7;
+            codeHighlight.style.paddingRight = 5;
+            codeHighlight.style.minHeight = 500;
+            codeHighlight.style.whiteSpace = WhiteSpace.Normal;
+            codeHighlight.style.unityTextAlign = TextAnchor.UpperLeft;
+            codeHighlight.enableRichText = true;
+            codeContainer.Add(codeHighlight);
+
+            // Поле ввода (нижний слой)
+            codeInput = new TextField();
+            codeInput.style.position = Position.Absolute;
+            codeInput.style.top = 0;
+            codeInput.style.left = 0;
+            codeInput.style.right = 0;
+            codeInput.style.bottom = 0;
+            codeInput.style.fontSize = 16;
+            codeInput.style.color = Color.clear;
+            codeInput.style.backgroundColor = Color.clear;
+            codeInput.style.paddingTop = 5;
+            codeInput.style.paddingBottom = 5;
+            codeInput.style.paddingLeft = 5;
+            codeInput.style.paddingRight = 5;
+            codeInput.style.marginTop = 0;
+            codeInput.style.marginBottom = 0;
+            codeInput.style.marginLeft = 0;
+            codeInput.style.marginRight = 0;
+            codeInput.style.minHeight = 500;
+            codeInput.style.whiteSpace = WhiteSpace.Normal;
+            codeInput.multiline = true;
+            codeInput.selectAllOnFocus = false;
+            codeInput.style.unityTextAlign = TextAnchor.UpperLeft;
+            codeContainer.Add(codeInput);
+        }
+
+        private void RegisterCallbacks()
+        {
+            codeInput.RegisterCallback<ChangeEvent<string>>(OnCodeInputChanged);
+            codeInput.RegisterCallback<FocusOutEvent>(e => UpdateHighlightingNow());
+            codeInput.RegisterCallback<MouseDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
+            codeInput.RegisterCallback<KeyDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
+        }
+
+        private void OnCodeInputChanged(ChangeEvent<string> evt)
+        {
+            string newText = evt.newValue;
+
+            // Нормализуем окончания строк
+            newText = NormalizeLineEndings(newText);
+
+            string wrappedText = WrapLines(newText);
+
+            if (wrappedText != newText)
+            {
+                int cursorPos = codeInput.cursorIndex;
+                codeInput.SetValueWithoutNotify(wrappedText);
+                codeInput.cursorIndex = Math.Min(cursorPos, wrappedText.Length);
+                currentText = wrappedText;
+            }
+            else
+            {
+                currentText = newText;
+            }
+
+            OnTextChanged?.Invoke(currentText);
+
+            UpdateLineNumbers();
+            UpdateCursorPosition();
+
+            ScheduleHighlighting();
+        }
+
+        private string WrapLines(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            string[] lines = text.Split('\n');
+            StringBuilder result = new StringBuilder();
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+
+                if (line.Length <= MAX_LINE_LENGTH)
+                {
+                    result.Append(line);
+                }
+                else
+                {
+                    for (int j = 0; j < line.Length; j += MAX_LINE_LENGTH)
+                    {
+                        int length = Math.Min(MAX_LINE_LENGTH, line.Length - j);
+                        result.Append(line.Substring(j, length));
+                        if (j + length < line.Length)
+                        {
+                            result.Append('\n');
+                        }
+                    }
+                }
+
+                if (i < lines.Length - 1)
+                {
+                    result.Append('\n');
+                }
+            }
+
+            return result.ToString();
+        }
+
+        private void ScheduleHighlighting()
+        {
+            pendingHighlightText = currentText;
+
+            if (!isHighlightingScheduled)
+            {
+                isHighlightingScheduled = true;
+                schedule.Execute(() => DelayedHighlightUpdate()).StartingIn(50);
+            }
+        }
+
+        private void DelayedHighlightUpdate()
+        {
+            isHighlightingScheduled = false;
+
+            if (pendingHighlightText != currentText)
+            {
+                pendingHighlightText = currentText;
+                schedule.Execute(() => DelayedHighlightUpdate()).StartingIn(50);
+                return;
+            }
+
+            UpdateHighlightingNow();
+        }
+
+        private void ScheduleCursorUpdate()
+        {
+            schedule.Execute(() => UpdateCursorPosition()).StartingIn(0);
+        }
+
+        private void UpdateCursorPosition()
+        {
+            int cursorPos = codeInput.cursorIndex;
+            string text = codeInput.text;
+
+            currentCursorLine = 1;
+            currentCursorColumn = 1;
+
+            for (int i = 0; i < cursorPos && i < text.Length; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    currentCursorLine++;
+                    currentCursorColumn = 1;
+                }
+                else
+                {
+                    currentCursorColumn++;
+                }
+            }
+
+            OnCursorPositionChanged?.Invoke(currentCursorLine, currentCursorColumn);
+        }
+
+        private void UpdateLineNumbers()
+        {
+            if (string.IsNullOrEmpty(currentText))
+            {
+                lineNumbersLabel.text = "1";
+                return;
+            }
+
+            string[] lines = currentText.Split('\n');
+            int lineCount = Math.Min(lines.Length, 9999);
+
+            StringBuilder numbersBuilder = new StringBuilder();
+            for (int i = 1; i <= lineCount; i++)
+            {
+                numbersBuilder.Append(i);
+                numbersBuilder.Append('\n');
+            }
+
+            if (numbersBuilder.Length > 0)
+                numbersBuilder.Length--;
+
+            lineNumbersLabel.text = numbersBuilder.ToString();
+        }
+
+        private void UpdateHighlightingNow()
+        {
+            if (string.IsNullOrEmpty(currentText))
+            {
+                codeHighlight.text = "";
+                return;
+            }
+
+            try
+            {
+                int cursorPos = codeInput.cursorIndex;
+                int selectStart = codeInput.selectIndex;
+                int selectEnd = codeInput.selectIndex;
+
+                string highlightedText = currentHighlighter != null
+                    ? currentHighlighter.GetHighlightedText(currentText)
+                    : currentText;
+
+                codeHighlight.text = highlightedText;
+
+                codeInput.cursorIndex = cursorPos;
+                if (selectStart != selectEnd)
+                {
+                    codeInput.selectIndex = selectStart;
+                    codeInput.selectIndex = selectEnd;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Highlighting error: {e.Message}");
+                codeHighlight.text = currentText;
+            }
+        }
+
+        public void SetText(string text)
+        {
+            // Нормализуем окончания строк при установке текста
+            currentText = NormalizeLineEndings(text ?? "");
+            string wrappedText = WrapLines(currentText);
+            codeInput.SetValueWithoutNotify(wrappedText);
+            if (wrappedText != currentText)
+            {
+                currentText = wrappedText;
+            }
+            UpdateLineNumbers();
+            UpdateHighlightingNow();
+            UpdateCursorPosition();
+        }
+
+        public string GetText()
+        {
+            return codeInput.text;
+        }
+
+        public (int line, int column) GetCursorPosition()
+        {
+            return (currentCursorLine, currentCursorColumn);
+        }
+    }
+}

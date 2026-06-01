@@ -61,7 +61,7 @@ namespace Assets.Scripts.Models
         public string Id { get; private set; }
         public PLCCondition IfCondition { get; set; }
         public List<PLCCondition> ElifConditions { get; set; } = new List<PLCCondition>();
-        public PLCCondition ElseConndition { get; set; } = new PLCCondition(ConditionType.Else);
+        public PLCCondition ElseCondition { get; set; } = new PLCCondition(ConditionType.Else);
 
 
     }

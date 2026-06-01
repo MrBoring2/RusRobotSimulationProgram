@@ -1162,8 +1162,8 @@ namespace Assets.Scripts.UI
                     if (block.IfCondition.Id == id) return block.IfCondition;
                     foreach (var elif in block.ElifConditions)
                         if (elif.Id == id) return elif;
-                    if (block.ElseConndition != null && block.ElseConndition.Id == id)
-                        return block.ElseConndition;
+                    if (block.ElseCondition != null && block.ElseCondition.Id == id)
+                        return block.ElseCondition;
 
                     var found = FindConditionInList(block.IfCondition.Content, id);
                     if (found != null) return found;
@@ -1172,9 +1172,9 @@ namespace Assets.Scripts.UI
                         found = FindConditionInList(elif.Content, id);
                         if (found != null) return found;
                     }
-                    if (block.ElseConndition != null)
+                    if (block.ElseCondition != null)
                     {
-                        found = FindConditionInList(block.ElseConndition.Content, id);
+                        found = FindConditionInList(block.ElseCondition.Content, id);
                         if (found != null) return found;
                     }
                 }
@@ -1452,9 +1452,9 @@ namespace Assets.Scripts.UI
                         found = FindCommandInList(elif.Content, commandId);
                         if (found != null) return found;
                     }
-                    if (block.ElseConndition != null)
+                    if (block.ElseCondition != null)
                     {
-                        found = FindCommandInList(block.ElseConndition.Content, commandId);
+                        found = FindCommandInList(block.ElseCondition.Content, commandId);
                         if (found != null) return found;
                     }
                 }
@@ -1520,9 +1520,9 @@ namespace Assets.Scripts.UI
                         if (found != null) return found;
                     }
 
-                    if (block.ElseConndition != null)
+                    if (block.ElseCondition != null)
                     {
-                        found = FindBlockConditionById(block.ElseConndition.Content, id);
+                        found = FindBlockConditionById(block.ElseCondition.Content, id);
                         if (found != null) return found;
                     }
                 }
@@ -1629,9 +1629,9 @@ namespace Assets.Scripts.UI
                         }
                     }
 
-                    if (block.ElseConndition != null && block.ElseConndition.Id == parentId)
+                    if (block.ElseCondition != null && block.ElseCondition.Id == parentId)
                     {
-                        targetList = block.ElseConndition.Content;
+                        targetList = block.ElseCondition.Content;
                         return true;
                     }
 
@@ -1644,7 +1644,7 @@ namespace Assets.Scripts.UI
                             return true;
                     }
 
-                    if (block.ElseConndition != null && TryAddToContent(block.ElseConndition.Content, parentId, itemToAdd, out targetList))
+                    if (block.ElseCondition != null && TryAddToContent(block.ElseCondition.Content, parentId, itemToAdd, out targetList))
                         return true;
                 }
             }
@@ -1694,8 +1694,8 @@ namespace Assets.Scripts.UI
                             return true;
                     }
 
-                    if (block.ElseConndition != null &&
-                        RemoveConditionFromList(block.ElseConndition.Content, conditionId))
+                    if (block.ElseCondition != null &&
+                        RemoveConditionFromList(block.ElseCondition.Content, conditionId))
                         return true;
                 }
             }
@@ -1760,7 +1760,7 @@ namespace Assets.Scripts.UI
                     {
                         if (RemoveCommandFromList(elif.Content, commandId)) return true;
                     }
-                    if (block.ElseConndition != null && RemoveCommandFromList(block.ElseConndition.Content, commandId)) return true;
+                    if (block.ElseCondition != null && RemoveCommandFromList(block.ElseCondition.Content, commandId)) return true;
                 }
             }
             return false;
@@ -1792,7 +1792,7 @@ namespace Assets.Scripts.UI
                     {
                         if (RemoveCommandFromList(elif.Content, commandId, out removedCmd, out sourceList)) return true;
                     }
-                    if (block.ElseConndition != null && RemoveCommandFromList(block.ElseConndition.Content, commandId, out removedCmd, out sourceList)) return true;
+                    if (block.ElseCondition != null && RemoveCommandFromList(block.ElseCondition.Content, commandId, out removedCmd, out sourceList)) return true;
                 }
             }
             return false;
@@ -1840,7 +1840,7 @@ namespace Assets.Scripts.UI
                     {
                         if (RemoveELIFFromList(elif.Content, elifId)) return true;
                     }
-                    if (block.ElseConndition != null && RemoveELIFFromList(block.ElseConndition.Content, elifId)) return true;
+                    if (block.ElseCondition != null && RemoveELIFFromList(block.ElseCondition.Content, elifId)) return true;
                 }
             }
             return false;
@@ -1960,14 +1960,14 @@ namespace Assets.Scripts.UI
             }
 
             // Отрисовка ELSE блока
-            if (block.ElseConndition != null)
+            if (block.ElseCondition != null)
             {
-                var elseFoldout = new CustomFoldout { Text = $"Иначе: {block.ElseConndition.Expression}" };
+                var elseFoldout = new CustomFoldout { Text = $"Иначе: {block.ElseCondition.Expression}" };
                 elseFoldout.name = "plc-else-block";
-                elseFoldout.userData = block.ElseConndition.Id;
+                elseFoldout.userData = block.ElseCondition.Id;
                 elseFoldout.AddToClassList("plc-else-block");
                 RegisterExpanedFoldout(elseFoldout);
-                foreach (var content in block.ElseConndition.Content)
+                foreach (var content in block.ElseCondition.Content)
                 {
                     DrawPLCItemRecursive(content, elseFoldout);
                 }
@@ -3335,14 +3335,14 @@ namespace Assets.Scripts.UI
                     }
 
                     // Проверяем ELSE Content
-                    if (block.ElseConndition != null)
+                    if (block.ElseCondition != null)
                     {
-                        foreach (var c in block.ElseConndition.Content)
+                        foreach (var c in block.ElseCondition.Content)
                         {
                             if (c is PLCCommand cmd && cmd.Id == commandId)
-                                return block.ElseConndition.Content;
+                                return block.ElseCondition.Content;
                         }
-                        found = FindParentListForCommandInConditions(block.ElseConndition.Content, commandId);
+                        found = FindParentListForCommandInConditions(block.ElseCondition.Content, commandId);
                         if (found != null) return found;
                     }
                 }
@@ -3504,7 +3504,7 @@ namespace Assets.Scripts.UI
                             return true;
                     }
                     // Рекурсивно ищем в ELSE блоке
-                    if (block.ElseConndition != null && FindCommandInListRecursive(block.ElseConndition.Content, commandId))
+                    if (block.ElseCondition != null && FindCommandInListRecursive(block.ElseCondition.Content, commandId))
                         return true;
                 }
             }
@@ -3539,7 +3539,7 @@ namespace Assets.Scripts.UI
                         if (elif.Id == conditionId)
                             return true;
                     }
-                    if (block.ElseConndition != null && block.ElseConndition.Id == conditionId)
+                    if (block.ElseCondition != null && block.ElseCondition.Id == conditionId)
                         return true;
 
                     // Рекурсивно ищем во вложенных Content
@@ -3550,7 +3550,7 @@ namespace Assets.Scripts.UI
                         if (FindConditionInBlockRecursive(elif.Content, conditionId))
                             return true;
                     }
-                    if (block.ElseConndition != null && FindConditionInBlockRecursive(block.ElseConndition.Content, conditionId))
+                    if (block.ElseCondition != null && FindConditionInBlockRecursive(block.ElseCondition.Content, conditionId))
                         return true;
                 }
             }
