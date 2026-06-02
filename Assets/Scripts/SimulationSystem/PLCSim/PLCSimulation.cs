@@ -220,12 +220,12 @@ public static class PLCDataConverter
             }
 
             // Else
-            if (blockCond.ElseConndition != null)
+            if (blockCond.ElseCondition != null)
             {
-                var elseBranch = new PLCConditionBranch(blockCond.ElseConndition.Id, ENUM_PLC_COMMANDS.ELSE_CONDITION)
+                var elseBranch = new PLCConditionBranch(blockCond.ElseCondition.Id, ENUM_PLC_COMMANDS.ELSE_CONDITION)
                 {
                     Condition = null,
-                    ProgrammElements = ParsePLCBaseList(blockCond.ElseConndition.Content)
+                    ProgrammElements = ParsePLCBaseList(blockCond.ElseCondition.Content)
                 };
                 condBlock.Branches.Add(elseBranch);
             }
