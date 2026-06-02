@@ -778,7 +778,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                     //contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(robot)));
                     //contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(robot)));
                     //contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(robot)));
-                    contextMenu.Add(CreateMenuButton("Открыть редактор", () => OpenRobotPanel()));
+                    contextMenu.Add(CreateMenuButton("Открыть редактор", () => OpenRobotPanel(robot.Id)));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
                 //else if (foldout.name == "hierarchy-item-program")
@@ -822,10 +822,10 @@ public class HierarchyPanelEvents : MonoBehaviour
         iBlocker.AddNewContextMenu(contextMenu);
     }
 
-    private void OpenRobotPanel()
+    private void OpenRobotPanel(string id)
     {
         ModalParameters parameters = new ModalParameters();
-        // parameters.Set("currentParentObjectId", parentId);
+        parameters.Set("FileToOpen", id);
         _modalWindowServiceManager.ShowWindow<GameObject>("code-editor-window", "Библиотека объектов", parameters, (prefab) =>
         {
             //if (prefab != null)

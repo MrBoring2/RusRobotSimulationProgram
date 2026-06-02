@@ -36,14 +36,19 @@ namespace Assets.Scripts.Models
     [Serializable]
     public class PLCBase
     {
+        public string Id { get; private set; }
 
+        public PLCBase()
+        {
+            Id = Guid.NewGuid().ToString();
+        }
     }
     [Serializable]
-    public class PLCRobotBlock
+    public class PLCRobotBlock : PLCBase
     {
         public string RobotId { get; private set; }
         public List<PLCBase> ConditionsList = new List<PLCBase>();
-        public PLCRobotBlock(string robotId)
+        public PLCRobotBlock(string robotId) : base()
         {
             RobotId = robotId;
         }
@@ -53,12 +58,11 @@ namespace Assets.Scripts.Models
     public class PLCBlockCondition : PLCBase
     {
 
-        public PLCBlockCondition(PLCCondition IfCondition)
+        public PLCBlockCondition(PLCCondition IfCondition) : base()
         {
             this.IfCondition = IfCondition;
-            Id = Guid.NewGuid().ToString();
         }
-        public string Id { get; private set; }
+        
         public PLCCondition IfCondition { get; set; }
         public List<PLCCondition> ElifConditions { get; set; } = new List<PLCCondition>();
         public PLCCondition ElseCondition { get; set; } = new PLCCondition(ConditionType.Else);
@@ -69,25 +73,22 @@ namespace Assets.Scripts.Models
     [Serializable]
     public class PLCCondition : PLCBase
     {
-        public PLCCondition(ConditionType conditionType, string expression = "")
+        public PLCCondition(ConditionType conditionType, string expression = "") : base()
         {
             ConditionType = conditionType;
             Expression = expression;
-            Id = Guid.NewGuid().ToString();
         }
         public ConditionType ConditionType { get; set; }
-        public string Id { get; private set; }
         public string Expression = "";
         public List<PLCBase> Content = new List<PLCBase>();
     }
     [Serializable]
     public class PLCCommand : PLCBase
     {
-        public string Id { get; set; }
         public CommandType Type;
-        public PLCCommand()
+        public PLCCommand() : base()
         {
-            Id = Guid.NewGuid().ToString();
+
         }
     }
     [Serializable]
@@ -111,7 +112,7 @@ namespace Assets.Scripts.Models
     {
         public string ProgramId;
         public string ProgramName;
-        public PLCStartProgram() { Type = CommandType.StartProgram; }
+        public PLCStartProgram() : base() { Type = CommandType.StartProgram; }
     }
 
     [Serializable]
@@ -119,7 +120,7 @@ namespace Assets.Scripts.Models
     {
         public string VariableName;
         public float Step;
-        public PLCIncrement() { Type = CommandType.Increment; }
+        public PLCIncrement() : base() { Type = CommandType.Increment; }
     }
 
     [Serializable]
@@ -127,7 +128,7 @@ namespace Assets.Scripts.Models
     {
         public string VariableName;
         public float Step;
-        public PLCDecrement() { Type = CommandType.Decrement; }
+        public PLCDecrement() : base() { Type = CommandType.Decrement; }
     }
     [Serializable]
     public class PLCInitVariable : PLCCommand
@@ -135,7 +136,7 @@ namespace Assets.Scripts.Models
         public VarType VarType;
         public string VariableName;
         public string StartValue;
-        public PLCInitVariable() { Id = Guid.NewGuid().ToString(); Type = CommandType.InitVariable; }
+        public PLCInitVariable() : base() { Type = CommandType.InitVariable; }
     }
 
     [Serializable]
@@ -145,7 +146,7 @@ namespace Assets.Scripts.Models
         public OperationType Operation;
         public string VariableName;
         public string Value;
-        public PLCSetVariable() { Id = Guid.NewGuid().ToString(); Type = CommandType.SetVariable; }
+        public PLCSetVariable() : base() { Type = CommandType.SetVariable; }
     }
 
     public enum VarType

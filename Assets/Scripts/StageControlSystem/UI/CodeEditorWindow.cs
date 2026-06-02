@@ -6,6 +6,7 @@ using Assets.Scripts.Models;
 using RobotLanguageCompiler.PLC;
 using RobotLanguageCompiler.Robot;
 using SFB;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -97,13 +98,20 @@ namespace Assets.UI.CodeEditor
                 }
                 return;
             }
-
+            parameters.TryGet("FileToOpen", out string id);
             // Загружаем данные из сцены
-            LoadDataFromScene();
+            LoadDataFromScene(id);
         }
 
         private void LoadDataFromScene()
         {
+            LoadDataFromScene(null);
+        }
+
+        private void LoadDataFromScene(string id)
+        {
+            int index = 0;
+
             codeFiles.Clear();
 
             // 1. Загружаем PLC данные с ПОДМЕНОЙ ID на имена
@@ -119,7 +127,6 @@ namespace Assets.UI.CodeEditor
             }
             else
             {
-                Debug.LogWarning("PLCData не найден, создаём пустой");
                 codeFiles.Add(new CodeFile("", CodeFileType.PLC, "ПЛК"));
             }
 
@@ -140,6 +147,7 @@ namespace Assets.UI.CodeEditor
                     string robotContent = robotGenerator.Generate(robotData);
 
                     codeFiles.Add(new CodeFile(robotContent, CodeFileType.Robot, robotName, robot.Id, robotName));
+                    if (robot.Id == id) index = codeFiles.Count - 1;
                 }
                 catch (System.Exception e)
                 {
@@ -153,7 +161,7 @@ namespace Assets.UI.CodeEditor
 
             if (codeFiles.Count > 0)
             {
-                openFilesDropdown.index = 0;
+                openFilesDropdown.index = index;
                 lastIndex = 0;
                 LoadFileContent(0);
             }
