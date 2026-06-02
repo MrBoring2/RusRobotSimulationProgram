@@ -7,6 +7,11 @@ namespace RobotLanguageCompiler.Robot
     {
         private const string Indent = "\t";
 
+        /// <summary>
+        /// Генерирует исходный код на языке программирования роботов из внутренней структуры данных.
+        /// </summary>
+        /// <param name="data">Объект RobotProgramData, содержащий подпрограммы и команды.</param>
+        /// <returns>Строка с сгенерированным кодом программы робота.</returns>
         public string Generate(RobotProgramData data)
         {
             var sb = new StringBuilder();
@@ -28,6 +33,11 @@ namespace RobotLanguageCompiler.Robot
             return sb.ToString().TrimEnd();
         }
 
+        /// <summary>
+        /// Форматирует отдельную команду в строковое представление языка.
+        /// </summary>
+        /// <param name="command">Объект команды (RobotMoveCommand, RobotWaitCommand, RobotEffectorCommand).</param>
+        /// <returns>Строковое представление команды в синтаксисе языка роботов.</returns>
         private string FormatCommand(object command)
         {
             switch (command)

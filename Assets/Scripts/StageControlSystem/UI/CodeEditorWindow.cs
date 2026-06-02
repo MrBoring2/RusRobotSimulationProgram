@@ -32,7 +32,6 @@ namespace Assets.UI.CodeEditor
         protected override void Start()
         {
             base.Start();
-
             // Регистрируем окно в ModalWindowServiceManager
             var modalService = ServiceManager.Current.Get<ModalWindowServiceManager>();
             if (modalService != null)
@@ -44,7 +43,7 @@ namespace Assets.UI.CodeEditor
                 Debug.LogError("ModalWindowServiceManager не найден!");
             }
 
-            //Show(null, null);
+            Show(null, null);
         }
 
         protected override void InitializeElements(VisualElement root)
@@ -52,7 +51,6 @@ namespace Assets.UI.CodeEditor
             base.InitializeElements(root);
 
             _eventBus = ServiceManager.Current.Get<EventBus>();
-            _eventBus.Invoke(new UpdatePLCData());
 
             // Ищем элементы в windowRoot
             openFilesDropdown = windowRoot.Q<DropdownField>("openFilesDropdown");
@@ -256,6 +254,7 @@ namespace Assets.UI.CodeEditor
             compilationStatus.text = "Сохранено успешно";
             compilationStatus.RemoveFromClassList("error-status");
             compilationStatus.AddToClassList("success-status");
+            _eventBus.Invoke(new UpdatePLCData());
         }
 
         /// <summary>
@@ -511,7 +510,7 @@ namespace Assets.UI.CodeEditor
         }
 
         // Для тестов: метод, который можно вызвать из кнопки в инспекторе
-        [ContextMenu("Open Test Window")]
+        [ContextMenu("OpenTestWindow")]
         public void OpenTestWindow()
         {
             Open();

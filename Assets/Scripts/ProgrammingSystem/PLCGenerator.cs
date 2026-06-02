@@ -1,13 +1,17 @@
 using Assets.Scripts.Models;
 using System.Text;
-using Unity.VisualScripting;
 
 namespace RobotLanguageCompiler.PLC
 {
     public class PLCGenerator
     {
-        private const string Indent = "\t"; // tab
+        private const string Indent = "\t";
 
+        /// <summary>
+        /// Генерирует исходный код на языке PLC из внутренней структуры данных.
+        /// </summary>
+        /// <param name="data">Объект PLCData, содержащий переменные, блоки роботов и логику.</param>
+        /// <returns>Строка с сгенерированным кодом PLC.</returns>
         public string Generate(PLCData data)
         {
             var sb = new StringBuilder();
@@ -29,14 +33,7 @@ namespace RobotLanguageCompiler.PLC
 
                 foreach (var item in robotBlock.ConditionsList)
                 {
-                    if (item is PLCBlockCondition condition)
-                    {
-                        GenerateCondition(sb, condition, Indent);
-                    }
-                    else if (item is PLCCommand command)
-                    {
-                        GenerateCommands(sb, command, Indent);
-                    }
+                    GenerateConditionOrCommand(sb, item, Indent);
                 }
 
                 sb.AppendLine($"}}");
@@ -48,52 +45,81 @@ namespace RobotLanguageCompiler.PLC
             sb.AppendLine("#LOGIC");
             foreach (var item in data.LogicBlockItems)
             {
-                if (item is PLCBlockCondition blockCond)
-                {
-                    GenerateCondition(sb, blockCond, "");
-                }
-                else if (item is PLCCommand command)
-                {
-                    GenerateCommands(sb, command, "");
-                }
+                GenerateConditionOrCommand(sb, item, "");
             }
 
             return sb.ToString().TrimEnd();
         }
 
+        /// <summary>
+        /// Рекурсивно генерирует код для условия или команды.
+        /// </summary>
+        /// <param name="sb">StringBuilder для накопления кода.</param>
+        /// <param name="item">Элемент (условие или команда) для генерации.</param>
+        /// <param name="indent">Отступ для форматирования.</param>
+        private void GenerateConditionOrCommand(StringBuilder sb, PLCBase item, string indent)
+        {
+            if (item is PLCBlockCondition condition)
+            {
+                GenerateCondition(sb, condition, indent);
+            }
+            else if (item is PLCCommand command)
+            {
+                GenerateCommands(sb, command, indent);
+            }
+        }
+
+        /// <summary>
+        /// Рекурсивно генерирует код условной конструкции if-elif-else с поддержкой вложенности.
+        /// </summary>
+        /// <param name="sb">StringBuilder для накопления кода.</param>
+        /// <param name="blockCond">Блок условия для генерации.</param>
+        /// <param name="indent">Отступ для форматирования.</param>
         private void GenerateCondition(StringBuilder sb, PLCBlockCondition blockCond, string indent)
         {
-            // if условие с пробелами
+            // Генерация if
             sb.AppendLine($"{indent}if ({blockCond.IfCondition.Expression}) {{");
-            foreach (PLCCommand command in blockCond.IfCondition.Content)
+
+            // Рекурсивная генерация содержимого блока if
+            foreach (var item in blockCond.IfCondition.Content)
             {
-                GenerateCommands(sb, command, indent + Indent);
+                GenerateConditionOrCommand(sb, item, indent + Indent);
             }
             sb.AppendLine($"{indent}}}");
 
-            // elif
+            // Генерация elif
             foreach (var elif in blockCond.ElifConditions)
             {
-                sb.AppendLine($"{indent}elif ({elif.Expression}) {{");
-                foreach (PLCCommand command in elif.Content)
+                sb.AppendLine($"{indent}else if ({elif.Expression}) {{");
+
+                // Рекурсивная генерация содержимого блока elif
+                foreach (var item in elif.Content)
                 {
-                    GenerateCommands(sb, command, indent + Indent);
+                    GenerateConditionOrCommand(sb, item, indent + Indent);
                 }
                 sb.AppendLine($"{indent}}}");
             }
 
-            // else
+            // Генерация else
             if (blockCond.ElseCondition != null && blockCond.ElseCondition.Content.Count > 0)
             {
                 sb.AppendLine($"{indent}else {{");
-                foreach (PLCCommand command in blockCond.ElseCondition.Content)
+
+                // Рекурсивная генерация содержимого блока else
+                foreach (var item in blockCond.ElseCondition.Content)
                 {
-                    GenerateCommands(sb, command, indent + Indent);
+                    GenerateConditionOrCommand(sb, item, indent + Indent);
                 }
                 sb.AppendLine($"{indent}}}");
             }
         }
 
+        /// <summary>
+        /// Генерирует код отдельной команды (start_program, присваивание, инкремент, декремент).
+        /// </summary>
+        /// <param name="sb">StringBuilder для накопления кода.</param>
+        /// <param name="command">Команда для генерации.</param>
+        /// <param name="indent">Отступ для форматирования.</param>
         private void GenerateCommands(StringBuilder sb, PLCCommand command, string indent)
         {
             switch (command)

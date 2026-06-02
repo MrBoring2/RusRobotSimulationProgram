@@ -19,6 +19,11 @@ namespace RobotLanguageCompiler.Robot
 
         public List<string> Errors => _errors;
 
+        /// <summary>
+        /// Выполняет синтаксический анализ токенов и строит структуру данных программы робота.
+        /// </summary>
+        /// <param name="robotId">Идентификатор робота.</param>
+        /// <returns>Объект RobotProgramData с разобранными подпрограммами.</returns>
         public RobotProgramData Parse(string robotId)
         {
             var data = new RobotProgramData(robotId);
@@ -27,17 +32,16 @@ namespace RobotLanguageCompiler.Robot
             {
                 var token = Current();
 
-                // Ожидаем идентификатор (имя подпрограммы)
                 if (token.Type != RobotTokenType.Identifier)
                 {
                     if (token.Type == RobotTokenType.RightBrace)
                     {
-                        AddError($"Unexpected '}}'", token);
+                        AddError($"Неожиданная '}}'", token);
                         Consume();
                         continue;
                     }
 
-                    AddError($"Expected subroutine name, got {token.Type}", token);
+                    AddError($"Ожидалось имя подпрограммы, получено {token.Type}", token);
                     Consume();
                     continue;
                 }
@@ -56,21 +60,19 @@ namespace RobotLanguageCompiler.Robot
                     subroutineNames.Add(subroutineName);
                 }
 
-                Consume(); // имя подпрограммы
+                Consume();
 
-                // Ожидаем {
                 if (Current().Type != RobotTokenType.LeftBrace)
                 {
-                    AddError($"Expected '{{' after subroutine name '{subroutineName}'", Current());
+                    AddError($"Ожидался '{{' после имени подпрограммы '{subroutineName}'", Current());
                     return null;
                 }
-                Consume(); // {
+                Consume();
 
                 var subroutine = new RobotSubroutine(subroutineName);
                 subroutine.Line = nameLine;
                 subroutine.Column = nameColumn;
 
-                // Парсим команды внутри подпрограммы
                 while (!IsAtEnd() && Current().Type != RobotTokenType.RightBrace)
                 {
                     var command = ParseCommand();
@@ -80,7 +82,7 @@ namespace RobotLanguageCompiler.Robot
                     }
                     else if (Current().Type == RobotTokenType.Identifier)
                     {
-                        AddError($"Expected command, got '{Current().Value}'", Current());
+                        AddError($"Ожидалась команда, получено '{Current().Value}'", Current());
                         var line = Current().Line;
                         while (Current().Line == line)
                         {
@@ -93,16 +95,15 @@ namespace RobotLanguageCompiler.Robot
                     }
                 }
 
-                // Проверяем, есть ли закрывающая скобка
                 if (IsAtEnd())
                 {
-                    AddError($"Expected '}}' to close subroutine '{subroutineName}'", Current());
+                    AddError($"Ожидалась '}}' для закрытия подпрограммы '{subroutineName}'", Current());
                     return null;
                 }
 
                 if (Current().Type != RobotTokenType.RightBrace)
                 {
-                    AddError($"Expected '}}' to close subroutine '{subroutineName}'", Current());
+                    AddError($"Ожидалась '}}' для закрытия подпрограммы '{subroutineName}'", Current());
                     if (Current().Type != RobotTokenType.Identifier)
                     {
                         return null;
@@ -110,7 +111,7 @@ namespace RobotLanguageCompiler.Robot
                 }
                 if (Current().Type == RobotTokenType.RightBrace)
                 {
-                    Consume(); // }
+                    Consume();
                 }
 
                 data.Subroutines.Add(subroutine);
@@ -119,6 +120,10 @@ namespace RobotLanguageCompiler.Robot
             return data;
         }
 
+        /// <summary>
+        /// Разбирает отдельную команду в подпрограмме.
+        /// </summary>
+        /// <returns>Объект команды (RobotMoveCommand, RobotWaitCommand, RobotEffectorCommand) или null.</returns>
         private object ParseCommand()
         {
             var token = Current();
@@ -139,78 +144,89 @@ namespace RobotLanguageCompiler.Robot
 
                 case RobotTokenType.OpenEffector:
                     Consume();
-                    return new RobotEffectorCommand(false); // open = false
+                    return new RobotEffectorCommand(false);
 
                 case RobotTokenType.CloseEffector:
                     Consume();
-                    return new RobotEffectorCommand(true); // close = true
+                    return new RobotEffectorCommand(true);
 
                 default:
-                    // Не возвращаем ошибку здесь, так как это может быть просто конец блока
                     return null;
             }
         }
 
+        /// <summary>
+        /// Разбирает команду движения (ptp_point или lin_point).
+        /// </summary>
+        /// <param name="isPtp">true для PTP движения, false для линейного.</param>
+        /// <returns>Объект RobotMoveCommand или null при ошибке.</returns>
         private RobotMoveCommand ParseMoveCommand(bool isPtp)
         {
             if (Current().Type != RobotTokenType.LeftParen)
             {
-                AddError($"Expected '(' after {(isPtp ? "ptp_point" : "lin_point")}", Current());
+                AddError($"Ожидался '(' после {(isPtp ? "ptp_point" : "lin_point")}", Current());
                 return null;
             }
-            Consume(); // (
+            Consume();
 
             if (Current().Type != RobotTokenType.Identifier)
             {
-                AddError($"Expected point name", Current());
+                AddError($"Ожидалось имя точки", Current());
                 return null;
             }
 
             string pointName = Current().Value;
-            Consume(); // имя точки
+            Consume();
 
             if (Current().Type != RobotTokenType.RightParen)
             {
-                AddError($"Expected ')' after point name", Current());
+                AddError($"Ожидался ')' после имени точки", Current());
                 return null;
             }
-            Consume(); // )
+            Consume();
 
             return new RobotMoveCommand(isPtp, pointName);
         }
 
+        /// <summary>
+        /// Разбирает команду ожидания wait(секунды).
+        /// </summary>
+        /// <returns>Объект RobotWaitCommand или null при ошибке.</returns>
         private RobotWaitCommand ParseWaitCommand()
         {
             if (Current().Type != RobotTokenType.LeftParen)
             {
-                AddError($"Expected '(' after wait", Current());
+                AddError($"Ожидался '(' после wait", Current());
                 return null;
             }
-            Consume(); // (
+            Consume();
 
             if (Current().Type != RobotTokenType.Number)
             {
-                AddError($"Expected number in wait()", Current());
+                AddError($"Ожидалось число в wait()", Current());
                 return null;
             }
 
             if (!float.TryParse(Current().Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float seconds))
             {
-                AddError($"Invalid number format", Current());
+                AddError($"Неверный формат числа", Current());
                 return null;
             }
-            Consume(); // число
+            Consume();
 
             if (Current().Type != RobotTokenType.RightParen)
             {
-                AddError($"Expected ')' after wait argument", Current());
+                AddError($"Ожидался ')' после аргумента wait", Current());
                 return null;
             }
-            Consume(); // )
+            Consume();
 
             return new RobotWaitCommand(seconds);
         }
 
+        /// <summary>
+        /// Возвращает текущий токен.
+        /// </summary>
         private RobotToken Current()
         {
             if (!IsAtEnd())
@@ -223,20 +239,29 @@ namespace RobotLanguageCompiler.Robot
             }
         }
 
+        /// <summary>
+        /// Продвигает позицию парсера.
+        /// </summary>
         private void Consume()
         {
             if (_position < _tokens.Count)
                 _position++;
         }
 
+        /// <summary>
+        /// Проверяет, достигнут ли конец токенов.
+        /// </summary>
         private bool IsAtEnd()
         {
             return _position >= _tokens.Count;
         }
 
+        /// <summary>
+        /// Добавляет сообщение об ошибке.
+        /// </summary>
         private void AddError(string message, RobotToken token)
         {
-            _errors.Add($"{message} at {token.Line}:{token.Column}");
+            _errors.Add($"{message} на {token.Line}:{token.Column}");
         }
     }
 }

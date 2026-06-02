@@ -85,6 +85,7 @@ namespace Assets.Scripts.UI
             _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
             _eventBus.Subscribe<ToggleCommandsListSignal>(OnToggleCommandsList);
             //_eventBus.Subscribe<UpdateHierarchySignal>(OnUpdateHierarhy);
+            _eventBus.Subscribe<UpdatePLCData>(OnUpdatePLCData);
 
             _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _lineManager = ServiceManager.Current.Get<LineManager>();
@@ -193,6 +194,8 @@ namespace Assets.Scripts.UI
                 UpdateHierarchy();
             }
         }
+
+        private void OnUpdatePLCData(UpdatePLCData signal) => UpdateHierarchy();
 
         private void OnUpdateHierarhy(UpdateHierarchySignal signal) => UpdateHierarchy();
 

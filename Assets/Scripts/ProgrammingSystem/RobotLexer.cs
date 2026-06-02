@@ -5,22 +5,17 @@ namespace RobotLanguageCompiler.Robot
 {
     public enum RobotTokenType
     {
-        // Ключевые слова
-        PtpPoint,       // ptp_point
-        LinPoint,       // lin_point
-        Wait,           // wait
-        OpenEffector,   // open_effector
-        CloseEffector,  // close_effector
-
-        // Разделители
-        LeftParen,      // (
-        RightParen,     // )
-        LeftBrace,      // {
-        RightBrace,     // }
-
-        // Прочее
-        Identifier,     // имя подпрограммы или имя точки
-        Number,         // число (для wait)
+        PtpPoint,
+        LinPoint,
+        Wait,
+        OpenEffector,
+        CloseEffector,
+        LeftParen,
+        RightParen,
+        LeftBrace,
+        RightBrace,
+        Identifier,
+        Number,
         Error
     }
 
@@ -41,7 +36,7 @@ namespace RobotLanguageCompiler.Robot
 
         public override string ToString()
         {
-            return $"{Type}({Value}) at {Line}:{Column}";
+            return $"{Type}({Value}) на {Line}:{Column}";
         }
     }
 
@@ -73,6 +68,10 @@ namespace RobotLanguageCompiler.Robot
 
         public List<string> Errors => _errors;
 
+        /// <summary>
+        /// Выполняет лексический анализ исходного кода и возвращает список токенов.
+        /// </summary>
+        /// <returns>Список токенов RobotToken.</returns>
         public List<RobotToken> Tokenize()
         {
             var tokens = new List<RobotToken>();
@@ -87,6 +86,10 @@ namespace RobotLanguageCompiler.Robot
             return tokens;
         }
 
+        /// <summary>
+        /// Извлекает следующий токен из исходного кода.
+        /// </summary>
+        /// <returns>Объект RobotToken или null, если достигнут конец файла.</returns>
         private RobotToken GetNextToken()
         {
             SkipWhitespace();
@@ -98,19 +101,16 @@ namespace RobotLanguageCompiler.Robot
 
             char current = _source[_position];
 
-            // Числа
             if (char.IsDigit(current))
             {
                 return ReadNumber();
             }
 
-            // Идентификаторы и ключевые слова
             if (char.IsLetter(current) || current == '_')
             {
                 return ReadIdentifierOrKeyword();
             }
 
-            // Разделители
             switch (current)
             {
                 case '(':
@@ -122,10 +122,13 @@ namespace RobotLanguageCompiler.Robot
                 case '}':
                     return CreateSingleCharToken(RobotTokenType.RightBrace, '}');
                 default:
-                    return CreateErrorToken($"Unexpected character '{current}'", _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", _line, _column);
             }
         }
 
+        /// <summary>
+        /// Пропускает пробельные символы (пробелы, табуляции, переводы строк).
+        /// </summary>
         private void SkipWhitespace()
         {
             while (_position < _source.Length)
@@ -154,6 +157,10 @@ namespace RobotLanguageCompiler.Robot
             }
         }
 
+        /// <summary>
+        /// Считывает числовой токен.
+        /// </summary>
+        /// <returns>Токен с типом Number.</returns>
         private RobotToken ReadNumber()
         {
             int startLine = _line;
@@ -170,6 +177,10 @@ namespace RobotLanguageCompiler.Robot
             return new RobotToken(RobotTokenType.Number, sb.ToString(), startLine, startColumn);
         }
 
+        /// <summary>
+        /// Считывает идентификатор или ключевое слово.
+        /// </summary>
+        /// <returns>Токен соответствующего типа.</returns>
         private RobotToken ReadIdentifierOrKeyword()
         {
             int startLine = _line;
@@ -193,6 +204,12 @@ namespace RobotLanguageCompiler.Robot
             return new RobotToken(RobotTokenType.Identifier, value, startLine, startColumn);
         }
 
+        /// <summary>
+        /// Создает токен из одного символа.
+        /// </summary>
+        /// <param name="type">Тип токена.</param>
+        /// <param name="character">Символ.</param>
+        /// <returns>Созданный токен.</returns>
         private RobotToken CreateSingleCharToken(RobotTokenType type, char character)
         {
             int startLine = _line;
@@ -202,9 +219,16 @@ namespace RobotLanguageCompiler.Robot
             return new RobotToken(type, character.ToString(), startLine, startColumn);
         }
 
+        /// <summary>
+        /// Создает токен ошибки.
+        /// </summary>
+        /// <param name="message">Сообщение об ошибке.</param>
+        /// <param name="line">Строка ошибки.</param>
+        /// <param name="column">Колонка ошибки.</param>
+        /// <returns>Токен с типом Error.</returns>
         private RobotToken CreateErrorToken(string message, int line, int column)
         {
-            _errors.Add($"{message} at {line}:{column}");
+            _errors.Add($"{message} на {line}:{column}");
             return new RobotToken(RobotTokenType.Error, message, line, column);
         }
     }

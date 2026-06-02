@@ -8,6 +8,7 @@ namespace RobotLanguageCompiler.PLC
     public class PLCParser
     {
         private readonly List<PLCToken> _tokens;
+        private List<string> initVariables = new List<string>();
         private int _position;
         private readonly List<string> _errors;
         private bool logicSection = false;
@@ -21,6 +22,10 @@ namespace RobotLanguageCompiler.PLC
 
         public List<string> Errors => _errors;
 
+        /// <summary>
+        /// Выполняет синтаксический анализ всех токенов и строит структуру данных PLC.
+        /// </summary>
+        /// <returns>Объект PLCData, содержащий все переменные, блоки роботов и логику.</returns>
         public PLCData Parse()
         {
             var data = new PLCData();
@@ -46,7 +51,7 @@ namespace RobotLanguageCompiler.PLC
                     default:
                         if (token.Type != PLCTokenType.Error)
                         {
-                            AddError($"Unexpected token {token.Type}", token);
+                            AddError($"Неожиданный токен {token.Type}", token);
                         }
                         Consume();
                         break;
@@ -56,12 +61,15 @@ namespace RobotLanguageCompiler.PLC
             return data;
         }
 
+        /// <summary>
+        /// Разбирает секцию #INIT, объявляет переменные и их начальные значения.
+        /// </summary>
+        /// <param name="data">Объект PLCData для заполнения.</param>
         private void ParseInitSection(PLCData data)
         {
             while (!IsAtEnd() && Current().Type != PLCTokenType.RobotsBlocksSection &&
                    Current().Type != PLCTokenType.LogicSection)
             {
-                // Объявление переменной: int x = 5 или bool flag = true
                 var varType = ParseVarType();
                 if (varType == null)
                 {
@@ -76,13 +84,20 @@ namespace RobotLanguageCompiler.PLC
                     continue;
                 }
 
-                if (Current().Type != PLCTokenType.Assign)
+                if (initVariables.Contains(varName))
                 {
-                    AddError($"Expected '='", Current());
+                    AddError($"Переменная с именем '{varName}' уже существует", Previous());
                     SkipToNextLine();
                     continue;
                 }
-                Consume(); // =
+
+                if (Current().Type != PLCTokenType.Assign)
+                {
+                    AddError($"Ожидался '='", Current());
+                    SkipToNextLine();
+                    continue;
+                }
+                Consume();
 
                 var value = ParseValue(varType.Value);
                 if (value == null)
@@ -91,7 +106,8 @@ namespace RobotLanguageCompiler.PLC
                     continue;
                 }
 
-                // Добавляем в InitBlockItems и Variables
+                initVariables.Add(varName);
+
                 var initVar = new PLCInitVariable
                 {
                     VarType = varType.Value,
@@ -103,6 +119,10 @@ namespace RobotLanguageCompiler.PLC
             }
         }
 
+        /// <summary>
+        /// Разбирает секцию #ROBOTS_BLOCKS, создавая блоки для каждого робота с командами и условиями.
+        /// </summary>
+        /// <param name="data">Объект PLCData для заполнения.</param>
         private void ParseRobotsBlocksSection(PLCData data)
         {
             List<String> robotIds = new List<String>();
@@ -115,7 +135,7 @@ namespace RobotLanguageCompiler.PLC
 
                 if (Current().Type == PLCTokenType.Robot)
                 {
-                    Consume(); // robot
+                    Consume();
                     robotId = ExpectIdentifier();
                     if (robotId == null) Error = true;
 
@@ -127,7 +147,7 @@ namespace RobotLanguageCompiler.PLC
                             {
                                 Consume();
                             }
-                            _errors.Add($"Robot name must be unique, block for robot '{robotId}' already exists");
+                            _errors.Add($"Имя робота должно быть уникальным, блок для робота '{robotId}' уже существует");
                             continue;
                         }
                         else robotIds.Add(robotId);
@@ -135,17 +155,17 @@ namespace RobotLanguageCompiler.PLC
 
                     if (Current().Type == PLCTokenType.LeftBrace && !Error)
                     {
-                        Consume(); // {
+                        Consume();
                     }
                     else if (!Error)
                     {
-                        AddError($"Expected '{{'", Current());
+                        AddError($"Ожидался '{{'", Current());
                         Error = true;
                     }
                 }
                 else
                 {
-                    AddError($"Expected 'robot' keyword", Current());
+                    AddError($"Ожидалось ключевое слово 'robot'", Current());
                     Error = true;
                 }
 
@@ -157,13 +177,12 @@ namespace RobotLanguageCompiler.PLC
                     }
                     var ErrEnd = Current();
 
-                    _errors.Add($"This block of code requires keyword 'robot' and robot name, starts at {ErrStart.Line}:{ErrStart.Column}, ends at {ErrEnd.Line}:{ErrEnd.Column}");
+                    _errors.Add($"Этот блок кода требует ключевое слово 'robot' и имя робота, начинается на {ErrStart.Line}:{ErrStart.Column}, заканчивается на {ErrEnd.Line}:{ErrEnd.Column}");
                     continue;
                 }
 
                 var robotBlock = new PLCRobotBlock(robotId);
 
-                // Парсим содержимое блока робота
                 while (!IsAtEnd() && Current().Type != PLCTokenType.RightBrace)
                 {
                     if (Current().Type == PLCTokenType.If)
@@ -176,7 +195,6 @@ namespace RobotLanguageCompiler.PLC
                     }
                     else
                     {
-                        // Это команда вне условия
                         var command = ParseCommand();
                         if (command != null)
                         {
@@ -184,7 +202,7 @@ namespace RobotLanguageCompiler.PLC
                         }
                         else
                         {
-                            AddError($"Unexpected token in ROBOTS_BLOCKS section {Current().Type}", Current());
+                            AddError($"Неожиданный токен в секции ROBOTS_BLOCKS {Current().Type}", Current());
                             Consume();
                         }
                     }
@@ -192,15 +210,19 @@ namespace RobotLanguageCompiler.PLC
 
                 if (Current().Type != PLCTokenType.RightBrace)
                 {
-                    AddError($"Expected '}}'", Current());
+                    AddError($"Ожидался '}}'", Current());
                     return;
                 }
-                Consume(); // }
+                Consume();
 
                 data.RobotCommandsBlockItems.Add(robotBlock);
             }
         }
 
+        /// <summary>
+        /// Разбирает секцию #LOGIC, содержащую условия и команды верхнего уровня.
+        /// </summary>
+        /// <param name="data">Объект PLCData для заполнения.</param>
         private void ParseLogicSection(PLCData data)
         {
             logicSection = true;
@@ -216,7 +238,6 @@ namespace RobotLanguageCompiler.PLC
                 }
                 else if (Current().Type == PLCTokenType.Identifier)
                 {
-                    // Это команда вне условия
                     var command = ParseCommand();
                     if (command != null)
                     {
@@ -225,14 +246,20 @@ namespace RobotLanguageCompiler.PLC
                 }
                 else
                 {
-                    AddError($"Unexpected token in LOGIC section: {Current().Type}", Current());
+                    AddError($"Неожиданный токен в секции LOGIC: {Current().Type}", Current());
                     Consume();
                 }
             }
         }
 
+        /// <summary>
+        /// Разбирает условную конструкцию if-elif-else и возвращает блок условия.
+        /// </summary>
+        /// <returns>Объект PLCBlockCondition или null при ошибке.</returns>
         private PLCBlockCondition ParseCondition()
         {
+            int ifLine = Current().Line;
+            int ifColumn = Current().Column;
             Consume(); // if
 
             var expression = ParseExpressionInParens();
@@ -243,7 +270,7 @@ namespace RobotLanguageCompiler.PLC
 
             if (Current().Type != PLCTokenType.LeftBrace)
             {
-                AddError($"Expected '{{'", Current());
+                AddError($"Ожидался '{{' после if", Current());
                 return null;
             }
             Consume(); // {
@@ -252,7 +279,7 @@ namespace RobotLanguageCompiler.PLC
 
             if (Current().Type != PLCTokenType.RightBrace)
             {
-                AddError($"Expected '}}'", Current());
+                AddError($"Ожидался '}}' для закрытия блока if, начатого на {ifLine}:{ifColumn}", Current());
                 return null;
             }
             Consume(); // }
@@ -260,6 +287,8 @@ namespace RobotLanguageCompiler.PLC
             // Парсим elif
             while (!IsAtEnd() && Current().Type == PLCTokenType.Elif)
             {
+                int elifLine = Current().Line;
+                int elifColumn = Current().Column;
                 Consume(); // elif
 
                 var elifExpression = ParseExpressionInParens();
@@ -270,7 +299,7 @@ namespace RobotLanguageCompiler.PLC
 
                 if (Current().Type != PLCTokenType.LeftBrace)
                 {
-                    AddError($"Expected '{{'", Current());
+                    AddError($"Ожидался '{{' после elif", Current());
                     return blockCondition;
                 }
                 Consume(); // {
@@ -279,7 +308,7 @@ namespace RobotLanguageCompiler.PLC
 
                 if (Current().Type != PLCTokenType.RightBrace)
                 {
-                    AddError($"Expected '}}'", Current());
+                    AddError($"Ожидался '}}' для закрытия блока elif, начатого на {elifLine}:{elifColumn}", Current());
                     return blockCondition;
                 }
                 Consume(); // }
@@ -288,11 +317,13 @@ namespace RobotLanguageCompiler.PLC
             // Парсим else
             if (!IsAtEnd() && Current().Type == PLCTokenType.Else)
             {
+                int elseLine = Current().Line;
+                int elseColumn = Current().Column;
                 Consume(); // else
 
                 if (Current().Type != PLCTokenType.LeftBrace)
                 {
-                    AddError($"Expected '{{'", Current());
+                    AddError($"Ожидался '{{' после else", Current());
                     return blockCondition;
                 }
                 Consume(); // {
@@ -301,7 +332,7 @@ namespace RobotLanguageCompiler.PLC
 
                 if (Current().Type != PLCTokenType.RightBrace)
                 {
-                    AddError($"Expected '}}'", Current());
+                    AddError($"Ожидался '}}' для закрытия блока else, начатого на {elseLine}:{elseColumn}", Current());
                     return blockCondition;
                 }
                 Consume(); // }
@@ -310,22 +341,42 @@ namespace RobotLanguageCompiler.PLC
             return blockCondition;
         }
 
+        /// <summary>
+        /// Разбирает содержимое блока условия.
+        /// </summary>
+        /// <param name="content">Список для добавления команд.</param>
         private void ParseConditionContent(List<PLCBase> content)
         {
             while (!IsAtEnd() && Current().Type != PLCTokenType.RightBrace)
             {
-                var command = ParseCommand();
-                if (command != null)
+                // Проверяем, не является ли токен началом нового условия
+                if (Current().Type == PLCTokenType.If)
                 {
-                    content.Add(command);
+                    var nestedCondition = ParseCondition();
+                    if (nestedCondition != null)
+                    {
+                        content.Add(nestedCondition);
+                    }
                 }
                 else
                 {
-                    Consume();
+                    var command = ParseCommand();
+                    if (command != null)
+                    {
+                        content.Add(command);
+                    }
+                    else
+                    {
+                        Consume();
+                    }
                 }
             }
         }
 
+        /// <summary>
+        /// Разбирает отдельную команду (start_program, присваивание, инкремент, декремент).
+        /// </summary>
+        /// <returns>Объект PLCCommand или null при ошибке.</returns>
         private PLCCommand ParseCommand()
         {
             var token = Current();
@@ -335,46 +386,50 @@ namespace RobotLanguageCompiler.PLC
                 case PLCTokenType.StartProgram:
                     if (logicSection)
                     {
-                        AddError($"Unexpected command 'start_program'", Current());
+                        AddError($"Неожиданная команда 'start_program' в секции LOGIC", Current());
                         break;
                     }
                     Consume();
                     if (Current().Type != PLCTokenType.LeftParen)
                     {
-                        AddError($"Expected '('", Current());
+                        AddError($"Ожидался '(' после start_program", Current());
                         break;
                     }
-                    Consume(); // (
+                    Consume();
 
                     var programName = ExpectIdentifier();
                     if (programName == null) break;
 
                     if (Current().Type != PLCTokenType.RightParen)
                     {
-                        AddError($"Expected ')'", Current());
+                        AddError($"Ожидался ')' после имени программы", Current());
                         break;
                     }
-                    Consume(); // )
+                    Consume();
 
                     return new PLCStartProgram { ProgramName = programName };
 
                 case PLCTokenType.Identifier:
                     var varName = token.Value;
+
+                    if (!initVariables.Contains(varName))
+                    {
+                        AddError($"Переменная '{varName}' должна быть объявлена в #INIT перед использованием", token);
+                        SkipToNextLine();
+                        return null;
+                    }
+
                     Consume();
 
                     if (Current().Type == PLCTokenType.Increment)
                     {
                         Consume();
-                        var value = ParseSimpleValue();
-                        if (value == null) return null;
-                        return new PLCSetVariable { Operation = OperationType.Increment, VariableName = varName, Value = value };
+                        return new PLCSetVariable { Operation = OperationType.Increment, VariableName = varName, Value = "1" };
                     }
                     else if (Current().Type == PLCTokenType.Decrement)
                     {
                         Consume();
-                        var value = ParseSimpleValue();
-                        if (value == null) return null;
-                        return new PLCSetVariable { Operation = OperationType.Decrement, VariableName = varName, Value = value };
+                        return new PLCSetVariable { Operation = OperationType.Decrement, VariableName = varName, Value = "1" };
                     }
                     else if (Current().Type == PLCTokenType.Assign)
                     {
@@ -389,31 +444,39 @@ namespace RobotLanguageCompiler.PLC
             return null;
         }
 
+        /// <summary>
+        /// Разбирает выражение внутри круглых скобок, например условие (x > 5).
+        /// </summary>
+        /// <returns>Строковое представление выражения или null при ошибке.</returns>
         private string ParseExpressionInParens()
         {
             if (Current().Type != PLCTokenType.LeftParen)
             {
-                AddError($"Expected '('", Current());
+                AddError($"Ожидался '('", Current());
             }
             else
             {
-                Consume(); // (
+                Consume();
             }
 
             var expression = ParseExpressionContent();
 
             if (Current().Type != PLCTokenType.RightParen)
             {
-                AddError($"Expected ')'", Current());
+                AddError($"Ожидался ')'", Current());
             }
             else
             {
-                Consume(); // )
+                Consume();
             }
 
             return expression;
         }
 
+        /// <summary>
+        /// Разбирает содержимое выражения, собирая токены до закрывающей скобки.
+        /// </summary>
+        /// <returns>Строковое представление выражения.</returns>
         private string ParseExpressionContent()
         {
             List<PLCTokenType> types = new List<PLCTokenType> { PLCTokenType.StartProgram, PLCTokenType.If, PLCTokenType.Elif, PLCTokenType.Else, 
@@ -462,6 +525,10 @@ namespace RobotLanguageCompiler.PLC
             return sb.ToString().Trim();
         }
 
+        /// <summary>
+        /// Разбирает простое значение (число, идентификатор, true/false).
+        /// </summary>
+        /// <returns>Строковое представление значения или null при ошибке.</returns>
         private string ParseSimpleValue()
         {
             var token = Current();
@@ -473,10 +540,15 @@ namespace RobotLanguageCompiler.PLC
                 return value;
             }
 
-            AddError($"Expected value", token);
+            AddError($"Ожидалось значение", token);
             return null;
         }
 
+        /// <summary>
+        /// Разбирает значение с проверкой ожидаемого типа.
+        /// </summary>
+        /// <param name="expectedType">Ожидаемый тип переменной.</param>
+        /// <returns>Строковое представление значения или null при ошибке.</returns>
         private string ParseValue(VarType expectedType)
         {
             var token = Current();
@@ -493,10 +565,14 @@ namespace RobotLanguageCompiler.PLC
                 return value;
             }
 
-            AddError($"Expected value of type {expectedType}", token);
+            AddError($"Ожидалось значение типа {expectedType}", token);
             return null;
         }
 
+        /// <summary>
+        /// Разбирает тип переменной (int или bool).
+        /// </summary>
+        /// <returns>Тип VarType или null при ошибке.</returns>
         private VarType? ParseVarType()
         {
             var token = Current();
@@ -511,10 +587,14 @@ namespace RobotLanguageCompiler.PLC
                 return VarType.Bool;
             }
 
-            AddError($"Expected type 'int' or 'bool'", token);
+            AddError($"Ожидался тип 'int' или 'bool'", token);
             return null;
         }
 
+        /// <summary>
+        /// Ожидает идентификатор и возвращает его значение.
+        /// </summary>
+        /// <returns>Имя идентификатора или null при ошибке.</returns>
         private string ExpectIdentifier()
         {
             var token = Current();
@@ -525,10 +605,13 @@ namespace RobotLanguageCompiler.PLC
                 return value;
             }
 
-            AddError($"Expected identifier", token);
+            AddError($"Ожидался идентификатор", token);
             return null;
         }
 
+        /// <summary>
+        /// Возвращает текущий токен без продвижения позиции.
+        /// </summary>
         private PLCToken Current()
         {
             if (!IsAtEnd())
@@ -541,29 +624,51 @@ namespace RobotLanguageCompiler.PLC
             }
         }
 
+        /// <summary>
+        /// Возвращает предыдущий токен.
+        /// </summary>
+        private PLCToken Previous()
+        {
+            return _tokens[_position - 1];
+        }
+
+        /// <summary>
+        /// Продвигает позицию парсера на следующий токен.
+        /// </summary>
         private void Consume()
         {
             if (_position < _tokens.Count)
                 _position++;
         }
 
+        /// <summary>
+        /// Пропускает все токены до конца текущей строки.
+        /// </summary>
         private void SkipToNextLine()
         {
             var line = Current().Line;
-            while (Current().Line == line)
+            while (Current().Line == line && !IsAtEnd())
             {
                 Consume();
             }
         }
 
+        /// <summary>
+        /// Проверяет, достигнут ли конец списка токенов.
+        /// </summary>
         private bool IsAtEnd()
         {
             return _position >= _tokens.Count;
         }
 
+        /// <summary>
+        /// Добавляет сообщение об ошибке с указанием позиции токена.
+        /// </summary>
+        /// <param name="message">Текст ошибки.</param>
+        /// <param name="token">Токен, на котором произошла ошибка.</param>
         private void AddError(string message, PLCToken token)
         {
-            _errors.Add($"{message} at {token.Line}:{token.Column}");
+            _errors.Add($"{message} на {token.Line}:{token.Column}");
         }
     }
 }

@@ -11,12 +11,14 @@ namespace Assets.UI.CodeEditor
     public static class RobotDataAdapter
     {
         /// <summary>
-        /// Преобразование из внутренней структуры Unity в структуру компилятора
+        /// Преобразование из внутренней структуры Unity в структуру компилятора.
         /// </summary>
         /// <param name="robotName">ИМЯ робота (не ID)</param>
+        /// <param name="programs">Список программных объектов робота.</param>
+        /// <returns>Объект RobotProgramData, готовый для использования компилятором.</returns>
         public static RobotProgramData ToCompilerData(string robotName, List<RobotProgramObject> programs)
         {
-            var data = new RobotProgramData(robotName); // Здесь robotName будет использован как ID в компиляторе
+            var data = new RobotProgramData(robotName);
 
             foreach (var program in programs)
             {
@@ -41,6 +43,11 @@ namespace Assets.UI.CodeEditor
             return data;
         }
 
+        /// <summary>
+        /// Преобразует отдельную команду Unity в объект команды компилятора.
+        /// </summary>
+        /// <param name="command">Исходная команда Unity.</param>
+        /// <returns>Объект команды компилятора (RobotMoveCommand, RobotWaitCommand, RobotEffectorCommand) или null.</returns>
         private static object ConvertCommand(CommandObject command)
         {
             switch (command.Type)
@@ -72,9 +79,11 @@ namespace Assets.UI.CodeEditor
         }
 
         /// <summary>
-        /// Преобразование из структуры компилятора во внутреннюю структуру Unity
+        /// Преобразование из структуры компилятора во внутреннюю структуру Unity.
         /// </summary>
-        /// <param name="robotId">РЕАЛЬНЫЙ ID робота в Unity</param>
+        /// <param name="sceneManager">Менеджер сцены для создания объектов.</param>
+        /// <param name="robotId">РЕАЛЬНЫЙ ID робота в Unity.</param>
+        /// <param name="data">Данные программы из компилятора.</param>
         public static void UpdateFromCompilerData(
             SceneObjectsManager sceneManager,
             string robotId,
@@ -84,11 +93,6 @@ namespace Assets.UI.CodeEditor
 
             foreach (var program in existingPrograms)
             {
-                //var commands = new List<CommandObject>(program.Items);
-                //foreach (var command in commands)
-                //{
-                //    sceneManager.Remove(command.Id);
-                //}
                 sceneManager.Remove(program.Id);
             }
             existingPrograms = sceneManager.Commands.GetSubPrograms(robotId, false);
@@ -125,6 +129,12 @@ namespace Assets.UI.CodeEditor
             }
         }
 
+        /// <summary>
+        /// Создает объект команды Unity на основе данных компилятора.
+        /// </summary>
+        /// <param name="sceneManager">Менеджер сцены.</param>
+        /// <param name="command">Команда из структуры компилятора.</param>
+        /// <param name="programId">ID родительской программы.</param>
         private static void CreateCommand(SceneObjectsManager sceneManager, object command, string programId)
         {
             GameObject prefab = null;

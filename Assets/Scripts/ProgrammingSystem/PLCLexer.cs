@@ -5,40 +5,31 @@ namespace RobotLanguageCompiler.PLC
 {
     public enum PLCTokenType
     {
-        // Ключевые слова секций
-        InitSection,        // #INIT
-        RobotsBlocksSection,// #ROBOTS_BLOCKS
-        LogicSection,       // #LOGIC
-
-        // Ключевые слова
-        Robot,              // robot
-        If,                 // if
-        Elif,               // elif
-        Else,               // else
-        StartProgram,       // start_program
-        Int,                // int
-        Bool,               // bool
-        True,               // true
-        False,              // false
-
-        // Операторы
-        Assign,             // =
-        Increment,          // ++
-        Decrement,          // --
-        Equal,              // ==
-        NotEqual,           // !=
-        Greater,            // >
-        Less,               // <
-        GreaterOrEqual,     // >=
-        LessOrEqual,        // <=
-
-        // Разделители
-        LeftParen,          // (
-        RightParen,         // )
-        LeftBrace,          // {
-        RightBrace,         // }
-
-        // Прочее
+        InitSection,
+        RobotsBlocksSection,
+        LogicSection,
+        Robot,
+        If,
+        Elif,
+        Else,
+        StartProgram,
+        Int,
+        Bool,
+        True,
+        False,
+        Assign,
+        Increment,
+        Decrement,
+        Equal,
+        NotEqual,
+        Greater,
+        Less,
+        GreaterOrEqual,
+        LessOrEqual,
+        LeftParen,
+        RightParen,
+        LeftBrace,
+        RightBrace,
         Identifier,
         Number,
         Error
@@ -61,7 +52,7 @@ namespace RobotLanguageCompiler.PLC
 
         public override string ToString()
         {
-            return $"{Type}({Value}) at {Line}:{Column}";
+            return $"{Type}({Value}) на {Line}:{Column}";
         }
     }
 
@@ -97,6 +88,10 @@ namespace RobotLanguageCompiler.PLC
 
         public List<string> Errors => _errors;
 
+        /// <summary>
+        /// Выполняет лексический анализ исходного кода PLC и возвращает список токенов.
+        /// </summary>
+        /// <returns>Список токенов PLCToken.</returns>
         public List<PLCToken> Tokenize()
         {
             var tokens = new List<PLCToken>();
@@ -111,6 +106,10 @@ namespace RobotLanguageCompiler.PLC
             return tokens;
         }
 
+        /// <summary>
+        /// Извлекает следующий токен из исходного кода.
+        /// </summary>
+        /// <returns>Объект PLCToken или null, если достигнут конец файла.</returns>
         private PLCToken GetNextToken()
         {
             SkipWhitespace();
@@ -122,25 +121,21 @@ namespace RobotLanguageCompiler.PLC
 
             char current = _source[_position];
 
-            // Секции начинаются с #
             if (current == '#')
             {
                 return ReadSection();
             }
 
-            // Числа
             if (char.IsDigit(current))
             {
                 return ReadNumber();
             }
 
-            // Идентификаторы и ключевые слова
             if (char.IsLetter(current) || current == '_')
             {
                 return ReadIdentifierOrKeyword();
             }
 
-            // Операторы
             switch (current)
             {
                 case '=':
@@ -154,7 +149,7 @@ namespace RobotLanguageCompiler.PLC
                     {
                         return ReadTwoCharToken(PLCTokenType.NotEqual, "!=");
                     }
-                    return CreateErrorToken($"Unexpected character '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
                 case '>':
                     if (Peek() == '=')
                     {
@@ -172,13 +167,13 @@ namespace RobotLanguageCompiler.PLC
                     {
                         return ReadTwoCharToken(PLCTokenType.Increment, "+=");
                     }
-                    return CreateErrorToken($"Unexpected character '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
                 case '-':
                     if (Peek() == '=')
                     {
                         return ReadTwoCharToken(PLCTokenType.Decrement, "-=");
                     }
-                    return CreateErrorToken($"Unexpected character '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
                 case '(':
                     return CreateSingleCharToken(PLCTokenType.LeftParen, '(');
                 case ')':
@@ -188,10 +183,13 @@ namespace RobotLanguageCompiler.PLC
                 case '}':
                     return CreateSingleCharToken(PLCTokenType.RightBrace, '}');
                 default:
-                    return CreateErrorToken($"Unexpected character '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
             }
         }
 
+        /// <summary>
+        /// Пропускает пробельные символы.
+        /// </summary>
         private void SkipWhitespace()
         {
             while (_position < _source.Length)
@@ -220,6 +218,9 @@ namespace RobotLanguageCompiler.PLC
             }
         }
 
+        /// <summary>
+        /// Просматривает следующий символ без продвижения позиции.
+        /// </summary>
         private char Peek()
         {
             if (_position + 1 >= _source.Length)
@@ -227,11 +228,14 @@ namespace RobotLanguageCompiler.PLC
             return _source[_position + 1];
         }
 
+        /// <summary>
+        /// Считывает секцию (начинается с #).
+        /// </summary>
         private PLCToken ReadSection()
         {
             int startLine = _line;
             int startColumn = _column;
-            _position++; // пропускаем #
+            _position++;
             _column++;
 
             StringBuilder sb = new StringBuilder();
@@ -256,12 +260,15 @@ namespace RobotLanguageCompiler.PLC
 
             if (type == PLCTokenType.Error)
             {
-                return CreateErrorToken($"Unknown section '{value}'", value, startLine, startColumn);
+                return CreateErrorToken($"Неизвестная секция '{value}'", value, startLine, startColumn);
             }
 
             return new PLCToken(type, value, startLine, startColumn);
         }
 
+        /// <summary>
+        /// Считывает числовой токен.
+        /// </summary>
         private PLCToken ReadNumber()
         {
             int startLine = _line;
@@ -278,6 +285,9 @@ namespace RobotLanguageCompiler.PLC
             return new PLCToken(PLCTokenType.Number, sb.ToString(), startLine, startColumn);
         }
 
+        /// <summary>
+        /// Считывает идентификатор или ключевое слово.
+        /// </summary>
         private PLCToken ReadIdentifierOrKeyword()
         {
             int startLine = _line;
@@ -301,6 +311,9 @@ namespace RobotLanguageCompiler.PLC
             return new PLCToken(PLCTokenType.Identifier, value, startLine, startColumn);
         }
 
+        /// <summary>
+        /// Считывает двухсимвольный токен (==, !=, >=, <=, +=, -=).
+        /// </summary>
         private PLCToken ReadTwoCharToken(PLCTokenType type, string value)
         {
             int startLine = _line;
@@ -310,6 +323,9 @@ namespace RobotLanguageCompiler.PLC
             return new PLCToken(type, value, startLine, startColumn);
         }
 
+        /// <summary>
+        /// Создает односимвольный токен.
+        /// </summary>
         private PLCToken CreateSingleCharToken(PLCTokenType type, char character)
         {
             int startLine = _line;
@@ -319,11 +335,14 @@ namespace RobotLanguageCompiler.PLC
             return new PLCToken(type, character.ToString(), startLine, startColumn);
         }
 
+        /// <summary>
+        /// Создает токен ошибки.
+        /// </summary>
         private PLCToken CreateErrorToken(string message, string value, int line, int column)
         {
             _position++;
             _column++;
-            _errors.Add($"{message} at {line}:{column}");
+            _errors.Add($"{message} на {line}:{column}");
             return new PLCToken(PLCTokenType.Error, value, line, column);
         }
     }
