@@ -16,12 +16,6 @@ public class LogicSignalBus : MonoBehaviour, IService
     private Dictionary<string, bool> signalsDict = new Dictionary<string, bool>();
     private Dictionary<string, int> intDataDict = new Dictionary<string, int>();
 
-    private Dictionary<string, bool> CopySignalsDict = new Dictionary<string, bool>();
-    private Dictionary<string, int> CopyIntDataDict = new Dictionary<string, int>();
-
-    private Dictionary<string, bool> BufSignalsDict = new Dictionary<string, bool>();
-    private Dictionary<string, int> BufIntDataDict = new Dictionary<string, int>();
-
     void Start()
     {
          ServiceManager.Current.Get<EventBus>().Subscribe<Init>(Init);
@@ -31,10 +25,6 @@ public class LogicSignalBus : MonoBehaviour, IService
     {
         signalsDict.Clear();
         intDataDict.Clear();
-        CopyIntDataDict.Clear();
-        CopySignalsDict.Clear();
-        BufSignalsDict.Clear();
-        BufIntDataDict.Clear();
     }
     
     private void ConvertDictionatyToList()
@@ -91,75 +81,6 @@ public class LogicSignalBus : MonoBehaviour, IService
     {
 
         return intDataDict;
-    }
-
-    //////////////////////////// Методы для работы с копиями словарей
-    public void CreateSignalCadr()
-    {
-        CopyIntDataDict.Clear();
-        CopySignalsDict.Clear();
-        BufSignalsDict.Clear();
-        BufIntDataDict.Clear();
-        foreach (var kvp in signalsDict)
-        {
-            CopySignalsDict.Add(kvp.Key, kvp.Value);
-        }
-        foreach (var kvp in intDataDict)
-        {
-            CopyIntDataDict.Add(kvp.Key, kvp.Value);
-        }
-    }
-    public void CadrToActiveSignal()
-    {
-        foreach (var kvp in BufSignalsDict)
-        {
-            SetSignal(kvp.Key, kvp.Value);
-        }
-        foreach (var kvp in BufIntDataDict)
-        {
-            SetIntData(kvp.Key, kvp.Value);
-        }
-    }
-    public bool GetCopySignal(string signalName)
-    {
-        return CopySignalsDict.ContainsKey(signalName) && CopySignalsDict[signalName];
-    }
-    public int GetCopyIntData(string DataName)
-    {
-        return CopyIntDataDict.ContainsKey(DataName) ? CopyIntDataDict[DataName] : 0;
-    }
-    
-    public Dictionary<string, bool> GetCopySignals()
-    {
-        
-        return CopySignalsDict;
-    }
-    public Dictionary<string, int> GetCopyIntData()
-    {
-        
-        return CopyIntDataDict;
-    }
-    public void SetCopySignal(string signalName, bool value)
-    {
-        if(BufSignalsDict.ContainsKey(signalName))
-        {
-            BufSignalsDict[signalName] = value;
-        }
-        else
-        {
-            BufSignalsDict.Add(signalName, value);
-        }
-    }
-    public void SetCopyIntData(string dataName, int value)
-    {
-        if(BufIntDataDict.ContainsKey(dataName))
-        {
-            BufIntDataDict[dataName] = value;
-        }
-        else
-        {
-            BufIntDataDict.Add(dataName, value);
-        }
     }
 
 

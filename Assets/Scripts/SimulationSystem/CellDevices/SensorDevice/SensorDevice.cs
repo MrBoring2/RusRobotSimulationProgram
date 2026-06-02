@@ -29,7 +29,7 @@ public class SensorDevice : CellDeviceBase
         float height = _propertyProvider.DetectionHeight;
 
         DetectObject.transform.localPosition = new Vector3(0, 0, length / 2f);
-        DetectObject.transform.localScale = new Vector3(DetectObject.transform.localScale.x - DetectObject.transform.localScale.x*0.9f, height-0.001f, length);
+        DetectObject.transform.localScale = new Vector3(0.001f, height-0.001f, length);
     }
 
     private void UpdateMesh()
@@ -73,7 +73,7 @@ public class SensorDevice : CellDeviceBase
             GameObject go = collider.gameObject;
             if (go == MeshSensor ||
                 go == LedSensor ||
-                go == this.gameObject)
+                go == this.gameObject || go.layer == LayerMask.NameToLayer("Manipulator"))
                 continue;
             if (collider.isTrigger) continue; //Игнорируем триггеры
             detected = true;
