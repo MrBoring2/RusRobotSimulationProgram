@@ -14,9 +14,11 @@ using Assets.Scripts.Models;
 using Assets.Scripts.Providers;
 using Assets.Scripts.StageControlSystem.Models;
 using Assets.UI.CustomElements;
+using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -651,7 +653,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 }
                 SelectHierarchyItem(element);
                 ShowProperties(element);
-              
+
             }
         }
     }
@@ -784,7 +786,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                     //contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(robot)));
                     //contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(robot)));
                     //contextMenu.Add(CreateMenuButton("Добавить подпрограмму", () => CreateProgram(robot)));
-                    contextMenu.Add(CreateMenuButton("Открыть таблицу входов-выходов робота", () => OpenRobotPanel()));
+                    contextMenu.Add(CreateMenuButton("Открыть редактор", () => OpenRobotPanel()));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
                 //else if (foldout.name == "hierarchy-item-program")
@@ -829,7 +831,15 @@ public class HierarchyPanelEvents : MonoBehaviour
 
     private void OpenRobotPanel()
     {
-        _eventBus.Invoke(new OpenRobotPanelSignal());
+        ModalParameters parameters = new ModalParameters();
+        // parameters.Set("currentParentObjectId", parentId);
+        _modalWindowServiceManager.ShowWindow<GameObject>("code-editor-window", "Библиотека объектов", parameters, (prefab) =>
+        {
+            //if (prefab != null)
+            //    AddObject(prefab, parentId);
+        });
+
+        // _eventBus.Invoke(new OpenRobotPanelSignal());
     }
 
     //private void CreateWaitCommand(SceneObject robot)
