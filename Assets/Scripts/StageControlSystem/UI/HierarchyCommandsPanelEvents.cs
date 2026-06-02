@@ -341,149 +341,99 @@ namespace Assets.Scripts.UI
         {
             VisualElement element = null;
 
-            //if (!expandedFoldouts.ContainsKey(parent.userData.ToString()))
-            //{
-            //    expandedFoldouts.Add(parent.userData.ToString(), parent.IsExpanded);
-            //}
-            //else expandedFoldouts[parent.userData.ToString()] = parent.IsExpanded;
-            //if (parent.userData != null)
-            //{
-            //    expandedFoldouts[parent.userData.ToString()] = parent.IsExpanded;
-            //}
             var cachedElem = FindElementByUserIdCached(item.Id);
             if (cachedElem != null)
             {
                 parent.AddChild(cachedElem);
-                if (restoreState && cachedElem is CustomFoldout fold && savedStates != null && savedStates.ContainsKey(item.Id))
-                {
-                    fold.SetExpanded(savedStates[item.Id]);
-                }
+                if (restoreState && cachedElem is CustomFoldout fold && savedStates != null && cachedElem.userData != null && savedStates.ContainsKey(((SceneObject)cachedElem.userData).Id))
+                    fold.SetExpanded(savedStates[((SceneObject)cachedElem.userData).Id]);
                 if (selectedElementId == item.Id)
-                {
                     SelectHierarchyItem(cachedElem);
-                }
 
-                //var children = _sceneObjectManager.GetGameObjectsList()
-                //                                .Where(o => o.ParentId == item.Id);
-                ObjectType childType = item.Type;
-                List<SceneObject> children = new List<SceneObject>();
-                if (childType == ObjectType.Program)
+                if (item.Type == ObjectType.Program)
                 {
                     var commands = _sceneObjectManager.Commands.GetCommandsFromSubProgram(current.Id, item.Id);
                     foreach (var command in commands)
-                    {
                         if (cachedElem is CustomFoldout foldout)
-                        {
                             DrawSingleItem(command, foldout, savedStates, restoreState);
-                        }
-                    }
                 }
+                return;
             }
+
             Texture2D texture = null;
             switch (item.Type)
             {
-                case ObjectType.Unknown:
-                    break;
-                case ObjectType.LinearMoveCommand:
-                    texture = Resources.Load<Texture2D>("Icons/icon_line_mode");
-                    break;
-                case ObjectType.StateEndEffectorCommand:
-                    texture = Resources.Load<Texture2D>("Icons/icon_grip");
-                    break;
-                case ObjectType.WaitCommand:
-                    texture = Resources.Load<Texture2D>("Icons/icon_wait");
-                    break;
-                case ObjectType.Program:
-                    texture = Resources.Load<Texture2D>("Icons/icon_program");
-                    break;
-                default:
-                    break;
+                case ObjectType.LinearMoveCommand: texture = Resources.Load<Texture2D>("Icons/icon_line_mode"); break;
+                case ObjectType.StateEndEffectorCommand: texture = Resources.Load<Texture2D>("Icons/icon_grip"); break;
+                case ObjectType.WaitCommand: texture = Resources.Load<Texture2D>("Icons/icon_wait"); break;
+                case ObjectType.Program: texture = Resources.Load<Texture2D>("Icons/icon_program"); break;
             }
+
             switch (item.Type)
             {
                 case ObjectType.Program:
                     element = new CustomFoldout { Text = item.Reference.name };
                     ((CustomFoldout)element).SetHeaderImage(texture);
                     element.name = "hierarchy-item-program";
+                    element.userData = item;
                     element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
                     var programFoldout = (CustomFoldout)element;
                     programFoldout.OnExpandedChanged += (isExpanded) =>
                     {
                         if (programFoldout.userData != null)
-                        {
-                            expandedFoldouts[programFoldout.userData.ToString()] = isExpanded;
-                        }
+                            expandedFoldouts[((SceneObject)programFoldout.userData).Id] = isExpanded;
                     };
                     break;
                 case ObjectType.LinearMoveCommand or ObjectType.StateEndEffectorCommand or ObjectType.WaitCommand:
                     element = CreateHierarchyElement("hierarchy-item-command", item.Reference.name, item.Id, texture);
+                    element.userData = item;
                     break;
                 default:
                     element = CreateHierarchyElement("hierarchy-item", item.Reference.name, item.Id, texture);
+                    element.userData = item;
                     break;
             }
 
             if (element != null)
             {
-
-                element.userData = item.Id;
-
                 CacheElement(element, item.Id);
-
                 parent.AddChild(element);
 
-                // При обновлении иерархии восстанавливаем состояние
                 if (restoreState && savedStates != null && savedStates.ContainsKey(item.Id) && element is CustomFoldout newFold)
-                {
-                    // При восстановлении - восстанавливаем сохраненное состояние
                     newFold.SetExpanded(savedStates[item.Id]);
-                }
 
                 if (selectedElementId == item.Id)
-                {
                     SelectHierarchyItem(element);
-                }
 
-
-                ObjectType childType = item.Type;
-                List<SceneObject> children = new List<SceneObject>();
-                if (childType == ObjectType.Program)
+                if (item.Type == ObjectType.Program)
                 {
                     var commands = _sceneObjectManager.Commands.GetCommandsFromSubProgram(current.Id, item.Id);
                     foreach (var command in commands)
-                    {
                         if (element is CustomFoldout foldout)
-                        {
                             DrawSingleItem(command, foldout, savedStates, restoreState);
-                        }
-                    }
                 }
             }
+        }
+        private string GetIdFromUserData(object userData)
+        {
+            if (userData == null) return null;
+            if (userData is SceneObject so) return so.Id;
+            if (userData is PLCRobotBlock rb) return rb.RobotId;
+            if (userData is PLCBlockCondition block) return block.Id;
+            if (userData is PLCCondition cond) return cond.Id;
+            if (userData is PLCCommand cmd) return cmd.Id;
+            if (userData is string s) return s;
+            if (userData is PLCInitBlock) return "plc_init_block";
+            if (userData is PLCRobotBlocks) return "plc_robots_block";
+            if (userData is PLCLogicBlock) return "plc_logic_block";
+            return userData.GetHashCode().ToString();
         }
         private Dictionary<string, bool> SaveFoldoutStates()
         {
             var states = new Dictionary<string, bool>();
-
-            // Сохраняем состояние из словаря и проверяем актуальное состояние
             foreach (var kvp in expandedFoldouts)
-            {
                 states[kvp.Key] = kvp.Value;
-            }
-
-            // Дополнительная проверка актуального состояния элементов
-            foreach (var kvp in elementCache)
-            {
-                if (kvp.Value is CustomFoldout foldout && foldout.userData != null)
-                {
-                    string id = foldout.userData.ToString();
-                    if (!states.ContainsKey(id))
-                    {
-                        states[id] = foldout.IsExpanded;
-                    }
-                }
-            }
-
-            return states;
+            return states; 
         }
         /// <summary>
         /// Удалить элемент из иерархии
@@ -492,28 +442,26 @@ namespace Assets.Scripts.UI
         public void RemoveHierarchyItem(string itemId)
         {
             if (string.IsNullOrEmpty(itemId)) return;
-
             var element = FindElementByUserIdCached(itemId);
             if (element != null)
             {
                 if (element.parent != null)
-                {
                     element.parent.Remove(element);
-                }
-
                 elementCache.Remove(itemId);
-                expandedFoldouts.Remove(itemId);
+                if (element.userData != null)
+                {
+                    string id = GetIdFromUserData(element.userData);
+                    if (!string.IsNullOrEmpty(id))
+                        expandedFoldouts.Remove(id);
+                }
                 if (selectedElementId == itemId)
                 {
                     ClearAllSelections();
                     selectedElementId = null;
                     lastSelectedElement = null;
                     _eventBus.Invoke(new UnpickObjectSignal());
-                    //objectPicker.UnpickObject();
                     _uIStatusManager.SetPropertiesPanelVisibility(false);
-                    //propertiesPanelEvents.HidePanel();
                 }
-
                 RemoveChildrenFromCache(itemId);
             }
         }
@@ -655,43 +603,37 @@ namespace Assets.Scripts.UI
         private void OnMouseDownHierarchyItem(MouseDownEvent evt)
         {
             if (evt.button != 0) return;
-
             if (evt.target is VisualElement element)
             {
-
                 if (element.name == "" || element.name == "label-hierarchy" || element.name == "foldout-header")
-                {
                     element = GetParentElement(element);
-                }
+
                 if (element.name == "plc-command")
                 {
-                    var commandId = element.userData.ToString();
-                    var command = GetCommandById(commandId);
+                    var command = element.userData as PLCCommand;
                     if (command != null)
                     {
                         currentDragData = new DragDropData
                         {
-                            SourceId = commandId,
+                            SourceId = command.Id,
                             SourceElement = element,
                             SceneObject = null,
                             StartPosition = evt.mousePosition,
                             UserData = command
                         };
                         SelectHierarchyItem(element);
-                        ShowProperties(element);
-
                     }
                     return;
                 }
-                else if (element.name == "hierarchy-item-command")
+
+                if (element.name == "hierarchy-item-command")
                 {
-                    var commandId = element.userData.ToString();
-                    var command = _sceneObjectManager.Commands.FindElementById(commandId) as CommandObject;
+                    var command = element.userData as CommandObject;
                     if (command != null)
                     {
                         currentDragData = new DragDropData
                         {
-                            SourceId = commandId,
+                            SourceId = command.Id,
                             SourceElement = element,
                             SceneObject = command,
                             StartPosition = evt.mousePosition,
@@ -700,36 +642,23 @@ namespace Assets.Scripts.UI
                         switch (command.Type)
                         {
                             case ObjectType.LinearMoveCommand:
-                                if (!string.IsNullOrEmpty(element.userData.ToString()) &&
-                                        _lineManager.IsCommandInCurrentProgram(commandId))
-                                {
+                                if (_lineManager.IsCommandInCurrentProgram(command.Id))
                                     _eventBus.Invoke(new PickObjectSignal(command));
-                                }
-                                else
-                                {
-                                    _eventBus.Invoke(new PickObjectSignal(command));
-                                    _eventBus.Invoke(new StopLineDrawer());
-                                }
+                                else { _eventBus.Invoke(new PickObjectSignal(command)); _eventBus.Invoke(new StopLineDrawer()); }
                                 break;
-                            case ObjectType.StateEndEffectorCommand or ObjectType.WaitCommand:
-                                break;
-                            default:
-                                _eventBus.Invoke(new PickObjectSignal(command));
-                                _eventBus.Invoke(new StopLineDrawer());
-                                break;
+                            case ObjectType.StateEndEffectorCommand or ObjectType.WaitCommand: break;
+                            default: _eventBus.Invoke(new PickObjectSignal(command)); _eventBus.Invoke(new StopLineDrawer()); break;
                         }
                         SelectHierarchyItem(element);
                         ShowProperties(element);
-
                     }
                     return;
                 }
+
                 SelectHierarchyItem(element);
                 ShowProperties(element);
-
             }
         }
-
 
         /// <summary>
         /// Проверка находится ли мы сейчас внутри панели
@@ -905,7 +834,8 @@ namespace Assets.Scripts.UI
                     //}
                     if (foldout.name == "hierarchy-item-program")
                     {
-                        var parentId = foldout.userData.ToString();
+                        var program = foldout.userData as SceneObject;
+                        var parentId = program?.Id;
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Добавить точку перемещения", () => CreatePoint(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(parentId)));
@@ -932,7 +862,8 @@ namespace Assets.Scripts.UI
                             return;
                         }
 
-                        var robot = _sceneObjectManager.GetById(MainHierarchyItem.userData.ToString());
+                        var robotId = MainHierarchyItem.userData as string;
+                        var robot = _sceneObjectManager.GetById(robotId);
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Добавить задачу", () => CreateProgram(robot.Id)));
 
@@ -944,33 +875,35 @@ namespace Assets.Scripts.UI
                     }
                     else if (foldout.name == "plc-init-block")
                     {
-                        var parentId = foldout.userData.ToString();
+                        var parentId = foldout.userData;
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
-                        contextMenu.Add(CreateMenuButton("Добавить переменную", () => ShowAddVariableWindow(parentId)));
+                        contextMenu.Add(CreateMenuButton("Добавить переменную", () => ShowAddVariableWindow("init_block")));
                     }
                     else if (foldout.name == "plc-logic-block")
                     {
-                        var parentId = foldout.userData.ToString();
+                        var parentId = foldout.userData;
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
-                        contextMenu.Add(CreateMenuButton("Добавить условие", () => ShowExpressionWindow(parentId)));
+                        contextMenu.Add(CreateMenuButton("Добавить условие", () => ShowExpressionWindow("logic_block")));
                     }
                     else if (foldout.name == "plc-robot-block")
                     {
-                        var parentId = foldout.userData.ToString();
+                        var robotBlock = foldout.userData as PLCRobotBlock;
+                        var parentId = robotBlock?.RobotId;
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Добавить условие", () => ShowExpressionWindow(parentId)));
                     }
                     else if (foldout.name == "plc-condition-block")
                     {
-                        var parentId = foldout.userData.ToString();
+                        var condition = foldout.userData as PLCCondition;
+                        var parentId = condition?.Id;
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Добавить иначе если", () => ShowExpressionWindow(parentId, true)));
                         contextMenu.Add(CreateMenuButton("Удалить условие", () => DeleteObject(clickedElement)));
                     }
                     else if (foldout.name == "plc-if-block")
                     {
-                        var parentId = foldout.userData.ToString();
-                        var condition = GetConditionById(parentId);
+                        var condition = foldout.userData as PLCCondition;
+                        var parentId = condition?.Id;
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         bool isInLogic = IsInsideLogicBlock(foldout);
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
@@ -994,8 +927,8 @@ namespace Assets.Scripts.UI
                     }
                     else if (foldout.name == "plc-elif-block")
                     {
-                        var parentId = foldout.userData.ToString();
-                        var condition = GetConditionById(parentId);
+                        var condition = foldout.userData as PLCCondition;
+                        var parentId = condition?.Id;
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         bool isInLogic = IsInsideLogicBlock(foldout);
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
@@ -1020,7 +953,8 @@ namespace Assets.Scripts.UI
                     }
                     else if (foldout.name == "plc-else-block")
                     {
-                        var parentId = foldout.userData.ToString();
+                        var condition = foldout.userData as PLCCondition;
+                        var parentId = condition?.Id;
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         bool isInLogic = IsInsideLogicBlock(foldout);
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
@@ -1043,7 +977,8 @@ namespace Assets.Scripts.UI
                     }
                     else if (foldout.name == "plc-command")
                     {
-                        var parentId = foldout.userData.ToString();
+                        var command = foldout.userData as PLCCommand;
+                        var parentId = command?.Id;
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Удалить команду", () => DeleteObject(clickedElement)));
                     }
@@ -1417,10 +1352,7 @@ namespace Assets.Scripts.UI
             }
 
             if (customScrollView != null)
-            {
                 customScrollView.schedule.Execute(() => customScrollView.Refresh()).ExecuteLater(100);
-            }
-
         }
         /// <summary>
         /// Получить ID робота из любого PLC блока, поднимаясь по иерархии
@@ -1430,11 +1362,12 @@ namespace Assets.Scripts.UI
             var current = element;
             while (current != null)
             {
-                // Ищем блок робота
-                if (current.name == "plc-robot-block" && current.userData != null)
+                if (current.name == "plc-robot-block")
                 {
-                    return current.userData.ToString();
+                    var robotBlock = current.userData as PLCRobotBlock;
+                    if (robotBlock != null) return robotBlock.RobotId;
                 }
+                if (current.name == "plc-logic-block") return "logic";
                 current = current.parent;
             }
             return null;
@@ -1875,61 +1808,50 @@ namespace Assets.Scripts.UI
         private void DrawPLCBlocks()
         {
             var initBlock = new CustomFoldout { Text = "Инициализация" };
-            initBlock.userData = "init_block";
+            initBlock.userData = new PLCInitBlock();
             initBlock.name = "plc-init-block";
             initBlock.AddToClassList("plc-init-block");
             RegisterExpanedFoldout(initBlock);
-
             foreach (var variable in _sceneObjectManager.PLCData.InitBlockItems)
-            {
                 DrawCommand(variable, initBlock);
-            }
             MainHierarchyItem.AddChild(initBlock);
 
             var robotsBlock = new CustomFoldout { Text = "Блоки роботов" };
-            robotsBlock.userData = "robot_blocks";
+            robotsBlock.userData = new PLCRobotBlocks();
             robotsBlock.name = "plc-robots-block";
             robotsBlock.AddToClassList("plc-robots-block");
             RegisterExpanedFoldout(robotsBlock);
 
-            var allRobots = _sceneObjectManager.GetGameObjectsList()
-                .Where(obj => obj.Type == ObjectType.Robot)
-                .ToList();
-
+            var allRobots = _sceneObjectManager.GetGameObjectsList().Where(obj => obj.Type == ObjectType.Robot).ToList();
             foreach (var robot in allRobots)
             {
                 var robotBlock = new CustomFoldout { Text = robot.Reference.name };
                 robotBlock.name = "plc-robot-block";
-                robotBlock.userData = robot.Id;
                 robotBlock.AddToClassList("plc-robot-block");
-                RegisterExpanedFoldout(robotBlock);
-
-                var robotData = _sceneObjectManager.PLCData.RobotCommandsBlockItems
-                    .FirstOrDefault(r => r.RobotId == robot.Id);
-
+                var robotData = _sceneObjectManager.PLCData.RobotCommandsBlockItems.FirstOrDefault(r => r.RobotId == robot.Id);
                 if (robotData != null)
                 {
-                    // Рекурсивно отрисовываем содержимое
+                    robotBlock.userData = robotData;
+                    RegisterExpanedFoldout(robotBlock);
                     foreach (var item in robotData.ConditionsList)
-                    {
                         DrawPLCItemRecursive(item, robotBlock);
-                    }
                 }
-
+                else
+                {
+                    robotBlock.userData = robot;
+                    RegisterExpanedFoldout(robotBlock);
+                }
                 robotsBlock.AddChild(robotBlock);
             }
-
             MainHierarchyItem.AddChild(robotsBlock);
 
             var logicBlock = new CustomFoldout { Text = "Логика" };
-            logicBlock.userData = "logic_block";
+            logicBlock.userData = new PLCLogicBlock();
             logicBlock.name = "plc-logic-block";
             logicBlock.AddToClassList("plc-logic-block");
             RegisterExpanedFoldout(logicBlock);
             foreach (var item in _sceneObjectManager.PLCData.LogicBlockItems)
-            {
                 DrawPLCItemRecursive(item, logicBlock);
-            }
             MainHierarchyItem.AddChild(logicBlock);
         }
 
@@ -1952,51 +1874,42 @@ namespace Assets.Scripts.UI
         /// </summary>
         private void DrawConditionBlock(PLCBlockCondition block, CustomFoldout parent)
         {
-            var conditionFoldout = new CustomFoldout { Text = $"Блок условия" };
+            var conditionFoldout = new CustomFoldout { Text = "Блок условия" };
             conditionFoldout.name = "plc-condition-block";
+            conditionFoldout.userData = block;
             conditionFoldout.AddToClassList("plc-condition-block");
-            conditionFoldout.userData = block.Id;
             RegisterExpanedFoldout(conditionFoldout);
-            // Отрисовка IF блока
+
             var ifFoldout = new CustomFoldout { Text = $"Если: {block.IfCondition.Expression}" };
             ifFoldout.name = "plc-if-block";
-            ifFoldout.userData = block.IfCondition.Id;
+            ifFoldout.userData = block.IfCondition;
             ifFoldout.AddToClassList("plc-if-block");
             RegisterExpanedFoldout(ifFoldout);
-
             foreach (var content in block.IfCondition.Content)
-            {
                 DrawPLCItemRecursive(content, ifFoldout);
-            }
             conditionFoldout.AddChild(ifFoldout);
 
-            // Отрисовка ELSE IF блоков
             foreach (var elif in block.ElifConditions)
             {
                 var elifFoldout = new CustomFoldout { Text = $"Иначе если: {elif.Expression}" };
                 elifFoldout.name = "plc-elif-block";
-                elifFoldout.userData = elif.Id;
+                elifFoldout.userData = elif;
                 elifFoldout.AddToClassList("plc-elif-block");
                 RegisterExpanedFoldout(elifFoldout);
                 foreach (var content in elif.Content)
-                {
                     DrawPLCItemRecursive(content, elifFoldout);
-                }
                 conditionFoldout.AddChild(elifFoldout);
             }
 
-            // Отрисовка ELSE блока
             if (block.ElseCondition != null)
             {
                 var elseFoldout = new CustomFoldout { Text = $"Иначе: {block.ElseCondition.Expression}" };
                 elseFoldout.name = "plc-else-block";
-                elseFoldout.userData = block.ElseCondition.Id;
+                elseFoldout.userData = block.ElseCondition;
                 elseFoldout.AddToClassList("plc-else-block");
                 RegisterExpanedFoldout(elseFoldout);
                 foreach (var content in block.ElseCondition.Content)
-                {
                     DrawPLCItemRecursive(content, elseFoldout);
-                }
                 conditionFoldout.AddChild(elseFoldout);
             }
 
@@ -2008,16 +1921,13 @@ namespace Assets.Scripts.UI
         {
             foldout.OnExpandedChanged += (isExpanded) =>
             {
-                if (foldout.userData != null)
-                {
-                    expandedFoldouts[foldout.userData.ToString()] = isExpanded;
-                }
+                string id = GetIdFromUserData(foldout.userData);
+                if (!string.IsNullOrEmpty(id))
+                    expandedFoldouts[id] = isExpanded;
             };
-
-            if (expandedFoldouts.TryGetValue(foldout.userData?.ToString() ?? "", out bool savedState))
-            {
+            string fId = GetIdFromUserData(foldout.userData);
+            if (!string.IsNullOrEmpty(fId) && expandedFoldouts.TryGetValue(fId, out bool savedState))
                 foldout.SetExpanded(savedState);
-            }
         }
 
         /// <summary>
@@ -2031,45 +1941,28 @@ namespace Assets.Scripts.UI
             container.style.alignItems = Align.Center;
             container.AddToClassList("plc-command");
             container.name = "plc-command";
-            container.userData = command.Id;
-            //commandElement.AddToClassList("plc-command-item");
+            container.userData = command;
 
             string commandText = "";
-
             switch (command)
             {
-                case PLCStartProgram start:
-                    commandText = $"Запустить программу: {start.ProgramName}";
-                    break;
+                case PLCStartProgram start: commandText = $"Запустить программу: {start.ProgramName}"; break;
                 case PLCSetVariable setVariable:
                     switch (setVariable.Operation)
                     {
-                        case OperationType.Increment:
-                            commandText = $"Инкремент: {setVariable.VariableName} += {setVariable.Value}";
-                            break;
-                        case OperationType.Decrement:
-                            commandText = $"Декремент: {setVariable.VariableName} -= {setVariable.Value}";
-                            break;
-                        case OperationType.Assign:
-                            commandText = $"Присвоить: {setVariable.VariableName} = {setVariable.Value}";
-                            break;
-                        default:
-                            break;
+                        case OperationType.Increment: commandText = $"Инкремент: {setVariable.VariableName} += {setVariable.Value}"; break;
+                        case OperationType.Decrement: commandText = $"Декремент: {setVariable.VariableName} -= {setVariable.Value}"; break;
+                        case OperationType.Assign: commandText = $"Присвоить: {setVariable.VariableName} = {setVariable.Value}"; break;
                     }
-
                     break;
-                case PLCInitVariable set:
-                    commandText = $"Создать {set.VarType}: {set.VariableName} = {set.StartValue}";
-                    break;
-                default:
-                    commandText = "Неизвестная команда";
-                    break;
+                case PLCInitVariable set: commandText = $"Создать {set.VarType}: {set.VariableName} = {set.StartValue}"; break;
+                default: commandText = "Неизвестная команда"; break;
             }
+
             var label = new Label(commandText);
             label.name = "label-hierarchy";
             label.style.color = new StyleColor(new Color(255, 255, 255));
             label.style.fontSize = 12;
-
             label.style.unityTextAlign = TextAnchor.MiddleLeft;
             label.style.flexGrow = 1;
             container.Add(label);
@@ -2078,7 +1971,6 @@ namespace Assets.Scripts.UI
             container.style.marginBottom = 2;
             container.style.marginLeft = 8;
             container.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
-
             parent.AddChild(container);
         }
 
@@ -2091,39 +1983,27 @@ namespace Assets.Scripts.UI
             if (clickedElement.name == "" || clickedElement.name == "label-hierarchy" || clickedElement.name == "foldout-header")
             {
                 var foldout = GetParentElement(clickedElement);
-                if (foldout != null)
-                {
-                    clickedElement = foldout;
-                }
+                if (foldout != null) clickedElement = foldout;
             }
 
-            string id = (string)clickedElement.userData;
-
-            // Проверяем, является ли элемент PLC командой
             if (clickedElement.name == "plc-command")
             {
-                DeletePLCCommand(id);
-                return;
+                var cmd = clickedElement.userData as PLCCommand;
+                if (cmd != null) { DeletePLCCommand(cmd.Id); return; }
             }
-
-            // Проверяем, является ли элемент условием PLC
             if (clickedElement.name == "plc-elif-block")
             {
-                DeleteELIFCondition(id);
-                return;
+                var elif = clickedElement.userData as PLCCondition;
+                if (elif != null) { DeleteELIFCondition(elif.Id); return; }
             }
             if (clickedElement.name == "plc-condition-block")
             {
-                DeletePLCBlockCondition(id);
-                return;
+                var block = clickedElement.userData as PLCBlockCondition;
+                if (block != null) { DeletePLCBlockCondition(block.Id); return; }
             }
 
-
-            // Обычное удаление объекта сцены
-            var obj = _sceneObjectManager.Commands.FindElementById(id);
-
-            if (obj == null)
-                return;
+            var obj = clickedElement.userData as SceneObject;
+            if (obj == null) return;
 
             _eventBus.Invoke(new UnpickObjectSignal());
             _eventBus.Invoke(new ChangePropertiesProviderSignal(null));
@@ -2136,20 +2016,12 @@ namespace Assets.Scripts.UI
         /// <param name="clickedElement">Ссылка на кликнутый элемент</param>
         private void ShowProperties(VisualElement clickedElement)
         {
-            var obj = _sceneObjectManager.GetById(clickedElement.userData.ToString()); //objectManager.GetObjectByUniqueID((int)clickedElement.userData);
-            if (obj == null)
-            {
-                obj = _sceneObjectManager.Commands.FindElementById(clickedElement.userData.ToString());
-            }
+            var obj = clickedElement.userData as SceneObject;
             if (obj != null)
             {
                 var provider = obj.Reference.TryGetComponent<IPropertyProvider>(out IPropertyProvider d);
                 if (d != null)
-                {
                     _eventBus.Invoke(new ChangePropertiesProviderSignal(d));
-                    //propertiesPanelEvents.ShowPanel();
-                    //propertiesPanelEvents.ShowProperties(d);
-                }
             }
         }
         #endregion
@@ -2646,99 +2518,88 @@ namespace Assets.Scripts.UI
             {
                 if (targetElement.name == "hierarchy-item-program")
                 {
-                    var targetProgram = _sceneObjectManager.Commands.FindElementById(targetElement.userData?.ToString()) as RobotProgramObject;
+                    var targetProgram = targetElement.userData as RobotProgramObject;
                     if (targetProgram == null) return false;
-
-                    // Нельзя дропнуть в ту же программу, если команда уже в ней?
-                    // Тут можно добавить логику
-
                     return true;
                 }
 
                 if (targetElement.name == "hierarchy-item-command")
                 {
-                    var targetCommand = ResolveCommand(targetElement);
+                    var targetCommand = targetElement.userData as CommandObject;
                     if (targetCommand == null) return false;
 
                     var draggedProgram = GetParentProgram(draggedRobotCommand);
                     var targetProgram = GetParentProgram(targetCommand);
 
-                    if (draggedProgram == null || targetProgram == null)
-                        return false;
+                    if (draggedProgram == null || targetProgram == null) return false;
 
                     var draggedRobot = GetRobotParent(draggedProgram);
                     var targetRobot = GetRobotParent(targetProgram);
 
-                    if (draggedRobot == null || targetRobot == null)
-                        return false;
-
-                    if (draggedRobot.Id != targetRobot.Id)
-                        return false;
-
+                    if (draggedRobot == null || targetRobot == null) return false;
+                    if (draggedRobot.Id != targetRobot.Id) return false;
                     return true;
                 }
 
                 return false;
             }
 
-            // Для PLC команд
             if (currentDragData.UserData is PLCCommand draggedPLCCommand)
             {
                 bool isFromInit = draggedPLCCommand is PLCInitVariable;
                 bool targetIsInit = IsInsideInitBlock(targetElement) || targetElement.name == "plc-init-block";
+
                 if (isFromInit)
                 {
                     if (!targetIsInit) return false;
                     if (targetElement.name == "plc-command")
                     {
-                        if (targetElement.userData?.ToString() == draggedPLCCommand.Id) return false;
+                        var plcCmd = targetElement.userData as PLCCommand;
+                        if (plcCmd != null && plcCmd.Id == draggedPLCCommand.Id) return false;
                         return true;
                     }
                     return false;
                 }
+
                 if (targetIsInit) return false;
+
                 if (targetElement.name == "plc-condition-block")
                 {
-                    // Проверяем что в том же роботе
                     string sourceRobId = GetRobotIdFromCommand(draggedPLCCommand.Id);
                     string targetRobId = GetRobotIdFromConditionBlock(targetElement);
                     return sourceRobId == targetRobId;
                 }
+
                 if (targetElement.name == "plc-robot-block" || targetElement.name == "plc-logic-block")
                 {
                     if (draggedPLCCommand is PLCStartProgram) return false;
                     return true;
                 }
+
                 if (targetElement.name == "plc-command")
                 {
-                    if (targetElement.userData?.ToString() == draggedPLCCommand.Id) return false;
+                    var plcCmd = targetElement.userData as PLCCommand;
+                    if (plcCmd != null && plcCmd.Id == draggedPLCCommand.Id) return false;
 
                     string sourceRobId = GetRobotIdFromCommand(draggedPLCCommand.Id);
-                    string targetRobId = GetRobotIdFromCommandById(targetElement.userData?.ToString());
-
+                    string targetRobId = GetRobotIdFromCommandById(targetElement.userData is PLCCommand cmd ? cmd.Id : "");
                     return sourceRobId == targetRobId;
                 }
 
                 var targetCondition = GetConditionFromElement(targetElement);
                 if (targetCondition == null) return false;
 
-                // Нельзя дропнуть в то же условие
                 if (IsCommandInCondition(draggedPLCCommand.Id, targetCondition)) return false;
 
-                // Получаем роботов
                 string sourceRobotId = GetRobotIdFromCommand(draggedPLCCommand.Id);
                 string targetRobotId = GetRobotIdFromCondition(targetCondition);
 
-                // Если роботы разные - запрещаем
                 if (sourceRobotId != targetRobotId) return false;
-
-                // Если это StartProgram - можно только если нет другой StartProgram
                 if (draggedPLCCommand is PLCStartProgram && HasStartProgramInCondition(targetCondition)) return false;
 
                 return true;
             }
 
-            // Для SceneObject
             if (currentDragData.SceneObject == null) return false;
 
             var target = GetSceneObjectFromElement(targetElement);
@@ -2751,12 +2612,14 @@ namespace Assets.Scripts.UI
 
         private string GetRobotIdFromConditionBlock(VisualElement element)
         {
-            // Ищем родительский plc-robot-block или plc-logic-block
             var current = element.parent;
             while (current != null)
             {
-                if (current.name == "plc-robot-block" && current.userData != null)
-                    return current.userData.ToString();
+                if (current.name == "plc-robot-block")
+                {
+                    var robotBlock = current.userData as PLCRobotBlock;
+                    if (robotBlock != null) return robotBlock.RobotId;
+                }
                 if (current.name == "plc-logic-block")
                     return "logic";
                 current = current.parent;
@@ -2934,12 +2797,10 @@ namespace Assets.Scripts.UI
                 // Дроп в программу (в конец)
                 if (targetElement.name == "hierarchy-item-program")
                 {
-                    var targetProgram = _sceneObjectManager.Commands.FindElementById(targetElement.userData?.ToString()) as RobotProgramObject;
+                    var targetProgram = targetElement.userData as RobotProgramObject; // Прямо из userData
                     if (targetProgram != null)
                     {
-                        // Удаляем из старого места
                         RemoveCommandFromProgram(draggedRobotCommand);
-                        // Добавляем в новую программу
                         targetProgram.Items.Add(draggedRobotCommand);
                         UpdateHierarchy();
                         CleanupDrag();
@@ -2950,7 +2811,7 @@ namespace Assets.Scripts.UI
                 // Дроп выше/ниже команды
                 if (targetElement.name == "hierarchy-item-command")
                 {
-                    var targetCommand = ResolveCommand(targetElement);
+                    var targetCommand = targetElement.userData as CommandObject; // Прямо из userData
                     if (targetCommand != null)
                     {
                         var targetProgram = GetParentProgram(targetCommand);
@@ -2964,13 +2825,11 @@ namespace Assets.Scripts.UI
                             if (targetIndex > oldIndex && oldIndex != -1)
                                 targetIndex--;
 
-                            // Удаляем со старого места
                             if (oldIndex != -1)
                                 targetProgram.Items.RemoveAt(oldIndex);
                             else
                                 RemoveCommandFromProgram(draggedRobotCommand);
 
-                            // Вставляем на новое место
                             targetProgram.Items.Insert(targetIndex, draggedRobotCommand);
                             UpdateHierarchy();
                             CleanupDrag();
@@ -3405,24 +3264,14 @@ namespace Assets.Scripts.UI
                 while (current != null)
                 {
                     if (current.name == "plc-if-block" || current.name == "plc-elif-block" || current.name == "plc-else-block")
-                    {
-                        var conditionId = current.userData?.ToString();
-                        if (conditionId != null)
-                            return GetConditionById(conditionId);
-                    }
+                        return current.userData as PLCCondition;
                     current = current.parent;
                 }
                 return null;
             }
-
-            // Для foldout — старая логика
             var foldout = GetParentElement(element);
             if (foldout != null && (foldout.name == "plc-if-block" || foldout.name == "plc-elif-block" || foldout.name == "plc-else-block"))
-            {
-                var conditionId = foldout.userData?.ToString();
-                if (conditionId != null)
-                    return GetConditionById(conditionId);
-            }
+                return foldout.userData as PLCCondition;
             return null;
         }
 
@@ -3606,28 +3455,23 @@ namespace Assets.Scripts.UI
         }
         private SceneObject GetSceneObjectFromElement(VisualElement element)
         {
-            if (element?.userData == null)
-                return null;
-
-            string id = element.userData.ToString();
-
-            if (string.IsNullOrEmpty(id))
-                return null;
-
-            return _sceneObjectManager.GetById(id);
+            return element?.userData as SceneObject;
         }
-
         private CommandObject ResolveCommand(VisualElement element)
         {
             if (element == null) return null;
 
-            // 1. напрямую
+            // Напрямую из userData
+            var sceneObj = element.userData as SceneObject;
+            if (sceneObj is CommandObject cmdObj)
+                return cmdObj;
+
+            // fallback по ID (если userData строка)
             if (element.userData is string id)
             {
                 foreach (var robot in _sceneObjectManager.GetGameObjectsList().Where(r => r.Type == ObjectType.Robot))
                 {
                     var programs = _sceneObjectManager.Commands.GetSubPrograms(robot.Id);
-
                     foreach (var program in programs)
                     {
                         var cmd = program.Items.FirstOrDefault(c => c.Id == id);
@@ -3636,25 +3480,24 @@ namespace Assets.Scripts.UI
                 }
             }
 
-            // 2. fallback по иерархии (если userData не заполнен)
-            var sceneObj = GetSceneObjectFromElement(element);
-            if (sceneObj is CommandObject cmdObj)
-                return cmdObj;
-
             return null;
         }
 
         private RobotProgramObject ResolveProgram(VisualElement element)
         {
+            // Напрямую
+            var sceneObj = element?.userData as SceneObject;
+            if (sceneObj is RobotProgramObject prog)
+                return prog;
+
+            // fallback
             if (element?.userData is string id)
             {
                 foreach (var robot in _sceneObjectManager.GetGameObjectsList().Where(r => r.Type == ObjectType.Robot))
                 {
                     var program = _sceneObjectManager.Commands.GetSubPrograms(robot.Id)
                         .FirstOrDefault(p => p.Id == id);
-
-                    if (program != null)
-                        return program;
+                    if (program != null) return program;
                 }
             }
 
@@ -3695,35 +3538,24 @@ namespace Assets.Scripts.UI
         /// <returns></returns>
         private VisualElement CreateHierarchyElement(string elemName, string text, string id, Texture2D texture)
         {
-            // Создаем контейнер для элемента
             var container = new VisualElement();
             container.AddToClassList("hierarchy-item-container-base");
             container.style.flexDirection = FlexDirection.Row;
             container.style.alignItems = Align.Center;
             container.name = elemName;
-            container.userData = id;
+            // container.userData = id; // УБРАТЬ! Устанавливается в DrawSingleItem
 
-            // Добавляем обработчик клика на весь контейнер
             container.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
 
-            // Добавляем картинку, если указан путь
             var imageElement = CreateImageElement(texture);
-            if (imageElement != null)
-            {
-                container.Add(imageElement);
-            }
+            if (imageElement != null) container.Add(imageElement);
 
-
-            // Создаем текстовый элемент
             var label = new Label(text);
             label.name = "label-hierarchy";
             label.style.color = new StyleColor(new Color(255, 255, 255));
             label.style.fontSize = 12;
-
             label.style.unityTextAlign = TextAnchor.MiddleLeft;
             label.style.flexGrow = 1;
-
-            // Добавляем текст в контейнер
             container.Add(label);
             container.style.height = 20;
             container.style.marginTop = 2;
@@ -3731,17 +3563,6 @@ namespace Assets.Scripts.UI
             container.style.marginLeft = 8;
 
             return container;
-            //var element = new Label(text);
-            //element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
-            //element.name = elemName;
-            //element.style.color = new StyleColor(new Color(255, 255, 255));
-            //element.userData = id;
-            //element.style.fontSize = 12;
-            //element.style.height = 20;
-            //element.style.marginTop = 2;
-            //element.style.marginBottom = 2;
-            //element.style.paddingLeft = 10;
-            //return element;
         }
 
         private VisualElement CreateImageElement(Texture2D texture, int width = 16, int height = 16)
@@ -3771,16 +3592,18 @@ namespace Assets.Scripts.UI
             customScrollView = hierarchyPanel.Q<CustomScrollView>("custom-scroll-view");
             MainHierarchyItem = hierarchyPanel.Q<CustomFoldout>("main-item");
             root.RegisterCallback<MouseDownEvent>(OnMouseDownInsidePanel);
+            MainHierarchyItem.userData = "main_item";
             MainHierarchyItem.SetExpanded(true);
-            //expandedFoldouts.Add(MainHierarchyItem.userData.ToString(), MainHierarchyItem.IsExpanded);
+            expandedFoldouts[MainHierarchyItem.userData.ToString()] = true;
             MainHierarchyItem.OnExpandedChanged += (isExpanded) =>
             {
                 if (MainHierarchyItem.userData != null)
-                {
                     expandedFoldouts[MainHierarchyItem.userData.ToString()] = isExpanded;
-                }
             };
         }
         #endregion
     }
+    public class PLCInitBlock { public string Id => "plc_init_block"; }
+    public class PLCRobotBlocks { public string Id => "plc_robots_block"; }
+    public class PLCLogicBlock { public string Id => "plc_logic_block"; }
 }

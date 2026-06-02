@@ -375,8 +375,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         if (element != null)
         {
 
-            element.userData = item.Id;
-
+            element.userData = item;
             CacheElement(element, item.Id);
 
             parent.AddChild(element);
@@ -409,21 +408,18 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
         var states = new Dictionary<string, bool>();
 
-        // Сохраняем состояние из словаря и проверяем актуальное состояние
         foreach (var kvp in expandedFoldouts)
         {
             states[kvp.Key] = kvp.Value;
         }
 
-        // Дополнительная проверка актуального состояния элементов
         foreach (var kvp in elementCache)
         {
-            if (kvp.Value is CustomFoldout foldout && foldout.userData != null)
+            if (kvp.Value is CustomFoldout foldout && foldout.userData is SceneObject obj)
             {
-                string id = foldout.userData.ToString();
-                if (!states.ContainsKey(id))
+                if (!states.ContainsKey(obj.Id))
                 {
-                    states[id] = foldout.IsExpanded;
+                    states[obj.Id] = foldout.IsExpanded;
                 }
             }
         }
@@ -454,9 +450,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 selectedElementId = null;
                 lastSelectedElement = null;
                 _eventBus.Invoke(new UnpickObjectSignal());
-                //objectPicker.UnpickObject();
                 _uIStatusManager.SetPropertiesPanelVisibility(false);
-                //propertiesPanelEvents.HidePanel();
             }
 
             RemoveChildrenFromCache(itemId);
@@ -609,11 +603,12 @@ public class HierarchyPanelEvents : MonoBehaviour
                 element = GetParentElement(element);
             }
 
-            var gameObject = _sceneObjectManager.GetById(element.userData.ToString());
+            var gameObject = element.userData as SceneObject;
             Debug.Log($"ID: {gameObject.Id} || PARENT: {gameObject.ParentId}");
             if (gameObject != null)
             {
-                var objectId = element.userData?.ToString();
+                var obj = element.userData as SceneObject;
+                var objectId = obj?.Id;
 
                 // Сохраняем информацию о потенциальном drag
                 // Drag начнется только при движении мыши с зажатой кнопкой
@@ -673,34 +668,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
         return false;
     }
-    /// <summary>
-    /// Выбрать элемент иерархии по Id, сначла поиск в кэше, иначе находим рекурсивно в списке элементов
-    /// </summary>
-    /// <param name="id">ID элемента</param>
-    private void SelectHierarchyItem(string id)
-    {
-        if (string.IsNullOrEmpty(id)) return;
-
-        var element = FindElementByUserIdCached(id);
-
-        if (element != null)
-        {
-            SelectHierarchyItem(element);
-        }
-        else
-        {
-            element = FindElementByUserId(MainHierarchyItem, id);
-            if (element != null)
-            {
-                CacheElement(element, id);
-                SelectHierarchyItem(element);
-            }
-            else
-            {
-                Debug.LogWarning($"Element with userId '{id}' not found in hierarchy");
-            }
-        }
-    }
+    
     /// <summary>
     /// Выбрать элемент иерархии по ссылке на элемент
     /// </summary>
@@ -726,6 +694,30 @@ public class HierarchyPanelEvents : MonoBehaviour
         {
             selectedElementId = null;
             lastSelectedElement = null;
+        }
+    }
+
+    private void SelectHierarchyItem(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+
+        var element = FindElementByUserIdCached(id);
+        if (element != null)
+        {
+            SelectHierarchyItem(element);
+        }
+        else
+        {
+            element = FindElementByUserId(MainHierarchyItem, id);
+            if (element != null)
+            {
+                CacheElement(element, id);
+                SelectHierarchyItem(element);
+            }
+            else
+            {
+                Debug.LogWarning($"Element with userId '{id}' not found in hierarchy");
+            }
         }
     }
     /// <summary>
@@ -781,7 +773,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             {
                 if (foldout.name == "hierarchy-item-robot")
                 {
-                    var robot = _sceneObjectManager.GetById(foldout.userData.ToString());
+                    var robot = foldout.userData as SceneObject;
                     //contextMenu.Add(CreateMenuButton("Добавить линейное движение", () => CreatePoint(robot)));
                     //contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(robot)));
                     //contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(robot)));
@@ -800,7 +792,8 @@ public class HierarchyPanelEvents : MonoBehaviour
                 //}
                 else if (foldout.name == "hierarchy-item-node")
                 {
-                    var parentId = foldout.userData.ToString();
+                    var obj = foldout.userData as SceneObject;
+                    var parentId = obj?.Id;
                     contextMenu.Add(CreateMenuButton("Добавить объект", () => CreateObject(parentId)));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
@@ -1059,8 +1052,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 clickedElement = foldout;
             }
         }
-        string id = (string)clickedElement.userData;
-        var obj = _sceneObjectManager.GetById(clickedElement.userData.ToString()); //objectManager.GetObjectByUniqueID(id);
+        var obj = clickedElement.userData as SceneObject;
 
         if (obj == null)
             return;
@@ -1078,7 +1070,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     /// <param name="clickedElement">Ссылка на кликнутый элемент</param>
     private void ShowProperties(VisualElement clickedElement)
     {
-        var obj = _sceneObjectManager.GetById(clickedElement.userData.ToString()); //objectManager.GetObjectByUniqueID((int)clickedElement.userData);
+        var obj = clickedElement.userData as SceneObject;
         if (obj != null)
         {
             var provider = obj.Reference.TryGetComponent<IPropertyProvider>(out IPropertyProvider d);
@@ -1278,17 +1270,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
     private SceneObject GetSceneObjectFromElement(VisualElement element)
     {
-        // Добавьте проверку на null для userData
-        if (element?.userData == null)
-            return null;
-
-        string id = element.userData.ToString();
-
-        // Дополнительная проверка на пустую строку
-        if (string.IsNullOrEmpty(id))
-            return null;
-
-        return _sceneObjectManager.GetById(id);
+        return element?.userData as SceneObject;
     }
 
     private bool CanBeDragged(SceneObject sceneObject)
