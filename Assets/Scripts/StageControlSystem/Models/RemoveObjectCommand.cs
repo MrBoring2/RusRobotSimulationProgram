@@ -107,20 +107,7 @@ namespace Assets.Scripts.Models
 
                 case StorageType.Commands:
                     // Удаляем команду из программы
-                    if (!string.IsNullOrEmpty(_robotId) && !string.IsNullOrEmpty(_programId))
-                    {
-                        var program = _sceneObjectManager.Commands.GetSubProgram(_programId);
-                        if (program != null && program.Items.Contains(instance))
-                        {
-                            _originalIndex = program.Items.IndexOf((CommandObject)instance);
-                            program.Items.Remove((CommandObject)instance);
-                        }
-                    }
-                    // Скрываем GameObject
-                    if (instance.Reference != null)
-                    {
-                        instance.Reference.SetActive(false);
-                    }
+                    _sceneObjectManager.Commands.RemoveById(instance.Id);
                     break;
             }
 

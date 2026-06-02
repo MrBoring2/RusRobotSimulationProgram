@@ -210,44 +210,56 @@ namespace Assets.Scripts.Managers
         }
 
         /// <summary>
-        /// Удаляет объект со сцены по его ID.
+        /// Удаляет объект или команду по ID (для Undo/Redo - скрывает)
         /// </summary>
-        /// <param name="id">ID удаляемого объекта</param>
         public void Remove(string id, bool destroyGameObject = false)
         {
-            if (!string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(id)) return;
+
+            // Проверяем в Items
+            if (Items.Contains(id))
             {
-                if (!Items.Contains(id)) return;
-
                 var sceneObject = (SceneObject)Items[id];
-
-                // Удаляем из словаря
                 Items.Remove(id);
 
-                // Отправляем сигнал об удалении
                 _eventBus.Invoke<RemoveSceneObjectSignal>(new RemoveSceneObjectSignal(sceneObject));
 
                 if (destroyGameObject)
                 {
-                    // Полное уничтожение GameObject
                     if (sceneObject.Reference != null)
-                    {
                         Destroy(sceneObject.Reference);
-                    }
                 }
                 else
                 {
-                    // Просто скрываем объект для возможности восстановления
                     if (sceneObject.Reference != null)
-                    {
                         sceneObject.Reference.SetActive(false);
-                    }
+                }
+
+                _eventBus.Invoke(new UpdateLineDrawer());
+                return;
+            }
+
+            var commandObj = Commands.FindElementById(id);
+            if (commandObj != null)
+            {
+                Commands.RemoveById(id);
+
+                _eventBus.Invoke<RemoveSceneObjectSignal>(new RemoveSceneObjectSignal(commandObj));
+
+                if (destroyGameObject)
+                {
+                    if (commandObj.Reference != null)
+                        Destroy(commandObj.Reference);
+                }
+                else
+                {
+                    if (commandObj.Reference != null)
+                        commandObj.Reference.SetActive(false);
                 }
 
                 _eventBus.Invoke(new UpdateLineDrawer());
             }
         }
-
         /// <summary>
         /// Получает объект по ID.
         /// </summary>

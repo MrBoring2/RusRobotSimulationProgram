@@ -1216,64 +1216,17 @@ public class HierarchyPanelEvents : MonoBehaviour
         float localPosY = position.y - panelWorldBounds.y;
         var localPos = new Vector2(localPosX, localPosY);
 
-        // Проверяем возможность дропа в начало
-        if (allElements.Count > 0 && CanDropInRoot(currentDragData.SceneObject))
-        {
-            var firstElement = allElements[0];
-            var firstBounds = firstElement.worldBound;
-            var firstLocalY = firstBounds.y - panelWorldBounds.y;
-
-            if (localPos.y < firstLocalY - 10)
-            {
-                var distance = Mathf.Abs(localPos.y - firstLocalY);
-                bestTarget = new DropTargetInfo
-                {
-                    TargetElement = firstElement,
-                    Position = DropPosition.Above,
-                    Distance = distance,
-                    IsBeforeFirst = true
-                };
-                minDistance = distance;
-            }
-        }
-
         foreach (var element in allElements)
         {
-            if (element == currentDragData.SourceElement) continue;
+            if (element == currentDragData?.SourceElement) continue;
 
             var sceneObject = GetSceneObjectFromElement(element);
             if (sceneObject == null) continue;
 
-            if (!CanDropOnTarget(currentDragData.SceneObject, sceneObject))
-                continue;
+            if (!CanDropOnTarget(element)) continue;
 
-            Rect elementLocalBounds;
-
-            if (element is CustomFoldout foldout && foldout.Header != null)
-            {
-                var headerBounds = foldout.Header.worldBound;
-
-                elementLocalBounds = new Rect(
-                    headerBounds.x - panelWorldBounds.x,
-                    headerBounds.y - panelWorldBounds.y,
-                    headerBounds.width,
-                    headerBounds.height
-                );
-            }
-            else
-            {
-                // обычные элементы (примитивы и т.п.)
-                var wb = element.worldBound;
-
-                elementLocalBounds = new Rect(
-                    wb.x - panelWorldBounds.x,
-                    wb.y - panelWorldBounds.y,
-                    wb.width,
-                    wb.height
-                );
-            }
-
-            var dropInfo = CalculateDropPosition(element, elementLocalBounds, localPos);
+            var elementBounds = GetElementBounds(element, panelWorldBounds);
+            var dropInfo = CalculateDropPosition(element, elementBounds, localPos);
             if (dropInfo != null && dropInfo.Distance < minDistance)
             {
                 minDistance = dropInfo.Distance;
@@ -1281,26 +1234,35 @@ public class HierarchyPanelEvents : MonoBehaviour
             }
         }
 
-        // Проверяем возможность дропа в конец
-        if (allElements.Count > 0 && CanDropInRoot(currentDragData.SceneObject) && bestTarget == null)
-        {
-            var lastElement = allElements[allElements.Count - 1];
-            var lastBounds = lastElement.worldBound;
-            var lastLocalY = lastBounds.y - panelWorldBounds.y + lastBounds.height;
-
-            if (localPos.y > lastLocalY + 10)
-            {
-                bestTarget = new DropTargetInfo
-                {
-                    TargetElement = lastElement,
-                    Position = DropPosition.Below,
-                    Distance = Mathf.Abs(localPos.y - lastLocalY)
-                };
-            }
-        }
-
         return bestTarget;
     }
+
+    private Rect GetElementBounds(VisualElement element, Rect panelWorldBounds)
+    {
+        Rect bounds;
+        if (element is CustomFoldout foldout && foldout.Header != null)
+        {
+            var headerBounds = foldout.Header.worldBound;
+            bounds = new Rect(
+                headerBounds.x - panelWorldBounds.x,
+                headerBounds.y - panelWorldBounds.y,
+                headerBounds.width,
+                headerBounds.height
+            );
+        }
+        else
+        {
+            var wb = element.worldBound;
+            bounds = new Rect(
+                wb.x - panelWorldBounds.x,
+                wb.y - panelWorldBounds.y,
+                wb.width,
+                wb.height
+            );
+        }
+        return bounds;
+    }
+
     private VisualElement FindDraggableElement(VisualElement element)
     {
         while (element != null && element != hierarchyPanel)
@@ -1419,7 +1381,6 @@ public class HierarchyPanelEvents : MonoBehaviour
         var target = GetSceneObjectFromElement(element);
         var dragged = currentDragData.SceneObject;
 
-        // ABOVE
         if (localPos.y < top)
         {
             return new DropTargetInfo
@@ -1429,7 +1390,6 @@ public class HierarchyPanelEvents : MonoBehaviour
                 Distance = Mathf.Abs(localPos.y - bounds.y)
             };
         }
-        // BELOW
         else if (localPos.y > bottom)
         {
             return new DropTargetInfo
@@ -1439,49 +1399,10 @@ public class HierarchyPanelEvents : MonoBehaviour
                 Distance = Mathf.Abs(localPos.y - (bounds.y + bounds.height))
             };
         }
-        // INSIDE
         else
         {
-            if (target.Type == ObjectType.Node &&
-                dragged.Type == ObjectType.Primitive)
-            {
-                return new DropTargetInfo
-                {
-                    TargetElement = element,
-                    Position = DropPosition.Inside,
-                    Distance = 0
-                };
-            }
-
-            if (!(element is CustomFoldout)) return null;
-
-            if (target.Type == ObjectType.Node &&
-                dragged.Type == ObjectType.Node)
-            {
-                return new DropTargetInfo
-                {
-                    TargetElement = element,
-                    Position = DropPosition.Inside,
-                    Distance = 0
-                };
-            }
-
-            // Команды/программы могут быть внутри робота
-            //else if (target.Type == ObjectType.Robot &&
-            //    (IsProgramOrCommand(dragged)))
-            //{
-            //    return new DropTargetInfo
-            //    {
-            //        TargetElement = element,
-            //        Position = DropPosition.Inside,
-            //        Distance = 0
-            //    };
-            //}
-
-            else if (target.Type == ObjectType.Program &&
-                (dragged.Type == ObjectType.LinearMoveCommand
-                || dragged.Type == ObjectType.StateEndEffectorCommand
-                || dragged.Type == ObjectType.WaitCommand))
+            // Разрешаем Inside для всех объектов
+            if (element is CustomFoldout)
             {
                 return new DropTargetInfo
                 {
@@ -1494,99 +1415,19 @@ public class HierarchyPanelEvents : MonoBehaviour
 
         return null;
     }
-
-    private bool CanDropOnTarget(SceneObject dragged, SceneObject target)
+    private bool CanDropOnTarget(VisualElement targetElement)
     {
-        if (dragged == null || target == null)
-            return false;
+        if (currentDragData == null) return false;
+        if (currentDragData.SceneObject == null) return false;
 
-        if (dragged.Id == target.Id)
-            return false;
+        var target = GetSceneObjectFromElement(targetElement);
+        if (target == null) return false;
+        if (currentDragData.SceneObject.Id == target.Id) return false;
+        if (IsChildOf(target.Id, currentDragData.SceneObject.Id)) return false;
 
-        // нельзя дропать в своего потомка
-        if (IsChildOf(target.Id, dragged.Id))
-            return false;
-
-        // ===== ROBOT =====
-        if (dragged.Type == ObjectType.Robot)
-        {
-            // роботы перемещаются только в корень
-            return string.IsNullOrEmpty(target.ParentId);
-        }
-
-        // ===== WORKPIECE =====
-        if (dragged.Type == ObjectType.Workpiece)
-        {
-            // роботы перемещаются только в корень
-            return string.IsNullOrEmpty(target.ParentId);
-        }
-
-        // ===== PRIMITIVE =====
-        if (dragged.Type == ObjectType.Primitive)
-        {
-            // Находим родительскую ноду для dragged
-            SceneObject draggedParent = null;
-            if (!string.IsNullOrEmpty(dragged.ParentId))
-            {
-                draggedParent = _sceneObjectManager.GetById(dragged.ParentId);
-            }
-
-            // Находим родительскую ноду для target
-            SceneObject targetParent = null;
-            if (!string.IsNullOrEmpty(target.ParentId))
-            {
-                targetParent = _sceneObjectManager.GetById(target.ParentId);
-            }
-
-            // Если оба примитива в одной ноде, можно перемещать над/под
-            if (draggedParent != null && targetParent != null &&
-                draggedParent.Type == ObjectType.Node &&
-                targetParent.Type == ObjectType.Node)
-            {
-                return draggedParent.Id == targetParent.Id;
-            }
-
-            // Если оба примитива в корне (нет ParentId), можно перемещать над/под
-            if (string.IsNullOrEmpty(dragged.ParentId) && string.IsNullOrEmpty(target.ParentId))
-            {
-                return true;
-            }
-
-            if (string.IsNullOrEmpty(dragged.ParentId) && targetParent != null && targetParent.Type == ObjectType.Node)
-            {
-                return true;
-            }
-
-            if (draggedParent != null && draggedParent.Type == ObjectType.Node &&
-                    string.IsNullOrEmpty(target.ParentId))
-            {
-                return true;
-            }
-
-            // Если один примитив в ноде, а другой в корне - нельзя дропать
-            return false;
-        }
-
-        // ===== NODE =====
-        if (dragged.Type == ObjectType.Node)
-        {
-            return string.IsNullOrEmpty(target.ParentId) || target.Type == ObjectType.Node;
-        }
-
-        // ===== PROGRAM / COMMAND =====
-        //if (IsProgramOrCommand(dragged))
-        //{
-        //    // только внутри своего робота
-        //    var draggedRobot = GetRobotParent(dragged);
-        //    var targetRobot = GetRobotParent(target);
-        //    if (draggedRobot == null || targetRobot == null)
-        //        return false;
-
-        //    return draggedRobot.Id == targetRobot.Id;
-        //}
-
-        return false;
+        return true;
     }
+
 
     private bool CanDropInRoot(SceneObject draggedObject)
     {
@@ -1653,11 +1494,15 @@ public class HierarchyPanelEvents : MonoBehaviour
         if (currentDragData == null || currentDropTarget == null) return;
 
         var draggedObject = currentDragData.SceneObject;
-        var targetElement = currentDropTarget.TargetElement;
-        var targetObject = GetSceneObjectFromElement(targetElement);
+        var targetObject = GetSceneObjectFromElement(currentDropTarget.TargetElement);
 
-        // Проверка на попытку перетащить объект на самого себя
-        if (targetObject != null && targetObject.Id == draggedObject.Id)
+        if (targetObject == null || draggedObject == null)
+        {
+            CleanupDrag();
+            return;
+        }
+
+        if (targetObject.Id == draggedObject.Id)
         {
             CleanupDrag();
             return;
@@ -1666,62 +1511,44 @@ public class HierarchyPanelEvents : MonoBehaviour
         string newParentId = null;
         int? insertAtIndex = null;
 
-        // Обработка для роботов - всегда перемещаем в корень
         switch (currentDropTarget.Position)
         {
             case DropPosition.Above:
-                newParentId = targetObject?.ParentId;
-                insertAtIndex = GetSiblingIndexInParent(targetObject);
+                newParentId = targetObject.ParentId;
+                insertAtIndex = GetSiblingIndex(targetObject.Id, targetObject.ParentId);
+                // Если dragged выше target в том же родителе, индекс не меняется
+                if (draggedObject.ParentId == targetObject.ParentId &&
+                    GetSiblingIndex(draggedObject.Id, draggedObject.ParentId) < insertAtIndex)
+                {
+                    // dragged удалится, target сдвинется вверх, поэтому индекс правильный
+                }
                 break;
 
             case DropPosition.Below:
-                newParentId = targetObject?.ParentId;
-                insertAtIndex = GetSiblingIndexInParent(targetObject) + 1;
+                newParentId = targetObject.ParentId;
+                insertAtIndex = GetSiblingIndex(targetObject.Id, targetObject.ParentId) + 1;
+                // Если dragged выше target в том же родителе, после удаления dragged индекс уменьшится на 1
+                if (draggedObject.ParentId == targetObject.ParentId &&
+                    GetSiblingIndex(draggedObject.Id, draggedObject.ParentId) < GetSiblingIndex(targetObject.Id, targetObject.ParentId))
+                {
+                    insertAtIndex--;
+                }
                 break;
 
             case DropPosition.Inside:
-                newParentId = targetObject?.Id;
-                insertAtIndex = 0; // В начало списка детей
+                newParentId = targetObject.Id;
+                insertAtIndex = 0;
                 break;
         }
+
         if (!string.IsNullOrEmpty(newParentId) && IsChildOf(newParentId, draggedObject.Id))
         {
             CleanupDrag();
             return;
         }
 
-        // Специальные проверки
-        //if (IsProgramOrCommand(draggedObject) && string.IsNullOrEmpty(newParentId))
-        //{
-        //    CleanupDrag();
-        //    return;
-        //}
-
-        // Проверяем, не пытаемся ли переместить объект в его собственного потомка
-        if (IsChildOf(newParentId, draggedObject.Id))
-        {
-            CleanupDrag();
-            return;
-        }
-
-        // Для команд/программ проверяем, что остаемся в том же роботе
-        //if (IsProgramOrCommand(draggedObject))
-        //{
-        //    var newParent = _sceneObjectManager.GetById(newParentId);
-        //    var newRobot = GetRobotParent(newParent ?? targetObject);
-        //    var oldRobot = GetRobotParent(draggedObject);
-
-        //    if (newRobot == null || newRobot.Id != oldRobot.Id)
-        //    {
-        //        CleanupDrag();
-        //        return;
-        //    }
-        //}
-
-        // Выполняем команду перемещения
         var command = new ChangeParentCommand(draggedObject.Id, newParentId, insertAtIndex);
         _undoRedoManager.Execute(command);
-
         CleanupDrag();
     }
 
