@@ -3,6 +3,7 @@ using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
 using Assets.UI.CustomElements;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.UIElements;
 
 namespace Assets.Scripts.UI
@@ -17,6 +18,7 @@ namespace Assets.Scripts.UI
         private StringPopupField typesList;
         private UIStatusManager _uiStatusManager;
         private string selectedType;
+        private NotificationSystemManager _notificationSystemManager;
 
         protected override void Start()
         {
@@ -26,12 +28,13 @@ namespace Assets.Scripts.UI
         protected override void OnBeforeShow(ModalParameters parameters)
         {
             _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
+            _notificationSystemManager = ServiceManager.Current.Get<NotificationSystemManager>();
 
             if (messageLabel != null)
             {
                 string message = parameters.Get("message", "Инициализация переменной");
                 messageLabel.text = message;
-              
+
             }
             typesList.choices = new List<string>
                 {
@@ -45,6 +48,18 @@ namespace Assets.Scripts.UI
 
         private void ConfirmCondition()
         {
+            if (varName.Contains(" "))
+            {
+                _notificationSystemManager.ShowWarning("Название переменной должно быть без пробелов!");
+                return;
+            }
+
+            if (varValue == "")
+            {
+                _notificationSystemManager.ShowWarning("Значение переменной не омжет быть пустым!");
+                return;
+            }
+
             VarType type = VarType.String;
             switch (selectedType)
             {
@@ -63,6 +78,26 @@ namespace Assets.Scripts.UI
                 default:
                     break;
             }
+
+            string[] validBoolValues = { "true", "True", "false", "False" };
+            if (type == VarType.Bool && !validBoolValues.Contains(varValue))
+            {
+                _notificationSystemManager.ShowWarning("Булевая переменная можеть иметь значение только true или false!");
+                return;
+            }
+
+            if (type == VarType.Int && !int.TryParse(varValue, out int v))
+            {
+                _notificationSystemManager.ShowWarning("Значение не подходит для целочисленной переменной!");
+                return;
+            }
+
+            if (type == VarType.Float && !float.TryParse(varValue, out float v2))
+            {
+                _notificationSystemManager.ShowWarning("Значение не подходит для вещественной переменной или вместо запятой стоит точка!");
+                return;
+            }
+
             CloseWithValue(new PLCInitVariable { VarType = type, VariableName = varName, StartValue = varValue });
             varName = "";
             varValue = "";
