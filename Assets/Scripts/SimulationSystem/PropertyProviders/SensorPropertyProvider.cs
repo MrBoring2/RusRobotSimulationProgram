@@ -18,8 +18,8 @@ public class SensorPropertyProvider : BasePropertyProvider
     public string NameSignal { get; set; } = "";
     public bool IsActive { get; set; } = false;
     [Header("Detection Settings")]
-    [SerializeField] public float DetectionLength = 0.05f;
-    [SerializeField] public float DetectionHeight = 0.01f;
+    public float DetectionLength { get; set; }  = 0.05f;
+    public float DetectionHeight { get; set; } = 0.01f;
     [Header("Visual Settings")]
     [SerializeField] public Color OnColor = Color.green;
     [SerializeField] public bool _showVisualization = true;
@@ -67,6 +67,18 @@ public class SensorPropertyProvider : BasePropertyProvider
                 () => InvertSignal,
                 val => InvertSignal = (bool)val
                 ),
+                new CustomProperty(
+                    "DetectionLength",
+                    "Длина обнаружения",
+                    typeof(float),
+                    () => DetectionLength,
+                    val => DetectionLength = (float)val),
+                new CustomProperty(
+                    "DetectionHeight",
+                    "Высота обнаружения",
+                    typeof(float),
+                    () => DetectionHeight,
+                    val => DetectionHeight = (float)val),
         };
         return list;
     }
