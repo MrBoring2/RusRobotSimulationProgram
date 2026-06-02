@@ -7,6 +7,7 @@ using UnityEngine;
 
 public class RobotCollisionController : MonoBehaviour
 {
+    //объекты робота и их меш рендереры для изменения цвета при коллизии
     public GameObject A1;
     public MeshRenderer A1MeshRenderer;
     public GameObject A2;
@@ -27,14 +28,13 @@ public class RobotCollisionController : MonoBehaviour
     public MeshRenderer LeftFingerRenderer;
     public GameObject RightFingerTrig;
     public MeshRenderer RightFingerRenderer;
+    // группы объектов для определения типа коллизии (коллизия звена или коллизия эффектора)
     private List<GameObject> JointGroup = new();
     private List<GameObject> EndEffectorGroup = new();
+    // словарь для хранения объектов, находящихся в коллизии с каждым из отслеживаемых объектов робота, а также их начальный цвет для восстановления при выходе из коллизии
     private Dictionary<GameObject, (MeshRenderer MeshRenderer, Color Color)> DictionaryMeshRenderers = new();
-    Color defaultColorA;
-    Color defultColorEndEff;
-    Color defaultColorFinger;
     public List<string> TestList = new();
-
+    // словарь для хранения имен объектов, находящихся в коллизии с каждым из отслеживаемых объектов робота, для передачи в интерфейс
     private Dictionary<GameObject, List<GameObject>> collisionObjects = new();
     public Dictionary<string, List<string>> stringCollisionObjects = new();
     
@@ -44,14 +44,12 @@ public class RobotCollisionController : MonoBehaviour
     void Start()
     {
         _SimManager = ServiceManager.Current.Get<SimulationManager>();
-        defaultColorA = A1MeshRenderer.material.color;
-        defultColorEndEff = EndEffectorRenderer.material.color;
-        defaultColorFinger = RightFingerRenderer.material.color;
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<RobotCollisionEvent>(OnRobotCollision);
         _eventBus.Subscribe<RobotCollisionExitEvent>(OnRobotCollisionExit);
         var GO = new[] { A1, A2, A3, A3_4, A4, A5, A6, EndEffector, RightFingerTrig, LeftFingerTrig };
-        var MR = new[] { A1MeshRenderer, A2MeshRenderer, A3MeshRenderer, A3_4MeshRenderer, A4MeshRenderer, A5MeshRenderer, A6MeshRenderer, EndEffectorRenderer,RightFingerRenderer, LeftFingerRenderer };
+        var MR = new[] { A1MeshRenderer, A2MeshRenderer, A3MeshRenderer, A3_4MeshRenderer, 
+            A4MeshRenderer, A5MeshRenderer, A6MeshRenderer, EndEffectorRenderer,RightFingerRenderer, LeftFingerRenderer };
         for (int i = 0; i < 10; i++)
         {
             collisionObjects.Add(GO[i], new List<GameObject>());
@@ -67,7 +65,7 @@ public class RobotCollisionController : MonoBehaviour
         }
         _notification = ServiceManager.Current.Get<NotificationSystemManager>();
     }
-
+    // обработка события коллизии
     private void OnRobotCollision(RobotCollisionEvent s)
     { 
         if (IsCollisionBetween(s, A1, A2) || IsCollisionBetween(s, A2, A3) || IsCollisionBetween(s, A3, A3_4) || IsCollisionBetween(s, A3_4, A4) ||
@@ -76,7 +74,8 @@ public class RobotCollisionController : MonoBehaviour
                     IsCollisionBetween(s, EndEffector, LeftFingerTrig) || IsCollisionBetween(s, LeftFingerTrig, RightFingerTrig)) return;
         GameObject obj1 = s.Object; //для которго отселживается коллизия
         GameObject obj2 =  s.CollidedObject; // в коллизии
-        if (obj1 == A1 || obj1 == A2 || obj1 == A3 || obj1 == A3_4 || obj1 == A4 || obj1 == A5 || obj1 == A6 || obj1 == EndEffector || obj1 == RightFingerTrig || obj1 == LeftFingerTrig)
+        if (obj1 == A1 || obj1 == A2 || obj1 == A3 || obj1 == A3_4 || obj1 == A4 || obj1 == A5 || obj1 == A6 || 
+            obj1 == EndEffector || obj1 == RightFingerTrig || obj1 == LeftFingerTrig)
         {
             if (!collisionObjects[obj1].Contains(obj2))
             {
@@ -93,11 +92,13 @@ public class RobotCollisionController : MonoBehaviour
             
         }
     }
+    // проверка, что коллизия происходит между двумя конкретными объектами, для которых не нужно обрабатывать коллизию
     bool IsCollisionBetween(RobotCollisionEvent s, GameObject obj1, GameObject obj2)
     {
         return (s.Object == obj1 && s.CollidedObject == obj2) ||
                (s.Object == obj2 && s.CollidedObject == obj1);
     }
+    // обработка события выхода из коллизии
     private void OnRobotCollisionExit(RobotCollisionExitEvent s)
     {
         GameObject obj =  s.Object; //для которго отселживается коллизия
@@ -117,6 +118,7 @@ public class RobotCollisionController : MonoBehaviour
             }
         }
     }
+    // обновление словаря stringCollisionObjects для передачи в интерфейс и вызов события об обновлении словаря коллизий
     private void UpdateStringCollisionObjects()
     {
         bool isCollision = false;
@@ -136,7 +138,7 @@ public class RobotCollisionController : MonoBehaviour
         UpdateTestList();
         _eventBus.Invoke(new CollisionDictionaryUpdated { isCollision = isCollision, stringCollisionObjects = stringCollisionObjects });
     }
-
+    // обновление тестового списка для отображения в инспекторе (для отладки)
     private void UpdateTestList()
     {
         TestList.Clear();

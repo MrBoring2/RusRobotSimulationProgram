@@ -1,20 +1,10 @@
-//DI
-using Assets.Scripts.CustomEventBus.Signals.Robot;
 using Assets.Scripts.CustomEventBus;
-using Assets.Scripts.CustomEventBus.Signals.Simulation;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Models;
-using NUnit.Framework;
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using Assets.Scripts.CustomEventBus.Signals.ObjectPicker_;
-using Assets.Scripts.Providers;
 using Assets.Scripts.Managers;
 using Assets.Scripts.SimulationSystem.PLC;
-using System.Threading;
 
 public class PLCSimulation : MonoBehaviour
 {
@@ -26,15 +16,11 @@ public class PLCSimulation : MonoBehaviour
 
     private void Start()
     {
-        _simManager = ServiceManager.Current.Get<SimulationManager>();
-        _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
-        _eventBus = ServiceManager.Current.Get<EventBus>();
-
-        _eventBus.Subscribe<StartProgramm>(StartSim);
-        
+        _simManager = ServiceManager.Current.Get<SimulationManager>();//менеджер симуляции
+        _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();//менеджер сцены
+        _eventBus = ServiceManager.Current.Get<EventBus>();//шин событий
+        _eventBus.Subscribe<StartProgramm>(StartSim);//сигнал запуска симуляции ПЛК        
     }
-
-    
     PLCBlockInit Init;
     List<PLCBlockRobotsTask> RobotsBlocks;
     PLCBlockLogic LogicBlock;
@@ -54,8 +40,6 @@ public class PLCSimulation : MonoBehaviour
         {
             cmd.Execute();
         }
-
-        //ServiceManager.Current.Get<LogicSignalBus>().CadrToActiveSignal();
         while (true)
         {
             if (_simManager.GetStatusSim() == SIM_STAT.STOP) return;
@@ -67,7 +51,6 @@ public class PLCSimulation : MonoBehaviour
             
             // Логика ПЛК
             await PLC();
-            //ServiceManager.Current.Get<LogicSignalBus>().CadrToActiveSignal();
             await Awaitable.WaitForSecondsAsync(0.1f);
         }
     }
@@ -82,8 +65,7 @@ public class PLCSimulation : MonoBehaviour
             await ExecuteRobotBlock(block);
         }
         await ExecuteCycleBlock(LogicBlock);
-    }
-    
+    } 
     //--Выполнение блока работы с роботом--
     public async Awaitable ExecuteRobotBlock(PLCBlockRobotsTask BlockRobotTasks)
     {
@@ -126,12 +108,6 @@ public class PLCSimulation : MonoBehaviour
             {
                 element.Execute();
             }
-    }
-
-
-    private void OnDestroy()
-    {
-
     }
 }
 
@@ -233,22 +209,6 @@ public static class PLCDataConverter
             outList.Add(condBlock);
             return outList;
         }
-
-        // PLCCondition (single condition block)
-        /*if (item is PLCCondition singleCond)
-        {
-            var condBlock = new PLCConditionBlock(singleCond.Id ?? Guid.NewGuid().ToString());
-            var branch = new PLCConditionBranch(singleCond.Id ?? Guid.NewGuid().ToString(), ENUM_PLC_COMMANDS.IF_CONDITION)
-            {
-                Condition = new PLCCCondition(singleCond.Expression),
-                ProgrammElements = ParsePLCBaseList(singleCond.Content)
-            };
-            condBlock.Branches.Add(branch);
-            outList.Add(condBlock);
-            return outList;
-        }*/
-
-        // PLCCommand and derived
         if (item is PLCCommand cmd)
         {
             // Start program => PLCCommandTask
@@ -258,7 +218,6 @@ public static class PLCDataConverter
                 outList.Add(com);
                 return outList;
             }
-
             // Increment => PLCCommandSetIncrement (int)
             if (cmd is PLCIncrement inc)
             {
@@ -267,7 +226,6 @@ public static class PLCDataConverter
                 outList.Add(setInc);
                 return outList;
             }
-
             // Decrement => PLCCommandSetIncrement with negative value
             if (cmd is PLCDecrement dec)
             {
@@ -276,7 +234,6 @@ public static class PLCDataConverter
                 outList.Add(setInc);
                 return outList;
             }
-
             // Init variable => create set/assign depending on type
             if (cmd is PLCInitVariable initVar)
             {
@@ -331,13 +288,6 @@ public static class PLCDataConverter
                     Debug.LogWarning($"PLC converter: не удалось распарсить bool StartValue для {initVar.VariableName}");
                 }
                 break;
-            /*case VarType.Float:
-                // нет прямого float-set в целевых PLCProgrammElement — логируем
-                Debug.LogWarning($"PLC converter: Float init for '{initVar.VariableName}' не поддерживается целевой моделью. Значение='{initVar.StartValue}'");
-                break;
-            case VarType.String:
-                Debug.LogWarning($"PLC converter: String init for '{initVar.VariableName}' не поддерживается целевой моделью.");
-                break;*/
         }
 
         return list;

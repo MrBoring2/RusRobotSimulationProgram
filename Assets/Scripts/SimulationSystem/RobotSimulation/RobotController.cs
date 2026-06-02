@@ -28,21 +28,17 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
         Angles[] angles;
         
-        //оптимизация
+        //предыдушие состояния
         Vector3 oldJOGposition = Vector3.zero;
         Quaternion oldJOGrotation = Quaternion.identity;
         float[] oldAngles = new float[6] { 0, 0, 0, 0, 0, 0 };
-        bool needUpdateConf = false;
         int OldConfigPoint = 0;
-        bool inProgressAsync = false;
-        //
-        bool endAnglesMove = false;
         public string ID => _propertyProvider.Id;
         public bool RunTask { get; set; }
         public List<SubProgramm> Programm { get; set; }
 
         public AnimationCurve SpeedCurve;
-        private InverseK_new InvKin;
+        private InverseK InvKin;
 
         Awaitable setJogAsync;
         Awaitable setAngleAsync;
@@ -50,8 +46,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         void Start()
         {
             Notification = ServiceManager.Current.Get<NotificationSystemManager>();
-            InvKin = gameObject.GetComponent<InverseK_new>();
-            //_eventBus.Subscribe<StopProgramm>(StopSim);
+            InvKin = gameObject.GetComponent<InverseK>();
             _eventBus.Subscribe<PickCommandSignal>(TeleportToPoint);
             _eventBus.Subscribe<Init>(ControllerResetState);
             _propertyProvider = GetComponent<RobotPropertyProvider>();
@@ -187,10 +182,6 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                     tLinear = sLinear / LinearSpeed;
                 }
             }
-
-
-            //Сделать проверку точки на достижимость, если точка недоступна, то не выполнять движение и выдавать ошибку
-
             while (Vector3.Distance(End.Position, wayPoint.Position) > 0.01 || (Quaternion.Angle(wayPoint.Rotation, End.Rotation) > 0.01))
             {
                 
@@ -283,7 +274,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
                 if (InvKin.CheckLimit(angles[point.ConfigPoint], _propertyProvider.AnglesLimit))
                 {
-                    _eventBus.Invoke(new SystemPauseSim("Линейное движение невозможно, ось достигла предела"));
+                    _eventBus.Invoke(new SystemPauseSim("Движение невозможно, ось достигла предела"));
                 }
                 if (InvKin.checkIsNaN(angles[point.ConfigPoint]))
                 {
@@ -501,8 +492,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
         }
         //=================================== КОМАНДЫ ===================================//
-        //--Задать позицию ДЖОГа
-        
+        //--Задать позицию ДЖОГа  
         public async Awaitable SetJogMove()
         {
             if (setJogAsync != null && !setJogAsync.IsCompleted) return;
@@ -527,16 +517,10 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                     ModifyRobot(_propertyProvider, angles[_propertyProvider.JOGpoint.ConfigPoint].GetFloats());
                     angles[_propertyProvider.JOGpoint.ConfigPoint].GetFloats().CopyTo(_propertyProvider.ChangeAngles, 0);
                     angles[_propertyProvider.JOGpoint.ConfigPoint].GetFloats().CopyTo(oldAngles,0);
-                    //////
                     await Awaitable.NextFrameAsync();
-
-                    //var jogPos = _propertyProvider.JOGpoint.GlobalPosition;
-                    //var objPos = _propertyProvider.GetActualPosEffector().Position;
-                    //UnityEngine.Debug.LogWarning($"JOG:({jogPos.x:F4}, {jogPos.y:F4}, {jogPos.z:F4});;;OBJ:({objPos.x:F4}, {objPos.y:F4}, {objPos.z:F4})");
                 }
                 else
                 {
-                    //Notification.ShowWarning("Точка вне зоны досягаемости");
                     _propertyProvider.JOGpoint.LocalPosition = oldJOGposition;
                     _propertyProvider.JOGpoint.LRotationQ = oldJOGrotation;
                     return;
@@ -572,8 +556,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 _propertyProvider.JOGpoint.LRotationQ = oldJOGrotation = position.Rotation;
 
                 _propertyProvider.ChangeAngles.CopyTo(oldAngles, 0);
-                endAnglesMove = true;
-                _eventBus.Invoke(new ChangeAnglesJOGSignal(_propertyProvider));
+                _eventBus.Invoke(new ChangeConfigJOGSignal(_propertyProvider));
             }
         }
         //--Выполнить подпрограмму (задачу)--
@@ -741,7 +724,6 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
        
         void OnDestroy()
         {
-            //_eventBus.Unsubcribe<StopProgramm>(StopSim);
             _eventBus.Unsubcribe<PickCommandSignal>(TeleportToPoint);
             _eventBus.Unsubcribe<Init>(ControllerResetState);
 

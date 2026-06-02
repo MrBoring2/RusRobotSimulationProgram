@@ -5,7 +5,7 @@ using UnityEngine;
 
 
 
-public class InverseK_new : MonoBehaviour
+public class InverseK : MonoBehaviour
 {
     //Translate
     Vector3 XYZ = Vector3.zero;
@@ -14,7 +14,7 @@ public class InverseK_new : MonoBehaviour
 
     //Рез. ИК
     public Angles[] Angles = new Angles[8];
-    public InverseK_new()
+    public InverseK()
     {
         for (int i = 0; i < 8; i++)
         {

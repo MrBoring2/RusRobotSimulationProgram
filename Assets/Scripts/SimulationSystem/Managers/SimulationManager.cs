@@ -1,12 +1,10 @@
 ﻿//DI
 using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomEventBus.Signals.Manipulator;
-using Assets.Scripts.CustomEventBus.Signals.Robot;
 using Assets.Scripts.CustomEventBus.Signals.Simulation;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using System;
-using System.Timers;
 using UnityEngine;
 
 public class SimulationManager : MonoBehaviour,IService
@@ -25,7 +23,7 @@ public class SimulationManager : MonoBehaviour,IService
     public bool CheckSpeed = false;
     void Start()
     {
-        _notification = ServiceManager.Current.Get<NotificationSystemManager>();
+        _notification = ServiceManager.Current.Get<NotificationSystemManager>();//сервис уведомлений
         _eventBus = ServiceManager.Current.Get<EventBus>();//шина событий
         _eventBus.Subscribe<StartSimulationSignal>(StartSim);//подписка на событие интерфейса (старт симуляции)
         _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode); //подписка на событие интерфейса (изменение режима управления роботом)
@@ -43,15 +41,15 @@ public class SimulationManager : MonoBehaviour,IService
         }
     }
     public void Init() { }
+    /// <summary>
+    /// изменнеие режима управление роботом (ручной/программный) 
+    /// </summary>
+    /// <param name="signal"></param>
     private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
     {
         if (signal.Mode == SceneManipulatorMode.JOG)
         {
             ChangeMode(MODE.JOG_MODE);
-        }
-        else if(signal.Mode == SceneManipulatorMode.Rotation)
-        {
-            ChangeMode(MODE.ANGLES_MODE);
         }
         else
         {
@@ -125,8 +123,6 @@ public class SimulationManager : MonoBehaviour,IService
     {
         (oldSimulationMode, SimulationMode) = (SimulationMode, oldSimulationMode);
     }
-
-
     public SIM_STAT GetStatusSim()
     {
         return SimulationStat;
@@ -160,10 +156,18 @@ public class SimulationManager : MonoBehaviour,IService
     {
         AlarmEndEffectorCollicion = b;
     }
+    /// <summary>
+    /// вкл/выкл паузу при коллизиях с захватом робота
+    /// </summary>
+    /// <param name="b"></param>
     public void SetPauseSimInCol(bool b)
     {
         PauseSimInCol = b;
     }
+    /// <summary>
+    /// вкл/выкл проверку превышения скорости робота
+    /// </summary>
+    /// <param name="b"></param>
     public void SetCheckSpeed(bool b)
     {
         CheckSpeed = b;
@@ -187,6 +191,5 @@ public enum SIM_STAT
 public enum MODE
 {
     JOG_MODE,
-    ANGLES_MODE,
     PROGRAM_MODE
 }
