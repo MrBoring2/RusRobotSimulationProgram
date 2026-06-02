@@ -68,7 +68,6 @@ namespace Assets.Scripts.UI
 
         private void Start()
         {
-
             _eventBus = ServiceManager.Current.Get<EventBus>();
             _modalWindowServiceManager = ServiceManager.Current.Get<ModalWindowServiceManager>();
             //_eventBus.Subscribe<AddSceneObjectSignal>(OnObjectAdded);
@@ -86,8 +85,6 @@ namespace Assets.Scripts.UI
             _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
             _eventBus.Subscribe<ToggleCommandsListSignal>(OnToggleCommandsList);
             //_eventBus.Subscribe<UpdateHierarchySignal>(OnUpdateHierarhy);
-
-            _eventBus.Subscribe<UpdatePLCData>(OnUpdatePLCData);
 
             _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _lineManager = ServiceManager.Current.Get<LineManager>();
@@ -189,8 +186,6 @@ namespace Assets.Scripts.UI
 
         private void OnPropgrammAdd(AddProgram program) => UpdateHierarchy();
 
-        private void OnUpdatePLCData(UpdatePLCData signal) => UpdateHierarchy();
-
         private void Instance_OnCommandUndone(ICommand obj)
         {
             if (obj is IDestructiveCommand)
@@ -210,7 +205,9 @@ namespace Assets.Scripts.UI
         }
         private void OnCommandUndoned(UndoneCommandSignal signal)
         {
-            if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand || signal.Command is AddPLCCommandCommand || signal.Command is RemovePLCCommandCommand)
+            if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand || signal.Command is AddPLCCommandCommand
+                || signal.Command is RemovePLCCommandCommand || signal.Command is RemovePLCInitVariableCommand || signal.Command is RemoveELIFCommand
+                || signal.Command is AddELIFCommand || signal.Command is UpdateConditionCommand)
             {
                 UpdateHierarchy();
                 UpdateTitle();
@@ -221,7 +218,9 @@ namespace Assets.Scripts.UI
 
         private void OnCommandExecuted(ExecuteCommandSignal signal)
         {
-            if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand || signal.Command is AddPLCCommandCommand || signal.Command is RemovePLCCommandCommand)
+            if (signal.Command is IDestructiveCommand || signal.Command is PropertyChangeCommand || signal.Command is AddPLCCommandCommand
+                || signal.Command is RemovePLCCommandCommand || signal.Command is RemovePLCInitVariableCommand || signal.Command is RemoveELIFCommand
+                || signal.Command is AddELIFCommand || signal.Command is UpdateConditionCommand)
             {
                 UpdateHierarchy();
                 UpdateTitle();
@@ -230,7 +229,6 @@ namespace Assets.Scripts.UI
 
         }
         private void OnToggleCommandsList(ToggleCommandsListSignal signal) => ToggleCommandsList();
-
 
         private void OnObjectAdded(AddSceneObjectSignal evt) => AddHierarchyItem(evt.GameObject);
         private void OnObjectRemoved(RemoveSceneObjectSignal evt)
@@ -908,10 +906,11 @@ namespace Assets.Scripts.UI
                     if (foldout.name == "hierarchy-item-program")
                     {
                         var parentId = foldout.userData.ToString();
-                        contextMenu.Add(CreateMenuButton("Добавить линейное движение", () => CreatePoint(parentId)));
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
+                        contextMenu.Add(CreateMenuButton("Добавить точку перемещения", () => CreatePoint(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(parentId)));
-                        contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+                        contextMenu.Add(CreateMenuButton("Удалить задачу", () => DeleteObject(clickedElement)));
                     }
                     //else if (foldout.name == "hierarchy-item-node")
                     //{
@@ -934,32 +933,39 @@ namespace Assets.Scripts.UI
                         }
 
                         var robot = _sceneObjectManager.GetById(MainHierarchyItem.userData.ToString());
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Добавить задачу", () => CreateProgram(robot.Id)));
+
                     }
                     else if (foldout.name == "hierarchy-item-command")
                     {
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Удалить команду", () => DeleteObject(clickedElement)));
                     }
                     else if (foldout.name == "plc-init-block")
                     {
                         var parentId = foldout.userData.ToString();
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Добавить переменную", () => ShowAddVariableWindow(parentId)));
                     }
                     else if (foldout.name == "plc-logic-block")
                     {
                         var parentId = foldout.userData.ToString();
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Добавить условие", () => ShowExpressionWindow(parentId)));
                     }
                     else if (foldout.name == "plc-robot-block")
                     {
                         var parentId = foldout.userData.ToString();
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Добавить условие", () => ShowExpressionWindow(parentId)));
                     }
                     else if (foldout.name == "plc-condition-block")
                     {
                         var parentId = foldout.userData.ToString();
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Добавить иначе если", () => ShowExpressionWindow(parentId, true)));
-                        contextMenu.Add(CreateMenuButton("Удалить условие", () => DeletePLCBlockCondition(parentId)));
+                        contextMenu.Add(CreateMenuButton("Удалить условие", () => DeleteObject(clickedElement)));
                     }
                     else if (foldout.name == "plc-if-block")
                     {
@@ -967,7 +973,7 @@ namespace Assets.Scripts.UI
                         var condition = GetConditionById(parentId);
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         bool isInLogic = IsInsideLogicBlock(foldout);
-
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Изменить условие", () => ShowExpressionWindow(parentId, false, condition.Expression)));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить изменение переменной", () =>
@@ -992,7 +998,7 @@ namespace Assets.Scripts.UI
                         var condition = GetConditionById(parentId);
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         bool isInLogic = IsInsideLogicBlock(foldout);
-
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Изменить условие", () => ShowExpressionWindow(parentId, true, condition.Expression)));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить изменение переменной", () =>
@@ -1010,14 +1016,14 @@ namespace Assets.Scripts.UI
                                 }
                             }));
                         }
-                        contextMenu.Add(CreateMenuButton("Удалить блок иначе если", () => DeleteELIFCondition(parentId)));
+                        contextMenu.Add(CreateMenuButton("Удалить блок иначе если", () => DeleteObject(clickedElement)));
                     }
                     else if (foldout.name == "plc-else-block")
                     {
                         var parentId = foldout.userData.ToString();
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         bool isInLogic = IsInsideLogicBlock(foldout);
-
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить изменение переменной", () =>
                         {
@@ -1038,7 +1044,8 @@ namespace Assets.Scripts.UI
                     else if (foldout.name == "plc-command")
                     {
                         var parentId = foldout.userData.ToString();
-                        contextMenu.Add(CreateMenuButton("Удалить команду", () => DeletePLCCommand(parentId)));
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
+                        contextMenu.Add(CreateMenuButton("Удалить команду", () => DeleteObject(clickedElement)));
                     }
                     //else
                     //{
@@ -1057,6 +1064,7 @@ namespace Assets.Scripts.UI
             {
                 if (current == null) return;
                 var robot = _sceneObjectManager.GetById(MainHierarchyItem.userData.ToString());
+                contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel()));
                 contextMenu.Add(CreateMenuButton("Добавить задачу", () => CreateProgram(robot.Id)));
             }
 
@@ -1106,8 +1114,8 @@ namespace Assets.Scripts.UI
             var condition = GetConditionById(conditionId);
             if (condition != null)
             {
-                condition.Expression = newExpression;
-                UpdateHierarchy();
+                var command = new UpdateConditionCommand(condition, condition.Expression, newExpression);
+                _undoRedoManager.Execute(command);
             }
         }
 
@@ -1116,8 +1124,8 @@ namespace Assets.Scripts.UI
             var condition = GetConditionById(conditionId);
             if (condition != null)
             {
-                condition.Expression = newExpression;
-                UpdateHierarchy();
+                var command = new UpdateConditionCommand(condition, condition.Expression, newExpression);
+                _undoRedoManager.Execute(command);
             }
         }
 
@@ -1188,7 +1196,13 @@ namespace Assets.Scripts.UI
         }
         private void OpenRobotPanel()
         {
-            _eventBus.Invoke(new OpenRobotPanelSignal());
+            ModalParameters parameters = new ModalParameters();
+            // parameters.Set("currentParentObjectId", parentId);
+            _modalWindowServiceManager.ShowWindow<GameObject>("code-editor-window", "Библиотека объектов", parameters, (prefab) =>
+            {
+                //if (prefab != null)
+                //    AddObject(prefab, parentId);
+            });
         }
 
         private void CreateWaitCommand(SceneObject robot)
@@ -1226,7 +1240,7 @@ namespace Assets.Scripts.UI
         /// <param name="programId">ID программы</param>
         private void CreatePoint(string programId)
         {
-            var prefab = Resources.Load<GameObject>("Prefabs/Program/Линейная точка");
+            var prefab = Resources.Load<GameObject>("Prefabs/Program/Точка перемещения");
             AddObject(prefab, programId);
         }
         /// <summary>
@@ -1235,7 +1249,7 @@ namespace Assets.Scripts.UI
         /// <param name="robot">Ссылка на робота</param>
         private void CreatePoint(SceneObject robot)
         {
-            var prefab = Resources.Load<GameObject>("Prefabs/Program/Линейная точка");
+            var prefab = Resources.Load<GameObject>("Prefabs/Program/Точка перемещения");
             AddObject(prefab, robot.Id);
         }
         /// <summary>
@@ -1503,8 +1517,8 @@ namespace Assets.Scripts.UI
 
             if (targetBlock != null)
             {
-                targetBlock.ElifConditions.Add(newElseIf);
-                UpdateHierarchy();
+                var command = new AddELIFCommand(newElseIf, targetBlock);
+                _undoRedoManager.Execute(command);
             }
         }
 
@@ -1661,16 +1675,22 @@ namespace Assets.Scripts.UI
             // Удаляем из блоков роботов
             foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
             {
-                if (RemoveConditionFromList(rb.ConditionsList, conditionId))
+                var blockToRemove = FindBlockConditionById(rb.ConditionsList, conditionId);
+                if (blockToRemove != null)
                 {
+                    var command = new RemovePLCCommandCommand(blockToRemove, rb.ConditionsList);
+                    _undoRedoManager.Execute(command);
                     UpdateHierarchy();
                     return;
                 }
             }
 
             // Удаляем из логики
-            if (RemoveConditionFromList(_sceneObjectManager.PLCData.LogicBlockItems, conditionId))
+            var logicBlock = FindBlockConditionById(_sceneObjectManager.PLCData.LogicBlockItems, conditionId);
+            if (logicBlock != null)
             {
+                var command = new RemovePLCCommandCommand(logicBlock, _sceneObjectManager.PLCData.LogicBlockItems);
+                _undoRedoManager.Execute(command);
                 UpdateHierarchy();
                 return;
             }
@@ -1716,7 +1736,7 @@ namespace Assets.Scripts.UI
                 if (initList[i].Id == commandId)
                 {
                     var cmd = initList[i];
-                    var command = new RemovePLCCommandCommand(cmd, initList);
+                    var command = new RemovePLCInitVariableCommand(initList[i], i);
                     _undoRedoManager.Execute(command);
                     UpdateHierarchy();
                     return;
@@ -1802,50 +1822,51 @@ namespace Assets.Scripts.UI
             }
             return false;
         }
-
         private void DeleteELIFCondition(string elifId)
         {
-            // Ищем и удаляем ELIF
             foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
             {
-                if (RemoveELIFFromList(rb.ConditionsList, elifId))
+                if (RemoveELIFFromList(rb.ConditionsList, elifId, out var elif, out var block))
                 {
-                    UpdateHierarchy();
+                    var command = new RemoveELIFCommand(elif, block);
+                    _undoRedoManager.Execute(command);
                     return;
                 }
             }
 
-            if (RemoveELIFFromList(_sceneObjectManager.PLCData.LogicBlockItems, elifId))
+            if (RemoveELIFFromList(_sceneObjectManager.PLCData.LogicBlockItems, elifId, out var elif2, out var block2))
             {
-                UpdateHierarchy();
+                var command = new RemoveELIFCommand(elif2, block2);
+                _undoRedoManager.Execute(command);
+
                 return;
             }
-
-            UpdateHierarchy();
         }
-
-        private bool RemoveELIFFromList(List<PLCBase> items, string elifId)
+        private bool RemoveELIFFromList(List<PLCBase> items, string elifId, out PLCCondition elif, out PLCBlockCondition block)
         {
+            elif = null;
+            block = null;
+
             foreach (var item in items)
             {
-                if (item is PLCBlockCondition block)
+                if (item is PLCBlockCondition b)
                 {
-                    for (int i = 0; i < block.ElifConditions.Count; i++)
+                    for (int i = 0; i < b.ElifConditions.Count; i++)
                     {
-                        if (block.ElifConditions[i].Id == elifId)
+                        if (b.ElifConditions[i].Id == elifId)
                         {
-                            block.ElifConditions.RemoveAt(i);
+                            elif = b.ElifConditions[i];
+                            block = b;
                             return true;
                         }
                     }
 
-                    // Рекурсивно ищем
-                    if (RemoveELIFFromList(block.IfCondition.Content, elifId)) return true;
-                    foreach (var elif in block.ElifConditions)
+                    if (RemoveELIFFromList(b.IfCondition.Content, elifId, out elif, out block)) return true;
+                    foreach (var e in b.ElifConditions)
                     {
-                        if (RemoveELIFFromList(elif.Content, elifId)) return true;
+                        if (RemoveELIFFromList(e.Content, elifId, out elif, out block)) return true;
                     }
-                    if (block.ElseCondition != null && RemoveELIFFromList(block.ElseCondition.Content, elifId)) return true;
+                    if (b.ElseCondition != null && RemoveELIFFromList(b.ElseCondition.Content, elifId, out elif, out block)) return true;
                 }
             }
             return false;
@@ -2075,15 +2096,37 @@ namespace Assets.Scripts.UI
                     clickedElement = foldout;
                 }
             }
+
             string id = (string)clickedElement.userData;
-            var obj = _sceneObjectManager.Commands.FindElementById(clickedElement.userData.ToString()); //objectManager.GetObjectByUniqueID(id);
+
+            // Проверяем, является ли элемент PLC командой
+            if (clickedElement.name == "plc-command")
+            {
+                DeletePLCCommand(id);
+                return;
+            }
+
+            // Проверяем, является ли элемент условием PLC
+            if (clickedElement.name == "plc-elif-block")
+            {
+                DeleteELIFCondition(id);
+                return;
+            }
+            if (clickedElement.name == "plc-condition-block")
+            {
+                DeletePLCBlockCondition(id);
+                return;
+            }
+
+
+            // Обычное удаление объекта сцены
+            var obj = _sceneObjectManager.Commands.FindElementById(id);
 
             if (obj == null)
                 return;
-            //objectPicker.UnpickObject();
+
             _eventBus.Invoke(new UnpickObjectSignal());
             _eventBus.Invoke(new ChangePropertiesProviderSignal(null));
-            //propertiesPanelEvents.HidePanel();
             var command = new RemoveObjectCommand(obj);
             _undoRedoManager.Execute(command);
         }

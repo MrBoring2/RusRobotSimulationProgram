@@ -67,6 +67,7 @@ namespace Assets.Scripts.Managers
                               _sceneObjectManager.GetGameObjectsList(),
                               _sceneObjectManager.Commands,
                               _sceneObjectManager.PLCData);
+                _undoRedoManager.ClearHistory();
                 return;
             }
             var extentionsList = new[]
@@ -82,6 +83,7 @@ namespace Assets.Scripts.Managers
                               _sceneObjectManager.GetGameObjectsList(),
                               _sceneObjectManager.Commands,
                               _sceneObjectManager.PLCData);
+                _undoRedoManager.ClearHistory();
             });
         }
         /// <summary>

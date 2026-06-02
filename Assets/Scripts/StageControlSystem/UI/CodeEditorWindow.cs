@@ -43,7 +43,7 @@ namespace Assets.UI.CodeEditor
                 Debug.LogError("ModalWindowServiceManager не найден!");
             }
 
-            Show(null, null);
+           
         }
 
         protected override void InitializeElements(VisualElement root)

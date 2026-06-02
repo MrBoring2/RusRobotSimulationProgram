@@ -112,10 +112,10 @@ namespace Assets.Scripts.Managers
                             var allRobots = GetGameObjectsList()
                                 .Where(obj => obj.Type == ObjectType.Robot)
                                 .ToList();
-                            foreach (var item in allRobots)
-                            {
-                                PLCData.RobotCommandsBlockItems.Add(new PLCRobotBlock(item.Id));
-                            }
+                            //foreach (var item in allRobots)
+                            //{
+                            //    PLCData.RobotCommandsBlockItems.Add(new PLCRobotBlock(item.Id));
+                            //}
                             break;
                         default:
                             sceneObj = new SceneObject(id, objectMaker.type, obj, parentId);
@@ -213,18 +213,38 @@ namespace Assets.Scripts.Managers
         /// Удаляет объект со сцены по его ID.
         /// </summary>
         /// <param name="id">ID удаляемого объекта</param>
-        public void Remove(string id)
+        public void Remove(string id, bool destroyGameObject = false)
         {
             if (!string.IsNullOrEmpty(id))
             {
-                var sceneObject = ((SceneObject)Items[id]);
-                if (Items.Contains(id))
+                if (!Items.Contains(id)) return;
+
+                var sceneObject = (SceneObject)Items[id];
+
+                // Удаляем из словаря
+                Items.Remove(id);
+
+                // Отправляем сигнал об удалении
+                _eventBus.Invoke<RemoveSceneObjectSignal>(new RemoveSceneObjectSignal(sceneObject));
+
+                if (destroyGameObject)
                 {
-                    Items.Remove(id);
-                    _eventBus.Invoke<RemoveSceneObjectSignal>(new RemoveSceneObjectSignal(sceneObject));
-                    Destroy(sceneObject.Reference);
-                    _eventBus.Invoke(new UpdateLineDrawer());
+                    // Полное уничтожение GameObject
+                    if (sceneObject.Reference != null)
+                    {
+                        Destroy(sceneObject.Reference);
+                    }
                 }
+                else
+                {
+                    // Просто скрываем объект для возможности восстановления
+                    if (sceneObject.Reference != null)
+                    {
+                        sceneObject.Reference.SetActive(false);
+                    }
+                }
+
+                _eventBus.Invoke(new UpdateLineDrawer());
             }
         }
 
@@ -281,7 +301,7 @@ namespace Assets.Scripts.Managers
         {
             foreach (var gameObject in GetGameObjectsList(false))
             {
-                Remove(gameObject.Id);
+                Remove(gameObject.Id, true);
             }
 
             Commands = new CommandsContainer();

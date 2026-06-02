@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 4873874282588785345}
   - component: {fileID: 5938881589677674509}
   m_Layer: 7
-  m_Name: "\u041B\u0438\u043D\u0435\u0439\u043D\u0430\u044F \u0442\u043E\u0447\u043A\u0430"
+  m_Name: "\u0422\u043E\u0447\u043A\u0430 \u043F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u0438\u044F"
   m_TagString: SceneObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -49,7 +49,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
   type: 1
-  sourcePath: "Prefabs/Program/\u041B\u0438\u043D\u0435\u0439\u043D\u0430\u044F \u0442\u043E\u0447\u043A\u0430"
+  sourcePath: "Prefabs/Program/\u0422\u043E\u0447\u043A\u0430 \u043F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u0438\u044F"
 --- !u!23 &136962427809383958
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -141,7 +141,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 111d94c5403c4264ba72d8cd28df2e70, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Providers.LinearPointPropertyProvider
-  Notification: {fileID: 0}
   ShowVisual: 1
   material: {fileID: 0}
   PointSize: 0.3

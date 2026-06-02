@@ -14,7 +14,7 @@ public class TrackingRobotCollision : MonoBehaviour
     }
     void Start()
     {
-         
+
     }
     void OnTriggerEnter(Collider other)
     {
@@ -33,12 +33,20 @@ public class TrackingRobotCollision : MonoBehaviour
     private void FixedUpdate()
     {
         if (collisionObjects.Count == 0) return;
+
+        var objectsToRemove = new List<GameObject>();
+
         foreach (var obj in collisionObjects)
         {
-            if(obj == null ||  obj.activeInHierarchy == false)
+            if (obj == null || obj.activeInHierarchy == false)
             {
-                DeleteCollision(obj);
+                objectsToRemove.Add(obj);
             }
+        }
+
+        foreach (var obj in objectsToRemove)
+        {
+            DeleteCollision(obj);
         }
     }
     private void DeleteCollision(GameObject obj)

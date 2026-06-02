@@ -135,6 +135,7 @@ GameObject:
   - component: {fileID: 21706623}
   - component: {fileID: 21706624}
   - component: {fileID: 21706625}
+  - component: {fileID: 21706626}
   m_Layer: 0
   m_Name: ModalWindows
   m_TagString: Untagged
@@ -268,6 +269,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.StageControlSystem.UI.RobotCollisionInfoPanelEvents
   windowId: robot-collision-info-window
   windowUXML: {fileID: 9197481963319205126, guid: 075644e76f3a6804a9922c603b1b704d, type: 3}
+  UIBlocker: {fileID: 1239946562}
+  UIDocument: {fileID: 1239946556}
+--- !u!114 &21706626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 21706617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1182e6543d58df42ba25e71f1caa0be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.UI.CodeEditor.CodeEditorWindow
+  windowId: code-editor-window
+  windowUXML: {fileID: 9197481963319205126, guid: bf8d0b8677d0eae478caae51a60c6378, type: 3}
   UIBlocker: {fileID: 1239946562}
   UIDocument: {fileID: 1239946556}
 --- !u!1 &152640449
