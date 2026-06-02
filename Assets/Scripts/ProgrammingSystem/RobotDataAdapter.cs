@@ -22,7 +22,7 @@ namespace Assets.UI.CodeEditor
             {
                 string programName = program.PropertyProvider?.Name ?? program.Reference.name;
 
-                var subroutine = new RobotSubroutine(programName);
+                var subroutine = new RobotSubroutine(programName.Replace(" ", "_"));
                 subroutine.Line = 0;
                 subroutine.Column = 0;
 
@@ -52,7 +52,7 @@ namespace Assets.UI.CodeEditor
                     bool isPtp = (pointProvider.PointType == POINTTYPE.PointToPoint);
                     string pointName = command.PropertyProvider?.Name ?? command.Reference.name;
 
-                    return new RobotMoveCommand(isPtp, pointName);
+                    return new RobotMoveCommand(isPtp, pointName.Replace(" ", "_"));
 
                 case ObjectType.WaitCommand:
                     var waitProvider = command.PropertyProvider as WaitPropertyProvider;
@@ -84,13 +84,14 @@ namespace Assets.UI.CodeEditor
 
             foreach (var program in existingPrograms)
             {
-                var commands = new List<CommandObject>(program.Items);
-                foreach (var command in commands)
-                {
-                    sceneManager.Remove(command.Id);
-                }
+                //var commands = new List<CommandObject>(program.Items);
+                //foreach (var command in commands)
+                //{
+                //    sceneManager.Remove(command.Id);
+                //}
                 sceneManager.Remove(program.Id);
             }
+            existingPrograms = sceneManager.Commands.GetSubPrograms(robotId, false);
 
             foreach (var subroutine in data.Subroutines)
             {
@@ -113,9 +114,9 @@ namespace Assets.UI.CodeEditor
 
                 if (program.PropertyProvider != null)
                 {
-                    program.PropertyProvider.Name = subroutine.Name;
+                    program.PropertyProvider.Name = subroutine.Name.Replace("_", " ");
                 }
-                program.Reference.name = subroutine.Name;
+                program.Reference.name = subroutine.Name.Replace("_", " ");
 
                 foreach (var cmd in subroutine.Commands)
                 {
@@ -171,9 +172,9 @@ namespace Assets.UI.CodeEditor
                 case RobotMoveCommand moveCmd:
                     if (cmdObject.PropertyProvider != null)
                     {
-                        cmdObject.PropertyProvider.Name = moveCmd.PointName;
+                        cmdObject.PropertyProvider.Name = moveCmd.PointName.Replace("_", " ");
                     }
-                    cmdObject.Reference.name = moveCmd.PointName;
+                    cmdObject.Reference.name = moveCmd.PointName.Replace("_", " ");
 
                     var pointProvider = cmdObject.Reference.GetComponent<PointPropertyProvider>();
                     if (pointProvider != null)

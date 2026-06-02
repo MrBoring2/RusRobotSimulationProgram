@@ -10,4 +10,8 @@ namespace Assets.Scripts.CustomEventBus.Signals.RobotPanel
     {
          
     }
+    public class UpdatePLCData
+    {
+
+    }
 }

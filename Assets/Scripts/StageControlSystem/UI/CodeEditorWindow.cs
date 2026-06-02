@@ -1,3 +1,5 @@
+using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.RobotPanel;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
 using Assets.Scripts.Models;
@@ -48,6 +50,9 @@ namespace Assets.UI.CodeEditor
         protected override void InitializeElements(VisualElement root)
         {
             base.InitializeElements(root);
+
+            _eventBus = ServiceManager.Current.Get<EventBus>();
+            _eventBus.Invoke(new UpdatePLCData());
 
             // Ищем элементы в windowRoot
             openFilesDropdown = windowRoot.Q<DropdownField>("openFilesDropdown");
@@ -120,7 +125,7 @@ namespace Assets.UI.CodeEditor
                 codeFiles.Add(new CodeFile("", CodeFileType.PLC, "ПЛК"));
             }
 
-            // 2. Загружаем данные роботов (без изменений, здесь всё хорошо)
+            // 2. Загружаем данные роботов
             var robots = sceneObjectsManager.GetGameObjectsList()
                 .Where(obj => obj.Type == ObjectType.Robot)
                 .ToList();

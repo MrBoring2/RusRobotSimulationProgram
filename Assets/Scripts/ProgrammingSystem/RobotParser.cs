@@ -6,6 +6,7 @@ namespace RobotLanguageCompiler.Robot
     public class RobotParser
     {
         private readonly List<RobotToken> _tokens;
+        private List<string> subroutineNames = new List<string>();
         private int _position;
         private readonly List<string> _errors;
 
@@ -44,6 +45,17 @@ namespace RobotLanguageCompiler.Robot
                 string subroutineName = token.Value;
                 int nameLine = token.Line;
                 int nameColumn = token.Column;
+
+                if (subroutineNames.Contains(subroutineName))
+                {
+                    AddError($"Программа с именем '{subroutineName}' уже существует", Current());
+                    return null;
+                }
+                else
+                {
+                    subroutineNames.Add(subroutineName);
+                }
+
                 Consume(); // имя подпрограммы
 
                 // Ожидаем {

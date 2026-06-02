@@ -68,7 +68,6 @@ namespace Assets.Scripts.UI
 
         private void Start()
         {
-
             _eventBus = ServiceManager.Current.Get<EventBus>();
             _modalWindowServiceManager = ServiceManager.Current.Get<ModalWindowServiceManager>();
             //_eventBus.Subscribe<AddSceneObjectSignal>(OnObjectAdded);
@@ -86,6 +85,7 @@ namespace Assets.Scripts.UI
             _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
             _eventBus.Subscribe<ToggleCommandsListSignal>(OnToggleCommandsList);
             //_eventBus.Subscribe<UpdateHierarchySignal>(OnUpdateHierarhy);
+
             _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _lineManager = ServiceManager.Current.Get<LineManager>();
             _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
@@ -225,7 +225,6 @@ namespace Assets.Scripts.UI
 
         }
         private void OnToggleCommandsList(ToggleCommandsListSignal signal) => ToggleCommandsList();
-
 
         private void OnObjectAdded(AddSceneObjectSignal evt) => AddHierarchyItem(evt.GameObject);
         private void OnObjectRemoved(RemoveSceneObjectSignal evt)

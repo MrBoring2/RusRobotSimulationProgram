@@ -1,5 +1,6 @@
 using Assets.Scripts.Models;
 using System.Text;
+using Unity.VisualScripting;
 
 namespace RobotLanguageCompiler.PLC
 {
@@ -100,14 +101,19 @@ namespace RobotLanguageCompiler.PLC
                 case PLCStartProgram start:
                     sb.AppendLine($"{indent}start_program({start.ProgramName})");
                     break;
-                case PLCIncrement inc:
-                    sb.AppendLine($"{indent}{inc.VariableName}++");
-                    break;
-                case PLCDecrement dec:
-                    sb.AppendLine($"{indent}{dec.VariableName}--");
-                    break;
                 case PLCSetVariable set:
-                    sb.AppendLine($"{indent}{set.VariableName} = {set.Value}");
+                    switch (set.Operation)
+                    {
+                        case OperationType.Assign:
+                            sb.AppendLine($"{indent}{set.VariableName} = {set.Value}");
+                            break;
+                        case OperationType.Increment:
+                            sb.AppendLine($"{indent}{set.VariableName} += {set.Value}");
+                            break;
+                        case OperationType.Decrement:
+                            sb.AppendLine($"{indent}{set.VariableName} -= {set.Value}");
+                            break;
+                    }
                     break;
             }
         }

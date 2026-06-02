@@ -102,7 +102,7 @@ namespace RobotLanguageCompiler.PLC
             var tokens = new List<PLCToken>();
             PLCToken token = GetNextToken();
 
-            while (token != null && token.Type != PLCTokenType.Error)
+            while (token != null)
             {
                 tokens.Add(token);
                 token = GetNextToken();
@@ -154,7 +154,7 @@ namespace RobotLanguageCompiler.PLC
                     {
                         return ReadTwoCharToken(PLCTokenType.NotEqual, "!=");
                     }
-                    return CreateErrorToken($"Unexpected character '!'", _line, _column);
+                    return CreateErrorToken($"Unexpected character '{current}'", current.ToString(), _line, _column);
                 case '>':
                     if (Peek() == '=')
                     {
@@ -168,17 +168,17 @@ namespace RobotLanguageCompiler.PLC
                     }
                     return CreateSingleCharToken(PLCTokenType.Less, '<');
                 case '+':
-                    if (Peek() == '+')
+                    if (Peek() == '=')
                     {
-                        return ReadTwoCharToken(PLCTokenType.Increment, "++");
+                        return ReadTwoCharToken(PLCTokenType.Increment, "+=");
                     }
-                    return CreateErrorToken($"Unexpected character '+'", _line, _column);
+                    return CreateErrorToken($"Unexpected character '{current}'", current.ToString(), _line, _column);
                 case '-':
-                    if (Peek() == '-')
+                    if (Peek() == '=')
                     {
-                        return ReadTwoCharToken(PLCTokenType.Decrement, "--");
+                        return ReadTwoCharToken(PLCTokenType.Decrement, "-=");
                     }
-                    return CreateErrorToken($"Unexpected character '-'", _line, _column);
+                    return CreateErrorToken($"Unexpected character '{current}'", current.ToString(), _line, _column);
                 case '(':
                     return CreateSingleCharToken(PLCTokenType.LeftParen, '(');
                 case ')':
@@ -188,7 +188,7 @@ namespace RobotLanguageCompiler.PLC
                 case '}':
                     return CreateSingleCharToken(PLCTokenType.RightBrace, '}');
                 default:
-                    return CreateErrorToken($"Unexpected character '{current}'", _line, _column);
+                    return CreateErrorToken($"Unexpected character '{current}'", current.ToString(), _line, _column);
             }
         }
 
@@ -256,7 +256,7 @@ namespace RobotLanguageCompiler.PLC
 
             if (type == PLCTokenType.Error)
             {
-                return CreateErrorToken($"Unknown section '{value}'", startLine, startColumn);
+                return CreateErrorToken($"Unknown section '{value}'", value, startLine, startColumn);
             }
 
             return new PLCToken(type, value, startLine, startColumn);
@@ -319,10 +319,12 @@ namespace RobotLanguageCompiler.PLC
             return new PLCToken(type, character.ToString(), startLine, startColumn);
         }
 
-        private PLCToken CreateErrorToken(string message, int line, int column)
+        private PLCToken CreateErrorToken(string message, string value, int line, int column)
         {
+            _position++;
+            _column++;
             _errors.Add($"{message} at {line}:{column}");
-            return new PLCToken(PLCTokenType.Error, message, line, column);
+            return new PLCToken(PLCTokenType.Error, value, line, column);
         }
     }
 }

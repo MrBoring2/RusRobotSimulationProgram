@@ -365,19 +365,23 @@ namespace RobotLanguageCompiler.PLC
                     if (Current().Type == PLCTokenType.Increment)
                     {
                         Consume();
-                        return new PLCIncrement { VariableName = varName };
+                        var value = ParseSimpleValue();
+                        if (value == null) return null;
+                        return new PLCSetVariable { Operation = OperationType.Increment, VariableName = varName, Value = value };
                     }
                     else if (Current().Type == PLCTokenType.Decrement)
                     {
                         Consume();
-                        return new PLCDecrement { VariableName = varName };
+                        var value = ParseSimpleValue();
+                        if (value == null) return null;
+                        return new PLCSetVariable { Operation = OperationType.Decrement, VariableName = varName, Value = value };
                     }
                     else if (Current().Type == PLCTokenType.Assign)
                     {
                         Consume();
                         var value = ParseSimpleValue();
                         if (value == null) return null;
-                        return new PLCSetVariable { VariableName = varName, Value = value };
+                        return new PLCSetVariable { Operation = OperationType.Assign, VariableName = varName, Value = value };
                     }
                     break;
             }
