@@ -338,6 +338,10 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
         switch (item.Type)
         {
+            case ObjectType.PLC:
+                element = CreateHierarchyElement("hierarchy-item-plc", item.Reference.name, item.Id, texture);
+                element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
+                break;
             case ObjectType.Robot:
                 element = CreateHierarchyElement("hierarchy-item-robot", item.Reference.name, item.Id, texture);
                 element.RegisterCallback<MouseDownEvent>(OnMouseDownHierarchyItem);
@@ -795,6 +799,13 @@ public class HierarchyPanelEvents : MonoBehaviour
                     var obj = foldout.userData as SceneObject;
                     var parentId = obj?.Id;
                     contextMenu.Add(CreateMenuButton("Добавить объект", () => CreateObject(parentId)));
+                    contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
+                }
+                else if (foldout.name == "hierarchy-item-plc")
+                {
+                    var obj = foldout.userData as SceneObject;
+                    var parentId = obj?.Id;
+                    contextMenu.Add(CreateMenuButton("Открыть редактор", () => OpenRobotPanel(parentId)));
                     contextMenu.Add(CreateMenuButton("Удалить объект", () => DeleteObject(clickedElement)));
                 }
                 else if (foldout.name == "main-item")
@@ -1652,7 +1663,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 return element;
             }
 
-            else if (element.name == "hierarchy-item-command" || element.name == "hierarchy-item" || element.name == "hierarchy-item-robot")
+            else if (element.name == "hierarchy-item-command" || element.name == "hierarchy-item" || element.name == "hierarchy-item-robot" || element.name == "hierarchy-item-plc") 
             {
                 return element;
             }
