@@ -1,5 +1,4 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <Style src="project://database/Assets/UI/CodeEditorStyles.uss?fileID=7433441132597879392&amp;guid=bfd4ee8f0d54540498927735411de38b&amp;type=3#CodeEditorStyles"/>
     <ui:VisualElement name="modal-window-container" class="code-editor-panel" style="height: 600px; top: auto; width: 600px; align-items: flex-start; align-self: flex-start; left: auto; min-width: 500px; min-height: 300px; max-width: 800px;">
         <ui:VisualElement class="top-bar" style="height: 50px; min-width: auto; min-height: 50px; width: 100%; padding-right: 0; padding-left: 0;">
             <ui:DropdownField name="openFilesDropdown" class="dropdown-files"/>
