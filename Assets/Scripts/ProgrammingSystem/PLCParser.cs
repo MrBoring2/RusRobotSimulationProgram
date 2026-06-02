@@ -502,8 +502,12 @@ namespace RobotLanguageCompiler.PLC
                 {
                     return null;
                 }
+                else if (token.Type == PLCTokenType.Identifier && !initVariables.Contains(token.Value))
+                {
+                    AddError($"Переменная '{token.Value}' должна быть объявлена в #INIT перед использованием", token);
+                }
 
-                expressionTokens.Add(token);
+                    expressionTokens.Add(token);
                 Consume();
             }
 
