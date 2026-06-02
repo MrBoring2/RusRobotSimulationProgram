@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3311927857407002060}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Manipulator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -48,6 +48,10 @@ PrefabInstance:
     - target: {fileID: 6050376070580345121, guid: 8fe5747d7312cab4a862cdbb1f1edcaa, type: 3}
       propertyPath: m_Name
       value: Plane_XY
+      objectReference: {fileID: 0}
+    - target: {fileID: 6050376070580345121, guid: 8fe5747d7312cab4a862cdbb1f1edcaa, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 6050376070580345121, guid: 8fe5747d7312cab4a862cdbb1f1edcaa, type: 3}
       propertyPath: m_IsActive
@@ -114,6 +118,10 @@ PrefabInstance:
     - target: {fileID: 2032620819248692517, guid: 37c812adf855fdc4ba45221767c0f2e4, type: 3}
       propertyPath: m_Name
       value: Plane_XZ
+      objectReference: {fileID: 0}
+    - target: {fileID: 2032620819248692517, guid: 37c812adf855fdc4ba45221767c0f2e4, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2032620819248692517, guid: 37c812adf855fdc4ba45221767c0f2e4, type: 3}
       propertyPath: m_IsActive
@@ -189,6 +197,9 @@ MonoBehaviour:
   direction: {x: 0, y: 0, z: 0}
   planeNormal: {x: 0, y: 1, z: 0}
   manipulator: {fileID: 0}
+  highlightMultiplier: 2
+  normalAlpha: 0.5
+  highlightAlpha: 1
 --- !u!4 &8724391694341734039 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5048350592489961571, guid: 37c812adf855fdc4ba45221767c0f2e4, type: 3}
@@ -205,6 +216,10 @@ PrefabInstance:
     - target: {fileID: 2277257141772833910, guid: 4abee4941c2aa3d4c8a3a461b960eb35, type: 3}
       propertyPath: m_Name
       value: Arrow_Z
+      objectReference: {fileID: 0}
+    - target: {fileID: 2277257141772833910, guid: 4abee4941c2aa3d4c8a3a461b960eb35, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 6098899631430614127, guid: 4abee4941c2aa3d4c8a3a461b960eb35, type: 3}
       propertyPath: m_LocalPosition.x
@@ -267,6 +282,10 @@ PrefabInstance:
     - target: {fileID: 4300432371189190849, guid: f5436258470044946ab5262651b12cb1, type: 3}
       propertyPath: m_Name
       value: Plane_YZ
+      objectReference: {fileID: 0}
+    - target: {fileID: 4300432371189190849, guid: f5436258470044946ab5262651b12cb1, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 4300432371189190849, guid: f5436258470044946ab5262651b12cb1, type: 3}
       propertyPath: m_IsActive
@@ -347,6 +366,9 @@ MonoBehaviour:
   direction: {x: 0, y: 0, z: 0}
   planeNormal: {x: 1, y: 0, z: 0}
   manipulator: {fileID: 0}
+  highlightMultiplier: 2
+  normalAlpha: 0.5
+  highlightAlpha: 1
 --- !u!1001 &7193011655229369202
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -358,6 +380,10 @@ PrefabInstance:
     - target: {fileID: 1123308003479597107, guid: 96a3d213adc248143891dfc014e97f52, type: 3}
       propertyPath: m_Name
       value: Arrow_X
+      objectReference: {fileID: 0}
+    - target: {fileID: 1123308003479597107, guid: 96a3d213adc248143891dfc014e97f52, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 5187949177656968686, guid: 96a3d213adc248143891dfc014e97f52, type: 3}
       propertyPath: m_LocalPosition.x
@@ -420,6 +446,10 @@ PrefabInstance:
     - target: {fileID: 2637352221576344945, guid: 4af30969b321f5c43a3599abe0321d74, type: 3}
       propertyPath: m_Name
       value: Arrow_Y
+      objectReference: {fileID: 0}
+    - target: {fileID: 2637352221576344945, guid: 4af30969b321f5c43a3599abe0321d74, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 4754285364914125374, guid: 4af30969b321f5c43a3599abe0321d74, type: 3}
       propertyPath: m_LocalPosition.x
