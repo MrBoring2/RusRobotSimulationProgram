@@ -207,6 +207,39 @@ namespace Assets.Scripts.Models
             }
         }
 
+        /// <summary>
+        /// Удаляет объект по ID (без уничтожения GameObject)
+        /// </summary>
+        public bool RemoveById(string id)
+        {
+            SceneObject removedObject = null;
 
+            foreach (var kvp in _subProgramsBySource)
+            {
+                var programs = kvp.Value;
+
+                for (int i = programs.Count - 1; i >= 0; i--)
+                {
+                    if (programs[i].Id == id)
+                    {
+                        removedObject = programs[i];
+                        programs.RemoveAt(i);
+                        return true;
+                    }
+
+                    for (int j = programs[i].Items.Count - 1; j >= 0; j--)
+                    {
+                        if (programs[i].Items[j].Id == id)
+                        {
+                            removedObject = programs[i].Items[j];
+                            programs[i].Items.RemoveAt(j);
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }
