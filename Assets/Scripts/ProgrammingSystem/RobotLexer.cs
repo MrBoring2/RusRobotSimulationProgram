@@ -77,7 +77,7 @@ namespace RobotLanguageCompiler.Robot
             var tokens = new List<RobotToken>();
             RobotToken token = GetNextToken();
 
-            while (token != null && token.Type != RobotTokenType.Error)
+            while (token != null)
             {
                 tokens.Add(token);
                 token = GetNextToken();
@@ -228,6 +228,8 @@ namespace RobotLanguageCompiler.Robot
         /// <returns>Токен с типом Error.</returns>
         private RobotToken CreateErrorToken(string message, int line, int column)
         {
+            _position++;
+            _column++;
             _errors.Add($"{message} на {line}:{column}");
             return new RobotToken(RobotTokenType.Error, message, line, column);
         }

@@ -84,19 +84,25 @@ namespace Assets.UI.CodeEditor
         /// <param name="sceneManager">Менеджер сцены для создания объектов.</param>
         /// <param name="robotId">РЕАЛЬНЫЙ ID робота в Unity.</param>
         /// <param name="data">Данные программы из компилятора.</param>
-        public static void UpdateFromCompilerData(
-            SceneObjectsManager sceneManager,
-            string robotId,
-            RobotProgramData data)
+        public static void UpdateFromCompilerData(SceneObjectsManager sceneManager, string robotId, RobotProgramData data)
         {
-            var existingPrograms = sceneManager.Commands.GetSubPrograms(robotId, false);
+            var commandsContainer = sceneManager.Commands;
 
+            // 1. Собираем ID существующих программ
+            var existingPrograms = commandsContainer.GetSubPrograms(robotId, false);
+            var programIdsToRemove = new List<string>();
             foreach (var program in existingPrograms)
             {
-                sceneManager.Remove(program.Id);
+                programIdsToRemove.Add(program.Id);
             }
-            existingPrograms = sceneManager.Commands.GetSubPrograms(robotId, false);
 
+            // 2. Удаляем программы по собранным ID
+            foreach (var programId in programIdsToRemove)
+            {
+                commandsContainer.RemoveSubProgram(robotId, programId);
+            }
+
+            // 3. Создаём новые программы и команды
             foreach (var subroutine in data.Subroutines)
             {
                 var programPrefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
@@ -118,9 +124,9 @@ namespace Assets.UI.CodeEditor
 
                 if (program.PropertyProvider != null)
                 {
-                    program.PropertyProvider.Name = subroutine.Name.Replace("_", " ");
+                    program.PropertyProvider.Name = subroutine.Name;
                 }
-                program.Reference.name = subroutine.Name.Replace("_", " ");
+                program.Reference.name = subroutine.Name;
 
                 foreach (var cmd in subroutine.Commands)
                 {

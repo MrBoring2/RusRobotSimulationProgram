@@ -12,7 +12,7 @@ namespace Assets.UI.CodeEditor
     {
         // Цвета для подсветки
         private static readonly Color KeywordColor = new Color(0.0f, 0.0f, 0.8f);      // Синий
-        private static readonly Color IdentifierColor = new Color(0.5f, 0.0f, 0.5f);   // Фиолетовый (имена подпрограмм)
+        private static readonly Color IdentifierColor = Color.black;                   // Чёрный
         private static readonly Color NumberColor = new Color(0.0f, 0.6f, 0.0f);       // Зелёный
         private static readonly Color ErrorColor = new Color(0.9f, 0.2f, 0.2f);        // Красный
         

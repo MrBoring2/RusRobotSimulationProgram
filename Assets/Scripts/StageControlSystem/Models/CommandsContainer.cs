@@ -135,6 +135,78 @@ namespace Assets.Scripts.Models
             return null;
         }
 
-       
+        /// <summary>
+        /// Удаляет подпрограмму (программу) робота
+        /// </summary>
+        public bool RemoveSubProgram(string robotId, string programId)
+        {
+            if (!_subProgramsBySource.TryGetValue(robotId, out var programs))
+                return false;
+
+            var program = programs.FirstOrDefault(p => p.Id == programId);
+            if (program == null)
+                return false;
+
+            // Сначала удаляем все команды программы
+            foreach (var command in program.Items.ToList())
+            {
+                RemoveCommand(robotId, programId, command.Id);
+            }
+
+            // Удаляем саму программу
+            programs.Remove(program);
+
+            // Если программ больше нет, удаляем ключ
+            if (programs.Count == 0)
+            {
+                _subProgramsBySource.Remove(robotId);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Удаляет команду из подпрограммы
+        /// </summary>
+        public bool RemoveCommand(string robotId, string programId, string commandId)
+        {
+            if (!_subProgramsBySource.TryGetValue(robotId, out var programs))
+                return false;
+
+            var program = programs.FirstOrDefault(p => p.Id == programId);
+            if (program == null)
+                return false;
+
+            var command = program.Items.FirstOrDefault(c => c.Id == commandId);
+            if (command == null)
+                return false;
+
+            return program.Items.Remove(command);
+        }
+
+        /// <summary>
+        /// Полностью очищает все данные для указанного робота
+        /// </summary>
+        public void ClearRobotData(string robotId)
+        {
+            if (_subProgramsBySource.TryGetValue(robotId, out var programs))
+            {
+                // Удаляем все GameObject команды и программы
+                foreach (var program in programs)
+                {
+                    foreach (var command in program.Items)
+                    {
+                        if (command.Reference != null)
+                            GameObject.Destroy(command.Reference);
+                    }
+                    if (program.Reference != null)
+                        GameObject.Destroy(program.Reference);
+                }
+
+                _subProgramsBySource.Remove(robotId);
+            }
+        }
+
+
     }
 }

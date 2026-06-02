@@ -213,7 +213,7 @@ namespace Assets.UI.CodeEditor
                 }
                 else if (file.Type == CodeFileType.Robot && !string.IsNullOrEmpty(file.RobotId))
                 {
-                    // Парсим Robot (без изменений)
+                    // Парсим Robot
                     try
                     {
                         var lexer = new RobotLexer(file.Content);

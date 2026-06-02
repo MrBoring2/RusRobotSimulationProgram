@@ -1996,6 +1996,7 @@ GameObject:
   - component: {fileID: 1239946574}
   - component: {fileID: 1239946573}
   - component: {fileID: 1239946575}
+  - component: {fileID: 1239946576}
   m_Layer: 0
   m_Name: MainUI
   m_TagString: Untagged
@@ -2272,6 +2273,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.HierarchyCommandsPanelEvents
   iBlocker: {fileID: 1239946562}
+--- !u!114 &1239946576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239946554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1182e6543d58df42ba25e71f1caa0be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.UI.CodeEditor.CodeEditorWindow
+  windowId: 
+  windowUXML: {fileID: 9197481963319205126, guid: bf8d0b8677d0eae478caae51a60c6378, type: 3}
+  UIBlocker: {fileID: 1239946562}
+  UIDocument: {fileID: 1239946556}
 --- !u!1001 &1274903201
 PrefabInstance:
   m_ObjectHideFlags: 0
