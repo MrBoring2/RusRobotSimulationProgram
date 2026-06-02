@@ -122,7 +122,7 @@ namespace RobotLanguageCompiler.Robot
                 case '}':
                     return CreateSingleCharToken(RobotTokenType.RightBrace, '}');
                 default:
-                    return CreateErrorToken($"Неожиданный символ '{current}'", _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
             }
         }
 
@@ -226,12 +226,12 @@ namespace RobotLanguageCompiler.Robot
         /// <param name="line">Строка ошибки.</param>
         /// <param name="column">Колонка ошибки.</param>
         /// <returns>Токен с типом Error.</returns>
-        private RobotToken CreateErrorToken(string message, int line, int column)
+        private RobotToken CreateErrorToken(string message, string value, int line, int column)
         {
             _position++;
             _column++;
             _errors.Add($"{message} на {line}:{column}");
-            return new RobotToken(RobotTokenType.Error, message, line, column);
+            return new RobotToken(RobotTokenType.Error, value, line, column);
         }
     }
 }

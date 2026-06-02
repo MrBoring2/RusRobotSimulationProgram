@@ -132,7 +132,7 @@ namespace Assets.UI.CodeEditor
             {
                 try
                 {
-                    var programs = sceneObjectsManager.Commands.GetSubPrograms(robot.Id, false);
+                    var programs = sceneObjectsManager.Commands.GetSubPrograms(robot.Id, true);
                     string robotName = robot.PropertyProvider?.Name ?? robot.Reference.name;
                     var robotData = RobotDataAdapter.ToCompilerData(robotName, programs);
 

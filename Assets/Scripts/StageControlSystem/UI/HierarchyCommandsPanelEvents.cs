@@ -86,6 +86,8 @@ namespace Assets.Scripts.UI
             _eventBus.Subscribe<ToggleCommandsListSignal>(OnToggleCommandsList);
             //_eventBus.Subscribe<UpdateHierarchySignal>(OnUpdateHierarhy);
 
+            _eventBus.Subscribe<UpdatePLCData>(OnUpdatePLCData);
+
             _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _lineManager = ServiceManager.Current.Get<LineManager>();
             _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
@@ -181,7 +183,7 @@ namespace Assets.Scripts.UI
         #region Обработчики событий
         private void OnClearSceneSignal(ClearSceneSignal signal) => UpdateHierarchy();
         private void OnObjectSelectedInScene(SelectObjectInScene scene) => SelectHierarchyItem(scene.Id);
-
+        private void OnUpdatePLCData(UpdatePLCData signal) => UpdateHierarchy();
         private void OnRobotCommandAdd(AddCommand command) => UpdateHierarchy();
 
         private void OnPropgrammAdd(AddProgram program) => UpdateHierarchy();
@@ -1132,7 +1134,7 @@ namespace Assets.Scripts.UI
         private void OpenRobotPanel()
         {
             ModalParameters parameters = new ModalParameters();
-            // parameters.Set("currentParentObjectId", parentId);
+            //parameters.Set("FileToOpen", id);
             _modalWindowServiceManager.ShowWindow<GameObject>("code-editor-window", "Библиотека объектов", parameters, (prefab) =>
             {
                 //if (prefab != null)

@@ -17,6 +17,8 @@ namespace RobotLanguageCompiler.PLC
         Bool,
         True,
         False,
+        And,
+        Or,
         Assign,
         Increment,
         Decrement,
@@ -172,6 +174,19 @@ namespace RobotLanguageCompiler.PLC
                     if (Peek() == '=')
                     {
                         return ReadTwoCharToken(PLCTokenType.Decrement, "-=");
+                    }
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
+                case '&':
+                    if (Peek() == '&')
+                    {
+                        return ReadTwoCharToken(PLCTokenType.And, "&&");
+                    }
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
+
+                case '|':
+                    if (Peek() == '|')
+                    {
+                        return ReadTwoCharToken(PLCTokenType.Or, "||");
                     }
                     return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
                 case '(':

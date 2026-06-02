@@ -479,8 +479,19 @@ namespace RobotLanguageCompiler.PLC
         /// <returns>Строковое представление выражения.</returns>
         private string ParseExpressionContent()
         {
-            List<PLCTokenType> types = new List<PLCTokenType> { PLCTokenType.StartProgram, PLCTokenType.If, PLCTokenType.Elif, PLCTokenType.Else, 
-                PLCTokenType.LeftBrace, PLCTokenType.RightBrace, PLCTokenType.LogicSection };
+            // Токены, которые НЕ могут быть внутри выражения
+            List<PLCTokenType> invalidTypes = new List<PLCTokenType> {
+        PLCTokenType.StartProgram,
+        PLCTokenType.If,
+        PLCTokenType.Elif,
+        PLCTokenType.Else,
+        PLCTokenType.LeftBrace,
+        PLCTokenType.RightBrace,
+        PLCTokenType.LogicSection,
+        PLCTokenType.Robot,
+        PLCTokenType.Int,
+        PLCTokenType.Bool
+    };
 
             var expressionTokens = new List<PLCToken>();
             int parenCount = 1;
@@ -498,7 +509,7 @@ namespace RobotLanguageCompiler.PLC
                     parenCount--;
                     if (parenCount == 0) break;
                 }
-                else if (types.Contains(token.Type))
+                else if (invalidTypes.Contains(token.Type))
                 {
                     return null;
                 }
@@ -507,7 +518,7 @@ namespace RobotLanguageCompiler.PLC
                     AddError($"Переменная '{token.Value}' должна быть объявлена в #INIT перед использованием", token);
                 }
 
-                    expressionTokens.Add(token);
+                expressionTokens.Add(token);
                 Consume();
             }
 
