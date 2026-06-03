@@ -181,7 +181,11 @@ namespace Assets.Scripts.UI
 
 
         #region Обработчики событий
-        private void OnClearSceneSignal(ClearSceneSignal signal) => UpdateHierarchy();
+        private void OnClearSceneSignal(ClearSceneSignal signal)
+        {
+            current = null;
+            UpdateHierarchy();
+        }
         private void OnObjectSelectedInScene(SelectObjectInScene scene) => SelectHierarchyItem(scene.Id);
         private void OnUpdatePLCData(UpdatePLCData signal) => UpdateHierarchy();
         private void OnRobotCommandAdd(AddCommand command) => UpdateHierarchy();
@@ -435,7 +439,7 @@ namespace Assets.Scripts.UI
             var states = new Dictionary<string, bool>();
             foreach (var kvp in expandedFoldouts)
                 states[kvp.Key] = kvp.Value;
-            return states; 
+            return states;
         }
         /// <summary>
         /// Удалить элемент из иерархии
