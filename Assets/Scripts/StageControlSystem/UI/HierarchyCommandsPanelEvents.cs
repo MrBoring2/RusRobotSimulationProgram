@@ -656,6 +656,17 @@ namespace Assets.Scripts.UI
                     }
                     return;
                 }
+                var sceneObj = element.userData as SceneObject;
+                if (sceneObj != null && currentDragData == null)
+                {
+                    currentDragData = new DragDropData
+                    {
+                        SourceId = sceneObj.Id,
+                        SourceElement = element,
+                        SceneObject = sceneObj,
+                        StartPosition = evt.mousePosition
+                    };
+                }
 
                 SelectHierarchyItem(element);
                 ShowProperties(element);
@@ -2800,15 +2811,15 @@ namespace Assets.Scripts.UI
         private void HandleDrop()
         {
             if (currentDragData == null || currentDropTarget == null) return;
+            Debug.Log($"HandleDrop: dragged={currentDragData.SceneObject?.Id}, target={currentDropTarget.TargetElement.name}, position={currentDropTarget.Position}");
 
             if (currentDragData.UserData is CommandObject draggedRobotCommand)
             {
                 var targetElement = currentDropTarget.TargetElement;
 
-                // Дроп в программу (в конец)
                 if (targetElement.name == "hierarchy-item-program")
                 {
-                    var targetProgram = targetElement.userData as RobotProgramObject; // Прямо из userData
+                    var targetProgram = targetElement.userData as RobotProgramObject;
                     if (targetProgram != null)
                     {
                         RemoveCommandFromProgram(draggedRobotCommand);
@@ -2819,10 +2830,9 @@ namespace Assets.Scripts.UI
                     }
                 }
 
-                // Дроп выше/ниже команды
                 if (targetElement.name == "hierarchy-item-command")
                 {
-                    var targetCommand = targetElement.userData as CommandObject; // Прямо из userData
+                    var targetCommand = targetElement.userData as CommandObject;
                     if (targetCommand != null)
                     {
                         var targetProgram = GetParentProgram(targetCommand);
@@ -2855,13 +2865,14 @@ namespace Assets.Scripts.UI
             if (currentDragData.UserData is PLCCommand draggedCommand)
             {
                 var targetElement = currentDropTarget.TargetElement;
+
                 if (targetElement.name == "plc-robot-block")
                 {
-                    var robotId = targetElement.userData?.ToString();
-                    if (!string.IsNullOrEmpty(robotId))
+                    var robotBlock = targetElement.userData as PLCRobotBlock;
+                    if (robotBlock != null)
                     {
                         var robotData = _sceneObjectManager.PLCData.RobotCommandsBlockItems
-                            .FirstOrDefault(r => r.RobotId == robotId);
+                            .FirstOrDefault(r => r.RobotId == robotBlock.RobotId);
                         if (robotData != null)
                         {
                             RemoveCommandFromAllLists(draggedCommand.Id);
@@ -2875,7 +2886,6 @@ namespace Assets.Scripts.UI
                     return;
                 }
 
-                // Дроп в корень логики
                 if (targetElement.name == "plc-logic-block")
                 {
                     RemoveCommandFromAllLists(draggedCommand.Id);
@@ -2884,19 +2894,19 @@ namespace Assets.Scripts.UI
                     CleanupDrag();
                     return;
                 }
+
                 if (targetElement.name == "plc-condition-block")
                 {
-                    var targetConditionBlockId = targetElement.userData?.ToString();
-                    if (!string.IsNullOrEmpty(targetConditionBlockId))
+                    var conditionBlock = targetElement.userData as PLCBlockCondition;
+                    if (conditionBlock != null)
                     {
                         foreach (var rb in _sceneObjectManager.PLCData.RobotCommandsBlockItems)
                         {
-                            int idx = FindConditionBlockIndex(rb.ConditionsList, targetConditionBlockId);
+                            int idx = FindConditionBlockIndex(rb.ConditionsList, conditionBlock.Id);
                             if (idx >= 0)
                             {
                                 RemoveCommandFromAllLists(draggedCommand.Id);
-                                if (currentDropTarget.Position == DropPosition.Below)
-                                    idx++;
+                                if (currentDropTarget.Position == DropPosition.Below) idx++;
                                 idx = Mathf.Clamp(idx, 0, rb.ConditionsList.Count);
                                 rb.ConditionsList.Insert(idx, draggedCommand);
                                 UpdateHierarchy();
@@ -2904,12 +2914,11 @@ namespace Assets.Scripts.UI
                                 return;
                             }
                         }
-                        int idx2 = FindConditionBlockIndex(_sceneObjectManager.PLCData.LogicBlockItems, targetConditionBlockId);
+                        int idx2 = FindConditionBlockIndex(_sceneObjectManager.PLCData.LogicBlockItems, conditionBlock.Id);
                         if (idx2 >= 0)
                         {
                             RemoveCommandFromAllLists(draggedCommand.Id);
-                            if (currentDropTarget.Position == DropPosition.Below)
-                                idx2++;
+                            if (currentDropTarget.Position == DropPosition.Below) idx2++;
                             idx2 = Mathf.Clamp(idx2, 0, _sceneObjectManager.PLCData.LogicBlockItems.Count);
                             _sceneObjectManager.PLCData.LogicBlockItems.Insert(idx2, draggedCommand);
                             UpdateHierarchy();
@@ -2920,36 +2929,30 @@ namespace Assets.Scripts.UI
                     CleanupDrag();
                     return;
                 }
-                // Дроп Above/Below на команду
+
                 if (targetElement.name == "plc-command")
                 {
-                    var targetCommand = GetCommandById(targetElement.userData?.ToString());
+                    var targetCommand = targetElement.userData as PLCCommand;
                     if (targetCommand == null)
                     {
                         CleanupDrag();
                         return;
                     }
 
-                    // Init блок
                     if (IsInsideInitBlock(targetElement))
                     {
                         var initList = _sceneObjectManager.PLCData.InitBlockItems;
-
                         RemoveCommandFromAllLists(draggedCommand.Id);
 
                         int targetIndex = initList.FindIndex(x => x.Id == targetCommand.Id);
-
                         if (targetIndex >= 0)
                         {
-                            if (currentDropTarget.Position == DropPosition.Below)
-                                targetIndex++;
-
+                            if (currentDropTarget.Position == DropPosition.Below) targetIndex++;
                             initList.Insert(targetIndex, (PLCInitVariable)draggedCommand);
                             UpdateHierarchy();
                             CleanupDrag();
                             return;
                         }
-
                         CleanupDrag();
                         return;
                     }
@@ -2960,18 +2963,14 @@ namespace Assets.Scripts.UI
                         if (foundList != null)
                         {
                             RemoveCommandFromAllLists(draggedCommand.Id);
-
                             int targetIndex = foundList.IndexOf(targetCommand);
-                            if (currentDropTarget.Position == DropPosition.Below)
-                                targetIndex++;
-
+                            if (currentDropTarget.Position == DropPosition.Below) targetIndex++;
                             foundList.Insert(targetIndex, draggedCommand);
                             UpdateHierarchy();
                             CleanupDrag();
                             return;
                         }
 
-                        // Проверяем в корне ConditionsList
                         int idx = rb.ConditionsList.IndexOf(targetCommand);
                         if (idx >= 0)
                         {
@@ -2985,23 +2984,18 @@ namespace Assets.Scripts.UI
                         }
                     }
 
-                    // 2. Ищем в логике
                     var logicList = FindParentListForCommandInConditions(_sceneObjectManager.PLCData.LogicBlockItems, targetCommand.Id);
                     if (logicList != null)
                     {
                         RemoveCommandFromAllLists(draggedCommand.Id);
-
                         int targetIndex = logicList.IndexOf(targetCommand);
-                        if (currentDropTarget.Position == DropPosition.Below)
-                            targetIndex++;
-
+                        if (currentDropTarget.Position == DropPosition.Below) targetIndex++;
                         logicList.Insert(targetIndex, draggedCommand);
                         UpdateHierarchy();
                         CleanupDrag();
                         return;
                     }
 
-                    // Проверяем в корне LogicBlockItems
                     int idx2 = _sceneObjectManager.PLCData.LogicBlockItems.IndexOf(targetCommand);
                     if (idx2 >= 0)
                     {
@@ -3018,8 +3012,6 @@ namespace Assets.Scripts.UI
                     return;
                 }
 
-
-                // Дроп Inside условия
                 var targetCondition2 = GetConditionFromElement(currentDropTarget.TargetElement);
                 if (targetCondition2 != null)
                 {
@@ -3096,8 +3088,8 @@ namespace Assets.Scripts.UI
                 }
             }
 
-            var command = new ChangeParentCommand(draggedObject.Id, newParentId, insertAtIndex);
-            _undoRedoManager.Execute(command);
+            var changeCommand = new ChangeParentCommand(draggedObject.Id, newParentId, insertAtIndex);
+            _undoRedoManager.Execute(changeCommand);
             CleanupDrag();
         }
         private void RemoveCommandFromProgram(CommandObject command)

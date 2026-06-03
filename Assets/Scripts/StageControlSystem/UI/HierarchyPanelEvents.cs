@@ -206,7 +206,11 @@ public class HierarchyPanelEvents : MonoBehaviour
     public void AddHierarchyItem(SceneObject item, string parentId = null)
     {
         if (item == null) return;
-        // Проверяем, нет ли уже такого элемента в кэше (защита от дублирования)
+
+        if (item.Type == ObjectType.Program || item.Type != ObjectType.LinearMoveCommand ||
+            item.Type != ObjectType.StateEndEffectorCommand || item.Type != ObjectType.WaitCommand)
+            return;
+
         if (elementCache.ContainsKey(item.Id))
         {
             Debug.LogWarning($"Element with id {item.Id} already exists in hierarchy");
