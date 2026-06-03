@@ -879,23 +879,20 @@ namespace Assets.Scripts.UI
                     else if (foldout.name == "plc-init-block")
                     {
                         var parentId = foldout.userData;
-                        var xz = foldout.userData as PLCBase;
-                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(xz.Id)));
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(null)));
                         contextMenu.Add(CreateMenuButton("Добавить переменную", () => ShowAddVariableWindow("init_block")));
                     }
                     else if (foldout.name == "plc-logic-block")
                     {
                         var parentId = foldout.userData;
-                        var xz = foldout.userData as PLCBase;
-                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(xz.Id)));
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(null)));
                         contextMenu.Add(CreateMenuButton("Добавить условие", () => ShowExpressionWindow("logic_block")));
                     }
                     else if (foldout.name == "plc-robot-block")
                     {
                         var robotBlock = foldout.userData as PLCRobotBlock;
                         var parentId = robotBlock?.RobotId;
-                        var xz = foldout.userData as PLCBase;
-                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(xz.Id)));
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(null)));
                         contextMenu.Add(CreateMenuButton("Добавить условие", () => ShowExpressionWindow(parentId)));
                     }
                     else if (foldout.name == "plc-condition-block")

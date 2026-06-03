@@ -80,18 +80,39 @@ namespace Assets.UI.CodeEditor
             string robotId,
             RobotProgramData data)
         {
+            // 1. СОБИРАЕМ ВСЕ СУЩЕСТВУЮЩИЕ ТОЧКИ РОБОТА (с их свойствами)
+            var existingPoints = new Dictionary<string, CommandObject>(); // key: имя точки
             var existingPrograms = sceneManager.Commands.GetSubPrograms(robotId, false);
 
+            foreach (var program in existingPrograms)
+            {
+                foreach (var command in program.Items)
+                {
+                    // Если это команда движения (точка)
+                    if (command.Type == ObjectType.LinearMoveCommand)
+                    {
+                        string pointName = command.PropertyProvider?.Name ?? command.Reference.name;
+                        existingPoints[pointName] = command;
+                    }
+                }
+            }
+
+            // 2. УДАЛЯЕМ ВСЕ ПРОГРАММЫ И КОМАНДЫ (кроме точек, которые будем переиспользовать)
             for (int j = existingPrograms.Count - 1; j >= 0; j--)
             {
                 var commands = new List<CommandObject>(existingPrograms[j].Items);
-                for (int i = commands.Count - 1; i>=0; i--)
+                for (int i = commands.Count - 1; i >= 0; i--)
                 {
-                    sceneManager.Remove(commands[i].Id, true);
+                    // Если это не точка, которую мы хотим сохранить — удаляем
+                    if (!existingPoints.ContainsValue(commands[i]))
+                    {
+                        sceneManager.Remove(commands[i].Id, true);
+                    }
                 }
                 sceneManager.Remove(existingPrograms[j].Id, true);
             }
 
+            // 3. СОЗДАЁМ НОВЫЕ ПРОГРАММЫ И КОМАНДЫ, ПЕРЕИСПОЛЬЗУЯ СУЩЕСТВУЮЩИЕ ТОЧКИ
             foreach (var subroutine in data.Subroutines)
             {
                 var programPrefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
@@ -119,7 +140,49 @@ namespace Assets.UI.CodeEditor
 
                 foreach (var cmd in subroutine.Commands)
                 {
-                    CreateCommand(sceneManager, cmd, program.Id);
+                    // Пытаемся найти существующую точку
+                    if (cmd is RobotMoveCommand moveCmd && existingPoints.TryGetValue(moveCmd.PointName, out var existingPoint))
+                    {
+                        // Переиспользуем существующую точку
+                        // Обновляем её свойства (тип движения может измениться)
+                        var pointProvider = existingPoint.Reference.GetComponent<PointPropertyProvider>();
+                        if (pointProvider != null)
+                        {
+                            pointProvider.PointType = moveCmd.IsPtp
+                                ? POINTTYPE.PointToPoint
+                                : POINTTYPE.LinearPoint;
+                        }
+
+                        // Добавляем точку в новую программу
+                        var moveCommand = sceneManager.CreateCommand(
+                            existingPoint.Reference,
+                            existingPoint.Reference.transform.position,
+                            existingPoint.Reference.transform.rotation,
+                            ObjectType.LinearMoveCommand,
+                            parentId: program.Id
+                        );
+
+                        if (moveCommand != null)
+                        {
+                            moveCommand.PropertyProvider.Name = moveCmd.PointName.Replace("_", " ");
+                            moveCommand.Reference.name = moveCmd.PointName.Replace("_", " ");
+                        }
+                    }
+                    else
+                    {
+                        // Создаём новую команду
+                        CreateCommand(sceneManager, cmd, program.Id);
+                    }
+                }
+            }
+
+            // 4. УДАЛЯЕМ НЕИСПОЛЬЗУЕМЫЕ ТОЧКИ (которые остались от старых программ, но не используются в новых)
+            foreach (var point in existingPoints.Values)
+            {
+                // Проверяем, есть ли у точки родитель (если нет — она больше не используется)
+                if (point.Reference.transform.parent == null)
+                {
+                    sceneManager.Remove(point.Id, true);
                 }
             }
         }

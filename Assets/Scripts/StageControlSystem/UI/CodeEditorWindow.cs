@@ -24,6 +24,7 @@ namespace Assets.UI.CodeEditor
 
         private List<CodeFile> codeFiles = new List<CodeFile>();
         private int lastIndex = -1;
+        private string lastFileId;
 
         private SceneObjectsManager sceneObjectsManager;
 
@@ -33,7 +34,6 @@ namespace Assets.UI.CodeEditor
         protected override void Start()
         {
             base.Start();
-            // Регистрируем окно в ModalWindowServiceManager
             var modalService = ServiceManager.Current.Get<ModalWindowServiceManager>();
             if (modalService != null)
             {
@@ -43,8 +43,7 @@ namespace Assets.UI.CodeEditor
             {
                 Debug.LogError("ModalWindowServiceManager не найден!");
             }
-
-           
+            LoadDataFromScene();
         }
 
         protected override void InitializeElements(VisualElement root)
@@ -53,7 +52,6 @@ namespace Assets.UI.CodeEditor
 
             _eventBus = ServiceManager.Current.Get<EventBus>();
 
-            // Ищем элементы в windowRoot
             openFilesDropdown = windowRoot.Q<DropdownField>("openFilesDropdown");
             codeEditor = windowRoot.Q<CodeEditorElement>("codeEditor");
             compilationStatus = windowRoot.Q<Label>("compilationStatus");
@@ -86,7 +84,6 @@ namespace Assets.UI.CodeEditor
 
         protected override void OnBeforeShow(ModalParameters parameters)
         {
-            // Получаем менеджеры
             sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
             if (sceneObjectsManager == null)
             {
@@ -98,39 +95,129 @@ namespace Assets.UI.CodeEditor
                 }
                 return;
             }
-            parameters.TryGet("FileToOpen", out string id);
-            // Загружаем данные из сцены
-            LoadDataFromScene(id);
-        }
 
-        private void LoadDataFromScene()
-        {
-            LoadDataFromScene(null);
-        }
+            // Получаем ID из параметров (целевой файл для открытия)
+            parameters.TryGet("FileToOpen", out string targetId);
 
-        private void LoadDataFromScene(string id)
-        {
-            int index = 0;
+            // синхронизируем список файлов (добавляем/удаляем роботов, обновляем имена)
+            SyncFileListOnly();
 
-            codeFiles.Clear();
+            // Определяем, какой файл открыть
+            int indexToOpen = DetermineFileToOpen(targetId);
 
-            // 1. Загружаем PLC данные с ПОДМЕНОЙ ID на имена
-            var plcData = sceneObjectsManager.PLCData;
-            if (plcData != null)
+            // Открываем файл
+            if (indexToOpen >= 0 && indexToOpen < codeFiles.Count)
             {
-                // ПОДМЕНА: ID роботов → имена для генератора
-                var plcDataWithNames = ReplaceRobotIdsWithNames(plcData);
-
-                var plcGenerator = new PLCGenerator();
-                string plcContent = plcGenerator.Generate(plcDataWithNames);
-                codeFiles.Add(new CodeFile(plcContent, CodeFileType.PLC, "ПЛК"));
+                openFilesDropdown.index = indexToOpen;
+                lastIndex = indexToOpen;
+                LoadFileContent(indexToOpen);
+                lastFileId = GetFileId(codeFiles[indexToOpen]);
             }
-            else
+        }
+
+        /// <summary>
+        /// Синхронизирует ТОЛЬКО список файлов (добавляет/удаляет роботов, обновляет имена)
+        /// Содержимое файлов НЕ трогает
+        /// </summary>
+        private void SyncFileListOnly()
+        {
+            // 1. Убеждаемся, что PLC файл существует (но не обновляем его содержимое)
+            var plcFile = codeFiles.FirstOrDefault(f => f.Type == CodeFileType.PLC);
+            if (plcFile == null)
             {
                 codeFiles.Add(new CodeFile("", CodeFileType.PLC, "ПЛК"));
             }
 
-            // 2. Загружаем данные роботов
+            // 2. Получаем актуальных роботов со сцены
+            var robotsOnScene = sceneObjectsManager.GetGameObjectsList()
+                .Where(obj => obj.Type == ObjectType.Robot)
+                .ToList();
+
+            var robotIdsOnScene = new HashSet<string>(robotsOnScene.Select(r => r.Id));
+            var robotNamesOnScene = new Dictionary<string, string>();
+            foreach (var robot in robotsOnScene)
+            {
+                string name = robot.PropertyProvider?.Name ?? robot.Reference.name;
+                robotNamesOnScene[robot.Id] = name;
+            }
+
+            // 3. Обновляем существующие файлы роботов
+            var existingRobotIds = new HashSet<string>();
+            for (int i = codeFiles.Count - 1; i >= 0; i--)
+            {
+                var file = codeFiles[i];
+                if (file.Type == CodeFileType.Robot)
+                {
+                    existingRobotIds.Add(file.RobotId);
+
+                    // Если робот был удалён со сцены — удаляем файл
+                    if (!robotIdsOnScene.Contains(file.RobotId))
+                    {
+                        codeFiles.RemoveAt(i);
+                        continue;
+                    }
+
+                    // Если имя робота изменилось — обновляем отображаемое имя (содержимое НЕ трогаем)
+                    string currentRobotName = robotNamesOnScene[file.RobotId];
+                    if (file.DisplayName != currentRobotName || file.RobotName != currentRobotName)
+                    {
+                        file.DisplayName = currentRobotName;
+                        file.RobotName = currentRobotName;
+                    }
+                }
+            }
+
+            // 4. Добавляем файлы для новых роботов (с пустым содержимым)
+            foreach (var robot in robotsOnScene)
+            {
+                if (!existingRobotIds.Contains(robot.Id))
+                {
+                    try
+                    {
+                        string robotName = robot.PropertyProvider?.Name ?? robot.Reference.name;
+                        var programs = sceneObjectsManager.Commands.GetSubPrograms(robot.Id, true);
+                        var robotData = RobotDataAdapter.ToCompilerData(robotName, programs);
+                        var robotGenerator = new RobotGenerator();
+                        string robotContent = robotGenerator.Generate(robotData);
+
+                        codeFiles.Add(new CodeFile(robotContent, CodeFileType.Robot, robotName, robot.Id, robotName));
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"Ошибка загрузки данных робота {robot.Id}: {e.Message}");
+                        string robotName = robot.PropertyProvider?.Name ?? robot.Reference.name;
+                        codeFiles.Add(new CodeFile("", CodeFileType.Robot, robotName, robot.Id, robotName));
+                    }
+                }
+            }
+
+            // 5. Обновляем дропдаун
+            UpdateDropdown();
+        }
+
+        /// <summary>
+        /// Полностью перезаписывает список файлов и содержимое из данных сцены
+        /// </summary>
+        private void SyncFilesWithContent()
+        {
+            // Полностью перестраиваем список файлов
+            var newCodeFiles = new List<CodeFile>();
+
+            // 1. PLC файл
+            var plcData = sceneObjectsManager.PLCData;
+            if (plcData != null)
+            {
+                var plcDataWithNames = ReplaceRobotIdsWithNames(plcData);
+                var plcGenerator = new PLCGenerator();
+                string plcContent = plcGenerator.Generate(plcDataWithNames);
+                newCodeFiles.Add(new CodeFile(plcContent, CodeFileType.PLC, "ПЛК"));
+            }
+            else
+            {
+                newCodeFiles.Add(new CodeFile("", CodeFileType.PLC, "ПЛК"));
+            }
+
+            // 2. Роботы
             var robots = sceneObjectsManager.GetGameObjectsList()
                 .Where(obj => obj.Type == ObjectType.Robot)
                 .ToList();
@@ -139,32 +226,65 @@ namespace Assets.UI.CodeEditor
             {
                 try
                 {
-                    var programs = sceneObjectsManager.Commands.GetSubPrograms(robot.Id, true);
                     string robotName = robot.PropertyProvider?.Name ?? robot.Reference.name;
+                    var programs = sceneObjectsManager.Commands.GetSubPrograms(robot.Id, true);
                     var robotData = RobotDataAdapter.ToCompilerData(robotName, programs);
-
                     var robotGenerator = new RobotGenerator();
                     string robotContent = robotGenerator.Generate(robotData);
 
-                    codeFiles.Add(new CodeFile(robotContent, CodeFileType.Robot, robotName, robot.Id, robotName));
-                    if (robot.Id == id) index = codeFiles.Count - 1;
+                    newCodeFiles.Add(new CodeFile(robotContent, CodeFileType.Robot, robotName, robot.Id, robotName));
                 }
-                catch (System.Exception e)
+                catch (Exception e)
                 {
                     Debug.LogError($"Ошибка загрузки данных робота {robot.Id}: {e.Message}");
                     string robotName = robot.PropertyProvider?.Name ?? robot.Reference.name;
-                    codeFiles.Add(new CodeFile("", CodeFileType.Robot, robotName, robot.Id, robotName));
+                    newCodeFiles.Add(new CodeFile("", CodeFileType.Robot, robotName, robot.Id, robotName));
                 }
             }
 
+            codeFiles = newCodeFiles;
             UpdateDropdown();
+        }
 
-            if (codeFiles.Count > 0)
+        /// <summary>
+        /// Полностью перезаписывает содержимое всех файлов из данных сцены
+        /// </summary>
+        private void LoadDataFromScene()
+        {
+            if (sceneObjectsManager == null)
+                sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
+
+            if (sceneObjectsManager == null)
             {
-                openFilesDropdown.index = index;
-                lastIndex = 0;
-                LoadFileContent(0);
+                compilationStatus.text = "Ошибка: SceneObjectsManager не найден";
+                compilationStatus.AddToClassList("error-status");
+                return;
             }
+
+            // Сохраняем ID текущего открытого файла
+            string currentFileId = (lastIndex >= 0 && lastIndex < codeFiles.Count)
+                ? GetFileId(codeFiles[lastIndex])
+                : null;
+
+            // Полностью синхронизируем список и содержимое файлов
+            SyncFilesWithContent();
+
+            // Восстанавливаем открытый файл
+            int indexToOpen = FindFileIndexById(currentFileId);
+            if (indexToOpen < 0)
+                indexToOpen = codeFiles.FindIndex(f => f.Type == CodeFileType.PLC);
+
+            if (indexToOpen >= 0 && indexToOpen < codeFiles.Count)
+            {
+                openFilesDropdown.index = indexToOpen;
+                lastIndex = indexToOpen;
+                LoadFileContent(indexToOpen);
+                lastFileId = GetFileId(codeFiles[indexToOpen]);
+            }
+
+            compilationStatus.text = "Данные загружены из сцены";
+            compilationStatus.RemoveFromClassList("error-status");
+            compilationStatus.AddToClassList("success-status");
         }
 
         private void SaveDataToScene()
@@ -183,7 +303,6 @@ namespace Assets.UI.CodeEditor
             {
                 if (file.Type == CodeFileType.PLC)
                 {
-                    // Парсим PLC
                     try
                     {
                         var lexer = new PLCLexer(file.Content);
@@ -199,19 +318,15 @@ namespace Assets.UI.CodeEditor
                             return;
                         }
 
-                        // ПОДМЕНА: имена роботов → ID для сохранения в SceneObjectsManager
                         var plcDataWithIds = ReplaceRobotNamesWithIds(plcDataWithNames);
-
-                        // Если преобразование вернуло null - значит робот не найден, прерываем сохранение
                         if (plcDataWithIds == null)
                         {
-                            // compilationStatus уже установлен в ReplaceRobotNamesWithIds
                             return;
                         }
 
                         sceneObjectsManager.SetPLCData(plcDataWithIds);
                     }
-                    catch (System.Exception e)
+                    catch (Exception e)
                     {
                         compilationStatus.text = $"Ошибка парсинга PLC: {e.Message}";
                         compilationStatus.AddToClassList("error-status");
@@ -221,7 +336,6 @@ namespace Assets.UI.CodeEditor
                 }
                 else if (file.Type == CodeFileType.Robot && !string.IsNullOrEmpty(file.RobotId))
                 {
-                    // Парсим Robot
                     try
                     {
                         var lexer = new RobotLexer(file.Content);
@@ -249,7 +363,7 @@ namespace Assets.UI.CodeEditor
 
                         RobotDataAdapter.UpdateFromCompilerData(sceneObjectsManager, file.RobotId, robotData);
                     }
-                    catch (System.Exception e)
+                    catch (Exception e)
                     {
                         compilationStatus.text = $"Ошибка парсинга Robot: {e.Message}";
                         compilationStatus.AddToClassList("error-status");
@@ -265,6 +379,47 @@ namespace Assets.UI.CodeEditor
             _eventBus.Invoke(new UpdatePLCData());
         }
 
+        /// <summary>
+        /// Определяет, какой файл нужно открыть
+        /// </summary>
+        private int DetermineFileToOpen(string targetId)
+        {
+            // Если передан targetId и есть соответствующий файл — открываем его
+            if (!string.IsNullOrEmpty(targetId))
+            {
+                int targetIndex = FindFileIndexById(targetId);
+                if (targetIndex >= 0)
+                {
+                    return targetIndex;
+                }
+            }
+
+            // Иначе открываем ПЛК
+            int plcIndex = codeFiles.FindIndex(f => f.Type == CodeFileType.PLC);
+            return plcIndex >= 0 ? plcIndex : 0;
+        }
+
+        /// <summary>
+        /// Находит индекс файла по ID (для роботов — RobotId, для PLC — "PLC")
+        /// </summary>
+        private int FindFileIndexById(string id)
+        {
+            if (id == "PLC")
+            {
+                return codeFiles.FindIndex(f => f.Type == CodeFileType.PLC);
+            }
+            return codeFiles.FindIndex(f => f.RobotId == id);
+        }
+
+        /// <summary>
+        /// Возвращает ID файла (для роботов — RobotId, для PLC — "PLC")
+        /// </summary>
+        private string GetFileId(CodeFile file)
+        {
+            if (file.Type == CodeFileType.PLC)
+                return "PLC";
+            return file.RobotId;
+        }
         /// <summary>
         /// Преобразует ID робота в имя для отображения в коде PLC
         /// </summary>
@@ -397,7 +552,6 @@ namespace Assets.UI.CodeEditor
             var file = codeFiles[index];
             codeEditor.SetText(file.Content);
 
-            // Устанавливаем подсветку
             if (file.Type == CodeFileType.PLC)
             {
                 codeEditor.SetHighlighter(plcHighlighter);
