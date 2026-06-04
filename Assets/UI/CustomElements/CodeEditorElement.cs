@@ -19,22 +19,20 @@ namespace Assets.UI.CodeEditor
         private string currentText = "";
         private bool isHighlightingScheduled = false;
         private string pendingHighlightText = "";
+        private bool isUpdatingFromCode = false;
 
         private int currentCursorLine = 1;
         private int currentCursorColumn = 1;
 
+        private int previousTextLength = 0;
+
         private ISyntaxHighlighter currentHighlighter;
 
         private const int MAX_LINE_LENGTH = 75;
+        private const int MAX_LINES = 999;
 
         public event Action<string> OnTextChanged;
         public event Action<int, int> OnCursorPositionChanged;
-
-        public string Text
-        {
-            get => codeInput.text;
-            set => SetText(value);
-        }
 
         public CodeEditorElement()
         {
@@ -46,6 +44,7 @@ namespace Assets.UI.CodeEditor
         /// <summary>
         /// Устанавливает подсветщик синтаксиса для текущего языка
         /// </summary>
+        /// <param name="highlighter">Экземпляр подсветщика синтаксиса</param>
         public void SetHighlighter(ISyntaxHighlighter highlighter)
         {
             currentHighlighter = highlighter;
@@ -53,21 +52,8 @@ namespace Assets.UI.CodeEditor
         }
 
         /// <summary>
-        /// Нормализует окончания строк: заменяет \r\n на \n и удаляет одиночные \r
+        /// Инициализирует визуальные элементы редактора
         /// </summary>
-        private string NormalizeLineEndings(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return text;
-
-            // Сначала заменяем \r\n на \n
-            string normalized = text.Replace("\r\n", "\n");
-            // Затем удаляем оставшиеся \r
-            normalized = normalized.Replace("\r", "");
-
-            return normalized;
-        }
-
         private void InitUI()
         {
             style.flexGrow = 1;
@@ -84,11 +70,17 @@ namespace Assets.UI.CodeEditor
             rowContainer.style.minWidth = 0;
             scrollView.contentContainer.Add(rowContainer);
 
+            Font courierFont = Font.CreateDynamicFontFromOSFont("Courier New", 16);
+            var fontDef = new FontDefinition();
+            fontDef.font = courierFont;
+
             // Номера строк
             lineNumbersLabel = new Label();
             lineNumbersLabel.style.width = 50;
             lineNumbersLabel.style.minWidth = 50;
             lineNumbersLabel.style.maxWidth = 70;
+            lineNumbersLabel.style.unityFontDefinition = fontDef;
+            lineNumbersLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             lineNumbersLabel.style.backgroundColor = Color.clear;
             lineNumbersLabel.style.paddingTop = 5;
             lineNumbersLabel.style.paddingBottom = 5;
@@ -112,9 +104,11 @@ namespace Assets.UI.CodeEditor
             codeContainer.style.minWidth = 0;
             rowContainer.Add(codeContainer);
 
-            // Подсвеченный текст (верхний слой)
+            // Подсвеченный текст (нижний слой)
             codeHighlight = new TextElement();
             codeHighlight.style.fontSize = 16;
+            codeHighlight.style.unityFontDefinition = fontDef;
+            codeHighlight.style.unityFontStyleAndWeight = FontStyle.Bold;
             codeHighlight.style.color = Color.black;
             codeHighlight.style.backgroundColor = Color.clear;
             codeHighlight.style.paddingTop = 5;
@@ -127,7 +121,7 @@ namespace Assets.UI.CodeEditor
             codeHighlight.enableRichText = true;
             codeContainer.Add(codeHighlight);
 
-            // Поле ввода (нижний слой)
+            // Поле ввода (верхний слой)
             codeInput = new TextField();
             codeInput.style.position = Position.Absolute;
             codeInput.style.top = 0;
@@ -135,6 +129,8 @@ namespace Assets.UI.CodeEditor
             codeInput.style.right = 0;
             codeInput.style.bottom = 0;
             codeInput.style.fontSize = 16;
+            codeInput.style.unityFontDefinition = fontDef;
+            codeInput.style.unityFontStyleAndWeight = FontStyle.Bold;
             codeInput.style.color = Color.clear;
             codeInput.style.backgroundColor = Color.clear;
             codeInput.style.paddingTop = 5;
@@ -153,6 +149,9 @@ namespace Assets.UI.CodeEditor
             codeContainer.Add(codeInput);
         }
 
+        /// <summary>
+        /// Регистрирует обработчики событий для поля ввода
+        /// </summary>
         private void RegisterCallbacks()
         {
             codeInput.RegisterCallback<ChangeEvent<string>>(OnCodeInputChanged);
@@ -161,35 +160,76 @@ namespace Assets.UI.CodeEditor
             codeInput.RegisterCallback<KeyDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
         }
 
+        /// <summary>
+        /// Обработчик изменения текста в поле ввода
+        /// </summary>
         private void OnCodeInputChanged(ChangeEvent<string> evt)
         {
-            string newText = evt.newValue;
+            if (isUpdatingFromCode) return;
 
-            // Нормализуем окончания строк
-            newText = NormalizeLineEndings(newText);
+            string Text = evt.newValue;
+            int cursorPos = codeInput.cursorIndex;
+            int cursorCorrection = 0;
 
-            string wrappedText = WrapLines(newText);
-
-            if (wrappedText != newText)
+            // 1. Обработка Enter (добавление отступа)
+            if (cursorPos > 0 && Text[cursorPos - 1] == '\n' && Text.Length == previousTextLength + 1)
             {
-                int cursorPos = codeInput.cursorIndex;
-                codeInput.SetValueWithoutNotify(wrappedText);
-                codeInput.cursorIndex = Math.Min(cursorPos, wrappedText.Length);
-                currentText = wrappedText;
+                int lineStart = cursorPos - 1;
+
+                while (lineStart > 0 && Text[lineStart - 1] != '\n')
+                {
+                    lineStart--;
+                }
+
+                int indentLength = 0;
+                for (int i = lineStart; i < Text.Length && Text[i] == ' '; i++)
+                {
+                    indentLength++;
+                }
+
+                if (indentLength > 0)
+                {
+                    string indent = new string(' ', indentLength);
+                    Text = Text.Insert(cursorPos, indent);
+                }
+                cursorCorrection = indentLength;
             }
-            else
+
+            // 2. Удаляем символы возврата каретки
+            Text = Text.Replace("\r", "");
+
+            // 3. Заменяем табуляции на пробелы
+            int oldLength = Text.Length;
+            Text = Text.Replace("\t", "    ");
+            int newLength = Text.Length;
+
+            cursorCorrection += newLength - oldLength;
+
+            // 4. Разбиваем длинные строки
+            Text = WrapLines(Text);
+
+            // 5. Обновляем текст, если он изменился
+            if (Text != currentText)
             {
-                currentText = newText;
+                isUpdatingFromCode = true;
+                cursorPos = codeInput.cursorIndex += cursorCorrection;
+                codeInput.SetValueWithoutNotify(Text);
+                codeInput.cursorIndex = codeInput.selectIndex = cursorPos < Text.Length ? cursorPos : Text.Length;
+                isUpdatingFromCode = false;
+                currentText = Text;
+
+                OnTextChanged?.Invoke(currentText);
+
+                UpdateLineNumbers();
+                UpdateCursorPosition();
+                ScheduleHighlighting();
             }
-
-            OnTextChanged?.Invoke(currentText);
-
-            UpdateLineNumbers();
-            UpdateCursorPosition();
-
-            ScheduleHighlighting();
+            previousTextLength = currentText.Length;
         }
 
+        /// <summary>
+        /// Разбивает длинные строки на несколько по максимальной длине
+        /// </summary>
         private string WrapLines(string text)
         {
             if (string.IsNullOrEmpty(text))
@@ -228,6 +268,9 @@ namespace Assets.UI.CodeEditor
             return result.ToString();
         }
 
+        /// <summary>
+        /// Планирует отложенное обновление подсветки синтаксиса
+        /// </summary>
         private void ScheduleHighlighting()
         {
             pendingHighlightText = currentText;
@@ -239,6 +282,9 @@ namespace Assets.UI.CodeEditor
             }
         }
 
+        /// <summary>
+        /// Выполняет отложенное обновление подсветки синтаксиса
+        /// </summary>
         private void DelayedHighlightUpdate()
         {
             isHighlightingScheduled = false;
@@ -253,11 +299,17 @@ namespace Assets.UI.CodeEditor
             UpdateHighlightingNow();
         }
 
+        /// <summary>
+        /// Планирует обновление позиции курсора на следующем кадре
+        /// </summary>
         private void ScheduleCursorUpdate()
         {
             schedule.Execute(() => UpdateCursorPosition()).StartingIn(0);
         }
 
+        /// <summary>
+        /// Обновляет отображаемую позицию курсора (строка, столбец)
+        /// </summary>
         private void UpdateCursorPosition()
         {
             int cursorPos = codeInput.cursorIndex;
@@ -282,6 +334,9 @@ namespace Assets.UI.CodeEditor
             OnCursorPositionChanged?.Invoke(currentCursorLine, currentCursorColumn);
         }
 
+        /// <summary>
+        /// Обновляет отображение номеров строк
+        /// </summary>
         private void UpdateLineNumbers()
         {
             if (string.IsNullOrEmpty(currentText))
@@ -291,7 +346,7 @@ namespace Assets.UI.CodeEditor
             }
 
             string[] lines = currentText.Split('\n');
-            int lineCount = Math.Min(lines.Length, 9999);
+            int lineCount = Math.Min(lines.Length, MAX_LINES);
 
             StringBuilder numbersBuilder = new StringBuilder();
             for (int i = 1; i <= lineCount; i++)
@@ -306,6 +361,9 @@ namespace Assets.UI.CodeEditor
             lineNumbersLabel.text = numbersBuilder.ToString();
         }
 
+        /// <summary>
+        /// Немедленно обновляет подсветку синтаксиса
+        /// </summary>
         private void UpdateHighlightingNow()
         {
             if (string.IsNullOrEmpty(currentText))
@@ -340,29 +398,36 @@ namespace Assets.UI.CodeEditor
             }
         }
 
+        /// <summary>
+        /// Устанавливает текст в редактор
+        /// </summary>
+        /// <param name="text">Новый текст</param>
         public void SetText(string text)
         {
-            // Нормализуем окончания строк при установке текста
-            currentText = NormalizeLineEndings(text ?? "");
-            string wrappedText = WrapLines(currentText);
-            codeInput.SetValueWithoutNotify(wrappedText);
-            if (wrappedText != currentText)
-            {
-                currentText = wrappedText;
-            }
+            string processed = text ?? "";
+            processed = processed.Replace("\r", "");
+            processed = processed.Replace("\t", "    ");
+            processed = WrapLines(processed);
+
+            isUpdatingFromCode = true;
+            codeInput.SetValueWithoutNotify(processed);
+            isUpdatingFromCode = false;
+
+            currentText = processed;
+            previousTextLength = processed.Length;
+
             UpdateLineNumbers();
             UpdateHighlightingNow();
             UpdateCursorPosition();
         }
 
+        /// <summary>
+        /// Возвращает текущий текст из редактора
+        /// </summary>
+        /// <returns>Текст редактора</returns>
         public string GetText()
         {
             return codeInput.text;
-        }
-
-        public (int line, int column) GetCursorPosition()
-        {
-            return (currentCursorLine, currentCursorColumn);
         }
     }
 }

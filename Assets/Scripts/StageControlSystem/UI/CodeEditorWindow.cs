@@ -24,7 +24,6 @@ namespace Assets.UI.CodeEditor
 
         private List<CodeFile> codeFiles = new List<CodeFile>();
         private int lastIndex = -1;
-        private string lastFileId;
 
         private SceneObjectsManager sceneObjectsManager;
 
@@ -74,7 +73,7 @@ namespace Assets.UI.CodeEditor
             if (closeButton != null)
                 closeButton.clicked += () => Hide();
 
-            codeEditor.OnTextChanged += OnCodeChanged;
+            //codeEditor.OnTextChanged += OnCodeChanged;
             codeEditor.OnCursorPositionChanged += OnCursorMoved;
 
             openFilesDropdown.choices = new List<string>();
@@ -111,7 +110,6 @@ namespace Assets.UI.CodeEditor
                 openFilesDropdown.index = indexToOpen;
                 lastIndex = indexToOpen;
                 LoadFileContent(indexToOpen);
-                lastFileId = GetFileId(codeFiles[indexToOpen]);
             }
         }
 
@@ -279,7 +277,6 @@ namespace Assets.UI.CodeEditor
                 openFilesDropdown.index = indexToOpen;
                 lastIndex = indexToOpen;
                 LoadFileContent(indexToOpen);
-                lastFileId = GetFileId(codeFiles[indexToOpen]);
             }
 
             compilationStatus.text = "Данные загружены из сцены";

@@ -2009,7 +2009,6 @@ GameObject:
   - component: {fileID: 1239946569}
   - component: {fileID: 1239946570}
   - component: {fileID: 1239946571}
-  - component: {fileID: 1239946572}
   - component: {fileID: 1239946574}
   - component: {fileID: 1239946573}
   - component: {fileID: 1239946575}
@@ -2238,20 +2237,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eec680fc89614b244bab952a4dfa5c2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: "Assembly-CSharp::\u044B\u044B\u044B\u044B"
---- !u!114 &1239946572
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1239946554}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb9f1807d2aeebb45ae8c32e0c6508e2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RobotPanelEvents
-  treeAsset: {fileID: 9197481963319205126, guid: 5f393c6a935de3c4eb61a806f33cd7c2, type: 3}
-  UIBlocker: {fileID: 1239946562}
 --- !u!114 &1239946573
 MonoBehaviour:
   m_ObjectHideFlags: 0
