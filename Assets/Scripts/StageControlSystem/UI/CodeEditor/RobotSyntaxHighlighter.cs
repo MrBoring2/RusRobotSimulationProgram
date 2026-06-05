@@ -1,4 +1,6 @@
+using RobotLanguageCompiler.PLC;
 using RobotLanguageCompiler.Robot;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -22,28 +24,65 @@ namespace Assets.UI.CodeEditor
             RobotTokenType.PtpPoint, RobotTokenType.LinPoint, RobotTokenType.Wait,
             RobotTokenType.OpenEffector, RobotTokenType.CloseEffector
         };
-        
+
         public string GetHighlightedText(string sourceCode)
         {
             if (string.IsNullOrEmpty(sourceCode))
                 return "";
-            
+
             try
             {
                 var lexer = new RobotLexer(sourceCode);
                 var tokens = lexer.Tokenize();
-                
+
                 if (tokens == null || tokens.Count == 0)
                     return sourceCode;
-                
-                return BuildHighlightedText(sourceCode, tokens);
+
+                StringBuilder result = new StringBuilder();
+                int start = sourceCode.Length;
+                int end = 0;
+
+                for (int i = tokens.Count - 1; i >= 0; i--)
+                {
+                    end = tokens[i].Position + tokens[i].Value.Length;
+                    result.Insert(0, sourceCode.Substring(end, start - end));
+                    start = tokens[i].Position;
+
+                    string textSegment = sourceCode.Substring(start, end - start);
+                    string colorHex = ColorUtility.ToHtmlStringRGB(GetTokenColor(tokens[i].Type));
+                    result.Insert(0, $"<color=#{colorHex}>{textSegment}</color>");
+                }
+                result.Insert(0, sourceCode.Substring(0, start));
+
+                return result.ToString();
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
-                Debug.LogError($"Robot highlighting error: {e.Message}");
+                Debug.LogError($"PLC highlighting error: {e.Message}");
                 return sourceCode;
             }
         }
+        //public string GetHighlightedText(string sourceCode)
+        //{
+        //    if (string.IsNullOrEmpty(sourceCode))
+        //        return "";
+            
+        //    try
+        //    {
+        //        var lexer = new RobotLexer(sourceCode);
+        //        var tokens = lexer.Tokenize();
+                
+        //        if (tokens == null || tokens.Count == 0)
+        //            return sourceCode;
+                
+        //        return BuildHighlightedText(sourceCode, tokens);
+        //    }
+        //    catch (System.Exception e)
+        //    {
+        //        Debug.LogError($"Robot highlighting error: {e.Message}");
+        //        return sourceCode;
+        //    }
+        //}
         
         public List<string> GetErrors(string sourceCode)
         {
@@ -52,64 +91,64 @@ namespace Assets.UI.CodeEditor
             return lexer.Errors;
         }
         
-        private string BuildHighlightedText(string source, List<RobotToken> tokens)
-        {
-            var colorSpans = new List<(int start, int end, Color color)>();
+        //private string BuildHighlightedText(string source, List<RobotToken> tokens)
+        //{
+        //    var colorSpans = new List<(int start, int end, Color color)>();
             
-            foreach (var token in tokens)
-            {
-                int tokenStart = GetTokenPosition(source, token);
-                if (tokenStart < 0) continue;
+        //    foreach (var token in tokens)
+        //    {
+        //        int tokenStart = GetTokenPosition(source, token);
+        //        if (tokenStart < 0) continue;
                 
-                int tokenEnd = tokenStart + token.Value.Length;
-                Color color = GetTokenColor(token.Type);
+        //        int tokenEnd = tokenStart + token.Value.Length;
+        //        Color color = GetTokenColor(token.Type);
                 
-                colorSpans.Add((tokenStart, tokenEnd, color));
-            }
+        //        colorSpans.Add((tokenStart, tokenEnd, color));
+        //    }
             
-            colorSpans.Sort((a, b) => a.start.CompareTo(b.start));
+        //    colorSpans.Sort((a, b) => a.start.CompareTo(b.start));
             
-            StringBuilder result = new StringBuilder();
-            int lastPos = 0;
+        //    StringBuilder result = new StringBuilder();
+        //    int lastPos = 0;
             
-            foreach (var span in colorSpans)
-            {
-                if (span.start > lastPos)
-                {
-                    result.Append(source.Substring(lastPos, span.start - lastPos));
-                }
+        //    foreach (var span in colorSpans)
+        //    {
+        //        if (span.start > lastPos)
+        //        {
+        //            result.Append(source.Substring(lastPos, span.start - lastPos));
+        //        }
                 
-                string textSegment = source.Substring(span.start, span.end - span.start);
-                string colorHex = ColorUtility.ToHtmlStringRGB(span.color);
-                result.Append($"<color=#{colorHex}>{textSegment}</color>");
+        //        string textSegment = source.Substring(span.start, span.end - span.start);
+        //        string colorHex = ColorUtility.ToHtmlStringRGB(span.color);
+        //        result.Append($"<color=#{colorHex}>{textSegment}</color>");
                 
-                lastPos = span.end;
-            }
+        //        lastPos = span.end;
+        //    }
             
-            if (lastPos < source.Length)
-            {
-                result.Append(source.Substring(lastPos));
-            }
+        //    if (lastPos < source.Length)
+        //    {
+        //        result.Append(source.Substring(lastPos));
+        //    }
             
-            return result.ToString();
-        }
+        //    return result.ToString();
+        //}
         
-        private int GetTokenPosition(string source, RobotToken token)
-        {
-            string[] lines = source.Split('\n');
+        //private int GetTokenPosition(string source, RobotToken token)
+        //{
+        //    string[] lines = source.Split('\n');
             
-            if (token.Line - 1 >= lines.Length)
-                return -1;
+        //    if (token.Line - 1 >= lines.Length)
+        //        return -1;
             
-            int position = 0;
-            for (int i = 0; i < token.Line - 1; i++)
-            {
-                position += lines[i].Length + 1;
-            }
+        //    int position = 0;
+        //    for (int i = 0; i < token.Line - 1; i++)
+        //    {
+        //        position += lines[i].Length + 1;
+        //    }
             
-            position += token.Column - 1;
-            return position;
-        }
+        //    position += token.Column - 1;
+        //    return position;
+        //}
         
         private Color GetTokenColor(RobotTokenType type)
         {

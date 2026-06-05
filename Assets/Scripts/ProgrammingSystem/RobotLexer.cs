@@ -25,13 +25,15 @@ namespace RobotLanguageCompiler.Robot
         public string Value { get; }
         public int Line { get; }
         public int Column { get; }
+        public int Position { get; }
 
-        public RobotToken(RobotTokenType type, string value, int line, int column)
+        public RobotToken(RobotTokenType type, string value, int line, int column, int position)
         {
             Type = type;
             Value = value;
             Line = line;
             Column = column;
+            Position = position;
         }
 
         public override string ToString()
@@ -122,7 +124,7 @@ namespace RobotLanguageCompiler.Robot
                 case '}':
                     return CreateSingleCharToken(RobotTokenType.RightBrace, '}');
                 default:
-                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column, _position);
             }
         }
 
@@ -165,6 +167,7 @@ namespace RobotLanguageCompiler.Robot
         {
             int startLine = _line;
             int startColumn = _column;
+            int startPosition = _position;
             StringBuilder sb = new StringBuilder();
 
             while (_position < _source.Length && (char.IsDigit(_source[_position]) || _source[_position] == '.'))
@@ -174,7 +177,7 @@ namespace RobotLanguageCompiler.Robot
                 _column++;
             }
 
-            return new RobotToken(RobotTokenType.Number, sb.ToString(), startLine, startColumn);
+            return new RobotToken(RobotTokenType.Number, sb.ToString(), startLine, startColumn, startPosition);
         }
 
         /// <summary>
@@ -185,6 +188,7 @@ namespace RobotLanguageCompiler.Robot
         {
             int startLine = _line;
             int startColumn = _column;
+            int startPosition = _position;
             StringBuilder sb = new StringBuilder();
 
             while (_position < _source.Length && (char.IsLetterOrDigit(_source[_position]) || _source[_position] == '_'))
@@ -198,10 +202,10 @@ namespace RobotLanguageCompiler.Robot
 
             if (_keywords.TryGetValue(value, out RobotTokenType type))
             {
-                return new RobotToken(type, value, startLine, startColumn);
+                return new RobotToken(type, value, startLine, startColumn, startPosition);
             }
 
-            return new RobotToken(RobotTokenType.Identifier, value, startLine, startColumn);
+            return new RobotToken(RobotTokenType.Identifier, value, startLine, startColumn, startPosition);
         }
 
         /// <summary>
@@ -214,9 +218,10 @@ namespace RobotLanguageCompiler.Robot
         {
             int startLine = _line;
             int startColumn = _column;
+            int startPosition = _position;
             _position++;
             _column++;
-            return new RobotToken(type, character.ToString(), startLine, startColumn);
+            return new RobotToken(type, character.ToString(), startLine, startColumn, startPosition);
         }
 
         /// <summary>
@@ -226,12 +231,12 @@ namespace RobotLanguageCompiler.Robot
         /// <param name="line">Строка ошибки.</param>
         /// <param name="column">Колонка ошибки.</param>
         /// <returns>Токен с типом Error.</returns>
-        private RobotToken CreateErrorToken(string message, string value, int line, int column)
+        private RobotToken CreateErrorToken(string message, string value, int line, int column, int position)
         {
             _position++;
             _column++;
             _errors.Add($"{message} на {line}:{column}");
-            return new RobotToken(RobotTokenType.Error, value, line, column);
+            return new RobotToken(RobotTokenType.Error, value, line, column, position);
         }
     }
 }

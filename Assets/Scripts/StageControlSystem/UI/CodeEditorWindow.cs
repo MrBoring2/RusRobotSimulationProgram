@@ -25,6 +25,9 @@ namespace Assets.UI.CodeEditor
         private List<CodeFile> codeFiles = new List<CodeFile>();
         private int lastIndex = -1;
 
+        private const int MAX_LINE_LENGTH = 65;
+        private const int MAX_LINES = 999;
+
         private SceneObjectsManager sceneObjectsManager;
 
         private readonly PLCSyntaxHighlighter plcHighlighter = new PLCSyntaxHighlighter();
@@ -73,7 +76,7 @@ namespace Assets.UI.CodeEditor
             if (closeButton != null)
                 closeButton.clicked += () => Hide();
 
-            //codeEditor.OnTextChanged += OnCodeChanged;
+            codeEditor.OnTextChanged += OnCodeChanged;
             codeEditor.OnCursorPositionChanged += OnCursorMoved;
 
             openFilesDropdown.choices = new List<string>();
@@ -608,8 +611,21 @@ namespace Assets.UI.CodeEditor
                 string filename = Path.GetFileName(paths[0]);
                 string content = File.ReadAllText(paths[0]);
 
-                // Нормализуем окончания строк
-                content = content.Replace("\r\n", "\n").Replace("\r", "");
+                string[] lines = content.Split('\n');
+                int linesN = lines.Length;
+
+                foreach (string line in lines)
+                {
+                    linesN += line.Length / MAX_LINE_LENGTH;
+                }
+
+                if (linesN > MAX_LINES)
+                {
+                    compilationStatus.text = $"Количество строк в загружаемом файле {lines} превышает допустимое {MAX_LINES}";
+                    compilationStatus.RemoveFromClassList("success-status");
+                    compilationStatus.AddToClassList("error-status");
+                    return;
+                }
 
                 codeFiles[lastIndex].Content = content;
                 codeEditor.SetText(content);

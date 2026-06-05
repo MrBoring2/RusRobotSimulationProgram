@@ -43,13 +43,15 @@ namespace RobotLanguageCompiler.PLC
         public string Value { get; }
         public int Line { get; }
         public int Column { get; }
+        public int Position { get; }
 
-        public PLCToken(PLCTokenType type, string value, int line, int column)
+        public PLCToken(PLCTokenType type, string value, int line, int column, int position)
         {
             Type = type;
             Value = value;
             Line = line;
             Column = column;
+            Position = position;
         }
 
         public override string ToString()
@@ -151,7 +153,7 @@ namespace RobotLanguageCompiler.PLC
                     {
                         return ReadTwoCharToken(PLCTokenType.NotEqual, "!=");
                     }
-                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column, _position);
                 case '>':
                     if (Peek() == '=')
                     {
@@ -169,26 +171,26 @@ namespace RobotLanguageCompiler.PLC
                     {
                         return ReadTwoCharToken(PLCTokenType.Increment, "+=");
                     }
-                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column, _position);
                 case '-':
                     if (Peek() == '=')
                     {
                         return ReadTwoCharToken(PLCTokenType.Decrement, "-=");
                     }
-                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column, _position);
                 case '&':
                     if (Peek() == '&')
                     {
                         return ReadTwoCharToken(PLCTokenType.And, "&&");
                     }
-                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column, _position);
 
                 case '|':
                     if (Peek() == '|')
                     {
                         return ReadTwoCharToken(PLCTokenType.Or, "||");
                     }
-                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column, _position);
                 case '(':
                     return CreateSingleCharToken(PLCTokenType.LeftParen, '(');
                 case ')':
@@ -198,7 +200,7 @@ namespace RobotLanguageCompiler.PLC
                 case '}':
                     return CreateSingleCharToken(PLCTokenType.RightBrace, '}');
                 default:
-                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column);
+                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column, _position);
             }
         }
 
@@ -250,6 +252,7 @@ namespace RobotLanguageCompiler.PLC
         {
             int startLine = _line;
             int startColumn = _column;
+            int startPosition = _position;
             _position++;
             _column++;
 
@@ -275,10 +278,10 @@ namespace RobotLanguageCompiler.PLC
 
             if (type == PLCTokenType.Error)
             {
-                return CreateErrorToken($"Неизвестная секция '{value}'", value, startLine, startColumn);
+                return CreateErrorToken($"Неизвестная секция '{value}'", value, startLine, startColumn, startPosition);
             }
 
-            return new PLCToken(type, value, startLine, startColumn);
+            return new PLCToken(type, value, startLine, startColumn, startPosition);
         }
 
         /// <summary>
@@ -288,6 +291,7 @@ namespace RobotLanguageCompiler.PLC
         {
             int startLine = _line;
             int startColumn = _column;
+            int startPosition = _position;
             StringBuilder sb = new StringBuilder();
 
             while (_position < _source.Length && char.IsDigit(_source[_position]))
@@ -297,7 +301,7 @@ namespace RobotLanguageCompiler.PLC
                 _column++;
             }
 
-            return new PLCToken(PLCTokenType.Number, sb.ToString(), startLine, startColumn);
+            return new PLCToken(PLCTokenType.Number, sb.ToString(), startLine, startColumn, startPosition);
         }
 
         /// <summary>
@@ -307,6 +311,7 @@ namespace RobotLanguageCompiler.PLC
         {
             int startLine = _line;
             int startColumn = _column;
+            int startPosition = _position;
             StringBuilder sb = new StringBuilder();
 
             while (_position < _source.Length && (char.IsLetterOrDigit(_source[_position]) || _source[_position] == '_' || _source[_position] == '-'))
@@ -320,10 +325,10 @@ namespace RobotLanguageCompiler.PLC
 
             if (_keywords.TryGetValue(value, out PLCTokenType type))
             {
-                return new PLCToken(type, value, startLine, startColumn);
+                return new PLCToken(type, value, startLine, startColumn, startPosition);
             }
 
-            return new PLCToken(PLCTokenType.Identifier, value, startLine, startColumn);
+            return new PLCToken(PLCTokenType.Identifier, value, startLine, startColumn, startPosition);
         }
 
         /// <summary>
@@ -333,9 +338,10 @@ namespace RobotLanguageCompiler.PLC
         {
             int startLine = _line;
             int startColumn = _column;
+            int startPosition = _position;
             _position += 2;
             _column += 2;
-            return new PLCToken(type, value, startLine, startColumn);
+            return new PLCToken(type, value, startLine, startColumn, startPosition);
         }
 
         /// <summary>
@@ -345,20 +351,21 @@ namespace RobotLanguageCompiler.PLC
         {
             int startLine = _line;
             int startColumn = _column;
+            int startPosition = _position;
             _position++;
             _column++;
-            return new PLCToken(type, character.ToString(), startLine, startColumn);
+            return new PLCToken(type, character.ToString(), startLine, startColumn, startPosition);
         }
 
         /// <summary>
         /// Создает токен ошибки.
         /// </summary>
-        private PLCToken CreateErrorToken(string message, string value, int line, int column)
+        private PLCToken CreateErrorToken(string message, string value, int line, int column, int position)
         {
             _position++;
             _column++;
             _errors.Add($"{message} на {line}:{column}");
-            return new PLCToken(PLCTokenType.Error, value, line, column);
+            return new PLCToken(PLCTokenType.Error, value, line, column, position);
         }
     }
 }

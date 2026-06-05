@@ -28,7 +28,7 @@ namespace Assets.UI.CodeEditor
 
         private ISyntaxHighlighter currentHighlighter;
 
-        private const int MAX_LINE_LENGTH = 75;
+        private const int MAX_LINE_LENGTH = 65;
         private const int MAX_LINES = 999;
 
         public event Action<string> OnTextChanged;
@@ -154,7 +154,7 @@ namespace Assets.UI.CodeEditor
         /// </summary>
         private void RegisterCallbacks()
         {
-            codeInput.RegisterCallback<ChangeEvent<string>>(OnCodeInputChanged);
+            codeInput.RegisterCallback<ChangeEvent<string>>(OnCodeInputChanged, TrickleDown.TrickleDown);
             codeInput.RegisterCallback<FocusOutEvent>(e => UpdateHighlightingNow());
             codeInput.RegisterCallback<MouseDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
             codeInput.RegisterCallback<KeyDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
@@ -168,6 +168,13 @@ namespace Assets.UI.CodeEditor
             if (isUpdatingFromCode) return;
 
             string Text = evt.newValue;
+            int lines = Text.Split('\n').Length;
+            if (lines > MAX_LINES)
+            {
+                codeInput.SetValueWithoutNotify(currentText);
+                return;
+            }
+
             int cursorPos = codeInput.cursorIndex;
             int cursorCorrection = 0;
 
@@ -206,7 +213,21 @@ namespace Assets.UI.CodeEditor
             cursorCorrection += newLength - oldLength;
 
             // 4. Разбиваем длинные строки
+            oldLength = newLength;
             Text = WrapLines(Text);
+
+            lines = Text.Split('\n').Length;
+            if (lines > MAX_LINES)
+            {
+                codeInput.SetValueWithoutNotify(currentText);
+                return;
+            }
+
+            newLength = Text.Length;
+
+            if (oldLength != newLength && currentCursorColumn + cursorCorrection <= MAX_LINE_LENGTH) cursorCorrection--;
+
+            cursorCorrection += newLength - oldLength;
 
             // 5. Обновляем текст, если он изменился
             if (Text != currentText)
@@ -222,7 +243,7 @@ namespace Assets.UI.CodeEditor
 
                 UpdateLineNumbers();
                 UpdateCursorPosition();
-                ScheduleHighlighting();
+                UpdateHighlightingNow();
             }
             previousTextLength = currentText.Length;
         }
@@ -232,71 +253,35 @@ namespace Assets.UI.CodeEditor
         /// </summary>
         private string WrapLines(string text)
         {
-            if (string.IsNullOrEmpty(text))
-                return text;
-
             string[] lines = text.Split('\n');
             StringBuilder result = new StringBuilder();
 
-            for (int i = 0; i < lines.Length; i++)
+            foreach (string line in lines)
             {
-                string line = lines[i];
-
                 if (line.Length <= MAX_LINE_LENGTH)
                 {
                     result.Append(line);
+                    result.Append("\n");
                 }
                 else
                 {
-                    for (int j = 0; j < line.Length; j += MAX_LINE_LENGTH)
+                    for (int i = 0; i < line.Length; i += MAX_LINE_LENGTH)
                     {
-                        int length = Math.Min(MAX_LINE_LENGTH, line.Length - j);
-                        result.Append(line.Substring(j, length));
-                        if (j + length < line.Length)
+                        if (line.Length - i >= MAX_LINE_LENGTH)
                         {
-                            result.Append('\n');
+                            result.Append(line.Substring(i, MAX_LINE_LENGTH));
                         }
+                        else
+                        {
+                            result.Append(line.Substring(i));
+                        }
+
+                        result.Append("\n");
                     }
                 }
-
-                if (i < lines.Length - 1)
-                {
-                    result.Append('\n');
-                }
             }
-
+            result.Remove(result.Length - 1, 1);
             return result.ToString();
-        }
-
-        /// <summary>
-        /// Планирует отложенное обновление подсветки синтаксиса
-        /// </summary>
-        private void ScheduleHighlighting()
-        {
-            pendingHighlightText = currentText;
-
-            if (!isHighlightingScheduled)
-            {
-                isHighlightingScheduled = true;
-                schedule.Execute(() => DelayedHighlightUpdate()).StartingIn(50);
-            }
-        }
-
-        /// <summary>
-        /// Выполняет отложенное обновление подсветки синтаксиса
-        /// </summary>
-        private void DelayedHighlightUpdate()
-        {
-            isHighlightingScheduled = false;
-
-            if (pendingHighlightText != currentText)
-            {
-                pendingHighlightText = currentText;
-                schedule.Execute(() => DelayedHighlightUpdate()).StartingIn(50);
-                return;
-            }
-
-            UpdateHighlightingNow();
         }
 
         /// <summary>
@@ -345,8 +330,8 @@ namespace Assets.UI.CodeEditor
                 return;
             }
 
-            string[] lines = currentText.Split('\n');
-            int lineCount = Math.Min(lines.Length, MAX_LINES);
+            int lines = currentText.Split('\n').Length;
+            int lineCount = lines < MAX_LINES ? lines : MAX_LINES;
 
             StringBuilder numbersBuilder = new StringBuilder();
             for (int i = 1; i <= lineCount; i++)
