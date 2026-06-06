@@ -193,7 +193,7 @@ public class ObjectPicker : MonoBehaviour
     /// <param name="signal">Сигнал с данными об объекте</param>
     private void OnPickObject(PickObjectSignal signal)
     {
-        PickObject(signal.Object.Reference); 
+        PickObject(signal.Object.Reference);
     }
 
     /// <summary>
@@ -203,7 +203,7 @@ public class ObjectPicker : MonoBehaviour
     /// <param name="obj">Transform перемещаемого объекта</param>
     private void Manipulator_OnDragStart(Transform obj)
     {
-        startPos = obj.position;
+        startPos = obj.localPosition;
         startRot = obj.eulerAngles;
     }
 
@@ -214,27 +214,35 @@ public class ObjectPicker : MonoBehaviour
     /// <param name="obj">Transform перемещенного объекта</param>
     private void Manipulator_OnDragEnd(Transform obj)
     {
-        if (transform == null) return;
-        Vector3 endPos = obj.position;
+        Vector3 endPos = obj.localPosition;
         Vector3 endRot = obj.eulerAngles;
+
         if (currentProvider != null)
         {
-            // Если позиция изменилась - создаем команду для Undo/Redo
             if (startPos != endPos)
             {
                 _undoRedoManager.Execute(
-                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.LocalPosition), startPos, endPos)
+                    new PropertyChangeCommand(
+                        currentProvider,
+                        nameof(IPropertyProvider.LocalPosition),
+                        startPos,
+                        endPos
+                    )
                 );
             }
-            // Если позиция изменилась - создаем команду для Undo/Redo
+
             if (startRot != endRot)
             {
                 _undoRedoManager.Execute(
-                    new PropertyChangeCommand(currentProvider, nameof(IPropertyProvider.Rotation), startRot, endRot)
+                    new PropertyChangeCommand(
+                        currentProvider,
+                        nameof(IPropertyProvider.Rotation),
+                        startRot,
+                        endRot
+                    )
                 );
             }
         }
-
     }
 
     /// <summary>
@@ -268,7 +276,7 @@ public class ObjectPicker : MonoBehaviour
         // Поиск SceneObject для определения типа
         SceneObject obj;
         var marker = gameObject.GetComponent<SceneObjectMarker>();
-        if(marker.type == ObjectType.LinearMoveCommand)
+        if (marker.type == ObjectType.LinearMoveCommand)
         {
             obj = _sceneObjectsManager.Commands.FindElementById(provider.Id);
         }
@@ -293,7 +301,7 @@ public class ObjectPicker : MonoBehaviour
         else
         {
             manipulator.Attach(gameObject.transform);
-        }    
+        }
     }
 
     /// <summary>
