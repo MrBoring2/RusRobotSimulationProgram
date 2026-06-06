@@ -75,11 +75,14 @@ namespace Assets.UI.CodeEditor
         /// Преобразование из структуры компилятора во внутреннюю структуру Unity
         /// </summary>
         /// <param name="robotId">РЕАЛЬНЫЙ ID робота в Unity</param>
-        public static void UpdateFromCompilerData(
+        /// <returns>Словарь соответствия имени программы и её ID</returns>
+        public static Dictionary<string, string> UpdateFromCompilerData(
             SceneObjectsManager sceneManager,
             string robotId,
             RobotProgramData data)
         {
+            var programIdMap = new Dictionary<string, string>(); // имя программы → ID (с заменой _ на пробелы)
+
             // 1. СОБИРАЕМ ВСЕ СУЩЕСТВУЮЩИЕ ТОЧКИ РОБОТА (с их свойствами)
             var existingPoints = new Dictionary<string, CommandObject>(); // key: имя точки
             var existingPrograms = sceneManager.Commands.GetSubPrograms(robotId, false);
@@ -88,7 +91,6 @@ namespace Assets.UI.CodeEditor
             {
                 foreach (var command in program.Items)
                 {
-                    // Если это команда движения (точка)
                     if (command.Type == ObjectType.LinearMoveCommand)
                     {
                         string pointName = command.PropertyProvider?.Name ?? command.Reference.name;
@@ -103,7 +105,6 @@ namespace Assets.UI.CodeEditor
                 var commands = new List<CommandObject>(existingPrograms[j].Items);
                 for (int i = commands.Count - 1; i >= 0; i--)
                 {
-                    // Если это не точка, которую мы хотим сохранить — удаляем
                     if (!existingPoints.ContainsValue(commands[i]))
                     {
                         sceneManager.Remove(commands[i].Id, true);
@@ -112,7 +113,7 @@ namespace Assets.UI.CodeEditor
                 sceneManager.Remove(existingPrograms[j].Id, true);
             }
 
-            // 3. СОЗДАЁМ НОВЫЕ ПРОГРАММЫ И КОМАНДЫ, ПЕРЕИСПОЛЬЗУЯ СУЩЕСТВУЮЩИЕ ТОЧКИ
+            // 3. СОЗДАЁМ НОВЫЕ ПРОГРАММЫ
             foreach (var subroutine in data.Subroutines)
             {
                 var programPrefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
@@ -132,11 +133,17 @@ namespace Assets.UI.CodeEditor
 
                 if (program == null) continue;
 
+                // Восстанавливаем имя программы (подчёркивания → пробелы)
+                string programName = subroutine.Name.Replace("_", " ");
+
                 if (program.PropertyProvider != null)
                 {
-                    program.PropertyProvider.Name = subroutine.Name.Replace("_", " ");
+                    program.PropertyProvider.Name = programName;
                 }
-                program.Reference.name = subroutine.Name.Replace("_", " ");
+                program.Reference.name = programName;
+
+                // Сохраняем связь: имя программы → её ID (оригинальное имя из компилятора с _)
+                programIdMap[subroutine.Name] = program.Id;
 
                 foreach (var cmd in subroutine.Commands)
                 {
@@ -144,7 +151,6 @@ namespace Assets.UI.CodeEditor
                     if (cmd is RobotMoveCommand moveCmd && existingPoints.TryGetValue(moveCmd.PointName, out var existingPoint))
                     {
                         // Переиспользуем существующую точку
-                        // Обновляем её свойства (тип движения может измениться)
                         var pointProvider = existingPoint.Reference.GetComponent<PointPropertyProvider>();
                         if (pointProvider != null)
                         {
@@ -164,8 +170,9 @@ namespace Assets.UI.CodeEditor
 
                         if (moveCommand != null)
                         {
-                            moveCommand.PropertyProvider.Name = moveCmd.PointName.Replace("_", " ");
-                            moveCommand.Reference.name = moveCmd.PointName.Replace("_", " ");
+                            string pointName = moveCmd.PointName.Replace("_", " ");
+                            moveCommand.PropertyProvider.Name = pointName;
+                            moveCommand.Reference.name = pointName;
                         }
                     }
                     else
@@ -176,15 +183,16 @@ namespace Assets.UI.CodeEditor
                 }
             }
 
-            // 4. УДАЛЯЕМ НЕИСПОЛЬЗУЕМЫЕ ТОЧКИ (которые остались от старых программ, но не используются в новых)
+            // 4. УДАЛЯЕМ НЕИСПОЛЬЗУЕМЫЕ ТОЧКИ
             foreach (var point in existingPoints.Values)
             {
-                // Проверяем, есть ли у точки родитель (если нет — она больше не используется)
                 if (point.Reference.transform.parent == null)
                 {
                     sceneManager.Remove(point.Id, true);
                 }
             }
+
+            return programIdMap;
         }
 
         private static void CreateCommand(SceneObjectsManager sceneManager, object command, string programId)
@@ -244,6 +252,8 @@ namespace Assets.UI.CodeEditor
                         pointProvider.PointType = moveCmd.IsPtp
                             ? POINTTYPE.PointToPoint
                             : POINTTYPE.LinearPoint;
+                        pointProvider.Position = new Vector3(1, 1, 1);
+                        pointProvider.Rotation = new Vector3(180, 0, 0);
                     }
                     break;
 
