@@ -13,7 +13,7 @@ using Assets.UI.CustomElements.ColorField;
 using Assets.UI.CustomElements.ColorPicker;
 using System;
 using System.Collections.Generic;
-
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.Windows;
@@ -301,12 +301,36 @@ public class PropertiesPanelEvents : MonoBehaviour
         // ��� - ��������� Action ��� �������
         cleanupActions.Add(FieldBindingUtils.BindFieldWithHistory(name, current, nameof(IPropertyProvider.Name), _undoRedoManager, _UIStatusManager, () =>
         {
-            if (current != null)
+            if (current == null) return;
+
+            string newName = name.value;
+
+            var sceneManager = ServiceManager.Current.Get<SceneObjectsManager>();
+
+            bool exists =
+                sceneManager.Items.Values
+                    .Cast<SceneObject>()
+                    .Any(x =>
+                        x != null &&
+                        x.Id != current.Id &&
+                        x.PropertyProvider.Name == newName
+                    )
+                ||
+                sceneManager.Commands.GetAllCommands()
+                    .Any(x =>
+                        x != null &&
+                        x.Id != current.Id &&
+                        x.PropertyProvider.Name == newName
+                    );
+
+            if (exists)
             {
-                current.Name = name.value;
-                _eventBus.Invoke(new ChangeNamePropertySignal(current.Id, name.value));
-                //OnTargetNameChanged?.Invoke();
+                name.SetValueWithoutNotify(current.Name);
+                return;
             }
+
+            current.Name = newName;
+            _eventBus.Invoke(new ChangeNamePropertySignal(current.Id, newName));
         }));
     }
 

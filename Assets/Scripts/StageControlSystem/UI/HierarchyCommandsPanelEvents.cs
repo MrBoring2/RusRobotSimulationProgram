@@ -1445,6 +1445,7 @@ namespace Assets.Scripts.UI
 
         private void AddVariableInitToPLC(string blockId, PLCInitVariable pLCSet)
         {
+           
             AddToPLCContent(blockId, pLCSet);
             _sceneObjectManager.PLCData.Variables.Add(new Variable(pLCSet.Id, pLCSet.VarType, pLCSet.VariableName));
         }
