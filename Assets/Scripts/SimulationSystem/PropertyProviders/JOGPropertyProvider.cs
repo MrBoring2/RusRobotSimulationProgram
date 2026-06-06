@@ -15,6 +15,7 @@ namespace Assets.Scripts.Providers
     {
         public int ConfigPoint { get; set; }
         public bool VerificationAngles { get; set; }
+        public bool AngleMode { get; set; }
         private bool EndEffectorOn
         {
             get
@@ -122,6 +123,13 @@ namespace Assets.Scripts.Providers
                 typeof(bool),
                 () => EndEffectorOn,
                 val => EndEffectorOn = (bool)val
+                ),
+                new CustomProperty(
+                "AngleMode",
+                "Режим углов",
+                typeof(bool),
+                () => AngleMode,
+                val => AngleMode = (bool)val
                 ),
                 new CustomProperty(
                 "ConfigPoint",

@@ -512,7 +512,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         }
         public async Awaitable _SetJogMove()
         {
-            if (oldJOGposition != _propertyProvider.JOGpoint.LocalPosition || oldJOGrotation != _propertyProvider.JOGpoint.LRotationQ || OldConfigPoint != _propertyProvider.JOGpoint.ConfigPoint)
+            if ((oldJOGposition != _propertyProvider.JOGpoint.LocalPosition || oldJOGrotation != _propertyProvider.JOGpoint.LRotationQ || OldConfigPoint != _propertyProvider.JOGpoint.ConfigPoint) &&  !_propertyProvider.JOGpoint.AngleMode)
             {
 
                 angles = InvKin.IKCalc(_propertyProvider.RP, _propertyProvider.JOGpoint.LocalPosition, _propertyProvider.JOGpoint.LRotationQ);
@@ -559,7 +559,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         }
         public async Awaitable _SetAngleMove()
         {
-            if (!oldAngles.SequenceEqual(_propertyProvider.ChangeAngles))
+            if (Diff(oldAngles, _propertyProvider.ChangeAngles) > 0.001 && _propertyProvider.JOGpoint.AngleMode)
             {
                 _propertyProvider.ChangeAngles = InvKin.CheckLimit(_propertyProvider.ChangeAngles, _propertyProvider.AnglesLimit); //углы
                 ModifyRobot(_propertyProvider, _propertyProvider.ChangeAngles);
@@ -572,10 +572,28 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
                 _propertyProvider.JOGpoint.LRotationQ = oldJOGrotation = position.Rotation;
 
                 _propertyProvider.ChangeAngles.CopyTo(oldAngles, 0);
-                endAnglesMove = true;
                 _eventBus.Invoke(new ChangeConfigJOGSignal(_propertyProvider));
             }
         }
+
+        float NormalizeAngle360(float angle)
+        {
+            angle = angle % 360f;
+            if (angle < 0) angle += 360f;
+            return angle;
+        }
+        public float Diff(float[] a1, float[] a2)
+        {
+            float max = float.NegativeInfinity;
+            for (int i = 0; i < 6; i++)
+            {
+                float diff = Mathf.Abs(NormalizeAngle360(a1[i]) - NormalizeAngle360(a2[i]));
+                if (diff > max) max = diff;
+
+            }
+            return max;
+        }
+
         //--Выполнить подпрограмму (задачу)--
         public void RunSubProgramm(string IDTaskToRun)
         {
