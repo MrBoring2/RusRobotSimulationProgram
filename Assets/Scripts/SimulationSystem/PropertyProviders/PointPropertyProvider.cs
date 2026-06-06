@@ -18,7 +18,7 @@ namespace Assets.Scripts.Providers
 
         public POINTTYPE PointType { get; set; } = POINTTYPE.LinearPoint;
         //Линейная точка
-        public float LinearSpeed { get; set; } = 0.5f; ///_м/с
+        public float Speed { get; set; } = 0.5f; ///_м/с
         public float LinAcceler { get; set; } = 1;
         public float LinBrake { get; set; } = 1;
         public float AngleSpeed { get; set; } = 90; ///_град/с
@@ -43,8 +43,17 @@ namespace Assets.Scripts.Providers
                 ProviderType = nameof(PointPropertyProvider),
                 FloatValues =
                 {
-                    ["Speed"] = LinearSpeed,
-                    ["AngleSpeed"] = AngleSpeed
+                    ["Speed"] = Speed,
+                    ["AngleSpeed"] = AngleSpeed,
+                    ["LinAcceler"] = LinAcceler,
+                    ["AngleSpeed"] = AngleSpeed,
+                    ["AngleBrake"] = AngleBrake,
+                    ["SpeedPercent"] = SpeedPercent,
+                    ["ConfigPoint"] = ConfigPoint
+                },
+                StringValues =
+                {
+                    ["PointType"] = PointType.ToString()
                 }
             };
         }
@@ -77,11 +86,11 @@ namespace Assets.Scripts.Providers
                     () => (ConfigPoint+1).ToString(),
                     val => ConfigPoint = int.Parse((string)val)-1
                     ),
-                    new CustomProperty("LinearSpeed",
+                    new CustomProperty("Speed",
                     "Л Скорость",
                     typeof(float),
-                    () => LinearSpeed,
-                    val => LinearSpeed = (float)val),
+                    () => Speed,
+                    val => Speed = (float)val),
                     new CustomProperty("LinAcceler",
                     " Л ускорение разгона",
                     typeof(float),
@@ -142,7 +151,7 @@ namespace Assets.Scripts.Providers
         public override void RestoreCustomState(ProviderSaveData data)
         {
             if (data.FloatValues.TryGetValue("Speed", out var v1))
-                LinearSpeed = v1;
+                Speed = v1;
             if (data.FloatValues.TryGetValue("AngleSpeed", out var v2))
                 AngleSpeed = v2;
             if (data.FloatValues.TryGetValue("LinAcceler", out var v3 ))
@@ -153,6 +162,12 @@ namespace Assets.Scripts.Providers
                 LinAcceler = v5;
             if (data.FloatValues.TryGetValue("AngleBrake", out var v6))
                 LinBrake = v6;
+            if (data.StringValues.TryGetValue("PointType", out var v7))
+            {
+                Enum.TryParse<POINTTYPE>(v7, out var pt);
+                PointType = pt;
+            }
+
             /*if (data.FloatValues.TryGetValue("AngleBrake", out var v7))
                 ConfigPoint = v7;*/
         }

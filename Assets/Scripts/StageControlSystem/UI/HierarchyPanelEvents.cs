@@ -694,7 +694,7 @@ public class HierarchyPanelEvents : MonoBehaviour
             {
                 element.AddToClassList("selected");
             }
-            selectedElementId = element.userData?.ToString();
+            selectedElementId = (element.userData as SceneObject).Id;
             lastSelectedElement = element;
         }
         else

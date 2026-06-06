@@ -3,13 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static Unity.Burst.Intrinsics.X86.Avx;
 
 namespace Assets.Scripts.Models
 {
     public class CommandsContainer
     {
         private readonly Dictionary<string, List<RobotProgramObject>> _subProgramsBySource;
-
+        private readonly Dictionary<string, SceneObject> _indexById = new Dictionary<string, SceneObject>();
         public CommandsContainer()
         {
             _subProgramsBySource = new Dictionary<string, List<RobotProgramObject>>();
@@ -31,9 +32,28 @@ namespace Assets.Scripts.Models
             }
 
             subPrograms.Add(subProgram);
+            _indexById[subProgram.Id] = subProgram;
         }
 
-      
+        public IEnumerable<RobotProgramObject> GetAllPrograms()
+        {
+            foreach (var kvp in _subProgramsBySource)
+            {
+                foreach (var p in kvp.Value)
+                    yield return p;
+            }
+        }
+        public IEnumerable<CommandObject> GetAllCommands()
+        {
+            foreach (var kvp in _subProgramsBySource)
+            {
+                foreach (var p in kvp.Value)
+                {
+                    foreach (var c in p.Items)
+                        yield return c;
+                }
+            }
+        }
         // Получение всех подпрограмм для устройства в порядке добавления
         public List<RobotProgramObject> GetSubPrograms(string sourceId, bool getOnlyActive = true)
         {
@@ -76,32 +96,22 @@ namespace Assets.Scripts.Models
                 throw new InvalidOperationException($"Подпрограмма {subProgramId} не найдена в устройстве {sourceId}");
 
             subProgram.Items.Add(command);
+            _indexById[command.Id] = command;
         }
 
 
         public SceneObject FindElementById(string id, bool getOnlyActive = true)
         {
-            foreach (var kvp in _subProgramsBySource)
-            {
-                foreach (var subProgram in kvp.Value)
-                {
-                    if (subProgram.Id == id)
-                    {
-                        if (!getOnlyActive || (getOnlyActive && subProgram.Reference.activeInHierarchy))
-                            return subProgram;
-                    }
+            if (string.IsNullOrEmpty(id))
+                return null;
 
-                    foreach (var command in subProgram.Items)
-                    {
-                        if (command.Id == id)
-                        {
-                            if (!getOnlyActive || (getOnlyActive && command.Reference.activeInHierarchy))
-                                return command;
-                        }
-                    }
-                }
-            }
-            return null;
+            if (!_indexById.TryGetValue(id, out var obj))
+                return null;
+
+            if (getOnlyActive && obj.Reference != null && !obj.Reference.activeInHierarchy)
+                return null;
+
+            return obj;
         }
 
         // Получение подпрограммы по ID
@@ -146,10 +156,11 @@ namespace Assets.Scripts.Models
             var program = programs.FirstOrDefault(p => p.Id == programId);
             if (program == null)
                 return false;
-
+            _indexById.Remove(programId);
             // Сначала удаляем все команды программы
             foreach (var command in program.Items.ToList())
             {
+                _indexById.Remove(command.Id);
                 RemoveCommand(robotId, programId, command.Id);
             }
 
@@ -180,7 +191,7 @@ namespace Assets.Scripts.Models
             var command = program.Items.FirstOrDefault(c => c.Id == commandId);
             if (command == null)
                 return false;
-
+            _indexById.Remove(commandId);
             return program.Items.Remove(command);
         }
 

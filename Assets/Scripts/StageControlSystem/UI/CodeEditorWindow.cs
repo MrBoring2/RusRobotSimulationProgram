@@ -299,6 +299,54 @@ namespace Assets.UI.CodeEditor
                 return;
             }
 
+            // Словарь для хранения ID программ всех роботов
+            var allProgramIds = new Dictionary<string, Dictionary<string, string>>(); // robotId → (programName → programId)
+
+            // 1. СНАЧАЛА СОХРАНЯЕМ ВСЕХ РОБОТОВ (чтобы получить ID их программ)
+            foreach (var file in codeFiles)
+            {
+                if (file.Type == CodeFileType.Robot && !string.IsNullOrEmpty(file.RobotId))
+                {
+                    try
+                    {
+                        var lexer = new RobotLexer(file.Content);
+                        var tokens = lexer.Tokenize();
+
+                        if (lexer.Errors.Count > 0)
+                        {
+                            compilationStatus.text = $"Ошибка лексики Robot ({file.DisplayName}): {string.Join(", ", lexer.Errors)}";
+                            compilationStatus.AddToClassList("error-status");
+                            compilationStatus.RemoveFromClassList("success-status");
+                            return;
+                        }
+
+                        var parser = new RobotParser(tokens);
+                        string robotName = file.DisplayName;
+                        var robotData = parser.Parse(robotName);
+
+                        if (parser.Errors.Count > 0)
+                        {
+                            compilationStatus.text = $"Ошибка парсинга Robot ({file.DisplayName}): {string.Join(", ", parser.Errors)}";
+                            compilationStatus.AddToClassList("error-status");
+                            compilationStatus.RemoveFromClassList("success-status");
+                            return;
+                        }
+
+                        // Обновляем данные робота и получаем словарь ID программ
+                        var programIdMap = RobotDataAdapter.UpdateFromCompilerData(sceneObjectsManager, file.RobotId, robotData);
+                        allProgramIds[file.RobotId] = programIdMap;
+                    }
+                    catch (Exception e)
+                    {
+                        compilationStatus.text = $"Ошибка парсинга Robot ({file.DisplayName}): {e.Message}";
+                        compilationStatus.AddToClassList("error-status");
+                        compilationStatus.RemoveFromClassList("success-status");
+                        return;
+                    }
+                }
+            }
+
+            // 2. ТЕПЕРЬ СОХРАНЯЕМ PLC (с уже известными ID программ роботов)
             foreach (var file in codeFiles)
             {
                 if (file.Type == CodeFileType.PLC)
@@ -318,54 +366,22 @@ namespace Assets.UI.CodeEditor
                             return;
                         }
 
+                        // Заменяем имена роботов на ID
                         var plcDataWithIds = ReplaceRobotNamesWithIds(plcDataWithNames);
                         if (plcDataWithIds == null)
                         {
                             return;
                         }
 
+                        // Заполняем ProgramId в командах StartProgram
+                        FillProgramIds(plcDataWithIds, allProgramIds);
+
                         sceneObjectsManager.SetPLCData(plcDataWithIds);
+                        break;
                     }
                     catch (Exception e)
                     {
                         compilationStatus.text = $"Ошибка парсинга PLC: {e.Message}";
-                        compilationStatus.AddToClassList("error-status");
-                        compilationStatus.RemoveFromClassList("success-status");
-                        return;
-                    }
-                }
-                else if (file.Type == CodeFileType.Robot && !string.IsNullOrEmpty(file.RobotId))
-                {
-                    try
-                    {
-                        var lexer = new RobotLexer(file.Content);
-                        var tokens = lexer.Tokenize();
-
-                        if (lexer.Errors.Count > 0)
-                        {
-                            compilationStatus.text = $"Ошибка лексики Robot: {string.Join(", ", lexer.Errors)}";
-                            compilationStatus.AddToClassList("error-status");
-                            compilationStatus.RemoveFromClassList("success-status");
-                            return;
-                        }
-
-                        var parser = new RobotParser(tokens);
-                        string robotName = file.DisplayName;
-                        var robotData = parser.Parse(robotName);
-
-                        if (parser.Errors.Count > 0)
-                        {
-                            compilationStatus.text = $"Ошибка парсинга Robot: {string.Join(", ", parser.Errors)}";
-                            compilationStatus.AddToClassList("error-status");
-                            compilationStatus.RemoveFromClassList("success-status");
-                            return;
-                        }
-
-                        RobotDataAdapter.UpdateFromCompilerData(sceneObjectsManager, file.RobotId, robotData);
-                    }
-                    catch (Exception e)
-                    {
-                        compilationStatus.text = $"Ошибка парсинга Robot: {e.Message}";
                         compilationStatus.AddToClassList("error-status");
                         compilationStatus.RemoveFromClassList("success-status");
                         return;
@@ -377,6 +393,92 @@ namespace Assets.UI.CodeEditor
             compilationStatus.RemoveFromClassList("error-status");
             compilationStatus.AddToClassList("success-status");
             _eventBus.Invoke(new UpdatePLCData());
+        }
+
+        /// <summary>
+        /// Заполняет ProgramId в командах StartProgram на основе имён программ
+        /// </summary>
+        private void FillProgramIds(PLCData plcData, Dictionary<string, Dictionary<string, string>> allProgramIds)
+        {
+            // Обрабатываем блоки роботов
+            foreach (var robotBlock in plcData.RobotCommandsBlockItems)
+            {
+                // Для каждого блока робота знаем его ID
+                string robotId = robotBlock.RobotId;
+
+                // Получаем словарь ID программ для этого робота
+                if (allProgramIds.TryGetValue(robotId, out var programIdMap))
+                {
+                    FillProgramIdsInConditions(robotBlock.ConditionsList, programIdMap);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Рекурсивно обходит условия и заполняет ProgramId
+        /// </summary>
+        private void FillProgramIdsInConditions(List<PLCBase> items, Dictionary<string, string> programIdMap)
+        {
+            foreach (var item in items)
+            {
+                if (item is PLCBlockCondition blockCond)
+                {
+                    FillProgramIdsInCondition(blockCond.IfCondition, programIdMap);
+                    foreach (var elif in blockCond.ElifConditions)
+                    {
+                        FillProgramIdsInCondition(elif, programIdMap);
+                    }
+                    FillProgramIdsInCondition(blockCond.ElseCondition, programIdMap);
+                }
+                else if (item is PLCCondition condition)
+                {
+                    FillProgramIdsInCondition(condition, programIdMap);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Заполняет ProgramId в одной ветке условия
+        /// </summary>
+        private void FillProgramIdsInCondition(PLCCondition condition, Dictionary<string, string> programIdMap)
+        {
+            if (condition == null) return;
+
+            foreach (var content in condition.Content)
+            {
+                if (content is PLCStartProgram startProgram)
+                {
+                    // Ищем программу по имени (из компилятора имя может быть с _ вместо пробелов)
+                    string programNameWithUnderscores = startProgram.ProgramName;
+
+                    if (programIdMap.TryGetValue(programNameWithUnderscores, out string programId))
+                    {
+                        startProgram.ProgramId = programId;
+                    }
+                    else
+                    {
+                        // Пробуем с заменой _ на пробелы (на случай несоответствия)
+                        string programNameWithSpaces = programNameWithUnderscores.Replace("_", " ");
+                        foreach (var kvp in programIdMap)
+                        {
+                            if (kvp.Key.Replace("_", " ") == programNameWithSpaces)
+                            {
+                                startProgram.ProgramId = kvp.Value;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else if (content is PLCBlockCondition nestedBlock)
+                {
+                    FillProgramIdsInCondition(nestedBlock.IfCondition, programIdMap);
+                    foreach (var elif in nestedBlock.ElifConditions)
+                    {
+                        FillProgramIdsInCondition(elif, programIdMap);
+                    }
+                    FillProgramIdsInCondition(nestedBlock.ElseCondition, programIdMap);
+                }
+            }
         }
 
         /// <summary>

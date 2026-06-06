@@ -63,25 +63,36 @@ namespace Assets.Scripts.GyzmoManipulazotr
             {
                 cam = Camera.main;
             }
-            //SetAxisMode(AxisMode.Global);
-            CurrentAxisMode = AxisMode.Local;
 
+            CurrentAxisMode = AxisMode.Local;
             CurrentManipulatorMode = new JOGMode();
             CurrentManipulatorMode.cursorAngleText = angleTextPrefab;
-            gizmoRoot = transform;
 
+            // Создаём отдельный gizmoRoot, не трогаем transform
+            gizmoRoot = new GameObject("JOG_GizmoRoot").transform;
+            gizmoRoot.SetParent(transform.parent);
+            gizmoRoot.position = transform.position;
+            gizmoRoot.rotation = transform.rotation;
+
+            // Перемещаем moveHandlesGroup под gizmoRoot
+            if (moveHandlesGroup != null)
+                moveHandlesGroup.transform.SetParent(gizmoRoot, true);
+
+            // Перемещаем rotateHandlesGroup под gizmoRoot
+            if (rotateHandlesGroup != null)
+                rotateHandlesGroup.transform.SetParent(gizmoRoot, true);
 
             _pointProvider = gameObject.GetComponent<JOGPropertyProvider>();
-            //angleTextPrefab = GameObject.Find("PreviewRotationText").GetComponent<TextMeshPro>();
         }
+
         private void Start()
         {
             _manipulatorModeManager = ServiceManager.Current.Get<SceneManipulatorModeManager>();
-
             _axisModeManager = ServiceManager.Current.Get<AxisModeManager>();
             _eventBus = ServiceManager.Current.Get<EventBus>();
             _eventBus.Subscribe<SetAxisModeSignal>(OnSetAxisMode);
             _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
+            CurrentAxisMode = _axisModeManager.Mode;
             foreach (Transform handle in moveHandlesGroup.transform)
             {
                 AxisHandleJOG ah = handle.GetComponent<AxisHandleJOG>();
@@ -111,6 +122,8 @@ namespace Assets.Scripts.GyzmoManipulazotr
         /// <param name="mode">Новый режим осей</param>
         public void SetAxisMode(AxisMode mode)
         {
+            CurrentAxisMode = mode;
+
             if (Target == null) return;
 
             if (mode == AxisMode.Local)
@@ -120,7 +133,6 @@ namespace Assets.Scripts.GyzmoManipulazotr
             else
             {
                 gizmoRoot.rotation = Quaternion.identity;
-                gizmoRootStartRotation = gizmoRoot.rotation;
             }
         }
         private void OnStartSimulation(StartSimulationSignal signal)
@@ -138,21 +150,18 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
         private void FixedUpdate()
         {
-            //if (Target != null)
-            //    gizmoRoot.position = Target.position;
+            // Обновляем позицию gizmoRoot на позицию захвата
+            gizmoRoot.position = transform.position;
 
             float dist = Vector3.Distance(cam.transform.position, gizmoRoot.position);
             if (dist > 2)
             {
                 gizmoRoot.localScale = Vector3.one * dist * gizmoScaleKoeficient;
-                //angleTextPrefab.gameObject.transform.localScale = Vector3.one * dist * gizmoScaleKoeficient;
             }
             else
             {
-
                 gizmoRoot.localScale = Vector3.one * 2 * gizmoScaleKoeficient;
                 angleTextPrefab.gameObject.transform.localScale = Vector3.one * 2 * gizmoScaleKoeficient;
-
             }
 
             UpdateHandlesOrientation();
@@ -164,7 +173,24 @@ namespace Assets.Scripts.GyzmoManipulazotr
         {
             if (Target == null || cam == null) return;
 
-            gizmoRoot.rotation = Target.rotation;
+            if (_axisModeManager.Mode == AxisMode.Local)
+            {
+                gizmoRoot.rotation = Target.rotation;
+            }
+            else
+            {
+                gizmoRoot.rotation = Quaternion.identity;
+
+                // В Global режиме кольца не вращаются
+                if (rotateHandlesGroup != null)
+                {
+                    if (!_handlesOriginalRotation.ContainsKey(rotateHandlesGroup.transform))
+                    {
+                        _handlesOriginalRotation[rotateHandlesGroup.transform] = rotateHandlesGroup.transform.localRotation;
+                    }
+                    rotateHandlesGroup.transform.localRotation = _handlesOriginalRotation[rotateHandlesGroup.transform];
+                }
+            }
 
             Vector3 toCamera = (cam.transform.position - gizmoRoot.position).normalized;
             float currentScale = gizmoRoot.localScale.x;
@@ -184,7 +210,6 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
                 handle.localRotation = _handlesOriginalRotation[handle];
 
-                // Находим две оси для этой плоскости
                 Vector3 axis1Dir = Vector3.zero;
                 Vector3 axis2Dir = Vector3.zero;
 
@@ -195,9 +220,12 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
                     if (Vector3.Dot(arrowHandle.direction.normalized, axisHandle.planeNormal.normalized) < 0.1f)
                     {
-                        Vector3 dir = Target.TransformDirection(arrowHandle.direction.normalized);
+                        Vector3 dir;
+                        if (_axisModeManager.Mode == AxisMode.Local && Target != null)
+                            dir = Target.TransformDirection(arrowHandle.direction.normalized);
+                        else
+                            dir = arrowHandle.direction.normalized;
 
-                        // Виртуальный разворот: если камера с другой стороны — инвертируем
                         float dotCamera = Vector3.Dot(toCamera, dir);
                         if (dotCamera < 0) dir = -dir;
 

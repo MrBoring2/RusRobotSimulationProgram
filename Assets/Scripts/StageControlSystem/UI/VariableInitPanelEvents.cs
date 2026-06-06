@@ -19,6 +19,7 @@ namespace Assets.Scripts.UI
         private UIStatusManager _uiStatusManager;
         private string selectedType;
         private NotificationSystemManager _notificationSystemManager;
+        private SceneObjectsManager _sceneObjectsManager;
 
         protected override void Start()
         {
@@ -27,6 +28,7 @@ namespace Assets.Scripts.UI
 
         protected override void OnBeforeShow(ModalParameters parameters)
         {
+            _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
             _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
             _notificationSystemManager = ServiceManager.Current.Get<NotificationSystemManager>();
 
@@ -59,6 +61,16 @@ namespace Assets.Scripts.UI
                 _notificationSystemManager.ShowWarning("Значение переменной не омжет быть пустым!");
                 return;
             }
+
+            var exists = _sceneObjectsManager.PLCData.Variables
+               .Any(v => v.Name == varName);
+
+            if (exists)
+            {
+                _notificationSystemManager.ShowWarning("Переменная с таким именем уже существует!");
+                return;
+            }
+
 
             VarType type = VarType.String;
             switch (selectedType)

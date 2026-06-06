@@ -37,6 +37,11 @@ public class SensorPropertyProvider : BasePropertyProvider
             StringValues =
             {
                 ["NameSignal"] = NameSignal,
+            },
+            FloatValues =
+            {
+                ["DetectionLength"] = DetectionLength,
+                ["DetectionHeight"] = DetectionHeight
             }
             
         };
@@ -91,5 +96,13 @@ public class SensorPropertyProvider : BasePropertyProvider
             IsActive = v2;
         if (data.BoolValues.TryGetValue("VerificationAngles", out var v3))
             InvertSignal = v3;
+        if(data.FloatValues.TryGetValue("DetectionHeight", out var v4)){
+            DetectionHeight = v4;
+        }
+        if (data.FloatValues.TryGetValue("DetectionLength", out var v5))
+        {
+            DetectionLength = v5;
+        }
+        
     }
 }

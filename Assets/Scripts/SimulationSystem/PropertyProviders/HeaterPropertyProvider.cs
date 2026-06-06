@@ -29,7 +29,18 @@ public class HeaterPropertyProvider : BasePropertyProvider
     {
         return new ProviderSaveData
         {
-
+            StringValues =
+            {
+                ["NameSignal1"] = NameSignal1,
+                ["NameSignal2"] = NameSignal2,
+                ["NameSignal3"] = NameSignal3,
+                ["NameSignal4"] = NameSignal4
+            },
+            FloatValues =
+            {
+                ["TimeHeating"] = TimeHeating
+            }
+            
         };
     }
 
@@ -78,5 +89,17 @@ public class HeaterPropertyProvider : BasePropertyProvider
 
     public override void RestoreCustomState(ProviderSaveData data)
     {
+        if (data.StringValues.TryGetValue("NameSignal1", out var v1))
+            NameSignal1 = v1;
+        if (data.StringValues.TryGetValue("NameSignal2", out var v2))
+            NameSignal2 = v2;
+        if (data.StringValues.TryGetValue("NameSignal3", out var v3))
+            NameSignal3 = v3;
+        if (data.StringValues.TryGetValue("NameSignal4", out var v4))
+            NameSignal4 = v4;
+        if (data.FloatValues.TryGetValue("TimeHeating", out var v5))
+        {
+            TimeHeating = v5;
+        }
     }
 }

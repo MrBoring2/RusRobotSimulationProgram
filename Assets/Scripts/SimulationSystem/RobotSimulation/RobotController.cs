@@ -114,7 +114,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
             float AngleAcceler = point.AngleAcceler;
             float AngleBreak = point.AngleBrake;
             float AngleSpeed = point.AngleSpeed;
-            float LinearSpeed = point.LinearSpeed;
+            float LinearSpeed = point.Speed;
             float vMax = 0;
             //получение парамтеров двжижения
             float currentTimeMove = 0;

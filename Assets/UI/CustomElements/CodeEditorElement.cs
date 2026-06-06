@@ -17,8 +17,6 @@ namespace Assets.UI.CodeEditor
         private TextElement codeHighlight;
 
         private string currentText = "";
-        private bool isHighlightingScheduled = false;
-        private string pendingHighlightText = "";
         private bool isUpdatingFromCode = false;
 
         private int currentCursorLine = 1;

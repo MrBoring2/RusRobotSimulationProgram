@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Net.NetworkInformation;
 using UnityEngine;
 
 namespace Assets.Scripts.Managers
@@ -79,7 +80,7 @@ namespace Assets.Scripts.Managers
                     if (parent == null) return null;
                 }
                 var obj = Instantiate(prefab, position, rotation, parent?.transform);
-                obj.name = prefab.name;
+                obj.name = MakeUniqueName(prefab.name);
                 var objectMaker = obj.GetComponent<SceneObjectMarker>();
                 if (objectMaker != null)
                 {
@@ -146,66 +147,94 @@ namespace Assets.Scripts.Managers
         /// <param name="id">ID команды</param>
         /// <param name="parentId">ID родителя (программы или подпрограммы)</param>
         /// <returns>Созданный SceneObject или null</returns>
-        public SceneObject CreateCommand(GameObject prefab, Vector3 position, Quaternion rotation, ObjectType type, string id = null, string parentId = null)
+        public SceneObject CreateCommand(
+     GameObject prefab,
+     Vector3 position,
+     Quaternion rotation,
+     ObjectType type,
+     string id = null,
+     string parentId = null)
         {
-            SceneObject sceneObj = null;
-            if (prefab != null)
+            if (prefab == null) return null;
+
+            GameObject parent = null;
+
+            // =========================
+            // FIND PARENT
+            // =========================
+            if (!string.IsNullOrEmpty(parentId))
             {
-                GameObject parent = null;
-                if (!string.IsNullOrEmpty(parentId))
+                if (type == ObjectType.Program)
                 {
-                    if (type == ObjectType.Program)
-                    {
-                        parent = ((SceneObject)Items[parentId])?.Reference;
-                    }
-                    else parent = Commands.GetSubProgram(parentId)?.Reference;
-                    if (parent == null) return null;
+                    parent = ((SceneObject)Items[parentId])?.Reference;
                 }
-                var obj = Instantiate(prefab, position, rotation, parent?.transform);
-                obj.name = prefab.name;
-                var objectMaker = obj.GetComponent<SceneObjectMarker>();
-                if (objectMaker != null)
+                else
                 {
-                    if (id == null)
-                        id = Guid.NewGuid().ToString();
-                    switch (type)
-                    {
-                        case ObjectType.LinearMoveCommand:
-                        case ObjectType.StateEndEffectorCommand:
-                        case ObjectType.WaitCommand:
-                            sceneObj = new CommandObject(id, objectMaker.type, obj, parentId);
-                            break;
-                        case ObjectType.Program:
-                            sceneObj = new RobotProgramObject(id, objectMaker.type, obj, parentId);
-                            break;
-                        default:
-                            sceneObj = new CommandObject(id, objectMaker.type, obj, parentId);
-                            break;
-                    }
-                    sceneObj.Reference.GetComponent<IPropertyProvider>().Id = id;
+                    parent = Commands.GetSubProgram(parentId)?.Reference;
+                }
 
+                if (parent == null) return null;
+            }
 
-                    if (sceneObj.Type == ObjectType.Program)
+            var obj = Instantiate(prefab, position, rotation, parent?.transform);
+
+            if (id == null)
+                id = Guid.NewGuid().ToString();
+
+            var marker = obj.GetComponent<SceneObjectMarker>();
+            if (marker == null) return null;
+
+            SceneObject sceneObj;
+
+            // =========================
+            // PROGRAM
+            // =========================
+            if (type == ObjectType.Program)
+            {
+                var robotId = parentId; // parentId = robot
+
+                obj.name = GetUniqueProgramName(robotId, prefab.name);
+
+                sceneObj = new RobotProgramObject(id, marker.type, obj, parentId);
+
+                Commands.AddSubProgram(parentId, sceneObj as RobotProgramObject);
+            }
+            // =========================
+            // COMMAND
+            // =========================
+            else
+            {
+                var subProgram = Commands.GetSubProgram(parentId);
+                if (subProgram == null) return null;
+
+                var robotId = subProgram.ParentId;
+
+                obj.name = GetUniqueCommandName(robotId, parentId, prefab.name);
+
+                sceneObj = new CommandObject(id, marker.type, obj, parentId);
+
+                var robot = GetById(robotId);
+
+                if (robot != null)
+                {
+                    if (sceneObj.Type == ObjectType.LinearMoveCommand)
                     {
-                        Commands.AddSubProgram(parentId, sceneObj as RobotProgramObject);
-                    }
-                    else if (sceneObj.Type == ObjectType.WaitCommand ||
-                        sceneObj.Type == ObjectType.LinearMoveCommand ||
-                        sceneObj.Type == ObjectType.StateEndEffectorCommand)
-                    {
-                        var robot = GetById(Commands.GetSubProgram(parentId).ParentId);
-                        if (sceneObj.Type == ObjectType.LinearMoveCommand)
-                        {
-                            var jog = (robot.PropertyProvider as RobotPropertyProvider).JOGpoint;
-                            var prov = sceneObj.PropertyProvider as PointPropertyProvider;
+                        var jog = (robot.PropertyProvider as RobotPropertyProvider)?.JOGpoint;
+                        var prov = sceneObj.PropertyProvider as PointPropertyProvider;
+
+                        if (jog != null && prov != null)
                             prov.ConfigPoint = jog.ConfigPoint;
-                        }
-                        Commands.AddCommand(robot.Id, parentId, sceneObj as CommandObject);
                     }
-                    _eventBus.Invoke<AddSceneObjectSignal>(new AddSceneObjectSignal(sceneObj));
-                    _eventBus.Invoke(new UpdateLineDrawer());
+
+                    Commands.AddCommand(robotId, parentId, sceneObj as CommandObject);
                 }
             }
+
+            sceneObj.Reference.GetComponent<IPropertyProvider>().Id = id;
+
+            _eventBus.Invoke(new AddSceneObjectSignal(sceneObj));
+            _eventBus.Invoke(new UpdateLineDrawer());
+
             return sceneObj;
         }
 
@@ -332,7 +361,66 @@ namespace Assets.Scripts.Managers
             _eventBus.Invoke(new ClearSceneSignal());
             _eventBus.Invoke(new LoadObjectsSignal(Items.Values.Cast<SceneObject>().ToList()));
         }
+        private string MakeUniqueName(string baseName)
+        {
+            int counter = 1;
+            string newName = baseName;
 
+            while (Items.Values.Cast<SceneObject>()
+                    .Any(o => o.Reference != null && o.Reference.name == newName))
+            {
+                newName = $"{baseName} ({counter++})";
+            }
+
+            return newName;
+        }
+
+        private string GetUniqueProgramName(string robotId, string baseName)
+        {
+            var existingNames = Commands
+                .GetSubPrograms(robotId)
+                .Where(p => p.Reference != null)
+                .Select(p => p.Reference.name)
+                .ToHashSet();
+
+            if (!existingNames.Contains(baseName))
+                return baseName;
+
+            int i = 1;
+            string name;
+
+            do
+            {
+                name = $"{baseName} ({i++})";
+            }
+            while (existingNames.Contains(name));
+
+            return name;
+        }
+        private string GetUniqueCommandName(string robotId, string programId, string baseName)
+        {
+            var program = Commands.GetSubProgram(robotId, programId);
+            if (program == null) return baseName;
+
+            var existingNames = program.Items
+                .Where(c => c.Reference != null)
+                .Select(c => c.Reference.name)
+                .ToHashSet();
+
+            if (!existingNames.Contains(baseName))
+                return baseName;
+
+            int i = 1;
+            string name;
+
+            do
+            {
+                name = $"{baseName} ({i++})";
+            }
+            while (existingNames.Contains(name));
+
+            return name;
+        }
         /// <summary>
         /// Восстанавливает сохраненные объекты на сцене.
         /// Выполняется в 3 прохода для корректного восстановления иерархии.
