@@ -53,11 +53,11 @@ public class RobotPropertyProvider : BasePropertyProvider
     /// Параметры звеньев робота
     /// </summary>
     public RP RP = new(450, -350, 0, 447, 1150, 1350, 715);
-    public float[] AnglesLimit = new[] {-175f,175f,-140f,-20f, -60f, 170f, -360f, 360f, -105f, 105f, -360f, 360f }; 
+    public float[] AnglesLimit = new[] {-175f,175f,-140f,-20f, -60f, 170f, -180f, 180f, -105f, 105f, -180f, 180f }; 
     public float[] thetha = { 0, 0, 0, 0, 0, 0 };
     public float[] old_thetha = { 0, 90, 90, 0, -90, 0 };
     public float[] step_thetha = { 0, 0, 0, 0, 0, 0 };
-    public float[] AnglesLimitUI = new[] { -175f, 175f, -50f, 60f, -150f, 80f, -360f, 360f, -105f, 105f, -360f, 360f };
+    public float[] AnglesLimitUI = new[] { -175f, 175f, -50f, 60f, -150f, 80f, -180, 180, -105f, 105f, -180, 180 };
 
     //JOG
     public JOGPropertyProvider JOGpoint;

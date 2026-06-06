@@ -162,18 +162,14 @@ public class InverseK_new : MonoBehaviour
         for (int i = 0; i < 8; i++)
         {
             for (int j = 0;j < 6; j++)
-            {
-                if (j == 0)
-                {
-                    Angles[i].SetThetha(j, Angles[i].GetThetha(j) * 180 / Mathf.PI);
-                    Angles[i].SetThetha(j, NormalizeTo180(Angles[i].GetThetha(j)));
-                }
-                else if(j == 1)
+            {               
+                if(j == 1)
                 {
                     Angles[i].SetThetha(j, Angles[i].GetThetha(j) * 180 / Mathf.PI - 90);
                 }
                 else
                     Angles[i].SetThetha(j, Angles[i].GetThetha(j) * 180 / Mathf.PI);
+                Angles[i].SetThetha(j, NormalizeTo180(Angles[i].GetThetha(j)));
             }
         }
         return Angles;

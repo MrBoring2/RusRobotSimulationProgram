@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ChildTrigger : MonoBehaviour
 {
-    public TrigFingerParent parentManager; // —сылка на родительский менеджер
+    public TrigChildDetectColl parentManager; // —сылка на родительский менеджер
 
     private void OnTriggerEnter(Collider other)
     {

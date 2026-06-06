@@ -74,7 +74,7 @@ public class RobotCollisionController : MonoBehaviour
                     IsCollisionBetween(s, A4, A5) || IsCollisionBetween(s, A5, A6) ||
                     IsCollisionBetween(s, A6, EndEffector) || IsCollisionBetween(s, EndEffector, RightFingerTrig) ||
                     IsCollisionBetween(s, EndEffector, LeftFingerTrig) || IsCollisionBetween(s, LeftFingerTrig, RightFingerTrig)) return;
-        GameObject obj1 = s.Object; //для которго отселживается коллизия
+        GameObject obj1 = s.Object; //для которго отеcлживается коллизия
         GameObject obj2 =  s.CollidedObject; // в коллизии
         if (obj1 == A1 || obj1 == A2 || obj1 == A3 || obj1 == A3_4 || obj1 == A4 || obj1 == A5 || obj1 == A6 || obj1 == EndEffector || obj1 == RightFingerTrig || obj1 == LeftFingerTrig)
         {

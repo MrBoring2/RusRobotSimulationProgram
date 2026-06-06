@@ -76,7 +76,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e271aab136f8bc44898a51cc08ffe617, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrigFinger
-  RealFinger: {fileID: 2820178748140534165}
+  RealBase: {fileID: 2820178748140534165}
 --- !u!1 &126077270418143292
 GameObject:
   m_ObjectHideFlags: 0
@@ -518,7 +518,7 @@ MonoBehaviour:
   closePosition: 0.1
   stiffness: 50
   damping: 200
-  maxForce: 3000
+  maxForce: 30000
 --- !u!1 &769721443125370325
 GameObject:
   m_ObjectHideFlags: 0
@@ -2175,7 +2175,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e271aab136f8bc44898a51cc08ffe617, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrigFinger
-  RealFinger: {fileID: 2044475163655838492}
+  RealBase: {fileID: 2044475163655838492}
 --- !u!54 &4755326137106622681
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2327,6 +2327,7 @@ GameObject:
   - component: {fileID: 7414136802823444754}
   - component: {fileID: 1748920713147913972}
   - component: {fileID: 1391857963086507392}
+  - component: {fileID: 8151624535497098929}
   m_Layer: 11
   m_Name: "\u0417\u0430\u0445\u0432\u0430\u0442"
   m_TagString: endEffecor
@@ -2421,7 +2422,7 @@ CapsuleCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -2429,6 +2430,19 @@ CapsuleCollider:
   m_Height: 2.2377303
   m_Direction: 1
   m_Center: {x: 0.00000004967057, y: -0.099023655, z: -0.00000006029069}
+--- !u!114 &8151624535497098929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2629808362086658229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eb88f2959508a34ebeb2fc47955a0ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChildTrigger
+  parentManager: {fileID: 7229286467275730458}
 --- !u!1 &2656674772117515126
 GameObject:
   m_ObjectHideFlags: 0
@@ -2930,6 +2944,7 @@ GameObject:
   - component: {fileID: 788610327519745446}
   - component: {fileID: 4447371018508180251}
   - component: {fileID: 5286575894703699372}
+  - component: {fileID: 3830560714081863400}
   m_Layer: 11
   m_Name: Cube (2)
   m_TagString: endEffecor
@@ -3030,6 +3045,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3830560714081863400
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2927507976825921963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eb88f2959508a34ebeb2fc47955a0ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChildTrigger
+  parentManager: {fileID: 7229286467275730458}
 --- !u!1 &3126245551890948002
 GameObject:
   m_ObjectHideFlags: 0
@@ -3142,12 +3170,12 @@ MonoBehaviour:
   - -20
   - -60
   - 170
-  - -360
-  - 360
+  - -180
+  - 180
   - -150
   - 105
-  - -360
-  - 360
+  - -180
+  - 180
   thetha:
   - 0
   - 0
@@ -3176,12 +3204,12 @@ MonoBehaviour:
   - 70
   - -150
   - 80
-  - -360
-  - 360
+  - -180
+  - 180
   - -105
   - 105
-  - -360
-  - 360
+  - -180
+  - 180
   JOGpoint: {fileID: 2824626051575175961}
   RCC: {fileID: 4376382298179574141}
   _forwarKinObj: {fileID: 1422309896803570807}
@@ -3300,6 +3328,7 @@ GameObject:
   - component: {fileID: 6972872410200059188}
   - component: {fileID: 7733887828493430146}
   - component: {fileID: 5360930925330018096}
+  - component: {fileID: 3223575369310832743}
   m_Layer: 11
   m_Name: Cube (5)
   m_TagString: endEffecor
@@ -3400,6 +3429,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3223575369310832743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3225177184005296462}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eb88f2959508a34ebeb2fc47955a0ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChildTrigger
+  parentManager: {fileID: 7229286467275730458}
 --- !u!1 &3377128220560539574
 GameObject:
   m_ObjectHideFlags: 0
@@ -4000,6 +4042,7 @@ GameObject:
   - component: {fileID: 8666444485165218969}
   - component: {fileID: 2784651478031390640}
   - component: {fileID: 2913681969300231536}
+  - component: {fileID: 1277125744309631741}
   m_Layer: 11
   m_Name: Cube (3)
   m_TagString: endEffecor
@@ -4100,6 +4143,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1277125744309631741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3878615015764855468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eb88f2959508a34ebeb2fc47955a0ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChildTrigger
+  parentManager: {fileID: 7229286467275730458}
 --- !u!1 &4168513469291338634
 GameObject:
   m_ObjectHideFlags: 0
@@ -4767,6 +4823,7 @@ GameObject:
   - component: {fileID: 8250281839476325212}
   - component: {fileID: 3048809525781785466}
   - component: {fileID: 4750060104363660357}
+  - component: {fileID: 4427854271912101542}
   m_Layer: 11
   m_Name: Cube
   m_TagString: endEffecor
@@ -4867,6 +4924,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4427854271912101542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5163712824129722115}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eb88f2959508a34ebeb2fc47955a0ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChildTrigger
+  parentManager: {fileID: 7229286467275730458}
 --- !u!1 &5454164292136530033
 GameObject:
   m_ObjectHideFlags: 0
@@ -4911,9 +4981,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8383295941327436486}
-  - component: {fileID: 2316022260769882204}
   - component: {fileID: 9085805371836259158}
   - component: {fileID: 6325388805043758559}
+  - component: {fileID: 7229286467275730458}
   m_Layer: 11
   m_Name: "\u041A\u043E\u0440\u043F\u0443\u0441 \u0437\u0430\u0445\u0432\u0430\u0442\u0430"
   m_TagString: "\u0421\u043E\u0441\u0442\u0430\u0432\u043D\u044B\u0435 \u0447\u0430\u0441\u0442\u0438
@@ -4943,18 +5013,6 @@ Transform:
   - {fileID: 4996076600810232967}
   m_Father: {fileID: 8910595605946806970}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2316022260769882204
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5531334247128954415}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b318b4099ea79a84584313b1d3363279, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CollisionJ0_J5
 --- !u!23 &9085805371836259158
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5031,6 +5089,19 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 3
+--- !u!114 &7229286467275730458
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5531334247128954415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e271aab136f8bc44898a51cc08ffe617, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrigChildDetectColl
+  RealBase: {fileID: 0}
 --- !u!1 &5645071553321762835
 GameObject:
   m_ObjectHideFlags: 0
@@ -5832,6 +5903,7 @@ GameObject:
   - component: {fileID: 5700888321561414212}
   - component: {fileID: 7986227308913965408}
   - component: {fileID: 1194747907872744920}
+  - component: {fileID: 11674414569113411}
   m_Layer: 11
   m_Name: Cube (4)
   m_TagString: endEffecor
@@ -5932,6 +6004,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &11674414569113411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6826610038471610265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eb88f2959508a34ebeb2fc47955a0ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChildTrigger
+  parentManager: {fileID: 7229286467275730458}
 --- !u!1 &6842460685100209636
 GameObject:
   m_ObjectHideFlags: 0

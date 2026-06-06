@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class OvenLogic : CellDeviceBase
+public class HeaterLogic : CellDeviceBase
 {
     public TrigOven Trig1;
     public TrigOven Trig2;
@@ -10,12 +10,11 @@ public class OvenLogic : CellDeviceBase
     private float t2;
     private float t3;
     private float t4;
-    OvenPropertyProvider _propertyProvider;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    HeaterPropertyProvider _propertyProvider;
     private void Start()
     {
         base.Start();
-        _propertyProvider = gameObject.GetComponent<OvenPropertyProvider>();
+        _propertyProvider = gameObject.GetComponent<HeaterPropertyProvider>();
     }
 
 

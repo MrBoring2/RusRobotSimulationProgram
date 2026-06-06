@@ -12,7 +12,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using UnityEngine;
 
-public class OvenPropertyProvider : BasePropertyProvider
+public class HeaterPropertyProvider : BasePropertyProvider
 {
     public bool G1 { get; set; } = false;
     public bool G2 { get; set; } = false;

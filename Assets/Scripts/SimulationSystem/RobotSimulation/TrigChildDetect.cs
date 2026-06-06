@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Assets.Scripts.CustomEventBus;
 
-public class TrigFingerParent : MonoBehaviour
+public class TrigChildDetectColl : MonoBehaviour
 {
     private EventBus _eventBus;
-    public Rigidbody RealFinger;
+    public Rigidbody RealBase;
 
     // Общий список всех объектов внутри ЛЮБОГО дочернего триггера
     private List<GameObject> collisionObjects = new List<GameObject>();
@@ -38,7 +38,8 @@ public class TrigFingerParent : MonoBehaviour
 
             // Объект действительно вошёл в зону (первый триггер)
             _eventBus.Invoke(new RobotCollisionEvent(gameObject, other.gameObject));
-            RealFinger.isKinematic = true;
+            if(RealBase != null) RealBase.isKinematic = true;
+
         }
 
         Debug.Log($"Объект {other.gameObject.name} вошёл. Счётчик: {objectTriggerCount[other.gameObject]}");
@@ -65,9 +66,9 @@ public class TrigFingerParent : MonoBehaviour
                 // Объект действительно покинул зону полностью
                 _eventBus.Invoke(new RobotCollisionExitEvent(gameObject, other.gameObject));
 
-                if (collisionObjects.Count == 0)
+                if (collisionObjects.Count == 0 && RealBase != null)
                 {
-                    RealFinger.isKinematic = false;
+                    RealBase.isKinematic = false;
                 }
             }
         }
@@ -104,7 +105,7 @@ public class TrigFingerParent : MonoBehaviour
 
         if (collisionObjects.Count == 0)
         {
-            RealFinger.isKinematic = false;
+            RealBase.isKinematic = false;
         }
     }
 }

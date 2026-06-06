@@ -573,7 +573,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
 
                 _propertyProvider.ChangeAngles.CopyTo(oldAngles, 0);
                 endAnglesMove = true;
-                _eventBus.Invoke(new ChangeAnglesJOGSignal(_propertyProvider));
+                _eventBus.Invoke(new ChangeConfigJOGSignal(_propertyProvider));
             }
         }
         //--Выполнить подпрограмму (задачу)--
@@ -658,6 +658,7 @@ namespace Assets.Scripts.SimulationSystem.RobotSimulation
         {
             RunTask = false;
             Programm = null;
+            OldPoint = null;
             Programm = BuildProgramm(ID);    
         }
         //--Мгновенное перемещение к переданной точке
