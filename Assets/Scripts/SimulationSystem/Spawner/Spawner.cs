@@ -12,6 +12,7 @@ using Assets.Scripts.Providers;
 using System.Linq;
 using Assets.Scripts.Managers;
 using Assets.Scripts.CustomServiceManager;
+using Assets.Scripts.Providers.PropertyProviders;
 public class Spawner : CellDeviceBase
 {
     public SpawnPropertyProvider spawnPointPropertyProvider;
@@ -49,8 +50,8 @@ public class Spawner : CellDeviceBase
         if (!string.IsNullOrEmpty(spawnPointPropertyProvider.DetailName))
         {
             GameObject spawnedObject = spawnPointPropertyProvider.detailsList.FirstOrDefault(x => x.Name == spawnPointPropertyProvider.DetailName).itemPrefab;
-            spawnedObject.GetComponent<Rigidbody>().isKinematic = false;
-            _sceneObjectsManager.Create(spawnedObject, transform.position, Quaternion.Euler(spawnPointPropertyProvider.RotateSpawnDetail), ObjectType.Workpiece); 
+            WorkpiecePropertyProvider WPP = (WorkpiecePropertyProvider)_sceneObjectsManager.Create(spawnedObject, transform.position, transform.rotation, ObjectType.Workpiece).PropertyProvider;
+            WPP.IsKinematic = false;
         }
     }
     private void UpdatePreviewMesh()

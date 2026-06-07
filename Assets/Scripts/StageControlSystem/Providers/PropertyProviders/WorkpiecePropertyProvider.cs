@@ -16,10 +16,14 @@ namespace Assets.Scripts.Providers.PropertyProviders
             set => gameObject.GetComponent<Rigidbody>().isKinematic = value;
         }
 
-        private void Awake()
+        //private void Awake()
+        //{
+        //    displayScale = false;
+        //    IsKinematic = true;
+        //}
+        void Start()
         {
             displayScale = false;
-            IsKinematic = true;
         }
         public override ProviderSaveData CaptureCustomState()
         {
