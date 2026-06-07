@@ -37,7 +37,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
         private void Start()
         {
             _eventBus = ServiceManager.Current.Get<EventBus>();
-            
+            _eventBus.Subscribe<SetGyzmoManipulatorModeSignal>(OnSetManipulatorMode);
             //_eventBus.Subscribe<PickObjectSignal>(OnPickObject);
             //_eventBus.Subscribe<UnpickObjectSignal>(OnUnpickObject);
             _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
@@ -59,7 +59,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
         private void OnSetManipulatorMode(SetGyzmoManipulatorModeSignal signal)
         {
-            _currentActiveManipulator.gameObject.SetActive(false);
+            _currentActiveManipulator?.gameObject.SetActive(false);
         }
 
         private void Manipulator_OnDragStart(Transform obj)
@@ -102,6 +102,8 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
                 // Деактивируем старый манипулятор
                 _currentActiveManipulator.gameObject.SetActive(false);
+                _currentActiveManipulator.gizmoRoot.gameObject.SetActive(false);
+
             }
 
             // Устанавливаем новый манипулятор
@@ -116,6 +118,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
 
                 // Активируем новый манипулятор
                 _currentActiveManipulator.gameObject.SetActive(true);
+                _currentActiveManipulator.gizmoRoot.gameObject.SetActive(true);
             }
 
         }

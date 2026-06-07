@@ -747,7 +747,7 @@ namespace Assets.Scripts.UI
                 {
                     element.AddToClassList("selected");
                 }
-                selectedElementId = (element.userData as SceneObject).Id;
+                selectedElementId = (element.userData as SceneObject)?.Id;
                 lastSelectedElement = element;
                 _eventBus.Invoke(new SelectObjectInHierarchyCommands(true));
             }
