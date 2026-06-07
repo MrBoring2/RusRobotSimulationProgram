@@ -30,9 +30,6 @@ public class RobotCollisionController : MonoBehaviour
     private List<GameObject> JointGroup = new();
     private List<GameObject> EndEffectorGroup = new();
     private Dictionary<GameObject, (MeshRenderer MeshRenderer, Color Color)> DictionaryMeshRenderers = new();
-    Color defaultColorA;
-    Color defultColorEndEff;
-    Color defaultColorFinger;
     public List<string> TestList = new();
 
     private Dictionary<GameObject, List<GameObject>> collisionObjects = new();
@@ -44,9 +41,6 @@ public class RobotCollisionController : MonoBehaviour
     void Start()
     {
         _SimManager = ServiceManager.Current.Get<SimulationManager>();
-        defaultColorA = A1MeshRenderer.material.color;
-        defultColorEndEff = EndEffectorRenderer.material.color;
-        defaultColorFinger = RightFingerRenderer.material.color;
         _eventBus = ServiceManager.Current.Get<EventBus>();
         _eventBus.Subscribe<RobotCollisionEvent>(OnRobotCollision);
         _eventBus.Subscribe<RobotCollisionExitEvent>(OnRobotCollisionExit);

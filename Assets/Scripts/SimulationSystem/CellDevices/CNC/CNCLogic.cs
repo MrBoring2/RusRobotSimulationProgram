@@ -7,6 +7,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 public class CNCLogic : CellDeviceBase
 {
+    public Move Door;
     public List<GameObject> Fingers;
     public Dictionary<GameObject, Move> FingerMoves = new();
     private Dictionary<GameObject, List<GameObject>> collisionObjects = new();
@@ -149,11 +150,13 @@ public class CNCLogic : CellDeviceBase
 
     async Awaitable OpenDoor()
     {
+        Door.Open();
         await Awaitable.WaitForSecondsAsync(3f);
         _PP.CNCEndWork = true;
     }
     async Awaitable CloseDoor()
     {
+        Door.Close();
         await Awaitable.WaitForSecondsAsync(3f);
     }
     protected override void StartSim(StartProgramm s)
