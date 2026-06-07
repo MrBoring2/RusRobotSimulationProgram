@@ -218,6 +218,7 @@ public class GizmoManupulator : MonoBehaviour
         CurrentManipulatorMode?.OnObjectSelected(Target, this);
     }
 
+
     /// <summary>
     /// Вычисляет геометрический центр объекта на основе всех его Renderer'ов.
     /// </summary>

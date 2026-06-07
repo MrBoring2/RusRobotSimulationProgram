@@ -765,6 +765,7 @@ GameObject:
   - component: {fileID: 6305511655423444731}
   - component: {fileID: 2601434998405190090}
   - component: {fileID: 8494370561695288141}
+  - component: {fileID: 8423692266215926550}
   m_Layer: 0
   m_Name: "\u0421\u0442\u0430\u043D\u043E\u043A"
   m_TagString: SceneObject
@@ -833,6 +834,20 @@ MonoBehaviour:
   WorkTime: 10
   NameWorkTime: WorkTime
   chuckOnContr: 0
+--- !u!114 &8423692266215926550
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7259884464785313557}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6128efd719aa587459e64f4f9b065df7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Models.SceneObjectMarker
+  type: 15
+  sourcePath: "Prefabs/Work/\u0421\u0442\u0430\u043D\u043E\u043A"
 --- !u!1 &9095630477498888924
 GameObject:
   m_ObjectHideFlags: 0

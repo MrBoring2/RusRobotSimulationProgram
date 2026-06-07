@@ -10,15 +10,19 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Assets.Scripts.Providers;
 using System.Linq;
+using Assets.Scripts.Managers;
+using Assets.Scripts.CustomServiceManager;
 public class Spawner : CellDeviceBase
 {
     public SpawnPropertyProvider spawnPointPropertyProvider;
     public GameObject detailView;
+    private SceneObjectsManager _sceneObjectsManager;
     private float timeOldSpawn = 0f;
     string oldDetailName = "";
     private void Start()
     {
         base.Start();
+        _sceneObjectsManager = ServiceManager.Current.Get<SceneObjectsManager>();
         spawnPointPropertyProvider = gameObject.GetComponent<SpawnPropertyProvider>();
     }
     private void FixedUpdate()
@@ -29,12 +33,12 @@ public class Spawner : CellDeviceBase
             oldDetailName = spawnPointPropertyProvider.DetailName;
         }
         if (SIM_STATUS != SIM_STAT.PLAY) return;
-        if (spawnPointPropertyProvider.spawnClick)
+        if (spawnPointPropertyProvider.SpawnClick)
         {
             SpawnItem();
-            spawnPointPropertyProvider.spawnClick = false;
+            spawnPointPropertyProvider.SpawnClick = false;
         }
-        if(_SimManager.GetTimeSimulationFloat() - timeOldSpawn >= spawnPointPropertyProvider.spawnInterval && spawnPointPropertyProvider.spawnInterval != 0 && spawnPointPropertyProvider.spawnOn)
+        if(_SimManager.GetTimeSimulationFloat() - timeOldSpawn >= spawnPointPropertyProvider.SpawnInterval && spawnPointPropertyProvider.SpawnInterval != 0 && spawnPointPropertyProvider.SpawnOn)
         {
             SpawnItem();
             timeOldSpawn = _SimManager.GetTimeSimulationFloat();
@@ -44,9 +48,7 @@ public class Spawner : CellDeviceBase
     {
         if (!string.IsNullOrEmpty(spawnPointPropertyProvider.DetailName))
         {
-            GameObject newItem = Instantiate(spawnPointPropertyProvider.detailsList.Where(x=>x.Name == spawnPointPropertyProvider.DetailName).FirstOrDefault().itemPrefab, transform.position, Quaternion.Euler(spawnPointPropertyProvider.RotateSpawnDetail));
-            Rigidbody rb = newItem.GetComponent<Rigidbody>();
-            rb.isKinematic = false;
+            _sceneObjectsManager.Create(spawnPointPropertyProvider.detailsList.FirstOrDefault(x => x.Name == spawnPointPropertyProvider.DetailName).itemPrefab, transform.position, Quaternion.Euler(spawnPointPropertyProvider.RotateSpawnDetail), ObjectType.Workpiece); 
         }
     }
     private void UpdatePreviewMesh()

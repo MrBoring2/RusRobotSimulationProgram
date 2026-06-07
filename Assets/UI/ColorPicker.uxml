@@ -1,5 +1,5 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <ui:VisualElement name="modal-window-container" style="flex-direction: column; padding: 16px; background-color: rgb(40,40,40); border-radius: 10px; width: 300px;">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="modal-window-container" style="flex-direction: column; padding: 16px; position: absolute; top: 0; left: 0;  background-color: rgb(40,40,40); border-radius: 10px; width: 300px;">
 
         <ui:Label text="Выбор цвета" style="color: white; font-size: 15px; unity-font-style: bold; margin-bottom: 10px;" />
 
