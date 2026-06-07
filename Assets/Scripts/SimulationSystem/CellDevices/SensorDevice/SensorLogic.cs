@@ -1,7 +1,7 @@
 ﻿using Assets.Scripts.CustomEventBus.Signals.Robot;
 using UnityEngine;
 
-public class SensorDevice : CellDeviceBase
+public class SensorLogic : CellDeviceBase
 {
     SensorPropertyProvider _propertyProvider;
 

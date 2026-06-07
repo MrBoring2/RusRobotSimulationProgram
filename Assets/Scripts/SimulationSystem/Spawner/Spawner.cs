@@ -48,7 +48,9 @@ public class Spawner : CellDeviceBase
     {
         if (!string.IsNullOrEmpty(spawnPointPropertyProvider.DetailName))
         {
-            _sceneObjectsManager.Create(spawnPointPropertyProvider.detailsList.FirstOrDefault(x => x.Name == spawnPointPropertyProvider.DetailName).itemPrefab, transform.position, Quaternion.Euler(spawnPointPropertyProvider.RotateSpawnDetail), ObjectType.Workpiece); 
+            GameObject spawnedObject = spawnPointPropertyProvider.detailsList.FirstOrDefault(x => x.Name == spawnPointPropertyProvider.DetailName).itemPrefab;
+            spawnedObject.GetComponent<Rigidbody>().isKinematic = false;
+            _sceneObjectsManager.Create(spawnedObject, transform.position, Quaternion.Euler(spawnPointPropertyProvider.RotateSpawnDetail), ObjectType.Workpiece); 
         }
     }
     private void UpdatePreviewMesh()
