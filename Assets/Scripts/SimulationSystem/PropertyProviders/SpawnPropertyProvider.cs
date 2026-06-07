@@ -57,7 +57,7 @@ namespace Assets.Scripts.Providers
         public override List<CustomProperty> GetCustomProperties()
         {
             return new List<CustomProperty>() {
-                new CustomProperty("DetailName",
+                /*new CustomProperty("DetailName",
                        "Деталь",
                        typeof(string),
                        () => DetailName,
@@ -65,7 +65,12 @@ namespace Assets.Scripts.Providers
                        .WithAttribute(new DropdownOptionsAttribute(
                            detailsList.Select(d => d.Name).ToArray(),
                            detailsList.Select(d => d.Name).ToArray(),
-                           "Name")),
+                           "Name")),*/
+                new CustomProperty("DetailName",
+                    "Деталь",
+                    typeof(string),
+                    () => DetailName,
+                    val => DetailName = val.ToString()),
                 new CustomProperty("SpawnInterval",
                     "Интервал появления",
                     typeof(float),

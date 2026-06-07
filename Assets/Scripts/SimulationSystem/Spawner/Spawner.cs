@@ -115,5 +115,6 @@ public class Spawner : CellDeviceBase
     }
     protected override void StartSim(StartProgramm s)
     {
+        timeOldSpawn = 0;
     }
 }
