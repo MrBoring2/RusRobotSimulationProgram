@@ -516,9 +516,10 @@ MonoBehaviour:
   _rightFingerTrig: {fileID: 77197840644160739}
   openPosition: 0
   closePosition: 0.1
-  stiffness: 10
+  stiffness: 100
   damping: 200
-  maxForce: 30000
+  maxForce: 1000
+  releasePushForce: 300
 --- !u!1 &769721443125370325
 GameObject:
   m_ObjectHideFlags: 0

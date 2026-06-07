@@ -15,11 +15,14 @@ public class Gripper : MonoBehaviour
 
     [Header("Settings")]
     public float openPosition = 0f;
-    public float closePosition = 0.5f;
-    public float stiffness = 80f;        // УМЕНЬШИЛИ
-    public float damping = 15f;          // УМЕНЬШИЛИ
-    public float maxForce = 1500f;       // Сильно уменьшили
-    public float releasePushForce = 300f; // Сила, чтобы "оттолкнуть" пальцы при разжатии
+    public float closePosition = 0.45f;
+    public float stiffness = 120f;
+    public float damping = 20f;
+    public float maxForce = 2500f;
+
+    // Новые параметры для принудительного разжатия
+    public float releaseSpeed = 8f;           // Скорость принудительного открытия
+    public float releaseDuration = 0.35f;     // Сколько времени принудительно разжимать
 
     private Rigidbody leftRb;
     private Rigidbody rightRb;
@@ -71,10 +74,31 @@ public class Gripper : MonoBehaviour
     {
         bool gripCommand = _propertyProvider.EndEffectorOn;
 
-        float target = gripCommand ? closePosition : openPosition;
+        if (isReleasing)
+        {
+            UpdateReleasing();
+            HandleGripLogic(gripCommand);
+            return;
+        }
 
-        MoveFinger(leftRb, leftStartPos, target);
-        MoveFinger(rightRb, rightStartPos, target);
+        if (gripCommand)
+        {
+            // Закрываем
+            if (!detailInGrip)
+            {
+                MoveFinger(leftRb, leftStartPos, closePosition);
+                MoveFinger(rightRb, rightStartPos, closePosition);
+            }
+            // Если держим — ничего не делаем (не давим)
+        }
+        else
+        {
+            // Разжимаем — начинаем принудительное разжатие
+            if (!isReleasing)
+            {
+                StartRelease();
+            }
+        }
 
         HandleGripLogic(gripCommand);
     }
@@ -87,17 +111,58 @@ public class Gripper : MonoBehaviour
         Vector3 error = targetWorld - rb.worldCenterOfMass;
         Vector3 targetVel = error * stiffness;
         Vector3 velError = targetVel - rb.linearVelocity;
-
         Vector3 force = velError * damping;
 
         if (force.magnitude > maxForce)
             force = force.normalized * maxForce;
 
-        // При разжатии добавляем небольшую отталкивающую силу
-        if (!_propertyProvider.EndEffectorOn)
-            force += (rb.transform.position - transform.position).normalized * releasePushForce * 0.3f;
-
         rb.AddForce(force, ForceMode.Acceleration);
+    }
+
+    // === ПРИНУДИТЕЛЬНОЕ РАЗЖАТИЕ ===
+    private void StartRelease()
+    {
+        isReleasing = true;
+        releaseTimer = releaseDuration;
+
+        // Делаем кинематическими на время разжатия
+        leftRb.isKinematic = true;
+        rightRb.isKinematic = true;
+    }
+
+    private void UpdateReleasing()
+    {
+        releaseTimer -= Time.fixedDeltaTime;
+
+        // Плавно двигаем к открытой позиции
+        MoveFingerToPosition(leftRb, leftStartPos, openPosition, releaseSpeed);
+        MoveFingerToPosition(rightRb, rightStartPos, openPosition, releaseSpeed);
+
+        if (releaseTimer <= 0f)
+        {
+            EndRelease();
+        }
+    }
+
+    private void MoveFingerToPosition(Rigidbody rb, Vector3 startLocalPos, float targetX, float speed)
+    {
+        Vector3 targetLocal = startLocalPos + new Vector3(targetX, 0, 0);
+        Vector3 targetWorld = rb.transform.parent.TransformPoint(targetLocal);
+
+        rb.transform.position = Vector3.MoveTowards(rb.transform.position, targetWorld, speed * Time.fixedDeltaTime);
+    }
+
+    private void EndRelease()
+    {
+        isReleasing = false;
+
+        // Возвращаем в динамический режим
+        leftRb.isKinematic = false;
+        rightRb.isKinematic = false;
+
+        // Обнуляем скорость
+        leftRb.linearVelocity = Vector3.zero;
+        rightRb.linearVelocity = Vector3.zero;
     }
 
     private void HandleGripLogic(bool gripCommand)
@@ -149,8 +214,7 @@ public class Gripper : MonoBehaviour
             if (detailRb != null)
             {
                 detailRb.isKinematic = false;
-                // Небольшой импульс вниз, чтобы деталь "отлепилась"
-                detailRb.AddForce(Vector3.down * 0.5f, ForceMode.Impulse);
+                detailRb.AddForce(Vector3.down * 0.8f, ForceMode.Impulse);
             }
         }
 
