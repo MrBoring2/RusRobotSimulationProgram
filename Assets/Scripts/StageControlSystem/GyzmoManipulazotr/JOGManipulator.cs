@@ -144,6 +144,7 @@ namespace Assets.Scripts.GyzmoManipulazotr
         {
             if (signal.Mode != SceneManipulatorMode.JOG)
             {
+                gizmoRoot.gameObject.SetActive(false);
                 _eventBus.Invoke(new ChangePropertiesProviderSignal(null));
             }
         }
