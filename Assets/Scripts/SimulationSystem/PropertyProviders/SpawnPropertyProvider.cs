@@ -61,7 +61,7 @@ namespace Assets.Scripts.Providers
                        "Деталь",
                        typeof(string),
                        () => DetailName,
-                       val => val.ToString())
+                       val => DetailName = val.ToString())
                        .WithAttribute(new DropdownOptionsAttribute(
                            detailsList.Select(d => d.Name).ToArray(),
                            detailsList.Select(d => d.Name).ToArray(),
