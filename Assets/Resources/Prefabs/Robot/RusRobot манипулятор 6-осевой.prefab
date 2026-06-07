@@ -516,7 +516,7 @@ MonoBehaviour:
   _rightFingerTrig: {fileID: 77197840644160739}
   openPosition: 0
   closePosition: 0.1
-  stiffness: 50
+  stiffness: 10
   damping: 200
   maxForce: 30000
 --- !u!1 &769721443125370325
