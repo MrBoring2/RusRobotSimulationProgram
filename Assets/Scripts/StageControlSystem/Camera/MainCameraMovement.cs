@@ -89,6 +89,7 @@ public class MainCameraMovement : MonoBehaviour
             HandleOrbitRotation();
             HandleZoom();
             HandleSpeedChange();
+            HandleLMBSpeedChange();
         }
 
         if (!_uiStatusManager.isInputMode)
@@ -203,6 +204,8 @@ public class MainCameraMovement : MonoBehaviour
 
     private void HandleZoom()
     {
+        if (Input.GetMouseButton(0))
+            return;
         if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             return;
         float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -241,6 +244,31 @@ public class MainCameraMovement : MonoBehaviour
             currentMovementSpeed /= speedChangeMultiplier;
 
         currentMovementSpeed = Mathf.Clamp(currentMovementSpeed, minMovementSpeed, maxMovementSpeed);
+    }
+    private void HandleLMBSpeedChange()
+    {
+        // Проверяем, зажата ли левая кнопка мыши и нет модификаторов (Alt, Ctrl)
+        if (!Input.GetMouseButton(0))
+            return;
+
+        // Не реагируем, если зажат Alt (режим орбиты) или Ctrl (стандартное изменение скорости)
+        if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
+            return;
+        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+            return;
+
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (Mathf.Approximately(scroll, 0f))
+            return;
+
+        // Изменяем скорость движения камеры
+        if (scroll > 0)
+            currentMovementSpeed *= speedChangeMultiplier;
+        else
+            currentMovementSpeed /= speedChangeMultiplier;
+
+        currentMovementSpeed = Mathf.Clamp(currentMovementSpeed, minMovementSpeed, maxMovementSpeed);
+
     }
 
     private void HandleButtonRotation()

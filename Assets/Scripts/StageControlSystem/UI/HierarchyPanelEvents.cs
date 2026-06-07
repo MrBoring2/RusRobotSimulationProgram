@@ -206,8 +206,8 @@ public class HierarchyPanelEvents : MonoBehaviour
     {
         if (item == null) return;
 
-        if (item.Type == ObjectType.Program || item.Type != ObjectType.LinearMoveCommand ||
-            item.Type != ObjectType.StateEndEffectorCommand || item.Type != ObjectType.WaitCommand)
+        if (item.Type == ObjectType.Program || item.Type == ObjectType.LinearMoveCommand ||
+            item.Type == ObjectType.StateEndEffectorCommand || item.Type == ObjectType.WaitCommand)
             return;
 
         if (elementCache.ContainsKey(item.Id))

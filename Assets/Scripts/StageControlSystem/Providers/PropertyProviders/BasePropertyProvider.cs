@@ -52,7 +52,7 @@ namespace Assets.Scripts.Providers
         {
             rotationEuler = transform.eulerAngles;
         }
-        protected void Start()
+        protected virtual void Start()
         {
             Notification = ServiceManager.Current.Get<NotificationSystemManager>();
         }

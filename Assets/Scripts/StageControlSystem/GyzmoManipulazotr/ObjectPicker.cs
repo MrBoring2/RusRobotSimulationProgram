@@ -298,6 +298,10 @@ public class ObjectPicker : MonoBehaviour
         {
             manipulator.AttachNode(gameObject.transform);
         }
+        if(obj.Type == ObjectType.Work)
+        {
+            manipulator.AttachNode(gameObject.transform);
+        }
         else
         {
             manipulator.Attach(gameObject.transform);

@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 1694866448352520288}
   - component: {fileID: 8498447275908342982}
   m_Layer: 9
-  m_Name: "\u0414\u0435\u0442\u0430\u043B\u044C"
+  m_Name: "\u0414\u0435\u0442\u0430\u043B\u044C 1"
   m_TagString: SceneObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
