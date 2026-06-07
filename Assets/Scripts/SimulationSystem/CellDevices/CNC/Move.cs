@@ -1,15 +1,16 @@
 using Assets.Scripts.CustomEventBus;
 using Assets.Scripts.CustomServiceManager;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class Move : MonoBehaviour
 {
 
     private MoveState moveState = MoveState.Open;
-
+    private MoveState oldState = MoveState.Open;
     public float openPosition = 0f;      // открыто
     public float closePosition = 0.1f;   // закрыто (в метрах!)
-
+    private float neutralPos = 0;
     public float stiffness = 140f;       // Жёсткость
     public float damping = 22f;          // Демпфирование (против дрожи)
     public float maxForce = 3000f;       // Максимальная сила толчка
@@ -34,6 +35,15 @@ public class Move : MonoBehaviour
         {
             MoveFinger(rb, Vector3.zero, closePosition);
         }
+        else if (moveState == MoveState.Neutral && oldState != MoveState.Neutral)
+        {
+            oldState = MoveState.Neutral;
+            neutralPos = rb.transform.localPosition.x;
+        }
+        else if (moveState == MoveState.Neutral)
+        {
+            MoveFinger(rb, Vector3.zero, neutralPos);
+        }
     }
     private void MoveFinger(Rigidbody rb, Vector3 startLocalPos, float targetX)
     {
@@ -53,11 +63,18 @@ public class Move : MonoBehaviour
 
     public void Close()
     {
+        oldState = moveState;
         moveState = MoveState.Close;
     }
     public void Open()
     {
+        oldState = moveState;
         moveState = MoveState.Open;
+    }
+    public void Neutral()
+    {
+        oldState = moveState;
+        moveState = MoveState.Neutral;
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -81,4 +98,5 @@ enum MoveState
 {
     Open,
     Close,
+    Neutral
 }

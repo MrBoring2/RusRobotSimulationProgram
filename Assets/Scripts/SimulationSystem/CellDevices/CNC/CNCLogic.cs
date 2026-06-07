@@ -8,7 +8,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 public class CNCLogic : CellDeviceBase
 {
     public Move Door;
-    public List<GameObject> Fingers;
+    public List<GameObject> Finger;
     public Dictionary<GameObject, Move> FingerMoves = new();
     private Dictionary<GameObject, List<GameObject>> collisionObjects = new();
     private CNCPropertyProvider _PP;
@@ -19,7 +19,7 @@ public class CNCLogic : CellDeviceBase
     {
         base.Start();
         _PP = GetComponent<CNCPropertyProvider>();
-        foreach (var finger in Fingers)
+        foreach (var finger in Finger)
         {
             collisionObjects.Add(finger, new List<GameObject>());
             FingerMoves.Add(finger, finger.GetComponent<Move>());
@@ -52,7 +52,7 @@ public class CNCLogic : CellDeviceBase
 
     void EnterCollision(CNCCollisionOnEvent s)
     {
-        if (Fingers.Contains(s.Finger))
+        if (Finger.Contains(s.Finger))
         {
             if (!collisionObjects[s.Finger].Contains(s.CollidedObject))
             {
@@ -63,7 +63,7 @@ public class CNCLogic : CellDeviceBase
 
     void ExitCollision(CNCCollisionExitEvent s)
     {
-        if (Fingers.Contains(s.Finger))
+        if (Finger.Contains(s.Finger))
         {
             if (collisionObjects[s.Finger].Contains(s.CollidedObject))
             {
@@ -76,14 +76,21 @@ public class CNCLogic : CellDeviceBase
     {
         if(grip && !_PP.DetailInChuck)
         {
-            foreach (var finger in Fingers)
+            foreach (var finger in Finger)
             {
                 FingerMoves[finger].Close();
             }
         }
+        if(grip && _PP.DetailInChuck)
+        {
+            foreach (var finger in Finger)
+            {
+                FingerMoves[finger].Neutral();
+            }
+        }
         else if (!grip)
         {
-            foreach (var finger in Fingers)
+            foreach (var finger in Finger)
             {
                 FingerMoves[finger].Open();
             }
@@ -94,10 +101,10 @@ public class CNCLogic : CellDeviceBase
         if (grip && !_PP.DetailInChuck)
         {
             // ѕровер€ем, зажали ли деталь с двух сторон
-            foreach (var obj in collisionObjects[Fingers[0]])
+            foreach (var obj in collisionObjects[Finger[0]])
             {
                 if (obj.layer == LayerMask.NameToLayer("Detail") &&
-                    collisionObjects[Fingers[1]].Contains(obj) && collisionObjects[Fingers[2]].Contains(obj))
+                    collisionObjects[Finger[1]].Contains(obj) && collisionObjects[Finger[2]].Contains(obj))
                 {
                     _PP.DetailInChuck = true;
                     Detail = obj;
