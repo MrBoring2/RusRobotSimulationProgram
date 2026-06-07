@@ -204,7 +204,7 @@ public class MainCameraMovement : MonoBehaviour
 
     private void HandleZoom()
     {
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(1))
             return;
         if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             return;
@@ -248,7 +248,7 @@ public class MainCameraMovement : MonoBehaviour
     private void HandleLMBSpeedChange()
     {
         // Проверяем, зажата ли левая кнопка мыши и нет модификаторов (Alt, Ctrl)
-        if (!Input.GetMouseButton(0))
+        if (!Input.GetMouseButton(1))
             return;
 
         // Не реагируем, если зажат Alt (режим орбиты) или Ctrl (стандартное изменение скорости)

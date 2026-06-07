@@ -135,7 +135,7 @@ public class GizmoManupulator : MonoBehaviour
     {
         if (Target != null)
         {
-            if (IsNode(Target))
+            if (IsNodeOrWork(Target))
                 gizmoRoot.position = CalculateGeometricCenter(Target);
             else
                 gizmoRoot.position = Target.position;
@@ -179,7 +179,7 @@ public class GizmoManupulator : MonoBehaviour
     /// </summary>
     /// <param name="t">Transform проверяемого объекта</param>
     /// <returns>True, если объект является узлом</returns>
-    private bool IsNode(Transform t)
+    private bool IsNodeOrWork(Transform t)
     {
         if (t.TryGetComponent<IPropertyProvider>(out var provider))
         {
@@ -187,7 +187,7 @@ public class GizmoManupulator : MonoBehaviour
                 .Get<SceneObjectsManager>()
                 .GetById(provider.Id);
 
-            return obj != null && obj.Type == ObjectType.Node;
+            return obj != null && (obj.Type == ObjectType.Node || obj.Type == ObjectType.Work);
         }
         return false;
     }
@@ -208,7 +208,7 @@ public class GizmoManupulator : MonoBehaviour
     /// Прикрепляет манипулятор к узлу с центрированием по геометрическому центру.
     /// </summary>
     /// <param name="nodeRoot">Корневой Transform узла</param>
-    public void AttachNode(Transform nodeRoot)
+    public void AttachNodeOrWork(Transform nodeRoot)
     {
         Target = nodeRoot;
 
@@ -217,7 +217,6 @@ public class GizmoManupulator : MonoBehaviour
 
         CurrentManipulatorMode?.OnObjectSelected(Target, this);
     }
-
 
     /// <summary>
     /// Вычисляет геометрический центр объекта на основе всех его Renderer'ов.

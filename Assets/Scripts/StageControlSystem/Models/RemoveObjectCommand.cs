@@ -3,229 +3,183 @@ using Assets.Scripts.CustomEventBus.Signals.Lines;
 using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomServiceManager;
 using Assets.Scripts.Managers;
+using Assets.Scripts.Models;
 using Assets.Scripts.Utils;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Assets.Scripts.Models
+public class RemoveObjectCommand : ICommand, IDestructiveCommand
 {
-    public class RemoveObjectCommand : ICommand, IDestructiveCommand
+    private SceneObjectsManager _sceneObjectManager;
+    private SceneObject instance;
+    private string _parentId;
+    private int _originalIndex;
+    private bool _wasRemoved;
+    private GameObject _originalParent;
+    private int _siblingIndex;
+
+    public SceneObject Instance => instance;
+
+    public RemoveObjectCommand(SceneObject instance)
     {
-        private SceneObjectsManager _sceneObjectManager;
-        private SceneObject instance;
-        private string _parentId;
-        private int _originalIndex;
-        private bool _wasRemoved;
+        _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
+        this.instance = instance;
+        _wasRemoved = false;
+    }
 
-        // Определяем тип списка для восстановления
-        private enum StorageType
+    public void Execute()
+    {
+        if (instance == null || instance.Reference == null)
+            throw new Exception("Объекта не существует");
+
+        _parentId = instance.ParentId;
+        _originalParent = instance.Reference.transform.parent?.gameObject;
+        _siblingIndex = instance.Reference.transform.GetSiblingIndex();
+
+        // Сохраняем индекс в OrderedDictionary
+        _originalIndex = OrderedDictionaryExtensions.IndexOf(_sceneObjectManager.Items, instance.Id);
+
+        // НЕ УДАЛЯЕМ из коллекций, только деактивируем и скрываем
+        instance.Reference.SetActive(false);
+
+        // Опционально: перемещаем в специальный контейнер "Deleted"
+        var deletedContainer = GameObject.Find("DeletedObjects");
+        if (deletedContainer != null)
         {
-            Items,           // Основной список объектов
-            Commands,        // Список команд роботов
-            PLC              // Список PLC команд
-        }
-        private StorageType _storageType;
-
-        // Дополнительные данные для восстановления в зависимости от типа
-        private string _robotId;           // Для команд - ID робота
-        private string _programId;         // Для команд - ID программы
-        private PLCBase _plcItem;          // Для PLC - сам элемент
-        private IList<PLCBase> _plcList;   // Для PLC - список, в котором был элемент
-        private int _plcIndex;             // Для PLC - индекс в списке
-
-        public SceneObject Instance => instance;
-
-        public RemoveObjectCommand(SceneObject instance)
-        {
-            _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
-            this.instance = instance;
-            _wasRemoved = false;
-
-            // Определяем тип хранилища
-            DetermineStorageType();
+            instance.Reference.transform.SetParent(deletedContainer.transform, false);
         }
 
-        private void DetermineStorageType()
-        {
-            if (instance == null) return;
+        // Убираем из активных списков (но не удаляем полностью)
+        _sceneObjectManager.Items.Remove(instance.Id);
 
-            // Проверяем, является ли объект командой робота
-            if (instance is CommandObject || instance is RobotProgramObject)
+        // Для команд - тоже удаляем из активных списков
+        if (instance is CommandObject command)
+        {
+            var program = GetProgramContainingCommand(command);
+            if (program != null)
             {
-                _storageType = StorageType.Commands;
+                program.Items.Remove(command);
+            }
+        }
+        else if (instance is RobotProgramObject program)
+        {
+            // Удаляем программу из активных списков робота
+            foreach (var robot in _sceneObjectManager.GetGameObjectsList())
+            {
+                if (robot.Type != ObjectType.Robot) continue;
+                _sceneObjectManager.Commands.GetSubPrograms(robot.Id).Remove(program);
+                break;
+            }
+        }
 
-                // Находим робота и программу для команды
-                foreach (var robot in _sceneObjectManager.GetGameObjectsList())
+        _wasRemoved = true;
+
+        // Отправляем сигнал об удалении
+        var eventBus = ServiceManager.Current.Get<EventBus>();
+        eventBus.Invoke(new RemoveSceneObjectSignal(instance));
+        eventBus.Invoke(new UpdateLineDrawer());
+    }
+
+    public void Undo()
+    {
+        if (!_wasRemoved || instance == null || instance.Reference == null)
+            return;
+
+        // Восстанавливаем GameObject
+        instance.Reference.SetActive(true);
+
+        // Восстанавливаем родителя
+        if (_originalParent != null)
+        {
+            instance.Reference.transform.SetParent(_originalParent.transform, false);
+            instance.Reference.transform.SetSiblingIndex(_siblingIndex);
+        }
+
+        // Восстанавливаем в коллекции
+        if (_originalIndex >= 0 && _originalIndex <= _sceneObjectManager.Items.Count)
+        {
+            _sceneObjectManager.Items.Insert(_originalIndex, instance.Id, instance);
+        }
+        else
+        {
+            _sceneObjectManager.Items.Add(instance.Id, instance);
+        }
+
+        // Восстанавливаем команды
+        if (instance is CommandObject command)
+        {
+            var program = GetProgramById(command.ParentId);
+            if (program != null && !program.Items.Contains(command))
+            {
+                program.Items.Add(command);
+            }
+        }
+        else if (instance is RobotProgramObject program)
+        {
+            // Находим робота и восстанавливаем программу
+            foreach (var robot in _sceneObjectManager.GetGameObjectsList())
+            {
+                if (robot.Type != ObjectType.Robot) continue;
+                var programs = _sceneObjectManager.Commands.GetSubPrograms(robot.Id);
+                if (!programs.Contains(program))
                 {
-                    if (robot.Type != ObjectType.Robot) continue;
-
-                    var programs = _sceneObjectManager.Commands.GetSubPrograms(robot.Id);
-                    foreach (var program in programs)
-                    {
-                        if (program.Id == instance.Id)
-                        {
-                            _robotId = robot.Id;
-                            _programId = instance.ParentId;
-                            break;
-                        }
-
-                        if (program.Items.Contains(instance))
-                        {
-                            _robotId = robot.Id;
-                            _programId = program.Id;
-                            _originalIndex = program.Items.IndexOf((CommandObject)instance);
-                            break;
-                        }
-                    }
-                    if (_robotId != null) break;
+                    programs.Add(program);
                 }
-            }
-            else
-            {
-                _storageType = StorageType.Items;
+                break;
             }
         }
 
-        public void Execute()
+        // Восстанавливаем родительскую связь в модели
+        if (!string.IsNullOrEmpty(_parentId))
         {
-            if (instance == null || instance.Reference == null)
-                throw new Exception("Объекта не существует");
-
-            _parentId = instance.ParentId;
-
-            switch (_storageType)
-            {
-                case StorageType.Items:
-                    // Сохраняем индекс в OrderedDictionary
-                    _originalIndex = OrderedDictionaryExtensions.IndexOf(_sceneObjectManager.Items, instance.Id);
-                    _sceneObjectManager.Remove(instance.Id, false);
-                    break;
-
-                case StorageType.Commands:
-                    // Удаляем команду из программы
-                    _sceneObjectManager.Commands.RemoveById(instance.Id);
-                    break;
-            }
-
-            _wasRemoved = true;
+            instance.SetParent(_parentId);
         }
 
-        public void Undo()
+        _wasRemoved = false;
+
+        // Отправляем сигнал о восстановлении
+        var eventBus = ServiceManager.Current.Get<EventBus>();
+        eventBus.Invoke(new AddSceneObjectSignal(instance));
+        eventBus.Invoke(new UpdateLineDrawer());
+    }
+
+    public void FinalizeDestroy()
+    {
+        // ТОЛЬКО здесь реально уничтожаем объект (когда Undo уже невозможен)
+        if (instance != null && instance.Reference != null)
         {
-            if (!_wasRemoved || instance == null || instance.Reference == null)
-                return;
-
-            // Восстанавливаем GameObject
-            instance.Reference.SetActive(true);
-
-            switch (_storageType)
-            {
-                case StorageType.Items:
-                    // Восстанавливаем в основной список
-                    if (!_sceneObjectManager.Items.Contains(instance.Id))
-                    {
-                        if (_originalIndex >= 0 && _originalIndex <= _sceneObjectManager.Items.Count)
-                        {
-                            _sceneObjectManager.Items.Insert(_originalIndex, instance.Id, instance);
-                        }
-                        else
-                        {
-                            _sceneObjectManager.Items.Add(instance.Id, instance);
-                        }
-
-                        // Восстанавливаем родительскую связь
-                        RestoreParentRelationship();
-
-                        // Отправляем сигналы
-                        var eventBus = ServiceManager.Current.Get<EventBus>();
-                        eventBus.Invoke(new AddSceneObjectSignal(instance));
-                        eventBus.Invoke(new UpdateLineDrawer());
-                    }
-                    break;
-
-                case StorageType.Commands:
-                    // Восстанавливаем команду в программу
-                    if (!string.IsNullOrEmpty(_robotId) && !string.IsNullOrEmpty(_programId))
-                    {
-                        var program = _sceneObjectManager.Commands.GetSubProgram(_programId);
-                        if (program != null)
-                        {
-                            if (_originalIndex >= 0 && _originalIndex <= program.Items.Count)
-                            {
-                                program.Items.Insert(_originalIndex, (CommandObject)instance);
-                            }
-                            else
-                            {
-                                program.Items.Add((CommandObject)instance);
-                            }
-
-                            // Восстанавливаем родительскую связь в Transform
-                            if (program.Reference != null)
-                            {
-                                instance.Reference.transform.SetParent(program.Reference.transform, false);
-                            }
-
-                            // Отправляем сигналы
-                            var eventBus = ServiceManager.Current.Get<EventBus>();
-                            eventBus.Invoke(new AddSceneObjectSignal(instance));
-                            eventBus.Invoke(new UpdateLineDrawer());
-                        }
-                    }
-                    break;
-            }
-
-            _wasRemoved = false;
+            UnityEngine.Object.Destroy(instance.Reference);
         }
+    }
 
-        private void RestoreParentRelationship()
+    private RobotProgramObject GetProgramContainingCommand(CommandObject command)
+    {
+        foreach (var robot in _sceneObjectManager.GetGameObjectsList())
         {
-            if (!string.IsNullOrEmpty(_parentId) && _sceneObjectManager.Items.Contains(_parentId))
+            if (robot.Type != ObjectType.Robot) continue;
+
+            var programs = _sceneObjectManager.Commands.GetSubPrograms(robot.Id);
+            foreach (var program in programs)
             {
-                var parent = ((SceneObject)_sceneObjectManager.Items[_parentId])?.Reference;
-                if (parent != null)
-                {
-                    instance.Reference.transform.SetParent(parent.transform, false);
-                    instance.SetParent(_parentId);
-                }
+                if (program.Items.Contains(command))
+                    return program;
             }
         }
+        return null;
+    }
 
-        public void FinalizeDestroy()
+    private RobotProgramObject GetProgramById(string programId)
+    {
+        foreach (var robot in _sceneObjectManager.GetGameObjectsList())
         {
-            if (instance != null && _wasRemoved)
-            {
-                // Окончательное уничтожение GameObject
-                if (instance.Reference != null)
-                {
-                    UnityEngine.Object.Destroy(instance.Reference);
-                }
+            if (robot.Type != ObjectType.Robot) continue;
 
-                // Удаляем из соответствующего списка если еще не удален
-                switch (_storageType)
-                {
-                    case StorageType.Items:
-                        if (_sceneObjectManager.Items.Contains(instance.Id))
-                        {
-                            _sceneObjectManager.Items.Remove(instance.Id);
-                        }
-                        break;
-
-                    case StorageType.Commands:
-                        if (!string.IsNullOrEmpty(_robotId) && !string.IsNullOrEmpty(_programId))
-                        {
-                            var program = _sceneObjectManager.Commands.GetSubProgram(_programId);
-                            if (program != null && program.Items.Contains(instance))
-                            {
-                                program.Items.Remove((CommandObject)instance);
-                            }
-                        }
-                        break;
-                }
-            }
+            var programs = _sceneObjectManager.Commands.GetSubPrograms(robot.Id);
+            var program = programs.FirstOrDefault(p => p.Id == programId);
+            if (program != null)
+                return program;
         }
+        return null;
     }
 }

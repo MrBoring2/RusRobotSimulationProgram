@@ -64,7 +64,7 @@ namespace Assets.Scripts.UI
         private const string DROP_TARGET_INSIDE_CLASS = "drop-target-inside";
         private const string DRAGGING_CLASS = "dragging";
         private bool isDragging = false;
-
+        
 
         private void Start()
         {
@@ -84,6 +84,8 @@ namespace Assets.Scripts.UI
             _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
             _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
             _eventBus.Subscribe<ToggleCommandsListSignal>(OnToggleCommandsList);
+            _eventBus.Subscribe<SelectObjectInHierarchy>(S => { selectedElementId = null; UpdateHierarchy(); });
+
             //_eventBus.Subscribe<UpdateHierarchySignal>(OnUpdateHierarhy);
 
             _eventBus.Subscribe<UpdatePLCData>(OnUpdatePLCData);
@@ -123,7 +125,13 @@ namespace Assets.Scripts.UI
             AddExpression(signal.ParentId, signal.Expression);
         }
 
-
+        private void Update()
+        {
+            if (Input.GetKey(KeyCode.Delete) && selectedElementId != null)
+            {
+                DeleteObject(selectedElementId);
+            }
+        }
         private void OnChangePropertiesProvider(ChangePropertiesProviderSignal signal)
         {
             if (signal.PropertyProvider != null)
@@ -739,13 +747,15 @@ namespace Assets.Scripts.UI
                 {
                     element.AddToClassList("selected");
                 }
-                selectedElementId = element.userData?.ToString();
+                selectedElementId = (element.userData as SceneObject).Id;
                 lastSelectedElement = element;
+                _eventBus.Invoke(new SelectObjectInHierarchyCommands(true));
             }
             else
             {
                 selectedElementId = null;
                 lastSelectedElement = null;
+                _eventBus.Invoke(new SelectObjectInHierarchyCommands(false));
             }
         }
         /// <summary>
@@ -2031,6 +2041,20 @@ namespace Assets.Scripts.UI
 
             _eventBus.Invoke(new UnpickObjectSignal());
             _eventBus.Invoke(new ChangePropertiesProviderSignal(null));
+            var command = new RemoveObjectCommand(obj);
+            _undoRedoManager.Execute(command);
+        }
+        private void DeleteObject(string id)
+        {
+            var obj = _sceneObjectManager.Commands.FindElementById(id);
+
+            if (obj == null)
+                return;
+            //objectPicker.UnpickObject();
+            _eventBus.Invoke(new UnpickObjectSignal());
+            _eventBus.Invoke(new ChangePropertiesProviderSignal(null));
+            _eventBus.Invoke(new RemoveSceneObjectSignal(obj));
+            //propertiesPanelEvents.HidePanel();
             var command = new RemoveObjectCommand(obj);
             _undoRedoManager.Execute(command);
         }

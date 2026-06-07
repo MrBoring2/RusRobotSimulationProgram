@@ -294,13 +294,9 @@ public class ObjectPicker : MonoBehaviour
         }
         currentProvider = provider;
         // Прикрепляем манипулятор к объекту (с учетом типа объекта)
-        if (obj.Type == ObjectType.Node)
+        if (obj.Type == ObjectType.Node || obj.Type == ObjectType.Work)
         {
-            manipulator.AttachNode(gameObject.transform);
-        }
-        if(obj.Type == ObjectType.Work)
-        {
-            manipulator.AttachNode(gameObject.transform);
+            manipulator.AttachNodeOrWork(gameObject.transform);
         }
         else
         {

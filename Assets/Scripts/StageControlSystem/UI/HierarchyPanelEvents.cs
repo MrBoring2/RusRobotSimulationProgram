@@ -55,6 +55,7 @@ public class HierarchyPanelEvents : MonoBehaviour
     private const string DROP_TARGET_INSIDE_CLASS = "drop-target-inside";
     private const string DRAGGING_CLASS = "dragging";
     private bool isDragging = false;
+    private bool isSelectedObjectInHierarchy;
 
     private void Start()
     {
@@ -73,11 +74,13 @@ public class HierarchyPanelEvents : MonoBehaviour
         _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
         _eventBus.Subscribe<ToggleObjectsListSignal>(OnToggleObjectsList);
         _eventBus.Subscribe<UpdateHierarchySignal>(OnUpdateHierarhy);
+        _eventBus.Subscribe<SelectObjectInHierarchyCommands>(S => { selectedElementId = null; UpdateHierarchy(); });
         _sceneObjectManager = ServiceManager.Current.Get<SceneObjectsManager>();
         _lineManager = ServiceManager.Current.Get<LineManager>();
         _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
         _uIStatusManager = ServiceManager.Current.Get<UIStatusManager>();
         _simulationManager = ServiceManager.Current.Get<SimulationManager>();
+
         root = GetComponent<UIDocument>().rootVisualElement;
         hierarchyPanel = root.Q("hierarchy-container");
         //propertiesPanelEvents.OnTargetNameChanged += PropertiesPanelEvents_OnTargetNameChanged;
@@ -96,6 +99,13 @@ public class HierarchyPanelEvents : MonoBehaviour
     }
 
 
+    private void Update()
+    {
+        if (Input.GetKey(KeyCode.Delete) && selectedElementId != null && !isSelectedObjectInHierarchy)
+        {
+            DeleteObject(selectedElementId);
+        }
+    }
 
 
 
@@ -675,7 +685,7 @@ public class HierarchyPanelEvents : MonoBehaviour
         }
         return false;
     }
-    
+
     /// <summary>
     /// Выбрать элемент иерархии по ссылке на элемент
     /// </summary>
@@ -696,11 +706,13 @@ public class HierarchyPanelEvents : MonoBehaviour
             }
             selectedElementId = (element.userData as SceneObject).Id;
             lastSelectedElement = element;
+            _eventBus.Invoke(new SelectObjectInHierarchy(true));
         }
         else
         {
             selectedElementId = null;
             lastSelectedElement = null;
+            _eventBus.Invoke(new SelectObjectInHierarchy(false));
         }
     }
 
@@ -1067,6 +1079,20 @@ public class HierarchyPanelEvents : MonoBehaviour
             }
         }
         var obj = clickedElement.userData as SceneObject;
+
+        if (obj == null)
+            return;
+        //objectPicker.UnpickObject();
+        _eventBus.Invoke(new UnpickObjectSignal());
+        _eventBus.Invoke(new ChangePropertiesProviderSignal(null));
+        _eventBus.Invoke(new RemoveSceneObjectSignal(obj));
+        //propertiesPanelEvents.HidePanel();
+        var command = new RemoveObjectCommand(obj);
+        _undoRedoManager.Execute(command);
+    }
+    private void DeleteObject(string id)
+    {
+        var obj = _sceneObjectManager.GetById(id);
 
         if (obj == null)
             return;
@@ -1666,7 +1692,7 @@ public class HierarchyPanelEvents : MonoBehaviour
                 return element;
             }
 
-            else if (element.name == "hierarchy-item-command" || element.name == "hierarchy-item" || element.name == "hierarchy-item-robot" || element.name == "hierarchy-item-plc") 
+            else if (element.name == "hierarchy-item-command" || element.name == "hierarchy-item" || element.name == "hierarchy-item-robot" || element.name == "hierarchy-item-plc")
             {
                 return element;
             }
