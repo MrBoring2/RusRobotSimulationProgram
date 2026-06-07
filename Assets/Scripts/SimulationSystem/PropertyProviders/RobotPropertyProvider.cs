@@ -15,7 +15,7 @@ public class RobotPropertyProvider : BasePropertyProvider
 
     //=================== ПАРАМЕТРЫ ===================
     public bool EndEffectorOn { get; set; }
-    public bool VisibleZone { get; set; }
+    public bool VisibleZone { get; set; } = false;
     //Ограничение скорости осей
     public Angles AnglesSpeedLimit { get; set; } = new(90, 60, 60, 120, 96, 210);
     //Ограничение ускорения осей

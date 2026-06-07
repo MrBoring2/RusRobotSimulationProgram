@@ -7,7 +7,7 @@ public class VisibleZone : MonoBehaviour
 
     void Start()
     {
-       
+        gameObject.GetComponent<MeshRenderer>().enabled = false;
     }
 
 
