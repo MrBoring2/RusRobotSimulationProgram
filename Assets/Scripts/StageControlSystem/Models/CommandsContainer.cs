@@ -87,8 +87,8 @@ namespace Assets.Scripts.Models
             return null;
         }
 
-      
-        
+
+
         public void AddCommand(string sourceId, string subProgramId, CommandObject command)
         {
             var subProgram = GetSubProgram(sourceId, subProgramId);
@@ -156,18 +156,22 @@ namespace Assets.Scripts.Models
             var program = programs.FirstOrDefault(p => p.Id == programId);
             if (program == null)
                 return false;
-            _indexById.Remove(programId);
-            // Сначала удаляем все команды программы
+
+            // Удаляем все команды из индекса
             foreach (var command in program.Items.ToList())
             {
                 _indexById.Remove(command.Id);
-                RemoveCommand(robotId, programId, command.Id);
             }
+
+            // Очищаем список команд (без вызова RemoveCommand)
+            program.Items.Clear();
+
+            // Удаляем программу из индекса
+            _indexById.Remove(programId);
 
             // Удаляем саму программу
             programs.Remove(program);
 
-            // Если программ больше нет, удаляем ключ
             if (programs.Count == 0)
             {
                 _subProgramsBySource.Remove(robotId);
@@ -224,27 +228,29 @@ namespace Assets.Scripts.Models
         public bool RemoveById(string id)
         {
             SceneObject removedObject = null;
-
-            foreach (var kvp in _subProgramsBySource)
+            if (_indexById.Remove(id))
             {
-                var programs = kvp.Value;
-
-                for (int i = programs.Count - 1; i >= 0; i--)
+                foreach (var kvp in _subProgramsBySource)
                 {
-                    if (programs[i].Id == id)
-                    {
-                        removedObject = programs[i];
-                        programs.RemoveAt(i);
-                        return true;
-                    }
+                    var programs = kvp.Value;
 
-                    for (int j = programs[i].Items.Count - 1; j >= 0; j--)
+                    for (int i = programs.Count - 1; i >= 0; i--)
                     {
-                        if (programs[i].Items[j].Id == id)
+                        if (programs[i].Id == id)
                         {
-                            removedObject = programs[i].Items[j];
-                            programs[i].Items.RemoveAt(j);
+                            removedObject = programs[i];
+                            programs.RemoveAt(i);
                             return true;
+                        }
+
+                        for (int j = programs[i].Items.Count - 1; j >= 0; j--)
+                        {
+                            if (programs[i].Items[j].Id == id)
+                            {
+                                removedObject = programs[i].Items[j];
+                                programs[i].Items.RemoveAt(j);
+                                return true;
+                            }
                         }
                     }
                 }

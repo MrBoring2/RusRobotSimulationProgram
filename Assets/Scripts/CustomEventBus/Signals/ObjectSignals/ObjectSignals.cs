@@ -59,4 +59,20 @@ namespace Assets.Scripts.CustomEventBus.Signals.ObjectSignals
             SceneObjects = sceneObjects;
         }
     }
+    public class SelectObjectInHierarchy
+    {
+        public readonly bool IsSelected;
+        public SelectObjectInHierarchy(bool isSelected)
+        {
+            IsSelected = isSelected;
+        }
+    }
+    public class SelectObjectInHierarchyCommands
+    {
+        public readonly bool IsSelected;
+        public SelectObjectInHierarchyCommands(bool isSelected)
+        {
+            IsSelected = isSelected;
+        }
+    }
 }
