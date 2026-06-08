@@ -15,6 +15,7 @@ namespace Assets.UI.CodeEditor
         private Label lineNumbersLabel;
         private TextField codeInput;
         private TextElement codeHighlight;
+        private UIBlocker uIBlocker;
 
         private string currentText = "";
         private bool isUpdatingFromCode = false;
@@ -156,6 +157,13 @@ namespace Assets.UI.CodeEditor
             codeInput.RegisterCallback<FocusOutEvent>(e => UpdateHighlightingNow());
             codeInput.RegisterCallback<MouseDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
             codeInput.RegisterCallback<KeyDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
+            //codeInput.RegisterCallback<FocusInEvent>();
+            //codeInput.RegisterCallback<FocusOutEvent>();
+        }
+
+        private void OnFocusIn(FocusInEvent e)
+        {
+            
         }
 
         /// <summary>
