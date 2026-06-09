@@ -670,15 +670,14 @@ namespace Assets.UI.CodeEditor
             if (index < 0 || index >= codeFiles.Count) return;
 
             var file = codeFiles[index];
-            codeEditor.SetText(file.Content);
 
             if (file.Type == CodeFileType.PLC)
             {
-                codeEditor.SetHighlighter(plcHighlighter);
+                codeEditor.SetText(file.Content, plcHighlighter);
             }
             else
             {
-                codeEditor.SetHighlighter(robotHighlighter);
+                codeEditor.SetText(file.Content, robotHighlighter);
             }
 
             compilationStatus.text = $"Открыт: {file.DisplayName}";

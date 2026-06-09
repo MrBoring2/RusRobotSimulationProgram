@@ -15,7 +15,6 @@ namespace Assets.UI.CodeEditor
         private Label lineNumbersLabel;
         private TextField codeInput;
         private TextElement codeHighlight;
-        private UIBlocker uIBlocker;
 
         private string currentText = "";
         private bool isUpdatingFromCode = false;
@@ -37,17 +36,6 @@ namespace Assets.UI.CodeEditor
         {
             InitUI();
             RegisterCallbacks();
-            SetText("");
-        }
-
-        /// <summary>
-        /// Устанавливает подсветщик синтаксиса для текущего языка
-        /// </summary>
-        /// <param name="highlighter">Экземпляр подсветщика синтаксиса</param>
-        public void SetHighlighter(ISyntaxHighlighter highlighter)
-        {
-            currentHighlighter = highlighter;
-            UpdateHighlightingNow();
         }
 
         /// <summary>
@@ -154,16 +142,8 @@ namespace Assets.UI.CodeEditor
         private void RegisterCallbacks()
         {
             codeInput.RegisterCallback<ChangeEvent<string>>(OnCodeInputChanged, TrickleDown.TrickleDown);
-            codeInput.RegisterCallback<FocusOutEvent>(e => UpdateHighlightingNow());
             codeInput.RegisterCallback<MouseDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
             codeInput.RegisterCallback<KeyDownEvent>(e => ScheduleCursorUpdate(), TrickleDown.TrickleDown);
-            //codeInput.RegisterCallback<FocusInEvent>();
-            //codeInput.RegisterCallback<FocusOutEvent>();
-        }
-
-        private void OnFocusIn(FocusInEvent e)
-        {
-            
         }
 
         /// <summary>
@@ -171,8 +151,6 @@ namespace Assets.UI.CodeEditor
         /// </summary>
         private void OnCodeInputChanged(ChangeEvent<string> evt)
         {
-            if (isUpdatingFromCode) return;
-
             string Text = evt.newValue;
             int lines = Text.Split('\n').Length;
             if (lines > MAX_LINES)
@@ -242,14 +220,18 @@ namespace Assets.UI.CodeEditor
                 cursorPos = codeInput.cursorIndex += cursorCorrection;
                 codeInput.SetValueWithoutNotify(Text);
                 codeInput.cursorIndex = codeInput.selectIndex = cursorPos < Text.Length ? cursorPos : Text.Length;
-                isUpdatingFromCode = false;
                 currentText = Text;
+                isUpdatingFromCode = false;
 
                 OnTextChanged?.Invoke(currentText);
 
                 UpdateLineNumbers();
                 UpdateCursorPosition();
-                UpdateHighlightingNow();
+
+                string highlightedText = currentHighlighter != null
+                        ? currentHighlighter.GetHighlightedText(Text)
+                        : Text;
+                codeHighlight.text = highlightedText;
             }
             previousTextLength = currentText.Length;
         }
@@ -308,7 +290,6 @@ namespace Assets.UI.CodeEditor
 
             currentCursorLine = 1;
             currentCursorColumn = 1;
-
             for (int i = 0; i < cursorPos && i < text.Length; i++)
             {
                 if (text[i] == '\n')
@@ -353,48 +334,15 @@ namespace Assets.UI.CodeEditor
         }
 
         /// <summary>
-        /// Немедленно обновляет подсветку синтаксиса
-        /// </summary>
-        private void UpdateHighlightingNow()
-        {
-            if (string.IsNullOrEmpty(currentText))
-            {
-                codeHighlight.text = "";
-                return;
-            }
-
-            try
-            {
-                int cursorPos = codeInput.cursorIndex;
-                int selectStart = codeInput.selectIndex;
-                int selectEnd = codeInput.selectIndex;
-
-                string highlightedText = currentHighlighter != null
-                    ? currentHighlighter.GetHighlightedText(currentText)
-                    : currentText;
-
-                codeHighlight.text = highlightedText;
-
-                codeInput.cursorIndex = cursorPos;
-                if (selectStart != selectEnd)
-                {
-                    codeInput.selectIndex = selectStart;
-                    codeInput.selectIndex = selectEnd;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Highlighting error: {e.Message}");
-                codeHighlight.text = currentText;
-            }
-        }
-
-        /// <summary>
         /// Устанавливает текст в редактор
         /// </summary>
         /// <param name="text">Новый текст</param>
-        public void SetText(string text)
+        public void SetText(string text, ISyntaxHighlighter highlighter = null)
         {
+            if (highlighter != null)
+            {
+                currentHighlighter = highlighter;
+            }
             string processed = text ?? "";
             processed = processed.Replace("\r", "");
             processed = processed.Replace("\t", "    ");
@@ -408,7 +356,12 @@ namespace Assets.UI.CodeEditor
             previousTextLength = processed.Length;
 
             UpdateLineNumbers();
-            UpdateHighlightingNow();
+
+            string highlightedText = currentHighlighter != null
+                    ? currentHighlighter.GetHighlightedText(currentText)
+                    : currentText;
+            codeHighlight.text = highlightedText;
+
             UpdateCursorPosition();
         }
 
