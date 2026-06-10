@@ -39,7 +39,10 @@ namespace RobotLanguageCompiler.PLC
                 sb.AppendLine($"}}");
                 sb.AppendLine();
             }
-            sb.AppendLine();
+            if (data.RobotCommandsBlockItems.Count == 0)
+            {
+                sb.AppendLine();
+            }
 
             // Секция #LOGIC
             sb.AppendLine("#LOGIC");

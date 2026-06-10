@@ -21,6 +21,7 @@ namespace Assets.UI.CodeEditor
         private CodeEditorElement codeEditor;
         private Label compilationStatus;
         private Label cursorPosition;
+        private UIStatusManager _uiStatusManager;
 
         private List<CodeFile> codeFiles = new List<CodeFile>();
         private int lastIndex = -1;
@@ -36,6 +37,7 @@ namespace Assets.UI.CodeEditor
         protected override void Start()
         {
             base.Start();
+            _uiStatusManager = ServiceManager.Current.Get<UIStatusManager>();
             var modalService = ServiceManager.Current.Get<ModalWindowServiceManager>();
             if (modalService != null)
             {
@@ -82,6 +84,13 @@ namespace Assets.UI.CodeEditor
             openFilesDropdown.choices = new List<string>();
             openFilesDropdown.index = -1;
             openFilesDropdown.RegisterValueChangedCallback(OnFileSelected);
+        }
+
+        protected override void RegisterEvents()
+        {
+            base.RegisterEvents();
+            codeEditor.RegisterCallback<FocusInEvent>(e => _uiStatusManager.SetInputMode(true));
+            codeEditor.RegisterCallback<FocusOutEvent>(e => _uiStatusManager.SetInputMode(false));
         }
 
         protected override void OnBeforeShow(ModalParameters parameters)
@@ -314,7 +323,7 @@ namespace Assets.UI.CodeEditor
 
                         if (lexer.Errors.Count > 0)
                         {
-                            compilationStatus.text = $"Ошибка лексики Robot ({file.DisplayName}): {string.Join(", ", lexer.Errors)}";
+                            compilationStatus.text = $"Ошибка лексики Robot ({file.DisplayName}): {string.Join(",\n", lexer.Errors)}";
                             compilationStatus.AddToClassList("error-status");
                             compilationStatus.RemoveFromClassList("success-status");
                             return;
@@ -326,7 +335,7 @@ namespace Assets.UI.CodeEditor
 
                         if (parser.Errors.Count > 0)
                         {
-                            compilationStatus.text = $"Ошибка парсинга Robot ({file.DisplayName}): {string.Join(", ", parser.Errors)}";
+                            compilationStatus.text = $"Ошибка парсинга Robot ({file.DisplayName}): {string.Join(",\n", parser.Errors)}";
                             compilationStatus.AddToClassList("error-status");
                             compilationStatus.RemoveFromClassList("success-status");
                             return;
@@ -355,12 +364,21 @@ namespace Assets.UI.CodeEditor
                     {
                         var lexer = new PLCLexer(file.Content);
                         var tokens = lexer.Tokenize();
+
+                        if (lexer.Errors.Count > 0)
+                        {
+                            compilationStatus.text = $"Ошибка лексики PLC ({file.DisplayName}): {string.Join(",\n", lexer.Errors)}";
+                            compilationStatus.AddToClassList("error-status");
+                            compilationStatus.RemoveFromClassList("success-status");
+                            return;
+                        }
+
                         var parser = new PLCParser(tokens);
                         var plcDataWithNames = parser.Parse();
 
                         if (parser.Errors.Count > 0)
                         {
-                            compilationStatus.text = $"Ошибка парсинга PLC: {string.Join(", ", parser.Errors)}";
+                            compilationStatus.text = $"Ошибка парсинга PLC: {string.Join(",\n", parser.Errors)}";
                             compilationStatus.AddToClassList("error-status");
                             compilationStatus.RemoveFromClassList("success-status");
                             return;
@@ -652,15 +670,14 @@ namespace Assets.UI.CodeEditor
             if (index < 0 || index >= codeFiles.Count) return;
 
             var file = codeFiles[index];
-            codeEditor.SetText(file.Content);
 
             if (file.Type == CodeFileType.PLC)
             {
-                codeEditor.SetHighlighter(plcHighlighter);
+                codeEditor.SetText(file.Content, plcHighlighter);
             }
             else
             {
-                codeEditor.SetHighlighter(robotHighlighter);
+                codeEditor.SetText(file.Content, robotHighlighter);
             }
 
             compilationStatus.text = $"Открыт: {file.DisplayName}";
