@@ -82,8 +82,14 @@ public class LogicSignalBus : MonoBehaviour, IService
 
         return intDataDict;
     }
-
-
+    /// <summary>
+    /// Получение всех сигналов и данных в виде кортежа словарей
+    /// </summary>
+    /// <returns></returns>
+    public (Dictionary<string, bool> Signals, Dictionary<string, int> Data) GetAllData()
+    {
+        return (signalsDict, intDataDict);
+    }
 
     [System.Serializable]
     public class SignalEntry
