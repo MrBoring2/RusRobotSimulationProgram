@@ -29,7 +29,7 @@ namespace RobotLanguageCompiler.PLC
             sb.AppendLine("#ROBOTS_BLOCKS");
             foreach (var robotBlock in data.RobotCommandsBlockItems)
             {
-                sb.AppendLine($"robot {robotBlock.RobotId} {{");
+                sb.AppendLine($"robot \"{robotBlock.RobotId}\" {{");
 
                 foreach (var item in robotBlock.ConditionsList)
                 {
@@ -128,7 +128,7 @@ namespace RobotLanguageCompiler.PLC
             switch (command)
             {
                 case PLCStartProgram start:
-                    sb.AppendLine($"{indent}start_program({start.ProgramName})");
+                    sb.AppendLine($"{indent}start_program(\"{start.ProgramName}\")");
                     break;
                 case PLCSetVariable set:
                     switch (set.Operation)

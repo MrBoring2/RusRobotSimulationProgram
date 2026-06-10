@@ -22,7 +22,7 @@ namespace Assets.UI.CodeEditor
             {
                 string programName = program.PropertyProvider?.Name ?? program.Reference.name;
 
-                var subroutine = new RobotSubroutine(programName.Replace(" ", "_"));
+                var subroutine = new RobotSubroutine(programName);
                 subroutine.Line = 0;
                 subroutine.Column = 0;
 
@@ -52,7 +52,7 @@ namespace Assets.UI.CodeEditor
                     bool isPtp = (pointProvider.PointType == POINTTYPE.PointToPoint);
                     string pointName = command.PropertyProvider?.Name ?? command.Reference.name;
 
-                    return new RobotMoveCommand(isPtp, pointName.Replace(" ", "_"));
+                    return new RobotMoveCommand(isPtp, pointName);
 
                 case ObjectType.WaitCommand:
                     var waitProvider = command.PropertyProvider as WaitPropertyProvider;
@@ -134,7 +134,7 @@ namespace Assets.UI.CodeEditor
                 if (program == null) continue;
 
                 // Восстанавливаем имя программы (подчёркивания → пробелы)
-                string programName = subroutine.Name.Replace("_", " ");
+                string programName = subroutine.Name;
 
                 if (program.PropertyProvider != null)
                 {
@@ -148,7 +148,7 @@ namespace Assets.UI.CodeEditor
                 foreach (var cmd in subroutine.Commands)
                 {
                     // Пытаемся найти существующую точку
-                    if (cmd is RobotMoveCommand moveCmd && existingPoints.TryGetValue(moveCmd.PointName.Replace("_", " "), out var existingPoint))
+                    if (cmd is RobotMoveCommand moveCmd && existingPoints.TryGetValue(moveCmd.PointName, out var existingPoint))
                     {
                         // Переиспользуем существующую точку
                         var pointProvider = existingPoint.Reference.GetComponent<PointPropertyProvider>();
@@ -171,7 +171,7 @@ namespace Assets.UI.CodeEditor
 
                         if (moveCommand != null)
                         {
-                            string pointName = moveCmd.PointName.Replace("_", " ");
+                            string pointName = moveCmd.PointName;
                             moveCommand.PropertyProvider.Name = pointName;
                             moveCommand.Reference.name = pointName;
 
@@ -263,9 +263,9 @@ namespace Assets.UI.CodeEditor
                 case RobotMoveCommand moveCmd:
                     if (cmdObject.PropertyProvider != null)
                     {
-                        cmdObject.PropertyProvider.Name = moveCmd.PointName.Replace("_", " ");
+                        cmdObject.PropertyProvider.Name = moveCmd.PointName;
                     }
-                    cmdObject.Reference.name = moveCmd.PointName.Replace("_", " ");
+                    cmdObject.Reference.name = moveCmd.PointName;
 
                     var pointProvider = cmdObject.Reference.GetComponent<PointPropertyProvider>();
                     if (pointProvider != null)

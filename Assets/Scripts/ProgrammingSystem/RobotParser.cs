@@ -32,7 +32,7 @@ namespace RobotLanguageCompiler.Robot
             {
                 var token = Current();
 
-                if (token.Type != RobotTokenType.Identifier)
+                if (token.Type != RobotTokenType.Identifier && token.Type != RobotTokenType.String)
                 {
                     if (token.Type == RobotTokenType.RightBrace)
                     {
@@ -169,7 +169,8 @@ namespace RobotLanguageCompiler.Robot
             }
             Consume();
 
-            if (Current().Type != RobotTokenType.Identifier)
+            // Имя точки может быть идентификатором или строкой в кавычках
+            if (Current().Type != RobotTokenType.Identifier && Current().Type != RobotTokenType.String)
             {
                 AddError($"Ожидалось имя точки", Current());
                 return null;

@@ -16,6 +16,7 @@ namespace RobotLanguageCompiler.Robot
         RightBrace,
         Identifier,
         Number,
+        String,
         Error
     }
 
@@ -103,6 +104,11 @@ namespace RobotLanguageCompiler.Robot
 
             char current = _source[_position];
 
+            if (current == '"')
+            {
+                return ReadString();
+            }
+
             if (char.IsDigit(current))
             {
                 return ReadNumber();
@@ -157,6 +163,42 @@ namespace RobotLanguageCompiler.Robot
                     break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Считывает строковый токен.
+        /// </summary>
+        /// <returns>Токен с типом String.</returns>
+        private RobotToken ReadString()
+        {
+            int startLine = _line;
+            int startColumn = _column;
+            int startPosition = _position;
+            _position++;
+            _column++;
+
+            StringBuilder sb = new StringBuilder();
+
+            while (_position < _source.Length && _source[_position] != '"')
+            {
+                if (_source[_position] == '\n')
+                {
+                    return CreateErrorToken($"Незакрытая строка", sb.ToString(), startLine, startColumn, startPosition);
+                }
+                sb.Append(_source[_position]);
+                _position++;
+                _column++;
+            }
+
+            if (_position >= _source.Length)
+            {
+                return CreateErrorToken($"Незакрытая строка", sb.ToString(), startLine, startColumn, startPosition);
+            }
+
+            _position++;
+            _column++;
+
+            return new RobotToken(RobotTokenType.String, sb.ToString(), startLine, startColumn, startPosition);
         }
 
         /// <summary>
