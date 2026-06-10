@@ -101,7 +101,7 @@ public class HierarchyPanelEvents : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKey(KeyCode.Delete) && selectedElementId != null && !isSelectedObjectInHierarchy)
+        if (Input.GetKey(KeyCode.Delete) && selectedElementId != null && !_uIStatusManager.isInputMode)
         {
             DeleteObject(selectedElementId);
         }
