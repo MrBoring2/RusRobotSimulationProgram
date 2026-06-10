@@ -18,6 +18,7 @@ public class CNCPropertyProvider : BasePropertyProvider
     public string  NameSignalDetailInChuck { get; set; } = "DetailInChuck";
 
     public float WorkTime { get; set; } = 10;
+    public float WaitTime { get; set; } = 1.5f;
 
     public bool chuckOnContr = false;
 
@@ -35,6 +36,7 @@ public class CNCPropertyProvider : BasePropertyProvider
             ProviderType = nameof(CNCPropertyProvider),
             FloatValues = {
                     ["WorkTime"] = WorkTime,
+                    ["WaitTime"] = WaitTime,
             },
             StringValues =
             {
@@ -76,6 +78,11 @@ public class CNCPropertyProvider : BasePropertyProvider
                 typeof(float),
                 () => WorkTime,
                 val => WorkTime = (float)val),
+                new CustomProperty("WaitTime",
+                "Время задержки выставления сигнала",
+                typeof(float),
+                () => WaitTime,
+                val => WaitTime = (float)val),
                 new CustomProperty("chuckOnContr",
                 "Сжать кулачки",
                 typeof(bool),
@@ -104,6 +111,10 @@ public class CNCPropertyProvider : BasePropertyProvider
         if (data.FloatValues.TryGetValue("WorkTime", out var v5))
         {
             WorkTime = v5;
+        }
+        if (data.FloatValues.TryGetValue("WaitTime", out var v6))
+        {
+            WaitTime = v6;
         }
 
     }
