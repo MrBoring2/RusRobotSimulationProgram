@@ -35,10 +35,6 @@ namespace Assets.Scripts.Providers
 
         public override void RestoreCustomState(ProviderSaveData data)
         {
-            if (data.StringValues.TryGetValue("Name", out var v1))
-            {
-                Name = v1;
-            }
         }
     }
 }
