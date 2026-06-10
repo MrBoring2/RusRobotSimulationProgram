@@ -93,7 +93,7 @@ namespace RobotLanguageCompiler.PLC
             // Генерация elif
             foreach (var elif in blockCond.ElifConditions)
             {
-                sb.AppendLine($"{indent}else if ({elif.Expression}) {{");
+                sb.AppendLine($"{indent}elif ({elif.Expression}) {{");
 
                 // Рекурсивная генерация содержимого блока elif
                 foreach (var item in elif.Content)
