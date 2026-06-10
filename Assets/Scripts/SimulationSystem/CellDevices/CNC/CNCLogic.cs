@@ -162,13 +162,13 @@ public class CNCLogic : CellDeviceBase
     async Awaitable OpenDoor()
     {
         Door.Open();
-        await Awaitable.WaitForSecondsAsync(3f);
+        await Awaitable.WaitForSecondsAsync(_PP.WaitTime);
         _PP.CNCEndWork = true;
     }
     async Awaitable CloseDoor()
     {
         Door.Close();
-        await Awaitable.WaitForSecondsAsync(3f);
+        await Awaitable.WaitForSecondsAsync(_PP.WaitTime);
     }
     protected override void StartSim(StartProgramm s)
     {

@@ -23,6 +23,8 @@ public class SimulationManager : MonoBehaviour,IService
     public bool AlarmEndEffectorCollicion = true;
     public bool PauseSimInCol = true;
     public bool CheckSpeed = false;
+    public float SpeedSim = 1;
+    private float OldSpeedSim = 1;
     void Start()
     {
         _notification = ServiceManager.Current.Get<NotificationSystemManager>();
@@ -36,8 +38,13 @@ public class SimulationManager : MonoBehaviour,IService
     }
     private void FixedUpdate()
     {
+        if(OldSpeedSim != SpeedSim)
+        {
+            OldSpeedSim = SpeedSim;
+            Time.timeScale = SpeedSim;
+        }
         //работа таймера
-        if(SimulationStat == SIM_STAT.PLAY)
+        if (SimulationStat == SIM_STAT.PLAY)
         { 
             TimeSim.UpdateTimerSim();
         }

@@ -46,10 +46,11 @@ namespace Assets.Scripts.Providers
                     ["Speed"] = Speed,
                     ["AngleSpeed"] = AngleSpeed,
                     ["LinAcceler"] = LinAcceler,
-                    ["AngleSpeed"] = AngleSpeed,
+                    ["AngleAcceler"] = AngleAcceler,
                     ["AngleBrake"] = AngleBrake,
                     ["SpeedPercent"] = SpeedPercent,
-                    ["ConfigPoint"] = ConfigPoint
+                    ["ConfigPoint"] = ConfigPoint,
+                    ["LinBrake"] = LinBrake
                 },
                 StringValues =
                 {
@@ -174,8 +175,8 @@ namespace Assets.Scripts.Providers
             {
                 Name = v9;
             }
-            /*if (data.FloatValues.TryGetValue("AngleBrake", out var v7))
-                ConfigPoint = v7;*/
+            if (data.FloatValues.TryGetValue("ConfigPoint", out var v10))
+                ConfigPoint = (int)v10;
         }
         
     }
