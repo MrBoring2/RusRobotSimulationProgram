@@ -146,6 +146,7 @@ public class CNCLogic : CellDeviceBase
             }
             else
             {
+                timer = 0;
                 if(stateDoor == true)
                 {
                     stateDoor = false;
@@ -173,7 +174,10 @@ public class CNCLogic : CellDeviceBase
     }
     protected override void StopSim(StopProgramm s)
     {
-
+        stateDoor = false;
+        _ = OpenDoor();
+        _PP.chuckOnContr = false;
+        timer = 0;
     }
     void UpdateSignal(string NameSignal, bool b)
     {

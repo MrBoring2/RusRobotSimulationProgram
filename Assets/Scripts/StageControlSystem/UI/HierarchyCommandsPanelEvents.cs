@@ -863,7 +863,8 @@ namespace Assets.Scripts.UI
                     {
                         var program = foldout.userData as SceneObject;
                         var parentId = program?.Id;
-                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(program.Id)));
+                        var robotId = MainHierarchyItem.userData as string;
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(robotId)));
                         contextMenu.Add(CreateMenuButton("Добавить точку перемещения", () => CreatePoint(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить состояние захвата", () => CreateStateEndEffector(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить ожидание", () => CreateWaitCommand(parentId)));
@@ -897,8 +898,8 @@ namespace Assets.Scripts.UI
                     }
                     else if (foldout.name == "hierarchy-item-command")
                     {
-                        var xz = foldout.userData as SceneObject;
-                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(xz.Id)));
+                        var robotId = MainHierarchyItem.userData as string;
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(robotId)));
                         contextMenu.Add(CreateMenuButton("Удалить команду", () => DeleteObject(clickedElement)));
                     }
                     else if (foldout.name == "plc-init-block")
@@ -924,8 +925,7 @@ namespace Assets.Scripts.UI
                     {
                         var condition = foldout.userData as PLCBlockCondition;
                         var parentId = condition?.Id;
-                        var xz = foldout.userData as PLCBase;
-                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(xz.Id)));
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(null)));
                         contextMenu.Add(CreateMenuButton("Добавить иначе если", () => ShowExpressionWindow(parentId, true)));
                         contextMenu.Add(CreateMenuButton("Удалить условие", () => DeleteObject(clickedElement)));
                     }
@@ -935,8 +935,7 @@ namespace Assets.Scripts.UI
                         var parentId = condition?.Id;
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         bool isInLogic = IsInsideLogicBlock(foldout);
-                        var xz = foldout.userData as PLCBase;
-                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(xz.Id)));
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(null)));
                         contextMenu.Add(CreateMenuButton("Изменить условие", () => ShowExpressionWindow(parentId, false, condition.Expression)));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить изменение переменной", () =>
@@ -961,8 +960,7 @@ namespace Assets.Scripts.UI
                         var parentId = condition?.Id;
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         bool isInLogic = IsInsideLogicBlock(foldout);
-                        var xz = foldout.userData as PLCBase;
-                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(xz.Id)));
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(null)));
                         contextMenu.Add(CreateMenuButton("Изменить условие", () => ShowExpressionWindow(parentId, true, condition.Expression)));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить изменение переменной", () =>
@@ -988,8 +986,7 @@ namespace Assets.Scripts.UI
                         var parentId = condition?.Id;
                         string robotId = GetRobotIdFromPLCBlock(foldout);
                         bool isInLogic = IsInsideLogicBlock(foldout);
-                        var xz = foldout.userData as PLCBase;
-                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(xz.Id)));
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(null)));
                         contextMenu.Add(CreateMenuButton("Добавить вложенное условие", () => ShowExpressionWindow(parentId)));
                         contextMenu.Add(CreateMenuButton("Добавить изменение переменной", () =>
                         {
@@ -1011,8 +1008,7 @@ namespace Assets.Scripts.UI
                     {
                         var command = foldout.userData as PLCCommand;
                         var parentId = command?.Id;
-                        var xz = foldout.userData as PLCBase;
-                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(xz.Id)));
+                        contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(null)));
                         contextMenu.Add(CreateMenuButton("Удалить команду", () => DeleteObject(clickedElement)));
                     }
                     //else
@@ -1024,10 +1020,10 @@ namespace Assets.Scripts.UI
                 lastSelectedElement = foldout;
 
             }
-            else if (clickedElement.name == "hierarchy-item-command")
-            {
+            //else if (clickedElement.name == "hierarchy-item-command")
+            //{
 
-            }
+            //}
             else
             {
                 if (current == null) return;
