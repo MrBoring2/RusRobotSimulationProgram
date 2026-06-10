@@ -17,7 +17,7 @@ namespace Assets.UI.CodeEditor
         private TextElement codeHighlight;
 
         private string currentText = "";
-        private bool isUpdatingFromCode = false;
+        
 
         private int currentCursorLine = 1;
         private int currentCursorColumn = 1;
@@ -216,12 +216,10 @@ namespace Assets.UI.CodeEditor
             // 5. Обновляем текст, если он изменился
             if (Text != currentText)
             {
-                isUpdatingFromCode = true;
                 cursorPos = codeInput.cursorIndex += cursorCorrection;
                 codeInput.SetValueWithoutNotify(Text);
                 codeInput.cursorIndex = codeInput.selectIndex = cursorPos < Text.Length ? cursorPos : Text.Length;
                 currentText = Text;
-                isUpdatingFromCode = false;
 
                 OnTextChanged?.Invoke(currentText);
 
@@ -348,9 +346,7 @@ namespace Assets.UI.CodeEditor
             processed = processed.Replace("\t", "    ");
             processed = WrapLines(processed);
 
-            isUpdatingFromCode = true;
             codeInput.SetValueWithoutNotify(processed);
-            isUpdatingFromCode = false;
 
             currentText = processed;
             previousTextLength = processed.Length;

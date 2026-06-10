@@ -35,6 +35,7 @@ namespace RobotLanguageCompiler.PLC
         RightBrace,
         Identifier,
         Number,
+        String,
         Error
     }
 
@@ -129,6 +130,11 @@ namespace RobotLanguageCompiler.PLC
             if (current == '#')
             {
                 return ReadSection();
+            }
+
+            if (current == '"')
+            {
+                return ReadString();
             }
 
             if (char.IsDigit(current))
@@ -304,6 +310,41 @@ namespace RobotLanguageCompiler.PLC
             }
 
             return new PLCToken(PLCTokenType.Number, sb.ToString(), startLine, startColumn, startPosition);
+        }
+
+        /// <summary>
+        /// Считывает строковый токен.
+        /// </summary>
+        private PLCToken ReadString()
+        {
+            int startLine = _line;
+            int startColumn = _column;
+            int startPosition = _position;
+            _position++; // пропускаем открывающую кавычку
+            _column++;
+
+            StringBuilder sb = new StringBuilder();
+
+            while (_position < _source.Length && _source[_position] != '"')
+            {
+                if (_source[_position] == '\n')
+                {
+                    return CreateErrorToken($"Незакрытая строка", sb.ToString(), startLine, startColumn, startPosition);
+                }
+                sb.Append(_source[_position]);
+                _position++;
+                _column++;
+            }
+
+            if (_position >= _source.Length)
+            {
+                return CreateErrorToken($"Незакрытая строка", sb.ToString(), startLine, startColumn, startPosition);
+            }
+
+            _position++; // пропускаем закрывающую кавычку
+            _column++;
+
+            return new PLCToken(PLCTokenType.String, sb.ToString(), startLine, startColumn, startPosition);
         }
 
         /// <summary>

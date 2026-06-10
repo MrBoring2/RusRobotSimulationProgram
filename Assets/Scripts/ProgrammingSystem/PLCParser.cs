@@ -136,7 +136,7 @@ namespace RobotLanguageCompiler.PLC
                 if (Current().Type == PLCTokenType.Robot)
                 {
                     Consume();
-                    robotId = ExpectIdentifier();
+                    robotId = ExpectIdentifierOrString();
                     if (robotId == null) Error = true;
 
                     if (!Error)
@@ -397,7 +397,7 @@ namespace RobotLanguageCompiler.PLC
                     }
                     Consume();
 
-                    var programName = ExpectIdentifier();
+                    var programName = ExpectIdentifierOrString();
                     if (programName == null) break;
 
                     if (Current().Type != PLCTokenType.RightParen)
@@ -621,6 +621,29 @@ namespace RobotLanguageCompiler.PLC
             }
 
             AddError($"Ожидался идентификатор", token);
+            return null;
+        }
+
+        /// <summary>
+        /// Ожидает идентификатор или строку в кавычках и возвращает его значение.
+        /// </summary>
+        private string ExpectIdentifierOrString()
+        {
+            var token = Current();
+            if (token.Type == PLCTokenType.Identifier)
+            {
+                var value = token.Value;
+                Consume();
+                return value;
+            }
+            else if (token.Type == PLCTokenType.String)
+            {
+                var value = token.Value;
+                Consume();
+                return value;
+            }
+
+            AddError($"Ожидался идентификатор или строка в кавычках", token);
             return null;
         }
 

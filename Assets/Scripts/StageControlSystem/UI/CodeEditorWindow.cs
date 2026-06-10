@@ -466,25 +466,9 @@ namespace Assets.UI.CodeEditor
             {
                 if (content is PLCStartProgram startProgram)
                 {
-                    // Ищем программу по имени (из компилятора имя может быть с _ вместо пробелов)
-                    string programNameWithUnderscores = startProgram.ProgramName;
-
-                    if (programIdMap.TryGetValue(programNameWithUnderscores, out string programId))
+                    if (programIdMap.TryGetValue(startProgram.ProgramName, out string programId))
                     {
                         startProgram.ProgramId = programId;
-                    }
-                    else
-                    {
-                        // Пробуем с заменой _ на пробелы (на случай несоответствия)
-                        string programNameWithSpaces = programNameWithUnderscores.Replace("_", " ");
-                        foreach (var kvp in programIdMap)
-                        {
-                            if (kvp.Key.Replace("_", " ") == programNameWithSpaces)
-                            {
-                                startProgram.ProgramId = kvp.Value;
-                                break;
-                            }
-                        }
                     }
                 }
                 else if (content is PLCBlockCondition nestedBlock)
@@ -550,9 +534,7 @@ namespace Assets.UI.CodeEditor
             var robot = sceneObjectsManager?.GetById(robotId);
             if (robot != null)
             {
-                string name = robot.PropertyProvider?.Name ?? robot.Reference.name;
-                // Заменяем пробелы на подчёркивания для совместимости с компилятором
-                return name.Replace(" ", "_");
+                robotId = robot.PropertyProvider?.Name ?? robot.Reference.name;
             }
             return robotId;
         }
@@ -564,9 +546,6 @@ namespace Assets.UI.CodeEditor
         {
             if (string.IsNullOrEmpty(robotName)) return robotName;
 
-            // Восстанавливаем исходное имя (заменяем _ обратно на пробелы)
-            string originalName = robotName.Replace("_", " ");
-
             var robots = sceneObjectsManager?.GetGameObjectsList()
                 .Where(obj => obj.Type == ObjectType.Robot)
                 .ToList();
@@ -576,142 +555,13 @@ namespace Assets.UI.CodeEditor
                 foreach (var robot in robots)
                 {
                     string name = robot.PropertyProvider?.Name ?? robot.Reference.name;
-                    if (name == originalName)
+                    if (name == robotName)
                     {
                         return robot.Id;
                     }
                 }
             }
             return null; // Возвращаем null, если робот не найден
-        }
-
-        /// <summary>
-        /// Рекурсивно заменяет пробелы на подчёркивания в именах точек в PLCData
-        /// </summary>
-        private void ReplaceSpacesInPointNames(PLCData data)
-        {
-            if (data == null) return;
-
-            // Обрабатываем блоки роботов
-            foreach (var robotBlock in data.RobotCommandsBlockItems)
-            {
-                ReplaceSpacesInConditions(robotBlock.ConditionsList);
-            }
-        }
-
-        /// <summary>
-        /// Рекурсивно обходит условия и заменяет пробелы в именах точек в командах
-        /// </summary>
-        private void ReplaceSpacesInConditions(List<PLCBase> items)
-        {
-            foreach (var item in items)
-            {
-                if (item is PLCBlockCondition blockCond)
-                {
-                    ReplaceSpacesInCondition(blockCond.IfCondition);
-                    foreach (var elif in blockCond.ElifConditions)
-                    {
-                        ReplaceSpacesInCondition(elif);
-                    }
-                    ReplaceSpacesInCondition(blockCond.ElseCondition);
-                }
-                else if (item is PLCCondition condition)
-                {
-                    ReplaceSpacesInCondition(condition);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Рекурсивно обрабатывает одну ветку условия (заменяет пробелы в командах внутри Content)
-        /// </summary>
-        private void ReplaceSpacesInCondition(PLCCondition condition)
-        {
-            if (condition == null) return;
-
-            foreach (var content in condition.Content)
-            {
-                if (content is PLCBlockCondition nestedBlock)
-                {
-                    ReplaceSpacesInCondition(nestedBlock.IfCondition);
-                    foreach (var elif in nestedBlock.ElifConditions)
-                    {
-                        ReplaceSpacesInCondition(elif);
-                    }
-                    ReplaceSpacesInCondition(nestedBlock.ElseCondition);
-                }
-                else if (content is PLCStartProgram startProgram)
-                {
-                    if (!string.IsNullOrEmpty(startProgram.ProgramName))
-                    {
-                        startProgram.ProgramName = startProgram.ProgramName.Replace(" ", "_");
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Рекурсивно восстанавливает пробелы в именах точек в PLCData
-        /// </summary>
-        private void RestoreSpacesInPointNames(PLCData data)
-        {
-            if (data == null) return;
-
-            foreach (var robotBlock in data.RobotCommandsBlockItems)
-            {
-                RestoreSpacesInConditions(robotBlock.ConditionsList);
-            }
-        }
-
-        /// <summary>
-        /// Рекурсивно обходит условия и восстанавливает пробелы в именах точек в командах
-        /// </summary>
-        private void RestoreSpacesInConditions(List<PLCBase> items)
-        {
-            foreach (var item in items)
-            {
-                if (item is PLCBlockCondition blockCond)
-                {
-                    RestoreSpacesInCondition(blockCond.IfCondition);
-                    foreach (var elif in blockCond.ElifConditions)
-                    {
-                        RestoreSpacesInCondition(elif);
-                    }
-                    RestoreSpacesInCondition(blockCond.ElseCondition);
-                }
-                else if (item is PLCCondition condition)
-                {
-                    RestoreSpacesInCondition(condition);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Рекурсивно обрабатывает одну ветку условия (восстанавливает пробелы в командах внутри Content)
-        /// </summary>
-        private void RestoreSpacesInCondition(PLCCondition condition)
-        {
-            if (condition == null) return;
-
-            foreach (var content in condition.Content)
-            {
-                if (content is PLCBlockCondition nestedBlock)
-                {
-                    RestoreSpacesInCondition(nestedBlock.IfCondition);
-                    foreach (var elif in nestedBlock.ElifConditions)
-                    {
-                        RestoreSpacesInCondition(elif);
-                    }
-                    RestoreSpacesInCondition(nestedBlock.ElseCondition);
-                }
-                else if (content is PLCStartProgram startProgram)
-                {
-                    if (!string.IsNullOrEmpty(startProgram.ProgramName))
-                    {
-                        startProgram.ProgramName = startProgram.ProgramName.Replace("_", " ");
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -738,8 +588,6 @@ namespace Assets.UI.CodeEditor
                 newData.RobotCommandsBlockItems.Add(newBlock);
             }
 
-            ReplaceSpacesInPointNames(newData);
-
             return newData;
         }
 
@@ -750,8 +598,6 @@ namespace Assets.UI.CodeEditor
         private PLCData ReplaceRobotNamesWithIds(PLCData data)
         {
             if (data == null) return data;
-
-            RestoreSpacesInPointNames(data);
 
             var newData = new PLCData
             {

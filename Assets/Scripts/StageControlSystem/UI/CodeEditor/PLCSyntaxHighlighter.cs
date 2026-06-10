@@ -17,6 +17,7 @@ namespace Assets.UI.CodeEditor
         private static readonly Color OperatorColor = new Color(0.8f, 0.4f, 0.0f);     // Оранжевый
         private static readonly Color NumberColor = new Color(0.0f, 0.6f, 0.0f);       // Зелёный
         private static readonly Color IdentifierColor = Color.black;                    // Чёрный
+        private static readonly Color StringColor = new Color(0.6f, 0.2f, 0.0f);        // Тёмно-ораньжевый
         private static readonly Color ErrorColor = new Color(0.9f, 0.2f, 0.2f);        // Красный
         
         // Ключевые слова
@@ -61,6 +62,9 @@ namespace Assets.UI.CodeEditor
                 for (int i = tokens.Count - 1; i >= 0; i--)
                 {
                     end = tokens[i].Position + tokens[i].Value.Length;
+
+                    if (tokens[i].Type == PLCTokenType.String) end += 2;
+
                     result.Insert(0, sourceCode.Substring(end, start - end));
                     start = tokens[i].Position;
 
@@ -102,6 +106,9 @@ namespace Assets.UI.CodeEditor
             
             if (type == PLCTokenType.Number)
                 return NumberColor;
+
+            if (type == PLCTokenType.String)
+                return StringColor;
             
             return IdentifierColor;
         }

@@ -18,7 +18,7 @@ namespace RobotLanguageCompiler.Robot
 
             foreach (var subroutine in data.Subroutines)
             {
-                sb.AppendLine($"{subroutine.Name} {{");
+                sb.AppendLine($"\"{subroutine.Name}\" {{");
                 
                 foreach (var command in subroutine.Commands)
                 {
@@ -44,7 +44,7 @@ namespace RobotLanguageCompiler.Robot
             {
                 case RobotMoveCommand move:
                     string moveType = move.IsPtp ? "ptp_point" : "lin_point";
-                    return $"{moveType}({move.PointName})";
+                    return $"{moveType}(\"{move.PointName}\")";
                     
                 case RobotWaitCommand wait:
                     string seconds = wait.Seconds.ToString(CultureInfo.InvariantCulture);
