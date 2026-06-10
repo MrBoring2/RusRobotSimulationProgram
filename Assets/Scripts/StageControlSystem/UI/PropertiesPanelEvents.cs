@@ -1,4 +1,5 @@
 using Assets.Scripts.CustomEventBus;
+using Assets.Scripts.CustomEventBus.Signals.ObjectSignals;
 using Assets.Scripts.CustomEventBus.Signals.PropertiesPanel;
 using Assets.Scripts.CustomEventBus.Signals.UndoRedoSystem;
 using Assets.Scripts.CustomServiceManager;
@@ -52,6 +53,7 @@ public class PropertiesPanelEvents : MonoBehaviour
         _eventBus.Subscribe<TogglePropertiesSignal>(OnToggleProperties);
         _eventBus.Subscribe<ExecuteCommandSignal>(OnCommandExecuted);
         _eventBus.Subscribe<UndoneCommandSignal>(OnCommandUndoned);
+        _eventBus.Subscribe<ClearSceneSignal>(OnClearSceneSignal);
         _UIStatusManager = ServiceManager.Current.Get<UIStatusManager>();
         _undoRedoManager = ServiceManager.Current.Get<UndoRedoManager>();
 
@@ -88,6 +90,11 @@ public class PropertiesPanelEvents : MonoBehaviour
         HideElement(scalePropertyContainer);
         //UndoRedoManager.Instance.OnCommandExecuted += OnUndoRedoPerformed;
         //UndoRedoManager.Instance.OnCommandUndone += OnUndoRedoPerformed;
+    }
+
+    private void OnClearSceneSignal(ClearSceneSignal signal)
+    {
+        current = null;
     }
 
     private void OnConfigJOGChanged(ChangeConfigJOGSignal signal)
@@ -308,20 +315,22 @@ public class PropertiesPanelEvents : MonoBehaviour
             var sceneManager = ServiceManager.Current.Get<SceneObjectsManager>();
 
             bool exists =
-                sceneManager.Items.Values
-                    .Cast<SceneObject>()
-                    .Any(x =>
-                        x != null &&
-                        x.Id != current.Id &&
-                        x.PropertyProvider.Name == newName
-                    )
-                ||
-                sceneManager.Commands.GetAllCommands()
-                    .Any(x =>
-                        x != null &&
-                        x.Id != current.Id &&
-                        x.PropertyProvider.Name == newName
-                    );
+                 sceneManager.Items.Values
+                     .Cast<SceneObject>()
+                     .Any(x =>
+                         x != null &&
+                         x.Reference != null && // проверка что GameObject ещё жив
+                         x.Id != current.Id &&
+                         x?.PropertyProvider?.Name == newName
+                     )
+                 ||
+                 sceneManager.Commands.GetAllCommands()
+                     .Any(x =>
+                         x != null &&
+                         x.Reference != null && // проверка что GameObject ещё жив
+                         x.Id != current.Id &&
+                         x?.PropertyProvider?.Name == newName
+                     );
 
             if (exists)
             {

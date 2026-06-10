@@ -922,7 +922,7 @@ namespace Assets.Scripts.UI
                     }
                     else if (foldout.name == "plc-condition-block")
                     {
-                        var condition = foldout.userData as PLCCondition;
+                        var condition = foldout.userData as PLCBlockCondition;
                         var parentId = condition?.Id;
                         var xz = foldout.userData as PLCBase;
                         contextMenu.Add(CreateMenuButton("Открыть в редакторе", () => OpenRobotPanel(xz.Id)));

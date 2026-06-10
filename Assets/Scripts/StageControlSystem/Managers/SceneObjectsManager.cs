@@ -482,6 +482,7 @@ namespace Assets.Scripts.Managers
                     foreach (var programData in robotData.Programs)
                     {
                         var programPrefab = Resources.Load<GameObject>("Prefabs/Program/Программа");
+                        programPrefab.name = programData.Name;
                         if (programPrefab == null) continue;
 
                         var program = CreateCommand(programPrefab, Vector3.zero, Quaternion.identity,
