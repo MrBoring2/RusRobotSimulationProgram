@@ -148,7 +148,7 @@ namespace Assets.UI.CodeEditor
                 foreach (var cmd in subroutine.Commands)
                 {
                     // Пытаемся найти существующую точку
-                    if (cmd is RobotMoveCommand moveCmd && existingPoints.TryGetValue(moveCmd.PointName, out var existingPoint))
+                    if (cmd is RobotMoveCommand moveCmd && existingPoints.TryGetValue(moveCmd.PointName.Replace("_", " "), out var existingPoint))
                     {
                         // Переиспользуем существующую точку
                         var pointProvider = existingPoint.Reference.GetComponent<PointPropertyProvider>();
@@ -158,10 +158,6 @@ namespace Assets.UI.CodeEditor
                             pointProvider.PointType = moveCmd.IsPtp
                                 ? POINTTYPE.PointToPoint
                                 : POINTTYPE.LinearPoint;
-
-                            // НЕ ОБНОВЛЯЕМ остальные параметры (скорости, ускорения, координаты)
-                            // Они сохраняются такими, какими были в точке
-                            // Это важно, чтобы пользовательские настройки точки не сбрасывались
                         }
 
                         // Перемещаем точку в новую программу
