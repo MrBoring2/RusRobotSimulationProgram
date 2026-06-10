@@ -174,9 +174,6 @@ namespace Assets.Scripts.Providers
             {
                 Name = v9;
             }
-            if (data.FloatValues.TryGetValue("SpeedPercent", out var v9))
-                SpeedPercent = v9;
-
             /*if (data.FloatValues.TryGetValue("AngleBrake", out var v7))
                 ConfigPoint = v7;*/
         }
