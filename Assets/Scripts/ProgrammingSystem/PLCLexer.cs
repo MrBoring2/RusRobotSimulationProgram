@@ -19,6 +19,7 @@ namespace RobotLanguageCompiler.PLC
         False,
         And,
         Or,
+        Not,
         Assign,
         Increment,
         Decrement,
@@ -153,7 +154,8 @@ namespace RobotLanguageCompiler.PLC
                     {
                         return ReadTwoCharToken(PLCTokenType.NotEqual, "!=");
                     }
-                    return CreateErrorToken($"Неожиданный символ '{current}'", current.ToString(), _line, _column, _position);
+                    else
+                        return CreateSingleCharToken(PLCTokenType.Not, '!');
                 case '>':
                     if (Peek() == '=')
                     {

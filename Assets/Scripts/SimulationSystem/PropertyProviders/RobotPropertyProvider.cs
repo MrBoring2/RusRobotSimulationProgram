@@ -97,6 +97,12 @@ public class RobotPropertyProvider : BasePropertyProvider
         return new ProviderSaveData
         {
             ProviderType = nameof(RobotPropertyProvider),
+            StringValues =
+            {
+                ["AnglesSpeedLimit"] = string.Join(",", AnglesSpeedLimit.GetFloats()),
+                ["AngleAcceler"] = string.Join(",", AngleAcceler.GetFloats()),
+                ["AngleBrake"] = string.Join(",", AngleBrake.GetFloats())
+            }
         };
     }
 
