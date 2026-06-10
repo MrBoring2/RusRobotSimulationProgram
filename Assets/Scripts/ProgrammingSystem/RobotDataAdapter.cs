@@ -154,12 +154,17 @@ namespace Assets.UI.CodeEditor
                         var pointProvider = existingPoint.Reference.GetComponent<PointPropertyProvider>();
                         if (pointProvider != null)
                         {
+                            // Обновляем тип движения (PTP или Linear)
                             pointProvider.PointType = moveCmd.IsPtp
                                 ? POINTTYPE.PointToPoint
                                 : POINTTYPE.LinearPoint;
+
+                            // НЕ ОБНОВЛЯЕМ остальные параметры (скорости, ускорения, координаты)
+                            // Они сохраняются такими, какими были в точке
+                            // Это важно, чтобы пользовательские настройки точки не сбрасывались
                         }
 
-                        // Добавляем точку в новую программу
+                        // Перемещаем точку в новую программу
                         var moveCommand = sceneManager.CreateCommand(
                             existingPoint.Reference,
                             existingPoint.Reference.transform.position,
@@ -173,6 +178,26 @@ namespace Assets.UI.CodeEditor
                             string pointName = moveCmd.PointName.Replace("_", " ");
                             moveCommand.PropertyProvider.Name = pointName;
                             moveCommand.Reference.name = pointName;
+
+                            // Копируем все параметры из существующей точки в новую команду
+                            var newPointProvider = moveCommand.Reference.GetComponent<PointPropertyProvider>();
+                            if (newPointProvider != null && pointProvider != null)
+                            {
+                                // Копируем все параметры
+                                newPointProvider.PointType = pointProvider.PointType;
+                                newPointProvider.LinAcceler = pointProvider.LinAcceler;
+                                newPointProvider.LinBrake = pointProvider.LinBrake;
+                                newPointProvider.AngleSpeed = pointProvider.AngleSpeed;
+                                newPointProvider.AngleAcceler = pointProvider.AngleAcceler;
+                                newPointProvider.AngleBrake = pointProvider.AngleBrake;
+                                newPointProvider.SpeedPercent = pointProvider.SpeedPercent;
+                                newPointProvider.ConfigPoint = pointProvider.ConfigPoint;
+
+                                // Копируем позицию и поворот
+                                moveCommand.Reference.transform.position = existingPoint.Reference.transform.position;
+                                moveCommand.Reference.transform.rotation = existingPoint.Reference.transform.rotation;
+                                moveCommand.Reference.transform.localScale = existingPoint.Reference.transform.localScale;
+                            }
                         }
                     }
                     else
