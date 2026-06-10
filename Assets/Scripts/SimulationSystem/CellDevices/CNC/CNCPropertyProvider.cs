@@ -17,7 +17,7 @@ public class CNCPropertyProvider : BasePropertyProvider
     public bool DetailInChuck = false;
     public string  NameSignalDetailInChuck { get; set; } = "DetailInChuck";
 
-    public float WorkTime = 10;
+    public float WorkTime { get; set; } = 10;
 
     public bool chuckOnContr = false;
 
@@ -33,6 +33,17 @@ public class CNCPropertyProvider : BasePropertyProvider
         return new ProviderSaveData
         {
             ProviderType = nameof(CNCPropertyProvider),
+            FloatValues = {
+                    ["WorkTime"] = WorkTime,
+            },
+            StringValues =
+            {
+                ["NameSignalChuckOn"] = NameSignalChuckOn,
+                ["NameSignalCNCStart"] = NameSignalCNCStart,
+                ["NameSignalCNCEndWork"] = NameSignalCNCEndWork,
+                ["NameSignalDetailInChuck"] = NameSignalDetailInChuck
+            }
+
         };
     }
 
