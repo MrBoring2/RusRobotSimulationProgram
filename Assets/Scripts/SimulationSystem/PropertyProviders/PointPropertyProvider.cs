@@ -46,7 +46,7 @@ namespace Assets.Scripts.Providers
                     ["Speed"] = Speed,
                     ["AngleSpeed"] = AngleSpeed,
                     ["LinAcceler"] = LinAcceler,
-                    ["AngleSpeed"] = AngleSpeed,
+                    ["LinBrake"] = LinBrake,
                     ["AngleBrake"] = AngleBrake,
                     ["SpeedPercent"] = SpeedPercent,
                     ["ConfigPoint"] = ConfigPoint
