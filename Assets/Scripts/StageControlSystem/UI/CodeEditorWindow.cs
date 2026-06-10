@@ -586,6 +586,228 @@ namespace Assets.UI.CodeEditor
         }
 
         /// <summary>
+        /// Рекурсивно заменяет пробелы на подчёркивания в именах точек в PLCData
+        /// </summary>
+        private void ReplaceSpacesInPointNames(PLCData data)
+        {
+            if (data == null) return;
+
+            // Обрабатываем блоки роботов
+            foreach (var robotBlock in data.RobotCommandsBlockItems)
+            {
+                ReplaceSpacesInConditions(robotBlock.ConditionsList);
+            }
+
+            // Обрабатываем блоки логики
+            ReplaceSpacesInConditions(data.LogicBlockItems);
+        }
+
+        /// <summary>
+        /// Рекурсивно обходит условия и заменяет пробелы в именах точек
+        /// </summary>
+        private void ReplaceSpacesInConditions(List<PLCBase> items)
+        {
+            foreach (var item in items)
+            {
+                if (item is PLCBlockCondition blockCond)
+                {
+                    ReplaceSpacesInCondition(blockCond.IfCondition);
+                    foreach (var elif in blockCond.ElifConditions)
+                    {
+                        ReplaceSpacesInCondition(elif);
+                    }
+                    ReplaceSpacesInCondition(blockCond.ElseCondition);
+                }
+                else if (item is PLCCondition condition)
+                {
+                    ReplaceSpacesInCondition(condition);
+                }
+                else if (item is PLCStartProgram startProgram)
+                {
+                    // Имена программ уже обрабатываются отдельно
+                    if (!string.IsNullOrEmpty(startProgram.ProgramName))
+                    {
+                        startProgram.ProgramName = startProgram.ProgramName.Replace(" ", "_");
+                    }
+                }
+                else if (item is PLCSetVariable setVar)
+                {
+                    // В выражении могут быть имена точек
+                    if (!string.IsNullOrEmpty(setVar.Value))
+                    {
+                        // Заменяем пробелы на _ в значении, если это не число
+                        if (!IsNumeric(setVar.Value))
+                        {
+                            setVar.Value = setVar.Value.Replace(" ", "_");
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Рекурсивно обрабатывает одну ветку условия
+        /// </summary>
+        private void ReplaceSpacesInCondition(PLCCondition condition)
+        {
+            if (condition == null) return;
+
+            // Обрабатываем выражение условия (там могут быть имена точек)
+            if (!string.IsNullOrEmpty(condition.Expression))
+            {
+                condition.Expression = ReplacePointNamesInExpression(condition.Expression);
+            }
+
+            foreach (var content in condition.Content)
+            {
+                if (content is PLCBlockCondition nestedBlock)
+                {
+                    ReplaceSpacesInCondition(nestedBlock.IfCondition);
+                    foreach (var elif in nestedBlock.ElifConditions)
+                    {
+                        ReplaceSpacesInCondition(elif);
+                    }
+                    ReplaceSpacesInCondition(nestedBlock.ElseCondition);
+                }
+                else if (content is PLCStartProgram startProgram)
+                {
+                    if (!string.IsNullOrEmpty(startProgram.ProgramName))
+                    {
+                        startProgram.ProgramName = startProgram.ProgramName.Replace(" ", "_");
+                    }
+                }
+                else if (content is PLCSetVariable setVar)
+                {
+                    if (!string.IsNullOrEmpty(setVar.Value) && !IsNumeric(setVar.Value))
+                    {
+                        setVar.Value = setVar.Value.Replace(" ", "_");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Заменяет имена точек в выражении условия
+        /// </summary>
+        private string ReplacePointNamesInExpression(string expression)
+        {
+            if (string.IsNullOrEmpty(expression)) return expression;
+
+            // Просто заменяем все пробелы на _, так как в выражении пробелы только между операторами
+            // Это упрощённый вариант, но для PLC языка должно работать
+            return expression.Replace(" ", "_");
+        }
+
+        /// <summary>
+        /// Рекурсивно восстанавливает пробелы в именах точек в PLCData
+        /// </summary>
+        private void RestoreSpacesInPointNames(PLCData data)
+        {
+            if (data == null) return;
+
+            foreach (var robotBlock in data.RobotCommandsBlockItems)
+            {
+                RestoreSpacesInConditions(robotBlock.ConditionsList);
+            }
+
+            RestoreSpacesInConditions(data.LogicBlockItems);
+        }
+
+        /// <summary>
+        /// Рекурсивно обходит условия и восстанавливает пробелы в именах точек
+        /// </summary>
+        private void RestoreSpacesInConditions(List<PLCBase> items)
+        {
+            foreach (var item in items)
+            {
+                if (item is PLCBlockCondition blockCond)
+                {
+                    RestoreSpacesInCondition(blockCond.IfCondition);
+                    foreach (var elif in blockCond.ElifConditions)
+                    {
+                        RestoreSpacesInCondition(elif);
+                    }
+                    RestoreSpacesInCondition(blockCond.ElseCondition);
+                }
+                else if (item is PLCCondition condition)
+                {
+                    RestoreSpacesInCondition(condition);
+                }
+                else if (item is PLCStartProgram startProgram)
+                {
+                    if (!string.IsNullOrEmpty(startProgram.ProgramName))
+                    {
+                        startProgram.ProgramName = startProgram.ProgramName.Replace("_", " ");
+                    }
+                }
+                else if (item is PLCSetVariable setVar)
+                {
+                    if (!string.IsNullOrEmpty(setVar.Value) && !IsNumeric(setVar.Value))
+                    {
+                        setVar.Value = setVar.Value.Replace("_", " ");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Рекурсивно обрабатывает одну ветку условия для восстановления пробелов
+        /// </summary>
+        private void RestoreSpacesInCondition(PLCCondition condition)
+        {
+            if (condition == null) return;
+
+            if (!string.IsNullOrEmpty(condition.Expression))
+            {
+                condition.Expression = RestorePointNamesInExpression(condition.Expression);
+            }
+
+            foreach (var content in condition.Content)
+            {
+                if (content is PLCBlockCondition nestedBlock)
+                {
+                    RestoreSpacesInCondition(nestedBlock.IfCondition);
+                    foreach (var elif in nestedBlock.ElifConditions)
+                    {
+                        RestoreSpacesInCondition(elif);
+                    }
+                    RestoreSpacesInCondition(nestedBlock.ElseCondition);
+                }
+                else if (content is PLCStartProgram startProgram)
+                {
+                    if (!string.IsNullOrEmpty(startProgram.ProgramName))
+                    {
+                        startProgram.ProgramName = startProgram.ProgramName.Replace("_", " ");
+                    }
+                }
+                else if (content is PLCSetVariable setVar)
+                {
+                    if (!string.IsNullOrEmpty(setVar.Value) && !IsNumeric(setVar.Value))
+                    {
+                        setVar.Value = setVar.Value.Replace("_", " ");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Восстанавливает имена точек в выражении условия
+        /// </summary>
+        private string RestorePointNamesInExpression(string expression)
+        {
+            if (string.IsNullOrEmpty(expression)) return expression;
+            return expression.Replace("_", " ");
+        }
+
+        /// <summary>
+        /// Проверяет, является ли строка числом
+        /// </summary>
+        private bool IsNumeric(string value)
+        {
+            return int.TryParse(value, out _) || float.TryParse(value, out _) || bool.TryParse(value, out _);
+        }
+
+        /// <summary>
         /// Рекурсивно заменяет ID роботов на имена в PLCData
         /// </summary>
         private PLCData ReplaceRobotIdsWithNames(PLCData data)
@@ -609,6 +831,9 @@ namespace Assets.UI.CodeEditor
                 newData.RobotCommandsBlockItems.Add(newBlock);
             }
 
+            // Заменяем пробелы на подчёркивания в именах точек
+            ReplaceSpacesInPointNames(newData);
+
             return newData;
         }
 
@@ -619,6 +844,9 @@ namespace Assets.UI.CodeEditor
         private PLCData ReplaceRobotNamesWithIds(PLCData data)
         {
             if (data == null) return data;
+
+            // Сначала восстанавливаем пробелы в именах точек
+            RestoreSpacesInPointNames(data);
 
             var newData = new PLCData
             {
@@ -636,7 +864,6 @@ namespace Assets.UI.CodeEditor
 
                 if (string.IsNullOrEmpty(robotId))
                 {
-                    // Робот не найден - показываем ошибку и возвращаем null
                     compilationStatus.text = $"Ошибка: робот с именем '{robotBlock.RobotId}' не найден на сцене. Сохранение отменено.";
                     compilationStatus.AddToClassList("error-status");
                     compilationStatus.RemoveFromClassList("success-status");
