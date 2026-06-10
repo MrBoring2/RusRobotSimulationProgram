@@ -163,14 +163,16 @@ namespace Assets.Scripts.Providers
                 LinAcceler = v5;
             if (data.FloatValues.TryGetValue("AngleBrake", out var v6))
                 LinBrake = v6;
-            if (data.StringValues.TryGetValue("PointType", out var v7))
+            if (data.FloatValues.TryGetValue("SpeedPercent", out var v7))
+                SpeedPercent = v7;
+            if (data.StringValues.TryGetValue("PointType", out var v8))
             {
-                Enum.TryParse<POINTTYPE>(v7, out var pt);
+                Enum.TryParse<POINTTYPE>(v8, out var pt);
                 PointType = pt;
             }
-            if (data.StringValues.TryGetValue("Name", out var v8))
+            if (data.StringValues.TryGetValue("Name", out var v9))
             {
-                Name = v8;
+                Name = v9;
             }
 
             /*if (data.FloatValues.TryGetValue("AngleBrake", out var v7))
