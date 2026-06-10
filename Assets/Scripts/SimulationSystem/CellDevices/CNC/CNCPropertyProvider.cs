@@ -17,7 +17,7 @@ public class CNCPropertyProvider : BasePropertyProvider
     public bool DetailInChuck = false;
     public string  NameSignalDetailInChuck { get; set; } = "DetailInChuck";
 
-    public float WorkTime = 10;
+    public float WorkTime { get; set; } = 10;
 
     public bool chuckOnContr = false;
 
