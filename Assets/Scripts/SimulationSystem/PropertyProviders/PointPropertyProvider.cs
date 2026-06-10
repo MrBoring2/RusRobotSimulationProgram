@@ -53,7 +53,8 @@ namespace Assets.Scripts.Providers
                 },
                 StringValues =
                 {
-                    ["PointType"] = PointType.ToString()
+                    ["PointType"] = PointType.ToString(),
+                    ["Name"] = Name
                 }
             };
         }
@@ -166,6 +167,10 @@ namespace Assets.Scripts.Providers
             {
                 Enum.TryParse<POINTTYPE>(v7, out var pt);
                 PointType = pt;
+            }
+            if (data.StringValues.TryGetValue("Name", out var v8))
+            {
+                Name = v8;
             }
 
             /*if (data.FloatValues.TryGetValue("AngleBrake", out var v7))
