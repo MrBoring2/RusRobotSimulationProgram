@@ -163,7 +163,7 @@ namespace Assets.Scripts.Providers
                 LinAcceler = v5;
             if (data.FloatValues.TryGetValue("AngleBrake", out var v6))
                 LinBrake = v6;
-            if (data.StringValues.TryGetValue("PointType", out var v7))
+            if (data.StringValues.TryGetValue("PointType", out var v7)) 
             {
                 Enum.TryParse<POINTTYPE>(v7, out var pt);
                 PointType = pt;
@@ -172,6 +172,8 @@ namespace Assets.Scripts.Providers
             {
                 Name = v8;
             }
+            if (data.FloatValues.TryGetValue("SpeedPercent", out var v9))
+                SpeedPercent = v9;
 
             /*if (data.FloatValues.TryGetValue("AngleBrake", out var v7))
                 ConfigPoint = v7;*/
