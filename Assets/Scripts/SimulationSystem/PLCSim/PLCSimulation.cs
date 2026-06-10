@@ -68,7 +68,8 @@ public class PLCSimulation : MonoBehaviour
             // Логика ПЛК
             await PLC();
             //ServiceManager.Current.Get<LogicSignalBus>().CadrToActiveSignal();
-            await Awaitable.WaitForSecondsAsync(0.1f);
+            //await Awaitable.WaitForSecondsAsync(0.1f);
+            await Awaitable.FixedUpdateAsync();
         }
     }
     /// <summary>
