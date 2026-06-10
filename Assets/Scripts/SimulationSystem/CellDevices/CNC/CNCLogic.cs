@@ -146,13 +146,16 @@ public class CNCLogic : CellDeviceBase
             }
             else
             {
-                timer = 0;
                 if(stateDoor == true)
                 {
                     stateDoor = false;
                     _ = OpenDoor();
                 }
             }
+        }
+        if (!_PP.CNCStart && timer != 0)
+        {
+            timer = 0;
         }
     }
 
