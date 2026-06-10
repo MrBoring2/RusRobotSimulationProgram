@@ -109,11 +109,12 @@ namespace Assets.Scripts.Managers
                     return;
                 }
                 savePath = paths[0];
+                _sceneObjectManager.SpawnRestoredObjects(loaded.objectsData, loaded.CommandsData);
                 if (loaded.PLCData != null)
                 {
                     _sceneObjectManager.SetPLCData(loaded.PLCData);
                 }
-                _sceneObjectManager.SpawnRestoredObjects(loaded.objectsData, loaded.CommandsData);
+               
                 
                 _eventBus.Invoke(new LoadObjectsSignal(_sceneObjectManager.GetGameObjectsList()));
             }

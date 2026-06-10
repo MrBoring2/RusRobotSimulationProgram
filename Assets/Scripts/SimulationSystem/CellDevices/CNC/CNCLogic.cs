@@ -153,6 +153,10 @@ public class CNCLogic : CellDeviceBase
                 }
             }
         }
+        if (!_PP.CNCStart && timer != 0)
+        {
+            timer = 0;
+        }
     }
 
     async Awaitable OpenDoor()
@@ -173,7 +177,10 @@ public class CNCLogic : CellDeviceBase
     }
     protected override void StopSim(StopProgramm s)
     {
-
+        stateDoor = false;
+        _ = OpenDoor();
+        _PP.chuckOnContr = false;
+        timer = 0;
     }
     void UpdateSignal(string NameSignal, bool b)
     {
