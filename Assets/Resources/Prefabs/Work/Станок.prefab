@@ -824,15 +824,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CNCPropertyProvider
   ChuckOn: 1
-  NameSignalChuckOn: CNCChuckOn
   CNCStart: 0
-  NameSignalCNCStart: CNCStart
   CNCEndWork: 0
-  NameSignalCNCEndWork: CNCEndWork
   DetailInChuck: 0
-  NameSignalDetailInChuck: DetailInChuck
-  WorkTime: 10
-  NameWorkTime: WorkTime
   chuckOnContr: 0
 --- !u!114 &8423692266215926550
 MonoBehaviour:
@@ -971,7 +965,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7610565835451767069, guid: bff527cb6d726ab48bc437767befd6c2, type: 3}
       propertyPath: stiffness
-      value: 50
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7610565835451767069, guid: bff527cb6d726ab48bc437767befd6c2, type: 3}
       propertyPath: openPosition
@@ -1074,7 +1068,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7610565835451767069, guid: bff527cb6d726ab48bc437767befd6c2, type: 3}
       propertyPath: stiffness
-      value: 50
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7610565835451767069, guid: bff527cb6d726ab48bc437767befd6c2, type: 3}
       propertyPath: openPosition
