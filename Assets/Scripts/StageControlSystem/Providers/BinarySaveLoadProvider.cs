@@ -57,6 +57,7 @@ public class BinarySaveLoadProvider : ISaveLoadProvider
             foreach (var program in programs)
             {
                 var programData = new ProgramData();
+                programData.Name = program.PropertyProvider.Name;
                 programData.ProgramId = program.Id;
                 programData.Position = new SerializableTransform(program.Reference.transform.localPosition);
                 programData.Rotation = new SerializableQuaternion(program.Reference.transform.localRotation);

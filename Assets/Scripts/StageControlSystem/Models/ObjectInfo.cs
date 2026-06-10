@@ -92,6 +92,7 @@ public class RobotCommandsData
 [Serializable]
 public class ProgramData
 {
+    public string Name;
     public string ProgramId;
     public SerializableTransform Position;
     public SerializableQuaternion Rotation;
