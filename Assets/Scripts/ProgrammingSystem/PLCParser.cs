@@ -8,7 +8,7 @@ namespace RobotLanguageCompiler.PLC
     public class PLCParser
     {
         private readonly List<PLCToken> _tokens;
-        private List<string> initVariables = new List<string>();
+        private Dictionary<string, VarType?> initVariables = new Dictionary<string, VarType?>();
         private int _position;
         private readonly List<string> _errors;
         private bool logicSection = false;
@@ -84,7 +84,7 @@ namespace RobotLanguageCompiler.PLC
                     continue;
                 }
 
-                if (initVariables.Contains(varName))
+                if (initVariables.ContainsKey(varName))
                 {
                     AddError($"Переменная с именем '{varName}' уже существует", Previous());
                     SkipToNextLine();
@@ -106,7 +106,7 @@ namespace RobotLanguageCompiler.PLC
                     continue;
                 }
 
-                initVariables.Add(varName);
+                initVariables.Add(varName, varType);
 
                 var initVar = new PLCInitVariable
                 {
@@ -412,7 +412,7 @@ namespace RobotLanguageCompiler.PLC
                 case PLCTokenType.Identifier:
                     var varName = token.Value;
 
-                    if (!initVariables.Contains(varName))
+                    if (!initVariables.ContainsKey(varName))
                     {
                         AddError($"Переменная '{varName}' должна быть объявлена в #INIT перед использованием", token);
                         SkipToNextLine();
@@ -424,19 +424,19 @@ namespace RobotLanguageCompiler.PLC
                     if (Current().Type == PLCTokenType.Increment)
                     {
                         Consume();
-                        return new PLCSetVariable { Operation = OperationType.Increment, VariableName = varName, Value = "1" };
+                        return new PLCSetVariable { Operation = OperationType.Increment, VarType = initVariables[varName].Value, VariableName = varName, Value = "1" };
                     }
                     else if (Current().Type == PLCTokenType.Decrement)
                     {
                         Consume();
-                        return new PLCSetVariable { Operation = OperationType.Decrement, VariableName = varName, Value = "1" };
+                        return new PLCSetVariable { Operation = OperationType.Decrement, VarType = initVariables[varName].Value, VariableName = varName, Value = "1" };
                     }
                     else if (Current().Type == PLCTokenType.Assign)
                     {
                         Consume();
                         var value = ParseSimpleValue();
                         if (value == null) return null;
-                        return new PLCSetVariable { Operation = OperationType.Assign, VariableName = varName, Value = value };
+                        return new PLCSetVariable { Operation = OperationType.Assign, VarType = initVariables[varName].Value, VariableName = varName, Value = value };
                     }
                     break;
             }
@@ -513,7 +513,7 @@ namespace RobotLanguageCompiler.PLC
                 {
                     return null;
                 }
-                else if (token.Type == PLCTokenType.Identifier && !initVariables.Contains(token.Value))
+                else if (token.Type == PLCTokenType.Identifier && !initVariables.ContainsKey(token.Value))
                 {
                     AddError($"Переменная '{token.Value}' должна быть объявлена в #INIT перед использованием", token);
                 }
