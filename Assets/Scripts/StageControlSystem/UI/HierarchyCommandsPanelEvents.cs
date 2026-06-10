@@ -127,7 +127,7 @@ namespace Assets.Scripts.UI
 
         private void Update()
         {
-            if (Input.GetKey(KeyCode.Delete) && selectedElementId != null)
+            if (Input.GetKey(KeyCode.Delete) && selectedElementId != null && !_uIStatusManager.isInputMode)
             {
                 DeleteObject(selectedElementId);
             }
