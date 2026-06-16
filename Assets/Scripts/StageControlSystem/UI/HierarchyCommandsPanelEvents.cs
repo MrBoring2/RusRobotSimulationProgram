@@ -1359,10 +1359,11 @@ namespace Assets.Scripts.UI
         /// </summary>
         private void UpdateHierarchy()
         {
-            if (current == null) return;
+  
             var savedStates = SaveFoldoutStates();
             MainHierarchyItem.ClearContent(true);
             elementCache.Clear();
+            if (current == null) return;
 
             ObjectType parentType = _sceneObjectManager.GetById(current.Id).Type;
 

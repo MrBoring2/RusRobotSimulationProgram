@@ -22,7 +22,7 @@ public class ObjectsLibraryEvents : BaseModalWindow
     protected override void Start()
     {
         base.Start();
-    
+
         categories.Add("Robot", "Манипуляторы");
         categories.Add("PLC", "ПЛК");
         categories.Add("Movement", "Перемещение");
@@ -30,7 +30,7 @@ public class ObjectsLibraryEvents : BaseModalWindow
         categories.Add("Detectors", "Датчики");
         categories.Add("Work", "Рабочие элементы");
         categories.Add("Environment", "Окружение");
-        categories.Add("Primitive", "Примитивы");     
+        categories.Add("Primitive", "Примитивы");
         categories.Add("General", "Общее");
         foreach (var category in categories.Keys)
         {
@@ -42,7 +42,7 @@ public class ObjectsLibraryEvents : BaseModalWindow
     protected override void InitializeElements(VisualElement root)
     {
         base.InitializeElements(root);
-        
+
         messageLabel = root.Q<Label>("message-label");
         closeButton = root.Q<Button>("close-button");
         list = windowRoot.Q<ScrollView>("list");
@@ -60,7 +60,7 @@ public class ObjectsLibraryEvents : BaseModalWindow
             messageLabel.text = message;
         }
 
-        
+
         BuildList();
     }
 
@@ -99,7 +99,7 @@ public class ObjectsLibraryEvents : BaseModalWindow
                     previewImage.style.height = new Length(80, LengthUnit.Pixel);
                     previewImage.scaleMode = ScaleMode.ScaleAndCrop;
                 }
-              
+
                 // Если нужно растянуть на всю площадь
                 //previewImage.style.flexGrow = 1;
 
@@ -133,7 +133,7 @@ public class ObjectsLibraryEvents : BaseModalWindow
         {
             antiAliasing = 8,
             hideFlags = HideFlags.DontSave
-        }; 
+        };
 
         cam.targetTexture = rt;
 
@@ -148,6 +148,16 @@ public class ObjectsLibraryEvents : BaseModalWindow
 
         float distance = bounds.size.magnitude * 1.5f;
         Vector3 offset = new Vector3(1.5f, 0.3f, -1f);
+        if (prefab.GetComponent<SceneObjectMarker>().type == ObjectType.Robot)
+        {
+            distance = bounds.size.magnitude * 0.5f;
+            offset = new Vector3(1.5f, 0.3f, -1f);
+        }
+        else if (prefab.GetComponent<SceneObjectMarker>().type == ObjectType.Detectors)
+        {
+            distance = bounds.size.magnitude * 0.1f;
+        }
+
         offset.Normalize();
         cam.transform.position = bounds.center + offset * distance;
         cam.transform.LookAt(bounds.center);

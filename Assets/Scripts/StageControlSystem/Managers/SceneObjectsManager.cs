@@ -95,6 +95,7 @@ namespace Assets.Scripts.Managers
                         case ObjectType.Node:
                         case ObjectType.Primitive:
                         case ObjectType.Static:
+                        case ObjectType.Environment:
                             sceneObj = new StaticObject(id, objectMaker.type, obj, parentId);
                             break;
                         case ObjectType.Dynamic:

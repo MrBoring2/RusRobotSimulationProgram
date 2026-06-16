@@ -995,8 +995,8 @@ public class HierarchyPanelEvents : MonoBehaviour
             return;
         }
 
-        var pos = Vector3.zero;
-        var rot = Quaternion.identity;
+        var pos = new Vector3(0, 1, 0);
+        var rot = prefab.gameObject.transform.rotation;
         if (_simulationManager.GetModeSim().SimulationMode == MODE.JOG_MODE)
         {
             if (type == ObjectType.LinearMoveCommand)

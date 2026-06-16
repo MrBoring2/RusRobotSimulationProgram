@@ -40,9 +40,7 @@ namespace Assets.Scripts.UI
             }
             typesList.choices = new List<string>
                 {
-                    "string",
                     "int",
-                    "float",
                     "bool"
                 };
         }
